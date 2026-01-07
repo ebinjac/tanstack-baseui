@@ -9,38 +9,198 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as TeamsRegisterRouteImport } from './routes/teams/register'
+import { Route as AdminTeamsRouteImport } from './routes/admin/teams'
+import { Route as AdminRequestsRouteImport } from './routes/admin/requests'
+import { Route as TeamsTeamIdSettingsRouteImport } from './routes/teams/$teamId/settings'
+import { Route as TeamsTeamIdLinkManagerIndexRouteImport } from './routes/teams/$teamId/link-manager.index'
+import { Route as TeamsTeamIdLinkManagerStatsRouteImport } from './routes/teams/$teamId/link-manager/stats'
+import { Route as TeamsTeamIdLinkManagerImportRouteImport } from './routes/teams/$teamId/link-manager/import'
+import { Route as TeamsTeamIdLinkManagerCategoriesRouteImport } from './routes/teams/$teamId/link-manager/categories'
 
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const TeamsRegisterRoute = TeamsRegisterRouteImport.update({
+  id: '/teams/register',
+  path: '/teams/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTeamsRoute = AdminTeamsRouteImport.update({
+  id: '/teams',
+  path: '/teams',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRequestsRoute = AdminRequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => AdminRoute,
+} as any)
+const TeamsTeamIdSettingsRoute = TeamsTeamIdSettingsRouteImport.update({
+  id: '/teams/$teamId/settings',
+  path: '/teams/$teamId/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamsTeamIdLinkManagerIndexRoute =
+  TeamsTeamIdLinkManagerIndexRouteImport.update({
+    id: '/teams/$teamId/link-manager/',
+    path: '/teams/$teamId/link-manager/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TeamsTeamIdLinkManagerStatsRoute =
+  TeamsTeamIdLinkManagerStatsRouteImport.update({
+    id: '/teams/$teamId/link-manager/stats',
+    path: '/teams/$teamId/link-manager/stats',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TeamsTeamIdLinkManagerImportRoute =
+  TeamsTeamIdLinkManagerImportRouteImport.update({
+    id: '/teams/$teamId/link-manager/import',
+    path: '/teams/$teamId/link-manager/import',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const TeamsTeamIdLinkManagerCategoriesRoute =
+  TeamsTeamIdLinkManagerCategoriesRouteImport.update({
+    id: '/teams/$teamId/link-manager/categories',
+    path: '/teams/$teamId/link-manager/categories',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/profile': typeof ProfileRoute
+  '/admin/requests': typeof AdminRequestsRoute
+  '/admin/teams': typeof AdminTeamsRoute
+  '/teams/register': typeof TeamsRegisterRoute
+  '/admin/': typeof AdminIndexRoute
+  '/teams/$teamId/settings': typeof TeamsTeamIdSettingsRoute
+  '/teams/$teamId/link-manager/categories': typeof TeamsTeamIdLinkManagerCategoriesRoute
+  '/teams/$teamId/link-manager/import': typeof TeamsTeamIdLinkManagerImportRoute
+  '/teams/$teamId/link-manager/stats': typeof TeamsTeamIdLinkManagerStatsRoute
+  '/teams/$teamId/link-manager': typeof TeamsTeamIdLinkManagerIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/profile': typeof ProfileRoute
+  '/admin/requests': typeof AdminRequestsRoute
+  '/admin/teams': typeof AdminTeamsRoute
+  '/teams/register': typeof TeamsRegisterRoute
+  '/admin': typeof AdminIndexRoute
+  '/teams/$teamId/settings': typeof TeamsTeamIdSettingsRoute
+  '/teams/$teamId/link-manager/categories': typeof TeamsTeamIdLinkManagerCategoriesRoute
+  '/teams/$teamId/link-manager/import': typeof TeamsTeamIdLinkManagerImportRoute
+  '/teams/$teamId/link-manager/stats': typeof TeamsTeamIdLinkManagerStatsRoute
+  '/teams/$teamId/link-manager': typeof TeamsTeamIdLinkManagerIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/profile': typeof ProfileRoute
+  '/admin/requests': typeof AdminRequestsRoute
+  '/admin/teams': typeof AdminTeamsRoute
+  '/teams/register': typeof TeamsRegisterRoute
+  '/admin/': typeof AdminIndexRoute
+  '/teams/$teamId/settings': typeof TeamsTeamIdSettingsRoute
+  '/teams/$teamId/link-manager/categories': typeof TeamsTeamIdLinkManagerCategoriesRoute
+  '/teams/$teamId/link-manager/import': typeof TeamsTeamIdLinkManagerImportRoute
+  '/teams/$teamId/link-manager/stats': typeof TeamsTeamIdLinkManagerStatsRoute
+  '/teams/$teamId/link-manager/': typeof TeamsTeamIdLinkManagerIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/profile'
+    | '/admin/requests'
+    | '/admin/teams'
+    | '/teams/register'
+    | '/admin/'
+    | '/teams/$teamId/settings'
+    | '/teams/$teamId/link-manager/categories'
+    | '/teams/$teamId/link-manager/import'
+    | '/teams/$teamId/link-manager/stats'
+    | '/teams/$teamId/link-manager'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/profile'
+    | '/admin/requests'
+    | '/admin/teams'
+    | '/teams/register'
+    | '/admin'
+    | '/teams/$teamId/settings'
+    | '/teams/$teamId/link-manager/categories'
+    | '/teams/$teamId/link-manager/import'
+    | '/teams/$teamId/link-manager/stats'
+    | '/teams/$teamId/link-manager'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/profile'
+    | '/admin/requests'
+    | '/admin/teams'
+    | '/teams/register'
+    | '/admin/'
+    | '/teams/$teamId/settings'
+    | '/teams/$teamId/link-manager/categories'
+    | '/teams/$teamId/link-manager/import'
+    | '/teams/$teamId/link-manager/stats'
+    | '/teams/$teamId/link-manager/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  ProfileRoute: typeof ProfileRoute
+  TeamsRegisterRoute: typeof TeamsRegisterRoute
+  TeamsTeamIdSettingsRoute: typeof TeamsTeamIdSettingsRoute
+  TeamsTeamIdLinkManagerCategoriesRoute: typeof TeamsTeamIdLinkManagerCategoriesRoute
+  TeamsTeamIdLinkManagerImportRoute: typeof TeamsTeamIdLinkManagerImportRoute
+  TeamsTeamIdLinkManagerStatsRoute: typeof TeamsTeamIdLinkManagerStatsRoute
+  TeamsTeamIdLinkManagerIndexRoute: typeof TeamsTeamIdLinkManagerIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +208,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/teams/register': {
+      id: '/teams/register'
+      path: '/teams/register'
+      fullPath: '/teams/register'
+      preLoaderRoute: typeof TeamsRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/teams': {
+      id: '/admin/teams'
+      path: '/teams'
+      fullPath: '/admin/teams'
+      preLoaderRoute: typeof AdminTeamsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/requests': {
+      id: '/admin/requests'
+      path: '/requests'
+      fullPath: '/admin/requests'
+      preLoaderRoute: typeof AdminRequestsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/teams/$teamId/settings': {
+      id: '/teams/$teamId/settings'
+      path: '/teams/$teamId/settings'
+      fullPath: '/teams/$teamId/settings'
+      preLoaderRoute: typeof TeamsTeamIdSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teams/$teamId/link-manager/': {
+      id: '/teams/$teamId/link-manager/'
+      path: '/teams/$teamId/link-manager'
+      fullPath: '/teams/$teamId/link-manager'
+      preLoaderRoute: typeof TeamsTeamIdLinkManagerIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teams/$teamId/link-manager/stats': {
+      id: '/teams/$teamId/link-manager/stats'
+      path: '/teams/$teamId/link-manager/stats'
+      fullPath: '/teams/$teamId/link-manager/stats'
+      preLoaderRoute: typeof TeamsTeamIdLinkManagerStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teams/$teamId/link-manager/import': {
+      id: '/teams/$teamId/link-manager/import'
+      path: '/teams/$teamId/link-manager/import'
+      fullPath: '/teams/$teamId/link-manager/import'
+      preLoaderRoute: typeof TeamsTeamIdLinkManagerImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teams/$teamId/link-manager/categories': {
+      id: '/teams/$teamId/link-manager/categories'
+      path: '/teams/$teamId/link-manager/categories'
+      fullPath: '/teams/$teamId/link-manager/categories'
+      preLoaderRoute: typeof TeamsTeamIdLinkManagerCategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminRequestsRoute: typeof AdminRequestsRoute
+  AdminTeamsRoute: typeof AdminTeamsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminRequestsRoute: AdminRequestsRoute,
+  AdminTeamsRoute: AdminTeamsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRouteWithChildren,
+  ProfileRoute: ProfileRoute,
+  TeamsRegisterRoute: TeamsRegisterRoute,
+  TeamsTeamIdSettingsRoute: TeamsTeamIdSettingsRoute,
+  TeamsTeamIdLinkManagerCategoriesRoute: TeamsTeamIdLinkManagerCategoriesRoute,
+  TeamsTeamIdLinkManagerImportRoute: TeamsTeamIdLinkManagerImportRoute,
+  TeamsTeamIdLinkManagerStatsRoute: TeamsTeamIdLinkManagerStatsRoute,
+  TeamsTeamIdLinkManagerIndexRoute: TeamsTeamIdLinkManagerIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -72,7 +72,7 @@ export function AdminSidebar() {
                                                 ${isActive ? 'bg-primary/10 text-primary hover:bg-primary/15' : 'hover:bg-sidebar-accent'}
                                             `}
                                         >
-                                            <item.icon className={`h-4 w-4 ${isActive ? 'text-primary' : 'text-sidebar-foreground/70'}`} />
+                                            <item.icon className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-sidebar-foreground/70'}`} />
                                             <span className="font-medium">{item.title}</span>
                                             {isActive && <ChevronRight className="ml-auto h-3.5 w-3.5" />}
                                         </SidebarMenuButton>
@@ -90,7 +90,7 @@ export function AdminSidebar() {
                             tooltip="Settings"
                             className="hover:bg-sidebar-accent"
                         >
-                            <Settings className="h-4 w-4 text-sidebar-foreground/70" />
+                            <Settings className="h-5 w-5 text-sidebar-foreground/70" />
                             <span className="font-medium">Settings</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>

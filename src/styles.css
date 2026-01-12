@@ -141,3 +141,47 @@
     @apply font-sans;
   }
 }
+
+/* Custom Minimal Scrollbar (Neutral) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+  opacity: 0.3;
+  /* This opacity property doesn't work on the thumb element directly in standard CSS behavior in some contexts but for webkit it often needs rgba/color-mix. */
+}
+
+/* Better approach for webkit to get transparency is using text-color or color-mix if supported, or just a lighter variable. 
+   Since we want neutral, let's use the --border or --input variable which is usually formatted for borders, 
+   or slightly darken it. 
+   Actually, let's use color-mix for modern browser support which tailwind 4/modern css supports, 
+   or fallback to a hardcoded neutral transparency if variables are tricky. 
+   
+   However, simpler: 
+   Use var(--border) for a very subtle scrollbar, or var(--muted-foreground) with a color-mix.
+*/
+
+::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--muted-foreground) 30%, transparent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--muted-foreground) 50%, transparent);
+}
+
+/* Firefox */
+@supports (scrollbar-color: auto) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--muted-foreground) 30%, transparent) transparent;
+  }
+}

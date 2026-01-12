@@ -19,6 +19,7 @@ import {
     Zap,
     MessageSquare,
     HelpCircle,
+    Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -278,8 +279,20 @@ function DispatchTurnoverPage() {
 
             {/* Cooldown Message */}
             {!canFinalizeData?.canFinalize && canFinalizeData?.message && (
-                <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4 text-amber-800 dark:text-amber-200 text-sm">
-                    {canFinalizeData.message}
+                <div className="rounded-xl border border-amber-200 bg-amber-50/50 dark:border-amber-900/30 dark:bg-amber-950/10 p-4">
+                    <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center shrink-0">
+                            <Clock className="h-5 w-5 text-amber-600 dark:text-amber-500" />
+                        </div>
+                        <div>
+                            <h4 className="font-semibold text-amber-900 dark:text-amber-200">
+                                Turnover Finalization Cooldown
+                            </h4>
+                            <p className="text-sm text-amber-700/80 dark:text-amber-400">
+                                {canFinalizeData.message}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -349,7 +362,7 @@ function DispatchTurnoverPage() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {Object.entries(groupedEntries).map(([appId, appEntries], index) => {
+                    {Object.entries(groupedEntries).map(([appId, appEntries]) => {
                         const app = appEntries[0]?.application;
                         const criticalCount = appEntries.filter((e) => e.isImportant).length;
                         const isExpanded = expandedApps.has(appId);

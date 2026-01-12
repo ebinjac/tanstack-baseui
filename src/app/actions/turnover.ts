@@ -443,20 +443,20 @@ export const canFinalizeTurnover = createServerFn({ method: "GET" })
         const session = await getSession();
         if (!session?.user?.email) throw new Error("Unauthorized");
 
-        // Check last finalization time (1 hour cooldown)
-        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+        // Check last finalization time (5 hours cooldown)
+        const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000);
 
         const lastFinalization = await db.query.finalizedTurnovers.findFirst({
             where: and(
                 eq(finalizedTurnovers.teamId, data.teamId),
-                gte(finalizedTurnovers.finalizedAt, oneHourAgo)
+                gte(finalizedTurnovers.finalizedAt, fiveHoursAgo)
             ),
             orderBy: [desc(finalizedTurnovers.finalizedAt)],
         });
 
         if (lastFinalization) {
             const remainingTime = Math.ceil(
-                (lastFinalization.finalizedAt.getTime() + 60 * 60 * 1000 - Date.now()) / 60000
+                (lastFinalization.finalizedAt.getTime() + 5 * 60 * 60 * 1000 - Date.now()) / 60000
             );
             return {
                 canFinalize: false,

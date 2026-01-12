@@ -14,15 +14,15 @@ import {
     Layers,
     ChevronLeft,
     ChevronRight,
-    ChevronDown,
     X,
     CheckCircle2,
     AlertCircle,
+    AlertTriangle,
     Bell,
     Zap,
     MessageSquare,
     HelpCircle,
-    Filter,
+    CalendarIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,10 +43,13 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { getFinalizedTurnovers } from "@/app/actions/turnover";
 import { SECTION_CONFIG, type TurnoverSection } from "@/lib/zod/turnover.schema";
@@ -78,7 +81,6 @@ function TransitionHistoryPage() {
     const [selectedSnapshot, setSelectedSnapshot] = useState<FinalizedTurnover | null>(null);
     const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
     const [snapshotFilter, setSnapshotFilter] = useState("");
-    const [expandedApps, setExpandedApps] = useState<Set<string>>(new Set());
 
     const limit = 20;
 
@@ -116,7 +118,6 @@ function TransitionHistoryPage() {
     const openSnapshot = async (turnover: FinalizedTurnover) => {
         setSelectedSnapshot(turnover);
         setSnapshotDialogOpen(true);
-        setExpandedApps(new Set());
     };
 
     // Get initials
@@ -259,7 +260,7 @@ function TransitionHistoryPage() {
                             key="grid"
                             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                         >
-                            {filteredTurnovers.map((turnover: FinalizedTurnover, index: number) => (
+                            {filteredTurnovers.map((turnover: FinalizedTurnover) => (
                                 <div
                                     key={turnover.id}
                                 >
@@ -316,7 +317,7 @@ function TransitionHistoryPage() {
                             key="list"
                             className="space-y-2"
                         >
-                            {filteredTurnovers.map((turnover: FinalizedTurnover, index: number) => (
+                            {filteredTurnovers.map((turnover: FinalizedTurnover) => (
                                 <div
                                     key={turnover.id}
                                 >
@@ -402,170 +403,246 @@ function TransitionHistoryPage() {
                 </div>
             )}
 
-            {/* Snapshot Detail Dialog */}
+            {/* Snapshot Detail Dialog - Full Screen */}
             <Dialog open={snapshotDialogOpen} onOpenChange={setSnapshotDialogOpen}>
-                <DialogContent className="max-w-4xl max-h-[85vh] min-w-[80vw]">
-                    <DialogHeader>
+                <DialogContent className="min-w-[100vw] h-[100vh] max-w-[100vw] max-h-[100vh] rounded-none p-0 gap-0 flex flex-col overflow-y-scroll">
+                    {/* Fixed Header */}
+                    <DialogHeader className="px-6 py-4 border-b shrink-0">
                         <DialogTitle className="flex items-center gap-3">
-                            <FileText className="w-5 h-5" />
+                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                <History className="w-5 h-5" />
+                            </div>
                             <div>
-                                <p>Turnover Snapshot</p>
+                                <p className="text-lg font-bold">Turnover Snapshot</p>
                                 {selectedSnapshot && (
                                     <p className="text-sm font-normal text-muted-foreground">
                                         {format(new Date(selectedSnapshot.finalizedAt), "MMMM dd, yyyy 'at' h:mm a")}
-                                        {" • "}Finalized by {selectedSnapshot.finalizedBy}
+                                        <span className="mx-2">•</span>
+                                        Finalized by <span className="font-medium text-foreground">{selectedSnapshot.finalizedBy}</span>
                                     </p>
                                 )}
                             </div>
                         </DialogTitle>
                     </DialogHeader>
 
+                    {/* Scrollable Content */}
                     {selectedSnapshot && (
-                        <ScrollArea className="max-h-[60vh]">
-                            <div className="space-y-6 pr-4">
-                                {/* Filter */}
-                                <div className="flex items-center gap-2">
-                                    <div className="relative flex-1">
-                                        <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <ScrollArea className="flex-1">
+                            <div className="p-6 space-y-6">
+                                {/* Filter & Notes Row */}
+                                <div className="flex flex-col lg:flex-row gap-4">
+                                    <div className="relative w-full lg:max-w-md">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                         <Input
                                             placeholder="Filter entries..."
-                                            className="pl-9"
+                                            className="pl-10"
                                             value={snapshotFilter}
                                             onChange={(e) => setSnapshotFilter(e.target.value)}
                                         />
                                     </div>
+                                    {selectedSnapshot.notes && (
+                                        <div className="flex-1 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                            <div className="flex gap-2">
+                                                <FileText className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                                <div>
+                                                    <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">Shift Notes</p>
+                                                    <p className="text-sm text-foreground/80">{selectedSnapshot.notes}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Notes */}
-                                {selectedSnapshot.notes && (
-                                    <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-                                        <h4 className="font-semibold text-amber-800 dark:text-amber-200 mb-2">
-                                            Handover Notes
-                                        </h4>
-                                        <p className="text-sm text-amber-700 dark:text-amber-300">
-                                            {selectedSnapshot.notes}
-                                        </p>
-                                    </div>
-                                )}
-
                                 {/* Applications */}
-                                {(() => {
-                                    const snapshotData = selectedSnapshot.snapshotData as any[];
+                                <div className="space-y-6">
+                                    {(() => {
+                                        const snapshotData = selectedSnapshot.snapshotData as any[];
 
-                                    // Group by application
-                                    const grouped: Record<string, any[]> = {};
-                                    snapshotData.forEach((entry) => {
-                                        const appId = entry.applicationId;
-                                        if (!grouped[appId]) grouped[appId] = [];
+                                        // Group by application
+                                        const groupedByApp: Record<string, any[]> = {};
+                                        snapshotData.forEach((entry) => {
+                                            const appId = entry.applicationId;
+                                            if (!groupedByApp[appId]) groupedByApp[appId] = [];
 
-                                        // Apply filter
-                                        if (snapshotFilter) {
-                                            const matchesFilter =
-                                                entry.title?.toLowerCase().includes(snapshotFilter.toLowerCase()) ||
-                                                entry.description?.toLowerCase().includes(snapshotFilter.toLowerCase());
-                                            if (!matchesFilter) return;
+                                            if (snapshotFilter) {
+                                                const matchesFilter =
+                                                    entry.title?.toLowerCase().includes(snapshotFilter.toLowerCase()) ||
+                                                    entry.description?.toLowerCase().includes(snapshotFilter.toLowerCase());
+                                                if (!matchesFilter) return;
+                                            }
+
+                                            groupedByApp[appId].push(entry);
+                                        });
+
+                                        const appGroups = Object.entries(groupedByApp).filter(([, entries]) => entries.length > 0);
+
+                                        if (appGroups.length === 0) {
+                                            return (
+                                                <div className="text-center py-12 text-muted-foreground">
+                                                    <History className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                                                    <p>No entries match your filter.</p>
+                                                </div>
+                                            );
                                         }
 
-                                        grouped[appId].push(entry);
-                                    });
+                                        return appGroups.map(([appId, appEntries]) => {
+                                            const app = appEntries[0]?.application;
+                                            const criticalCount = appEntries.filter((e) => e.isImportant).length;
 
-                                    return Object.entries(grouped).map(([appId, entries]) => {
-                                        const app = entries[0]?.application;
-                                        const isExpanded = expandedApps.has(appId);
+                                            // Group by section
+                                            const groupedBySection: Record<string, any[]> = {};
+                                            appEntries.forEach((entry) => {
+                                                if (!groupedBySection[entry.section]) groupedBySection[entry.section] = [];
+                                                groupedBySection[entry.section].push(entry);
+                                            });
 
-                                        if (entries.length === 0) return null;
+                                            const sectionOrder: TurnoverSection[] = ["MIM", "INC", "RFC", "ALERTS", "COMMS", "FYI"];
+                                            const sortedSections = sectionOrder
+                                                .filter((s) => groupedBySection[s])
+                                                .map((s) => [s, groupedBySection[s]] as [string, any[]]);
 
-                                        return (
-                                            <Collapsible
-                                                key={appId}
-                                                open={isExpanded}
-                                                onOpenChange={() => {
-                                                    setExpandedApps((prev) => {
-                                                        const next = new Set(prev);
-                                                        if (next.has(appId)) {
-                                                            next.delete(appId);
-                                                        } else {
-                                                            next.add(appId);
-                                                        }
-                                                        return next;
-                                                    });
-                                                }}
-                                            >
-                                                <Card>
-                                                    <CollapsibleTrigger className="w-full text-left">
-                                                        <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors py-3">
-                                                            <div className="flex items-center gap-3">
-                                                                <ChevronDown
-                                                                    className={cn(
-                                                                        "w-4 h-4 transition-transform",
-                                                                        !isExpanded && "-rotate-90"
-                                                                    )}
-                                                                />
-                                                                <span className="font-semibold">
-                                                                    {app?.applicationName || "Unknown"}
-                                                                </span>
-                                                                {app?.tla && (
-                                                                    <Badge variant="secondary">{app.tla}</Badge>
-                                                                )}
-                                                                <Badge variant="outline">{entries.length} entries</Badge>
+                                            return (
+                                                <div key={appId} className="space-y-4 mb-10">
+                                                    {/* App Header Row */}
+                                                    <div className="flex items-center justify-between px-2">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white dark:bg-zinc-900 border shadow-sm">
+                                                                <Layers className="w-6 h-6 text-primary" />
                                                             </div>
-                                                        </CardHeader>
-                                                    </CollapsibleTrigger>
-                                                    <CollapsibleContent>
-                                                        <CardContent className="pt-0 space-y-3">
-                                                            {entries.map((entry: any) => {
-                                                                const sConfig = SECTION_CONFIG[entry.section as TurnoverSection];
-                                                                const SectionIcon = SECTION_ICONS[entry.section as TurnoverSection];
+                                                            <div>
+                                                                <div className="flex items-center gap-3">
+                                                                    <h3 className="text-xl font-bold tracking-tight">
+                                                                        {app?.applicationName || "Unknown Application"}
+                                                                    </h3>
+                                                                    {app?.tla && (
+                                                                        <Badge variant="outline" className="font-mono text-xs text-muted-foreground">
+                                                                            {app.tla}
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-sm text-muted-foreground mt-0.5">
+                                                                    {appEntries.length} total entries
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        {criticalCount > 0 && (
+                                                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-destructive/10 border border-destructive/20">
+                                                                <AlertTriangle className="w-4 h-4 text-destructive" />
+                                                                <span className="text-sm font-semibold text-destructive">{criticalCount} Critical Items</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
 
-                                                                return (
-                                                                    <div
-                                                                        key={entry.id}
-                                                                        className={cn(
-                                                                            "p-3 rounded-lg border",
-                                                                            entry.isImportant && "border-l-4 border-l-orange-500"
-                                                                        )}
-                                                                    >
-                                                                        <div className="flex items-center gap-2 mb-2">
-                                                                            <Badge
-                                                                                className={cn("gap-1", sConfig.bgClass, sConfig.colorClass)}
-                                                                            >
-                                                                                <SectionIcon className="w-3 h-3" />
-                                                                                {sConfig.shortName}
+                                                    {/* Sections as Individual Cards */}
+                                                    <div className="grid grid-cols-1 gap-6">
+                                                        {sortedSections.map(([section, entries]) => {
+                                                            const sConfig = SECTION_CONFIG[section as TurnoverSection];
+                                                            const SectionIcon = SECTION_ICONS[section as TurnoverSection];
+
+                                                            return (
+                                                                <div key={section} className="rounded-xl border bg-card shadow-sm overflow-hidden">
+                                                                    {/* Section Header */}
+                                                                    <div className="flex items-center gap-3 px-6 py-4 border-b bg-muted/30">
+                                                                        <div className={cn("p-2 rounded-md", sConfig.colorClass.replace("text-", "bg-").replace("500", "500/10").replace("600", "600/10"))}>
+                                                                            <SectionIcon className={cn("w-4 h-4", sConfig.colorClass)} />
+                                                                        </div>
+                                                                        <div className="flex items-center gap-3">
+                                                                            <h4 className="font-semibold text-base">{sConfig.name}</h4>
+                                                                            <Badge variant="secondary" className="text-xs font-normal">
+                                                                                {entries.length}
                                                                             </Badge>
-                                                                            <span className="font-medium">{entry.title}</span>
                                                                         </div>
-                                                                        {entry.description && (
-                                                                            <p className="text-sm text-muted-foreground mb-2">
-                                                                                {entry.description}
-                                                                            </p>
-                                                                        )}
-                                                                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                                                            <span>Created by {entry.createdBy}</span>
-                                                                            {entry.status === "RESOLVED" && (
-                                                                                <Badge
-                                                                                    variant="secondary"
-                                                                                    className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                                                                >
-                                                                                    Resolved
-                                                                                </Badge>
-                                                                            )}
-                                                                        </div>
-                                                                        {entry.comments && (
-                                                                            <div
-                                                                                className="mt-2 text-sm prose prose-sm dark:prose-invert max-w-none"
-                                                                                dangerouslySetInnerHTML={{ __html: entry.comments }}
-                                                                            />
-                                                                        )}
                                                                     </div>
-                                                                );
-                                                            })}
-                                                        </CardContent>
-                                                    </CollapsibleContent>
-                                                </Card>
-                                            </Collapsible>
-                                        );
-                                    });
-                                })()}
+
+                                                                    {/* Table Content */}
+                                                                    <div className="overflow-x-auto">
+                                                                        <Table>
+                                                                            <TableHeader>
+                                                                                <TableRow className="hover:bg-transparent border-b-border/50">
+                                                                                    <TableHead className="w-[60px] text-center bg-muted/5">Pri</TableHead>
+                                                                                    <TableHead className="bg-muted/5">Description</TableHead>
+                                                                                    <TableHead className="w-[120px] bg-muted/5">Status</TableHead>
+                                                                                    <TableHead className="w-[30%] bg-muted/5">Team Notes</TableHead>
+                                                                                    <TableHead className="w-[150px] text-right bg-muted/5">Author</TableHead>
+                                                                                </TableRow>
+                                                                            </TableHeader>
+                                                                            <TableBody>
+                                                                                {entries.map((entry) => (
+                                                                                    <TableRow key={entry.id} className="group hover:bg-muted/30">
+                                                                                        <TableCell className="text-center py-4 align-top">
+                                                                                            {entry.isImportant ? (
+                                                                                                <div className="relative inline-flex">
+                                                                                                    <div className="absolute inset-0 bg-orange-400/20 rounded-full blur-sm" />
+                                                                                                    <Star className="relative w-4 h-4 text-orange-500 fill-orange-500" />
+                                                                                                </div>
+                                                                                            ) : (
+                                                                                                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/20 mx-auto mt-2" />
+                                                                                            )}
+                                                                                        </TableCell>
+                                                                                        <TableCell className="py-4 align-top">
+                                                                                            <span className="font-medium text-sm block mb-1">
+                                                                                                {entry.title}
+                                                                                            </span>
+                                                                                            {entry.description && (
+                                                                                                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                                                                                                    {entry.description}
+                                                                                                </p>
+                                                                                            )}
+                                                                                        </TableCell>
+                                                                                        <TableCell className="py-4 align-top">
+                                                                                            <Badge
+                                                                                                variant="outline"
+                                                                                                className={cn(
+                                                                                                    "font-medium text-[11px] px-2 py-0.5",
+                                                                                                    entry.status === "RESOLVED"
+                                                                                                        ? "border-green-500/30 text-green-700 bg-green-500/5 dark:text-green-400"
+                                                                                                        : "border-muted-foreground/30 text-muted-foreground"
+                                                                                                )}
+                                                                                            >
+                                                                                                {entry.status === "RESOLVED" ? "Resolved" : "Active"}
+                                                                                            </Badge>
+                                                                                        </TableCell>
+                                                                                        <TableCell className="py-4 align-top">
+                                                                                            {entry.comments ? (
+                                                                                                <div className="flex gap-2">
+                                                                                                    <MessageSquare className="w-3.5 h-3.5 text-muted-foreground/40 mt-1 shrink-0" />
+                                                                                                    <div
+                                                                                                        className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none prose-p:my-0 leading-relaxed"
+                                                                                                        dangerouslySetInnerHTML={{ __html: entry.comments }}
+                                                                                                    />
+                                                                                                </div>
+                                                                                            ) : (
+                                                                                                <span className="text-muted-foreground/20 text-xs italic">—</span>
+                                                                                            )}
+                                                                                        </TableCell>
+                                                                                        <TableCell className="py-4 align-top text-right">
+                                                                                            <div className="flex items-center justify-end gap-2.5">
+                                                                                                <div className="text-right">
+                                                                                                    <p className="text-xs font-medium text-foreground">{entry.createdBy}</p>
+                                                                                                    <p className="text-[10px] text-muted-foreground">Owner</p>
+                                                                                                </div>
+                                                                                                <div className="h-8 w-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center text-xs font-bold text-primary shadow-sm">
+                                                                                                    {getInitials(entry.createdBy)}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </TableCell>
+                                                                                    </TableRow>
+                                                                                ))}
+                                                                            </TableBody>
+                                                                        </Table>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            );
+                                        });
+                                    })()}
+                                </div>
+
+                                {/* Bottom Spacer for scroll */}
+                                <div className="h-8" />
                             </div>
                         </ScrollArea>
                     )}

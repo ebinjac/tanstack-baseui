@@ -7,6 +7,7 @@ import appCss from '../styles.css?url'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Header } from '@/components/header'
+import { SessionGuard } from '@/components/session-guard'
 import { getSession } from '@/app/ssr/auth'
 
 export const Route = createRootRoute({
@@ -58,13 +59,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider defaultTheme="system" storageKey="ensemble-theme">
           <QueryClientProvider client={queryClient}>
-            <div className="relative flex min-h-screen flex-col">
-              {!isAdminRoute && <Header session={session} />}
-              <main className="flex-1">
-                {children}
-              </main>
-            </div>
-            <Toaster />
+            <SessionGuard session={session}>
+              <div className="relative flex min-h-screen flex-col">
+                {!isAdminRoute && <Header session={session} />}
+                <main className="flex-1">
+                  {children}
+                </main>
+              </div>
+              <Toaster />
+            </SessionGuard>
           </QueryClientProvider>
         </ThemeProvider>
 
@@ -84,3 +87,4 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     </html>
   )
 }
+

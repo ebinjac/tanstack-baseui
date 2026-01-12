@@ -172,7 +172,7 @@ function PassTheBatonPage() {
             )}
           </div>
 
-          <div className="grid gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
             {SECTIONS.map((section, index) => (
               <div key={section}>
                 <SectionTable

@@ -1,6 +1,5 @@
-import { createFileRoute, useRouter, Link } from '@tanstack/react-router'
-import { getSession, loginUser } from '../app/ssr/auth'
-import { useAuthBlueSSO } from '../components/use-authblue-sso'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { getSession } from '../app/ssr/auth'
 import { useEffect, useState } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
@@ -24,30 +23,13 @@ export const Route = createFileRoute('/')({
 
 function RouteComponent() {
   const { session } = Route.useLoaderData()
-  const ssoUser = useAuthBlueSSO()
-  const router = useRouter()
-
-  useEffect(() => {
-    const initSession = async () => {
-      if (!session && ssoUser) {
-        try {
-          await loginUser({ data: ssoUser })
-          router.invalidate()
-        } catch (error) {
-          console.error('Failed to create session:', error)
-        }
-      }
-    }
-
-    initSession()
-  }, [session, ssoUser, router])
+  const [activeTeamId, setActiveTeamId] = useState<string | null>(null)
 
   const { scrollYProgress } = useScroll()
   const y = useTransform(scrollYProgress, [0, 1], [0, -50])
   const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0])
 
-  const [activeTeamId, setActiveTeamId] = useState<string | null>(null)
-
+  // Active team ID effect
   useEffect(() => {
     const savedTeamId = localStorage.getItem('ensemble-last-team-id')
     if (savedTeamId && session?.permissions.find(t => t.teamId === savedTeamId)) {

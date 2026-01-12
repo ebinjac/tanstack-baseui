@@ -109,13 +109,16 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
                                         localStorage.setItem(STORAGE_KEY, team.teamId)
                                         setSelectedTeamId(team.teamId)
 
-                                        // Only navigate if we are already in a team context
-                                        const isTeamRoute = matches.some(m => (m.params as any).teamId)
+                                        // Detect if we are in a team context by looking for teamId param in any match
+                                        const teamMatch = [...matches].reverse().find(m => (m.params as any).teamId)
+                                        const leafMatch = matches[matches.length - 1]
 
-                                        if (isTeamRoute) {
+                                        if (teamMatch && leafMatch) {
                                             router.navigate({
-                                                to: '/teams/$teamId/dashboard' as any,
-                                                params: { teamId: team.teamId }
+                                                to: leafMatch.routeId as any,
+                                                params: { ...(leafMatch.params as any), teamId: team.teamId },
+                                                // Keep search params if any
+                                                search: (prev: any) => prev,
                                             } as any)
                                         }
                                     }}

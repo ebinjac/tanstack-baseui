@@ -10,7 +10,6 @@ import {
     BookOpen,
     User,
     LogOut,
-    Settings,
 } from "lucide-react"
 
 import {
@@ -36,6 +35,15 @@ import { Button } from "@/components/ui/button"
 import { useAuthBlueSSO } from "./use-authblue-sso"
 import { SessionData } from "@/lib/auth/config"
 import { TeamSwitcher } from "./team-switcher"
+import { loginUser } from "@/app/ssr/auth"
+import { useRouter } from "@tanstack/react-router"
+import { toast } from "sonner"
+import {
+    ShieldCheck,
+    LifeBuoy,
+    Sparkles,
+    ExternalLink
+} from "lucide-react"
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -68,7 +76,33 @@ const getTools = (teamId: string | null) => [
 
 export function Header({ session }: { session: SessionData | null }) {
     const user = useAuthBlueSSO()
+    const router = useRouter()
     const teams = session?.permissions || []
+
+    const isAdmin = teams.some(t => t.role === 'ADMIN')
+    const [isRefreshing, setIsRefreshing] = useState(false)
+
+    // Refresh permissions logic
+    const handleRefreshPermissions = async () => {
+        if (!user) {
+            toast.error("SSO User not found. Please re-login.")
+            return
+        }
+
+        setIsRefreshing(true)
+        const toastId = toast.loading("Refreshing your permissions...")
+
+        try {
+            await loginUser({ data: user })
+            await router.invalidate()
+            toast.success("Permissions refreshed successfully", { id: toastId })
+        } catch (error) {
+            console.error(error)
+            toast.error("Failed to refresh permissions", { id: toastId })
+        } finally {
+            setIsRefreshing(false)
+        }
+    }
 
     // Get active team from URL or storage
     const matches = useRouterState({ select: (s) => s.matches })
@@ -93,7 +127,7 @@ export function Header({ session }: { session: SessionData | null }) {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto flex h-16 items-center px-4">
+            <div className=" mx-auto flex h-16 items-center px-8">
                 <div className="mr-8 flex items-center space-x-2">
                     <Link to="/" className="flex items-center space-x-2">
                         <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg shadow-lg shadow-primary/20">
@@ -203,15 +237,43 @@ export function Header({ session }: { session: SessionData | null }) {
                                 </DropdownMenuGroup>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuGroup>
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem render={
                                         <Link to="/profile" className="flex items-center w-full cursor-pointer">
                                             <User className="mr-2 h-4 w-4" />
                                             <span>Profile</span>
                                         </Link>
+                                    } />
+
+                                    <DropdownMenuItem
+                                        onClick={handleRefreshPermissions}
+                                        disabled={isRefreshing}
+                                        className="cursor-pointer"
+                                    >
+                                        <RefreshCcw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                                        <span>Refresh Permissions</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <Settings className="mr-2 h-4 w-4" />
-                                        <span>Settings</span>
+
+                                    {isAdmin && (
+                                        <DropdownMenuItem render={
+                                            <Link to="/admin" className="flex items-center w-full cursor-pointer text-primary">
+                                                <ShieldCheck className="mr-2 h-4 w-4" />
+                                                <span className="font-semibold">Admin Panel</span>
+                                            </Link>
+                                        } />
+                                    )}
+                                </DropdownMenuGroup>
+
+                                <DropdownMenuSeparator />
+
+                                <DropdownMenuGroup>
+                                    <DropdownMenuItem className="cursor-pointer">
+                                        <LifeBuoy className="mr-2 h-4 w-4" />
+                                        <span>Help & Support</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem className="cursor-pointer">
+                                        <Sparkles className="mr-2 h-4 w-4" />
+                                        <span>What's New</span>
+                                        <ExternalLink className="ml-auto h-3 w-3 opacity-50" />
                                     </DropdownMenuItem>
                                 </DropdownMenuGroup>
                                 <DropdownMenuSeparator />

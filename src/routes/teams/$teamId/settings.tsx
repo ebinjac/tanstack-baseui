@@ -124,6 +124,9 @@ function TeamSettingsPage() {
   const [isEditingTeam, setIsEditingTeam] = useState(false)
   // State for search filter in apps
   const [appSearch, setAppSearch] = useState('')
+  // State for active tab to enable animations
+  const [activeTab, setActiveTab] = useState('overview')
+
 
   // Applications Query
   const { data: applications, isLoading: isLoadingApps } = useQuery({
@@ -206,26 +209,83 @@ function TeamSettingsPage() {
 
   return (
     <div className="container mx-auto py-10 px-4 max-w-6xl space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Team Settings</h1>
-        <p className="text-muted-foreground">Manage your team configuration and applications.</p>
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 px-1">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+            </div>
+            <Badge variant="outline" className="rounded-full px-3 py-0 h-6 bg-primary/5 text-primary border-primary/20 text-[10px] font-bold uppercase tracking-wider leading-none">
+              Team Workspace
+            </Badge>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
+            Team Settings
+          </h1>
+          <p className="text-muted-foreground text-sm max-w-2xl font-medium leading-relaxed">
+            Configure your team's core identity, manage the application inventory, and access shared operational resources for <span className="text-foreground font-bold px-1.5 py-0.5 bg-muted rounded-md">{team.teamName}</span>.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="flex -space-x-2 mr-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-8 w-8 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[10px] font-bold overflow-hidden shadow-sm">
+                <User className="h-4 w-4 text-muted-foreground" />
+              </div>
+            ))}
+            <div className="h-8 w-8 rounded-full border-2 border-background bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary shadow-sm">
+              +{isAdmin ? "4" : "2"}
+            </div>
+          </div>
+          {isAdmin && (
+            <Button variant="outline" size="sm" className="h-9 rounded-xl font-bold text-xs gap-2 border-muted-foreground/20 hover:bg-muted" onClick={() => setIsEditingTeam(true)}>
+              <Pencil className="h-3.5 w-3.5" /> Edit Details
+            </Button>
+          )}
+        </div>
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="bg-muted/50 p-1">
-          <TabsTrigger value="overview" className="gap-2">
-            <LayoutDashboard className="h-4 w-4" /> Team Overview
-          </TabsTrigger>
-          <TabsTrigger value="applications" className="gap-2">
-            <Boxes className="h-4 w-4" /> Applications
-          </TabsTrigger>
-          <TabsTrigger value="resources" className="gap-2">
-            <Wrench className="h-4 w-4" /> Resources
-          </TabsTrigger>
-          <TabsTrigger value="support" className="gap-2">
-            <LifeBuoy className="h-4 w-4" /> Support
-          </TabsTrigger>
-        </TabsList>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+        <div className="sticky top-0 z-30 -mx-4 px-4 py-2 bg-background/60 backdrop-blur-xl border-b border-border/40 mb-2">
+          <TabsList className="bg-muted/40 p-1.5 rounded-2xl border border-border/50 shadow-sm backdrop-blur-sm relative h-12 inline-flex w-fit max-w-full overflow-x-auto no-scrollbar">
+            {[
+              { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+              { id: 'applications', label: 'Applications', icon: Boxes, count: stats.total },
+              { id: 'resources', label: 'Resources', icon: Wrench },
+              { id: 'support', label: 'Support', icon: LifeBuoy },
+            ].map((tab) => (
+              <TabsTrigger
+                key={tab.id}
+                value={tab.id}
+                className={cn(
+                  "relative z-10 gap-2.5 px-5 h-full rounded-xl transition-all duration-300 font-bold text-sm tracking-tight border-none shadow-none bg-transparent hover:bg-white/5",
+                  activeTab === tab.id ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                <tab.icon className={cn("h-4 w-4 transition-colors", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
+                {tab.label}
+                {tab.count !== undefined && (
+                  <span className={cn(
+                    "ml-1 text-[10px] px-2 py-0.5 rounded-full font-black border transition-colors",
+                    activeTab === tab.id ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground border-transparent"
+                  )}>
+                    {tab.count}
+                  </span>
+                )}
+                {activeTab === tab.id && (
+                  <motion.div
+                    layoutId="active-tab-background"
+                    className="absolute inset-0 bg-background shadow-md border border-border/50 rounded-xl -z-10"
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+
+
 
         <TabsContent value="overview" className="mt-6 space-y-6 animate-in fade-in duration-500">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

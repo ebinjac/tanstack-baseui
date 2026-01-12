@@ -21,7 +21,7 @@ import {
     GetTurnoverMetricsSchema,
 } from "@/lib/zod/turnover.schema";
 import { z } from "zod";
-import { and, desc, eq, gte, lte, or, sql, count } from "drizzle-orm";
+import { and, desc, eq, gte, lte, or, sql, count, ilike } from "drizzle-orm";
 
 // ========================
 // Entry Management
@@ -36,7 +36,6 @@ export const createTurnoverEntry = createServerFn({ method: "POST" })
         const session = await getSession();
         if (!session?.user?.email) throw new Error("Unauthorized");
 
-        const userEmail = session.user.email;
         const userName = `${session.user.firstName} ${session.user.lastName}`;
 
         // Generate title based on section if not provided
@@ -543,7 +542,7 @@ export const getFinalizedTurnovers = createServerFn({ method: "GET" })
         const session = await getSession();
         if (!session?.user?.email) throw new Error("Unauthorized");
 
-        const { teamId, fromDate, toDate, limit = 20, offset = 0 } = data;
+        const { teamId, fromDate, toDate, search, limit = 20, offset = 0 } = data;
 
         const filters = [eq(finalizedTurnovers.teamId, teamId)];
 
@@ -555,6 +554,17 @@ export const getFinalizedTurnovers = createServerFn({ method: "GET" })
             const toDateObj = new Date(toDate);
             toDateObj.setHours(23, 59, 59, 999);
             filters.push(lte(finalizedTurnovers.finalizedAt, toDateObj));
+        }
+
+        if (search) {
+            const searchPattern = `%${search}%`;
+            filters.push(
+                or(
+                    ilike(finalizedTurnovers.finalizedBy, searchPattern),
+                    ilike(finalizedTurnovers.notes, searchPattern),
+                    sql`${finalizedTurnovers.snapshotData}::text ILIKE ${searchPattern}`
+                )!
+            );
         }
 
         const turnovers = await db.query.finalizedTurnovers.findMany({

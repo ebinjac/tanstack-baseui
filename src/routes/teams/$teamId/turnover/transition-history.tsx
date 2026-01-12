@@ -1,14 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import {
     History,
     Search,
     Grid3X3,
     List,
-    Calendar,
     FileText,
     Star,
     Layers,
@@ -75,24 +75,37 @@ function TransitionHistoryPage() {
 
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [searchQuery, setSearchQuery] = useState("");
-    const [fromDate, setFromDate] = useState<Date | undefined>();
-    const [toDate, setToDate] = useState<Date | undefined>();
+    const [dateRange, setDateRange] = useState<DateRange | undefined>();
     const [page, setPage] = useState(0);
     const [selectedSnapshot, setSelectedSnapshot] = useState<FinalizedTurnover | null>(null);
     const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
-    const [snapshotFilter, setSnapshotFilter] = useState("");
+    const [debouncedSearch, setDebouncedSearch] = useState("");
 
     const limit = 20;
 
+    // Debounce search query
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+        }, 400);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    // Reset page when search changes
+    useEffect(() => {
+        setPage(0);
+    }, [debouncedSearch, dateRange]);
+
     // Fetch turnovers
     const { data } = useQuery({
-        queryKey: ["finalized-turnovers", teamId, fromDate, toDate, page],
+        queryKey: ["finalized-turnovers", teamId, dateRange?.from, dateRange?.to, page, debouncedSearch],
         queryFn: () =>
             getFinalizedTurnovers({
                 data: {
                     teamId,
-                    fromDate: fromDate?.toISOString(),
-                    toDate: toDate?.toISOString(),
+                    search: debouncedSearch,
+                    fromDate: dateRange?.from?.toISOString(),
+                    toDate: dateRange?.to?.toISOString(),
                     limit,
                     offset: page * limit,
                 },
@@ -105,14 +118,11 @@ function TransitionHistoryPage() {
     const total = queryResult?.total || 0;
     const totalPages = Math.ceil(total / limit);
 
-    // Filter by search
-    const filteredTurnovers = useMemo(() => {
-        if (!searchQuery) return turnovers;
-        return turnovers.filter((t: FinalizedTurnover) =>
-            t.finalizedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            t.notes?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [turnovers, searchQuery]);
+    // Use turnovers directly (they are already filtered by server)
+    const filteredTurnovers = turnovers;
+
+    // Add missing snapshotFilter state
+    const [snapshotFilter, setSnapshotFilter] = useState("");
 
     // Open snapshot detail
     const openSnapshot = async (turnover: FinalizedTurnover) => {
@@ -133,12 +143,11 @@ function TransitionHistoryPage() {
     // Clear filters
     const clearFilters = () => {
         setSearchQuery("");
-        setFromDate(undefined);
-        setToDate(undefined);
+        setDateRange(undefined);
         setPage(0);
     };
 
-    const hasFilters = searchQuery || fromDate || toDate;
+    const hasFilters = searchQuery || dateRange?.from || dateRange?.to;
 
     return (
         <div className="p-8 mx-auto space-y-8">
@@ -195,38 +204,40 @@ function TransitionHistoryPage() {
                     />
                 </div>
 
-                {/* From Date */}
+                {/* Date Range Picker */}
                 <Popover>
                     <PopoverTrigger>
-                        <Button variant="outline" className="gap-2">
-                            <Calendar className="w-4 h-4" />
-                            {fromDate ? format(fromDate, "MMM dd, yyyy") : "From Date"}
+                        <Button
+                            id="date"
+                            variant="outline"
+                            className={cn(
+                                "justify-start text-left font-normal gap-2 h-10 px-4",
+                                !dateRange && "text-muted-foreground"
+                            )}
+                        >
+                            <CalendarIcon className="w-4 h-4" />
+                            {dateRange?.from ? (
+                                dateRange.to ? (
+                                    <>
+                                        {format(dateRange.from, "LLL dd, y")} -{" "}
+                                        {format(dateRange.to, "LLL dd, y")}
+                                    </>
+                                ) : (
+                                    format(dateRange.from, "LLL dd, y")
+                                )
+                            ) : (
+                                <span>Pick a date range</span>
+                            )}
                         </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                         <CalendarComponent
-                            mode="single"
-                            selected={fromDate}
-                            onSelect={setFromDate}
                             initialFocus
-                        />
-                    </PopoverContent>
-                </Popover>
-
-                {/* To Date */}
-                <Popover>
-                    <PopoverTrigger>
-                        <Button variant="outline" className="gap-2">
-                            <Calendar className="w-4 h-4" />
-                            {toDate ? format(toDate, "MMM dd, yyyy") : "To Date"}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                            mode="single"
-                            selected={toDate}
-                            onSelect={setToDate}
-                            initialFocus
+                            mode="range"
+                            defaultMonth={dateRange?.from}
+                            selected={dateRange}
+                            onSelect={setDateRange}
+                            numberOfMonths={2}
                         />
                     </PopoverContent>
                 </Popover>
@@ -465,9 +476,19 @@ function TransitionHistoryPage() {
                                             if (!groupedByApp[appId]) groupedByApp[appId] = [];
 
                                             if (snapshotFilter) {
+                                                const searchLower = snapshotFilter.toLowerCase();
                                                 const matchesFilter =
-                                                    entry.title?.toLowerCase().includes(snapshotFilter.toLowerCase()) ||
-                                                    entry.description?.toLowerCase().includes(snapshotFilter.toLowerCase());
+                                                    entry.title?.toLowerCase().includes(searchLower) ||
+                                                    entry.description?.toLowerCase().includes(searchLower) ||
+                                                    entry.comments?.toLowerCase().includes(searchLower) ||
+                                                    entry.createdBy?.toLowerCase().includes(searchLower) ||
+                                                    entry.application?.applicationName?.toLowerCase().includes(searchLower) ||
+                                                    entry.application?.tla?.toLowerCase().includes(searchLower) ||
+                                                    entry.rfcDetails?.rfcNumber?.toLowerCase().includes(searchLower) ||
+                                                    entry.incDetails?.incidentNumber?.toLowerCase().includes(searchLower) ||
+                                                    entry.mimDetails?.mimLink?.toLowerCase().includes(searchLower) ||
+                                                    entry.commsDetails?.emailSubject?.toLowerCase().includes(searchLower);
+
                                                 if (!matchesFilter) return;
                                             }
 

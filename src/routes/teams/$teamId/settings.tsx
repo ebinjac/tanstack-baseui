@@ -247,11 +247,12 @@ function TeamSettingsPage() {
 
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <div className="sticky top-0 z-30 -mx-4 px-4 py-2 bg-background/60 backdrop-blur-xl border-b border-border/40 mb-2">
-          <TabsList className="bg-muted/40 p-1.5 rounded-2xl border border-border/50 shadow-sm backdrop-blur-sm relative h-12 inline-flex w-fit max-w-full overflow-x-auto no-scrollbar">
+        <div className="sticky top-0 z-30 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-xl border-b border-border/40 mb-6">
+          <TabsList className="bg-muted/60 p-1.5 rounded-xl border border-border/40 w-auto inline-flex h-auto gap-1">
             {[
               { id: 'overview', label: 'Overview', icon: LayoutDashboard },
               { id: 'applications', label: 'Applications', icon: Boxes, count: stats.total },
+              { id: 'members', label: 'Members', icon: Users2 },
               { id: 'resources', label: 'Resources', icon: Wrench },
               { id: 'support', label: 'Support', icon: LifeBuoy },
             ].map((tab) => (
@@ -259,24 +260,28 @@ function TeamSettingsPage() {
                 key={tab.id}
                 value={tab.id}
                 className={cn(
-                  "relative z-10 gap-2.5 px-5 h-full rounded-xl transition-all duration-300 font-bold text-sm tracking-tight border-none shadow-none bg-transparent hover:bg-white/5",
-                  activeTab === tab.id ? "text-primary" : "text-muted-foreground"
+                  "relative z-10 flex flex-row items-center gap-2 px-5 py-2.5 h-10 rounded-[10px] transition-all duration-300 font-medium text-sm border-none shadow-none bg-transparent hover:text-foreground",
+                  activeTab === tab.id ? "text-primary" : "text-muted-foreground/60"
                 )}
               >
-                <tab.icon className={cn("h-4 w-4 transition-colors", activeTab === tab.id ? "text-primary" : "text-muted-foreground")} />
-                {tab.label}
+                <tab.icon className={cn("h-4 w-4", activeTab === tab.id ? "text-primary" : "text-current")} />
+
+
+                <span>{tab.label}</span>
+
                 {tab.count !== undefined && (
                   <span className={cn(
-                    "ml-1 text-[10px] px-2 py-0.5 rounded-full font-black border transition-colors",
-                    activeTab === tab.id ? "bg-primary/10 text-primary border-primary/20" : "bg-muted text-muted-foreground border-transparent"
+                    "ml-1.5 text-[10px] px-1.5 py-0.5 rounded-md font-bold border transition-colors",
+                    activeTab === tab.id ? "bg-primary/10 text-primary border-primary/20" : "bg-background/50 text-muted-foreground border-transparent"
                   )}>
                     {tab.count}
                   </span>
                 )}
+
                 {activeTab === tab.id && (
                   <motion.div
                     layoutId="active-tab-background"
-                    className="absolute inset-0 bg-background shadow-md border border-border/50 rounded-xl -z-10"
+                    className="absolute inset-0 bg-background shadow-sm border border-border/60 rounded-[10px] -z-10"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -475,6 +480,10 @@ function TeamSettingsPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="members" className="mt-6 animate-in fade-in duration-500">
+          <MembersTab adminGroup={team.adminGroup} userGroup={team.userGroup} />
+        </TabsContent>
+
         <TabsContent value="resources" className="mt-6 space-y-6 animate-in fade-in duration-500">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="shadow-sm border-muted/60">
@@ -583,7 +592,7 @@ function TeamSettingsPage() {
             </div>
           </div>
         </TabsContent>
-      </Tabs>
+      </Tabs >
 
       {
         viewingApp && (
@@ -1487,3 +1496,190 @@ function ToolItem({ icon, title, desc, link }: { icon: React.ReactNode, title: s
   )
 }
 
+// Types for LDAP response
+interface LdapResponse {
+  names: string[];
+}
+
+function MembersTab({ adminGroup, userGroup }: { adminGroup: string; userGroup: string }) {
+  // Fetch admin members
+  const { data: adminData, isLoading: isLoadingAdmins, error: adminError, refetch: refetchAdmins } = useQuery<LdapResponse>({
+    queryKey: ['ldap-members', adminGroup],
+    queryFn: async () => {
+      if (!adminGroup) return { names: [] };
+      const response = await fetch(`http://localhost:8008/api/ldap?group=${encodeURIComponent(adminGroup)}`);
+      if (!response.ok) throw new Error('Failed to fetch admin members');
+      return response.json();
+    },
+    enabled: !!adminGroup,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch user members
+  const { data: userData, isLoading: isLoadingUsers, error: userError, refetch: refetchUsers } = useQuery<LdapResponse>({
+    queryKey: ['ldap-members', userGroup],
+    queryFn: async () => {
+      if (!userGroup) return { names: [] };
+      const response = await fetch(`http://localhost:8008/api/ldap?group=${encodeURIComponent(userGroup)}`);
+      if (!response.ok) throw new Error('Failed to fetch user members');
+      return response.json();
+    },
+    enabled: !!userGroup,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const adminMembers = adminData?.names || [];
+  const userMembers = userData?.names || [];
+
+  const handleRefresh = () => {
+    refetchAdmins();
+    refetchUsers();
+    toast.success('Refreshing member list...');
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <Users2 className="h-5 w-5 text-primary" />
+            Team Members
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Members are fetched in real-time from Active Directory groups.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={handleRefresh}
+          disabled={isLoadingAdmins || isLoadingUsers}
+        >
+          <RefreshCw className={cn("h-4 w-4", (isLoadingAdmins || isLoadingUsers) && "animate-spin")} />
+          Refresh
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Administrators Section */}
+        <Card className="shadow-sm border-muted/60">
+          <CardHeader className="pb-3 border-b">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-bold">Administrators</CardTitle>
+              </div>
+              <Badge variant="outline" className="text-[10px] font-mono h-5">
+                {adminGroup || 'Not configured'}
+              </Badge>
+            </div>
+            <CardDescription className="text-xs">
+              Full administrative access to team settings and configurations.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {isLoadingAdmins ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : adminError ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                <AlertTriangle className="h-8 w-8 text-destructive/60 mb-2" />
+                <p className="text-sm text-muted-foreground">Failed to load administrators</p>
+              </div>
+            ) : adminMembers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                <Users2 className="h-8 w-8 text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">No administrators found</p>
+              </div>
+            ) : (
+              <div className="divide-y max-h-[400px] overflow-y-auto">
+                {adminMembers.map((name, idx) => (
+                  <div key={idx} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
+                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{name}</p>
+                    </div>
+                    <Badge className="h-5 text-[9px] bg-primary/10 text-primary border-primary/20">
+                      Admin
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="p-3 bg-muted/10 border-t text-[11px] text-muted-foreground font-medium">
+              {adminMembers.length} administrator{adminMembers.length !== 1 ? 's' : ''}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Members Section */}
+        <Card className="shadow-sm border-muted/60">
+          <CardHeader className="pb-3 border-b">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users2 className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-bold">Members</CardTitle>
+              </div>
+              <Badge variant="outline" className="text-[10px] font-mono h-5">
+                {userGroup || 'Not configured'}
+              </Badge>
+            </div>
+            <CardDescription className="text-xs">
+              Standard portal access for team collaboration.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {isLoadingUsers ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : userError ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                <AlertTriangle className="h-8 w-8 text-destructive/60 mb-2" />
+                <p className="text-sm text-muted-foreground">Failed to load members</p>
+              </div>
+            ) : userMembers.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+                <Users2 className="h-8 w-8 text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">No members found</p>
+              </div>
+            ) : (
+              <div className="divide-y max-h-[400px] overflow-y-auto">
+                {userMembers.map((name, idx) => (
+                  <div key={idx} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
+                    <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center border shrink-0">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">{name}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="p-3 bg-muted/10 border-t text-[11px] text-muted-foreground font-medium">
+              {userMembers.length} member{userMembers.length !== 1 ? 's' : ''}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Info Banner */}
+      <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
+        <Info className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Real-time Sync</p>
+          <p className="text-xs text-muted-foreground">
+            Member data is fetched directly from Active Directory groups. Changes to group membership
+            will be reflected automatically upon page refresh.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

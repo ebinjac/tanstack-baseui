@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Route as RootRoute } from "../../__root";
-import { getScorecardData } from "@/app/actions/scorecard";
+import { getScorecardData, getPublishStatus, publishScorecard, unpublishScorecard } from "@/app/actions/scorecard";
 import { getTeamById } from "@/app/actions/teams";
-import React, { useState, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useMemo } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -19,6 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 import { cn } from "@/lib/utils";
 import {
   ChevronsUpDown,
@@ -32,7 +43,14 @@ import {
   Calendar,
   Filter,
   LayoutDashboard,
+  CheckCircle2,
+
+  Send,
+  Eye,
+  EyeOff,
+
 } from "lucide-react";
+import { toast } from "sonner";
 
 // Import from scorecard components
 import {
@@ -43,14 +61,15 @@ import {
   type Application,
   type AvailabilityRecord,
   type VolumeRecord,
-  type MonthInfo,
+
   // Constants
   TIME_PERIOD_OPTIONS,
   AVAILABLE_YEARS,
   currentYear,
-  currentMonth,
+
   getMonthsForPeriod,
   getMonthsForYear,
+  MONTH_NAMES,
   // Components
   StatsCard,
   ApplicationSection,
@@ -92,6 +111,11 @@ function ScorecardPage() {
   // Chart sheet state
   const [showChart, setShowChart] = useState(false);
 
+  // Publish dialog state
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
+  const [publishMonth, setPublishMonth] = useState<{ year: number; month: number } | null>(null);
+  const [publishAction, setPublishAction] = useState<"publish" | "unpublish">("publish");
+
   const toggleAllApps = () => {
     const allAppIds = scorecardData?.applications?.map((app: Application) => app.id) || [];
     if (expandedApps.size > 0 && expandedApps.size === allAppIds.length) {
@@ -115,6 +139,99 @@ function ScorecardPage() {
     displayMonths.forEach(m => years.add(m.year));
     return Array.from(years);
   }, [displayMonths]);
+
+  // Fetch publish status for current year
+  const { data: publishStatusCurrentYear } = useQuery({
+    queryKey: ["publishStatus", teamId, currentYear],
+    queryFn: () => getPublishStatus({ data: { teamId, year: currentYear } }),
+  });
+
+  // Fetch publish status for previous year (if needed)
+  const { data: publishStatusPrevYear } = useQuery({
+    queryKey: ["publishStatus", teamId, currentYear - 1],
+    queryFn: () => getPublishStatus({ data: { teamId, year: currentYear - 1 } }),
+    enabled: yearsToFetch.includes(currentYear - 1),
+  });
+
+  // Combine publish status from both years
+  const publishStatusByMonth = useMemo(() => {
+    const status: Record<string, { isPublished: boolean; publishedBy: string | null; publishedAt: Date | null }> = {};
+
+    // Add current year status
+    if (publishStatusCurrentYear?.statusByMonth) {
+      Object.entries(publishStatusCurrentYear.statusByMonth).forEach(([month, data]) => {
+        status[`${currentYear}-${month}`] = data;
+      });
+    }
+
+    // Add previous year status
+    if (publishStatusPrevYear?.statusByMonth) {
+      Object.entries(publishStatusPrevYear.statusByMonth).forEach(([month, data]) => {
+        status[`${currentYear - 1}-${month}`] = data;
+      });
+    }
+
+    return status;
+  }, [publishStatusCurrentYear, publishStatusPrevYear]);
+
+  // Publish mutation
+  const publishMutation = useMutation({
+    mutationFn: (params: { year: number; month: number }) =>
+      publishScorecard({ data: { teamId, year: params.year, month: params.month } }),
+    onSuccess: () => {
+      toast.success("Scorecard published successfully", {
+        description: "Data is now visible in the Enterprise Scorecard.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["publishStatus", teamId] });
+      setShowPublishDialog(false);
+      setPublishMonth(null);
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to publish scorecard", {
+        description: error.message,
+      });
+    },
+  });
+
+  // Unpublish mutation
+  const unpublishMutation = useMutation({
+    mutationFn: (params: { year: number; month: number }) =>
+      unpublishScorecard({ data: { teamId, year: params.year, month: params.month } }),
+    onSuccess: () => {
+      toast.success("Scorecard unpublished", {
+        description: "Data is no longer visible in the Enterprise Scorecard.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["publishStatus", teamId] });
+      setShowPublishDialog(false);
+      setPublishMonth(null);
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to unpublish scorecard", {
+        description: error.message,
+      });
+    },
+  });
+
+  const handlePublishClick = (year: number, month: number) => {
+    setPublishMonth({ year, month });
+    setPublishAction("publish");
+    setShowPublishDialog(true);
+  };
+
+  const handleUnpublishClick = (year: number, month: number) => {
+    setPublishMonth({ year, month });
+    setPublishAction("unpublish");
+    setShowPublishDialog(true);
+  };
+
+  const confirmPublishAction = () => {
+    if (!publishMonth) return;
+    if (publishAction === "publish") {
+      publishMutation.mutate(publishMonth);
+    } else {
+      unpublishMutation.mutate(publishMonth);
+    }
+  };
 
   // Fetch scorecard data for current year
   const { data: currentYearData, isLoading: isLoadingCurrent } = useQuery({
@@ -182,6 +299,66 @@ function ScorecardPage() {
 
     return { entriesByApp, availabilityByEntry, volumeByEntry };
   }, [scorecardData]);
+
+  // Calculate months requiring publishing:
+  // 1. Months that were never published
+  // 2. Months where data has been modified after the last publish (pending changes)
+  const { unpublishedMonths, pendingChangesMonths } = useMemo(() => {
+    const unpublished: typeof displayMonths = [];
+    const pendingChanges: typeof displayMonths = [];
+
+    displayMonths.forEach(({ year, month, isFuture, label }) => {
+      if (isFuture) return;
+
+      const key = `${year}-${month}`;
+      const status = publishStatusByMonth[key];
+
+      // Check if never published
+      if (!status?.isPublished) {
+        unpublished.push({ year, month, isFuture, label });
+        return;
+      }
+
+      // Check if data was modified after the last publish
+      const publishedAt = status.publishedAt ? new Date(status.publishedAt) : null;
+      if (!publishedAt) {
+        unpublished.push({ year, month, isFuture, label });
+        return;
+      }
+
+      // Check availability records for this month
+      let hasPendingChanges = false;
+
+      Object.values(availabilityByEntry).forEach(entryAvail => {
+        const av = entryAvail[key];
+        if (av) {
+          const dataUpdatedAt = av.updatedAt ? new Date(av.updatedAt) : (av.createdAt ? new Date(av.createdAt) : null);
+          if (dataUpdatedAt && dataUpdatedAt > publishedAt) {
+            hasPendingChanges = true;
+          }
+        }
+      });
+
+      // Check volume records for this month
+      if (!hasPendingChanges) {
+        Object.values(volumeByEntry).forEach(entryVol => {
+          const vol = entryVol[key];
+          if (vol) {
+            const dataUpdatedAt = vol.updatedAt ? new Date(vol.updatedAt) : (vol.createdAt ? new Date(vol.createdAt) : null);
+            if (dataUpdatedAt && dataUpdatedAt > publishedAt) {
+              hasPendingChanges = true;
+            }
+          }
+        });
+      }
+
+      if (hasPendingChanges) {
+        pendingChanges.push({ year, month, isFuture, label });
+      }
+    });
+
+    return { unpublishedMonths: unpublished, pendingChangesMonths: pendingChanges };
+  }, [displayMonths, publishStatusByMonth, availabilityByEntry, volumeByEntry]);
 
   const toggleApp = (appId: string) => {
     setExpandedApps((prev) => {
@@ -287,6 +464,99 @@ function ScorecardPage() {
           sublabel={filterLabel}
         />
       </div>
+
+      {/* Publish Status for Admin */}
+      {isAdmin && (
+        <Card className={cn(
+          "shadow-sm transition-all",
+          (unpublishedMonths.length > 0 || pendingChangesMonths.length > 0)
+            ? pendingChangesMonths.length > 0
+              ? "border-orange-500/50 bg-gradient-to-r from-orange-500/5 to-orange-500/10"
+              : "border-amber-500/50 bg-gradient-to-r from-amber-500/5 to-amber-500/10"
+            : "border-green-500/50 bg-gradient-to-r from-green-500/5 to-green-500/10"
+        )}>
+          <CardHeader className="py-3 px-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                {(unpublishedMonths.length > 0 || pendingChangesMonths.length > 0) ? (
+                  <div className={cn(
+                    "p-2 rounded-full",
+                    pendingChangesMonths.length > 0 ? "bg-orange-500/20" : "bg-amber-500/20"
+                  )}>
+                    <AlertTriangle className={cn(
+                      "h-5 w-5",
+                      pendingChangesMonths.length > 0 ? "text-orange-500" : "text-amber-500"
+                    )} />
+                  </div>
+                ) : (
+                  <div className="p-2 rounded-full bg-green-500/20">
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  </div>
+                )}
+                <div>
+                  <CardTitle className="text-base">
+                    {pendingChangesMonths.length > 0 && unpublishedMonths.length > 0
+                      ? `${pendingChangesMonths.length} Pending + ${unpublishedMonths.length} Unpublished`
+                      : pendingChangesMonths.length > 0
+                        ? `${pendingChangesMonths.length} Month${pendingChangesMonths.length > 1 ? 's' : ''} with Pending Changes`
+                        : unpublishedMonths.length > 0
+                          ? `${unpublishedMonths.length} Month${unpublishedMonths.length > 1 ? 's' : ''} Not Published`
+                          : "All Months Published"
+                    }
+                  </CardTitle>
+                  <CardDescription className="text-sm">
+                    {pendingChangesMonths.length > 0
+                      ? "Data was modified after publishing. Republish to sync changes to Enterprise Scorecard."
+                      : unpublishedMonths.length > 0
+                        ? "These scorecards are not visible in the Enterprise Scorecard yet."
+                        : "All scorecard data is visible in the Enterprise Scorecard."
+                    }
+                  </CardDescription>
+                </div>
+              </div>
+
+              {/* Publish Management */}
+              <div className="flex flex-wrap items-center gap-2">
+                {displayMonths.filter(m => !m.isFuture).map(({ year, month, label }) => {
+                  const key = `${year}-${month}`;
+                  const hasPending = pendingChangesMonths.some(p => p.year === year && p.month === month);
+                  const isUnpublished = unpublishedMonths.some(u => u.year === year && u.month === month);
+
+                  // Determine the state: pending > unpublished > published
+                  let colorClass = "";
+                  let icon = null;
+
+                  if (hasPending) {
+                    colorClass = "bg-orange-500/20 text-orange-700 dark:text-orange-400 hover:bg-orange-500/30 ring-1 ring-orange-500/50";
+                    icon = <AlertTriangle className="h-3 w-3" />;
+                  } else if (isUnpublished) {
+                    colorClass = "bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:bg-amber-500/30";
+                    icon = <EyeOff className="h-3 w-3" />;
+                  } else {
+                    colorClass = "bg-green-500/20 text-green-700 dark:text-green-400 hover:bg-green-500/30";
+                    icon = <Eye className="h-3 w-3" />;
+                  }
+
+                  return (
+                    <div
+                      key={key}
+                      className={cn(
+                        "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all cursor-pointer",
+                        colorClass
+                      )}
+                      onClick={() => (hasPending || isUnpublished) ? handlePublishClick(year, month) : handleUnpublishClick(year, month)}
+                      title={hasPending ? "Pending changes - click to republish" : isUnpublished ? "Not published - click to publish" : "Published - click to unpublish"}
+                    >
+                      {icon}
+                      <span>{label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      )}
 
       {/* Main Content */}
       <Card className="shadow-sm border-muted/60">
@@ -506,6 +776,71 @@ function ScorecardPage() {
         displayMonths={displayMonths}
         filterLabel={filterLabel}
       />
+
+      {/* Publish/Unpublish Confirmation Dialog */}
+      <AlertDialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              {publishAction === "publish" ? (
+                <>
+                  <Send className="h-5 w-5 text-green-500" />
+                  Publish Scorecard
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-5 w-5 text-amber-500" />
+                  Unpublish Scorecard
+                </>
+              )}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              {publishAction === "publish" ? (
+                <>
+                  <p>
+                    You are about to publish the scorecard for{" "}
+                    <strong>
+                      {publishMonth ? MONTH_NAMES[publishMonth.month - 1] : ""} {publishMonth?.year}
+                    </strong>.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Once published, this data will be visible in the Enterprise Scorecard for all users.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p>
+                    You are about to unpublish the scorecard for{" "}
+                    <strong>
+                      {publishMonth ? MONTH_NAMES[publishMonth.month - 1] : ""} {publishMonth?.year}
+                    </strong>.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    This will hide the data from the Enterprise Scorecard. You can republish it later.
+                  </p>
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmPublishAction}
+              disabled={publishMutation.isPending || unpublishMutation.isPending}
+              className={cn(
+                publishAction === "publish"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-amber-600 hover:bg-amber-700"
+              )}
+            >
+              {(publishMutation.isPending || unpublishMutation.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {publishAction === "publish" ? "Publish" : "Unpublish"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

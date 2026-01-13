@@ -24,6 +24,8 @@ export interface AvailabilityRecord {
     month: number;
     availability: string;
     reason: string | null;
+    createdAt?: Date | null;
+    updatedAt?: Date | null;
 }
 
 export interface VolumeRecord {
@@ -33,6 +35,8 @@ export interface VolumeRecord {
     month: number;
     volume: number;
     reason: string | null;
+    createdAt?: Date | null;
+    updatedAt?: Date | null;
 }
 
 export interface MonthInfo {

@@ -1,24 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import {
     Drawer,
     DrawerContent,
@@ -26,29 +10,6 @@ import {
     DrawerHeader,
     DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import {
-    Combobox,
-    ComboboxInput,
-    ComboboxContent,
-    ComboboxList,
-    ComboboxItem,
-    ComboboxGroup,
-    ComboboxLabel,
-    ComboboxEmpty,
-} from "@/components/ui/combobox";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
     Table,
     TableBody,
@@ -59,105 +20,38 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import {
-    ChevronDown,
-    ChevronRight,
-    BarChart3,
     Activity,
-    AlertTriangle,
     Loader2,
-    Hash,
-    Calendar,
-    Filter,
-    Users,
     Building2,
-    Lock,
-    Eye,
-    Layers,
     X,
-    Download,
     FileSpreadsheet,
     FileText,
 } from "lucide-react";
 import { getGlobalScorecardData } from "@/app/actions/scorecard";
 
+// Import enterprise scorecard components
+import {
+    EnterpriseFilters,
+    StatsSummary,
+    TeamSection,
+    EntryRows,
+    MONTHS,
+    CURRENT_YEAR,
+    CURRENT_MONTH,
+    type Team,
+    type Application,
+    type ScorecardEntry,
+    type AvailabilityRecord,
+    type VolumeRecord,
+    type ScorecardStats,
+} from "@/components/enterprise-scorecard";
+
 export const Route = createFileRoute("/scorecard")({
     component: GlobalScorecardPage,
 });
 
-const MONTHS = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-];
-
-// Get current date info
-const now = new Date();
-const currentYear = now.getFullYear();
-const currentMonth = now.getMonth() + 1;
-
-// Available years
-const AVAILABLE_YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
-
-// Leadership filter types
-const LEADERSHIP_TYPES = [
-    { value: "all", label: "All Leadership" },
-    { value: "svp", label: "SVP" },
-    { value: "vp", label: "VP" },
-    { value: "director", label: "Director" },
-    { value: "app_owner", label: "Application Owner" },
-    { value: "app_manager", label: "Application Manager" },
-    { value: "unit_cio", label: "Unit CIO" },
-];
-
-// Type definitions
-interface Team {
-    id: string;
-    teamName: string;
-}
-
-interface Application {
-    id: string;
-    teamId: string;
-    applicationName: string;
-    tla: string;
-    tier: string | null;
-    assetId: number;
-    ownerSvpName: string | null;
-    vpName: string | null;
-    directorName: string | null;
-    applicationOwnerName: string | null;
-    applicationManagerName: string | null;
-    unitCioName: string | null;
-}
-
-interface ScorecardEntry {
-    id: string;
-    applicationId: string;
-    scorecardIdentifier: string;
-    name: string;
-    availabilityThreshold: string;
-    volumeChangeThreshold: string;
-}
-
-interface AvailabilityRecord {
-    id: string;
-    scorecardEntryId: string;
-    year: number;
-    month: number;
-    availability: string;
-    reason: string | null;
-}
-
-interface VolumeRecord {
-    id: string;
-    scorecardEntryId: string;
-    year: number;
-    month: number;
-    volume: number;
-    reason: string | null;
-}
-
 function GlobalScorecardPage() {
-    const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+    const [selectedYear, setSelectedYear] = useState<number>(CURRENT_YEAR);
     const [leadershipType, setLeadershipType] = useState<string>("all");
     const [leadershipSearch, setLeadershipSearch] = useState<string>("");
     const [teamSearch, setTeamSearch] = useState<string>("");
@@ -173,8 +67,8 @@ function GlobalScorecardPage() {
             return MONTHS.map((_, i) => ({ month: i + 1, year: selectedYear }));
         }
 
-        const isCurrentYear = selectedYear === currentYear;
-        const endMonth = isCurrentYear ? currentMonth : 12;
+        const isCurrentYear = selectedYear === CURRENT_YEAR;
+        const endMonth = isCurrentYear ? CURRENT_MONTH : 12;
 
         if (drawerRange === "ytd") {
             return Array.from({ length: endMonth }, (_, i) => ({ month: i + 1, year: selectedYear }));
@@ -197,58 +91,7 @@ function GlobalScorecardPage() {
             }
         }
         return result;
-    }, [drawerRange, selectedYear, currentMonth]);
-
-    const handleExportCSV = (team: Team) => {
-        const apps = appsByTeam[team.id] || [];
-        let csv = "Ensemble Scorecard Report\n";
-        csv += `Team: ${team.teamName}\n`;
-        csv += `Year: ${selectedYear}\n`;
-        csv += `Range: ${drawerRange.toUpperCase()}\n\n`;
-
-        csv += "Application,Asset ID,Metric,Identifier,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec,Average/Total\n";
-
-        apps.forEach(app => {
-            const entries = entriesByApp[app.id] || [];
-            entries.forEach(entry => {
-                // Availability row
-                let availRow = `"${app.applicationName}",${app.assetId},"${entry.name} (Availability)","${entry.scorecardIdentifier}"`;
-                let sumAvail = 0;
-                let countAvail = 0;
-                for (let m = 1; m <= 12; m++) {
-                    const key = `${selectedYear}-${m}`;
-                    const val = availabilityByEntry[entry.id]?.[key]?.availability;
-                    availRow += `,${val ? parseFloat(val).toFixed(2) : ""}`;
-                    if (val) {
-                        sumAvail += parseFloat(val);
-                        countAvail++;
-                    }
-                }
-                csv += availRow + `,${countAvail > 0 ? (sumAvail / countAvail).toFixed(2) : ""}\n`;
-
-                // Volume row
-                let volRow = `"",,"${entry.name} (Volume)",""`;
-                let totalVol = 0;
-                for (let m = 1; m <= 12; m++) {
-                    const key = `${selectedYear}-${m}`;
-                    const val = volumeByEntry[entry.id]?.[key]?.volume;
-                    volRow += `,${val || ""}`;
-                    if (val) totalVol += val;
-                }
-                csv += volRow + `,${totalVol}\n`;
-            });
-        });
-
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `${team.teamName.replace(/\s+/g, "_")}_Scorecard_${selectedYear}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+    }, [drawerRange, selectedYear]);
 
     // Fetch global scorecard data
     const { data: scorecardData, isLoading } = useQuery({
@@ -323,7 +166,7 @@ function GlobalScorecardPage() {
     }, [teamsWithApps]);
 
     // Stats
-    const stats = useMemo(() => {
+    const stats: ScorecardStats = useMemo(() => {
         const teams = teamsWithApps.length;
         const apps = scorecardData?.applications?.length || 0;
         const entries = scorecardData?.entries?.length || 0;
@@ -332,7 +175,7 @@ function GlobalScorecardPage() {
         scorecardData?.entries?.forEach((entry: ScorecardEntry) => {
             const threshold = parseFloat(entry.availabilityThreshold);
             const entryAvail = availabilityByEntry[entry.id] || {};
-            Object.values(entryAvail).forEach((av: any) => {
+            Object.values(entryAvail).forEach((av: AvailabilityRecord) => {
                 if (parseFloat(av.availability) < threshold) {
                     availBreaches++;
                 }
@@ -376,290 +219,127 @@ function GlobalScorecardPage() {
         return leaders.slice(0, 3);
     };
 
+    const handleExportCSV = (team: Team) => {
+        const apps = appsByTeam[team.id] || [];
+        let csv = "Ensemble Scorecard Report\n";
+        csv += `Team: ${team.teamName}\n`;
+        csv += `Year: ${selectedYear}\n`;
+        csv += `Range: ${drawerRange.toUpperCase()}\n\n`;
+
+        csv += "Application,Asset ID,Metric,Identifier,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec,Average/Total\n";
+
+        apps.forEach(app => {
+            const entries = entriesByApp[app.id] || [];
+            entries.forEach(entry => {
+                // Availability row
+                let availRow = `"${app.applicationName}",${app.assetId},"${entry.name} (Availability)","${entry.scorecardIdentifier}"`;
+                let sumAvail = 0;
+                let countAvail = 0;
+                for (let m = 1; m <= 12; m++) {
+                    const key = `${selectedYear}-${m}`;
+                    const val = availabilityByEntry[entry.id]?.[key]?.availability;
+                    availRow += `,${val ? parseFloat(val).toFixed(2) : ""}`;
+                    if (val) {
+                        sumAvail += parseFloat(val);
+                        countAvail++;
+                    }
+                }
+                csv += availRow + `,${countAvail > 0 ? (sumAvail / countAvail).toFixed(2) : ""}\n`;
+
+                // Volume row
+                let volRow = `"",,,"${entry.name} (Volume)",""`;
+                let totalVol = 0;
+                for (let m = 1; m <= 12; m++) {
+                    const key = `${selectedYear}-${m}`;
+                    const val = volumeByEntry[entry.id]?.[key]?.volume;
+                    volRow += `,${val || ""}`;
+                    if (val) totalVol += val;
+                }
+                csv += volRow + `,${totalVol}\n`;
+            });
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.setAttribute("href", url);
+        link.setAttribute("download", `${team.teamName.replace(/\s+/g, "_")}_Scorecard_${selectedYear}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleClearAllFilters = () => {
+        setLeadershipType("all");
+        setLeadershipSearch("");
+        setTeamSearch("");
+        setAppSearch("");
+    };
+
     return (
         <div className="container mx-auto py-6 px-4 max-w-7xl space-y-4">
-            {/* Compact Header & Stats Row */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-card p-4 rounded-xl border border-muted/60 shadow-sm">
-                <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 p-2 rounded-lg">
-                        <BarChart3 className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight">Enterprise Scorecard</h1>
-                        <p className="text-xs text-muted-foreground">Availability & volume across teams</p>
-                    </div>
+            {/* Stats Summary Header */}
+            <StatsSummary stats={stats} />
+
+            {/* Advanced Filters */}
+            <EnterpriseFilters
+                selectedYear={selectedYear}
+                leadershipType={leadershipType}
+                leadershipSearch={leadershipSearch}
+                teamSearch={teamSearch}
+                appSearch={appSearch}
+                onYearChange={setSelectedYear}
+                onLeadershipTypeChange={setLeadershipType}
+                onLeadershipSearchChange={setLeadershipSearch}
+                onTeamSearchChange={setTeamSearch}
+                onAppSearchChange={setAppSearch}
+                onClearAll={handleClearAllFilters}
+                teams={scorecardData?.teams || []}
+                applications={scorecardData?.applications || []}
+                leadershipOptions={scorecardData?.leadershipOptions}
+            />
+
+            {/* Team Scorecards List */}
+            <div>
+                <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        Teams ({teamsWithApps.length})
+                    </h2>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 rounded-lg border border-transparent hover:border-muted-foreground/20 transition-all">
-                        <Layers className="h-4 w-4 text-blue-500" />
-                        <div>
-                            <p className="text-xs text-muted-foreground leading-none">Teams</p>
-                            <p className="text-sm font-bold">{stats.teams}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 rounded-lg border border-transparent hover:border-muted-foreground/20 transition-all">
-                        <Activity className="h-4 w-4 text-indigo-500" />
-                        <div>
-                            <p className="text-xs text-muted-foreground leading-none">Apps</p>
-                            <p className="text-sm font-bold">{stats.apps}</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-muted/40 rounded-lg border border-transparent hover:border-muted-foreground/20 transition-all">
-                        <Hash className="h-4 w-4 text-green-500" />
-                        <div>
-                            <p className="text-xs text-muted-foreground leading-none">Entries</p>
-                            <p className="text-sm font-bold">{stats.entries}</p>
-                        </div>
-                    </div>
-                    <div className={cn(
-                        "flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all",
-                        stats.availBreaches > 0
-                            ? "bg-red-500/5 border-red-500/20 text-red-600"
-                            : "bg-muted/40 border-transparent text-foreground"
-                    )}>
-                        <AlertTriangle className={cn("h-4 w-4", stats.availBreaches > 0 ? "text-red-500" : "text-muted-foreground")} />
-                        <div>
-                            <p className="text-xs opacity-70 leading-none">Breaches</p>
-                            <p className="text-sm font-bold">{stats.availBreaches}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Compact Filters Card */}
-            {/* Filters Card */}
-            <Card className="shadow-md border-muted/50 overflow-visible bg-muted/5">
-                <CardContent className="p-5">
-                    <div className="flex flex-col gap-6">
-                        <div className="flex items-center justify-between border-b pb-4 border-muted/30">
-                            <div className="flex items-center gap-3">
-                                <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                                    <Filter className="h-4 w-4 text-primary" />
-                                </div>
-                                <div>
-                                    <h2 className="text-sm font-black uppercase tracking-widest text-foreground">Advanced Filters</h2>
-                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">Refine your enterprise results</p>
-                                </div>
-                            </div>
-
-                            {(leadershipSearch || leadershipType !== "all" || teamSearch || appSearch) && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        setLeadershipType("all");
-                                        setLeadershipSearch("");
-                                        setTeamSearch("");
-                                        setAppSearch("");
-                                    }}
-                                    className="h-8 text-[11px] font-bold uppercase tracking-wider text-red-600 hover:text-red-700 hover:bg-red-50"
-                                >
-                                    Clear All Filters
-                                </Button>
-                            )}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-                            {/* Year Filter */}
-                            <div className="flex flex-col gap-2">
-                                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Fiscal Year</Label>
-                                <Select
-                                    value={selectedYear.toString()}
-                                    onValueChange={(val) => val && setSelectedYear(parseInt(val))}
-                                >
-                                    <SelectTrigger className="h-10 w-full bg-background border-muted/40 shadow-sm transition-all focus:border-primary/50">
-                                        <Calendar className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {AVAILABLE_YEARS.map((year) => (
-                                            <SelectItem key={year} value={year.toString()}>
-                                                {year}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* Team Name Filter */}
-                            <div className="flex flex-col gap-2 lg:col-span-1">
-                                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Team Name</Label>
-                                <div className="relative">
-                                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-                                    <Input
-                                        placeholder="Filter by team..."
-                                        value={teamSearch}
-                                        onChange={(e) => setTeamSearch(e.target.value)}
-                                        className="h-10 pl-9 bg-background border-muted/40 shadow-sm transition-all focus:border-primary/50"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Application Filter */}
-                            <div className="flex flex-col gap-2 lg:col-span-1">
-                                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Application</Label>
-                                <div className="relative">
-                                    <Activity className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
-                                    <Input
-                                        placeholder="Search apps..."
-                                        value={appSearch}
-                                        onChange={(e) => setAppSearch(e.target.value)}
-                                        className="h-10 pl-9 bg-background border-muted/40 shadow-sm transition-all focus:border-primary/50"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Leadership Role Filter */}
-                            <div className="flex flex-col gap-2 lg:col-span-1">
-                                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Leadership Role</Label>
-                                <Select
-                                    value={leadershipType}
-                                    onValueChange={(val) => val && setLeadershipType(val)}
-                                >
-                                    <SelectTrigger className="h-10 w-full bg-background border-muted/40 shadow-sm transition-all focus:border-primary/50">
-                                        <Users className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                        <SelectValue>
-                                            <span className="uppercase text-[11px] font-bold tracking-wider">{LEADERSHIP_TYPES.find(t => t.value === leadershipType)?.label}</span>
-                                        </SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {LEADERSHIP_TYPES.map((type) => (
-                                            <SelectItem key={type.value} value={type.value}>
-                                                {type.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* Leadership Name Search */}
-                            <div className="flex flex-col gap-2 lg:col-span-2">
-                                <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest px-1">Search Leader</Label>
-                                <Combobox
-                                    value={leadershipSearch}
-                                    onValueChange={(val) => setLeadershipSearch(val || "")}
-                                >
-                                    <ComboboxInput
-                                        placeholder="Type to find SVP, VP..."
-                                        showClear={!!leadershipSearch}
-                                        className="h-10 bg-background border-muted/40 shadow-sm transition-all focus:border-primary/50"
-                                    />
-                                    <ComboboxContent>
-                                        <ComboboxList>
-                                            <ComboboxEmpty>No leaders matched</ComboboxEmpty>
-                                            {leadershipType === "all" || leadershipType === "svp" ? (
-                                                <ComboboxGroup>
-                                                    <ComboboxLabel>SVP</ComboboxLabel>
-                                                    {(scorecardData?.leadershipOptions?.svp || []).filter((n): n is string => Boolean(n)).map((name) => (
-                                                        <ComboboxItem key={`svp-${name}`} value={name}>
-                                                            {name}
-                                                        </ComboboxItem>
-                                                    ))}
-                                                </ComboboxGroup>
-                                            ) : null}
-                                            {leadershipType === "all" || leadershipType === "vp" ? (
-                                                <ComboboxGroup>
-                                                    <ComboboxLabel>VP</ComboboxLabel>
-                                                    {(scorecardData?.leadershipOptions?.vp || []).filter((n): n is string => Boolean(n)).map((name) => (
-                                                        <ComboboxItem key={`vp-${name}`} value={name}>
-                                                            {name}
-                                                        </ComboboxItem>
-                                                    ))}
-                                                </ComboboxGroup>
-                                            ) : null}
-                                            {leadershipType === "all" || leadershipType === "director" ? (
-                                                <ComboboxGroup>
-                                                    <ComboboxLabel>Director</ComboboxLabel>
-                                                    {(scorecardData?.leadershipOptions?.director || []).filter((n): n is string => Boolean(n)).map((name) => (
-                                                        <ComboboxItem key={`dir-${name}`} value={name}>
-                                                            {name}
-                                                        </ComboboxItem>
-                                                    ))}
-                                                </ComboboxGroup>
-                                            ) : null}
-                                            {leadershipType === "all" || leadershipType === "app_owner" ? (
-                                                <ComboboxGroup>
-                                                    <ComboboxLabel>Application Owner</ComboboxLabel>
-                                                    {(scorecardData?.leadershipOptions?.appOwner || []).filter((n): n is string => Boolean(n)).map((name) => (
-                                                        <ComboboxItem key={`owner-${name}`} value={name}>
-                                                            {name}
-                                                        </ComboboxItem>
-                                                    ))}
-                                                </ComboboxGroup>
-                                            ) : null}
-                                            {leadershipType === "all" || leadershipType === "unit_cio" ? (
-                                                <ComboboxGroup>
-                                                    <ComboboxLabel>Unit CIO</ComboboxLabel>
-                                                    {(scorecardData?.leadershipOptions?.unitCio || []).filter((n): n is string => Boolean(n)).map((name) => (
-                                                        <ComboboxItem key={`cio-${name}`} value={name}>
-                                                            {name}
-                                                        </ComboboxItem>
-                                                    ))}
-                                                </ComboboxGroup>
-                                            ) : null}
-                                        </ComboboxList>
-                                    </ComboboxContent>
-                                </Combobox>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Main Content */}
-            <Card className="shadow-sm border-muted/60">
-                <CardHeader className="py-3 px-4 border-b">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <CardTitle className="text-base flex items-center gap-2">
-                                <Building2 className="h-4 w-4 text-primary" />
-                                Team Scorecards
-                            </CardTitle>
-                            <CardDescription className="text-xs">
-                                All teams are expanded by default to show applications for {selectedYear}
-                            </CardDescription>
-                        </div>
-                    </div>
-                </CardHeader>
-                <CardContent className="p-0">
+                <div className="border rounded-lg divide-y">
                     {isLoading ? (
-                        <div className="flex items-center justify-center py-20">
-                            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <div className="flex items-center justify-center py-16">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
                     ) : teamsWithApps.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <Activity className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                            <h3 className="text-lg font-semibold">No Data Found</h3>
-                            <p className="text-muted-foreground text-sm max-w-md mt-2">
-                                {leadershipSearch || leadershipType !== "all"
-                                    ? "No applications match the current filters. Try adjusting your search criteria."
-                                    : "No teams have applications with scorecard data yet."}
-                            </p>
+                        <div className="flex flex-col items-center justify-center py-16 text-center">
+                            <Activity className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                            <p className="text-sm font-medium text-muted-foreground">No teams match your filters</p>
                         </div>
                     ) : (
-                        <div className="divide-y">
-                            {teamsWithApps.map((team: Team) => (
-                                <TeamSection
-                                    key={team.id}
-                                    team={team}
-                                    isExpanded={expandedTeams.has(team.id)}
-                                    onToggle={() => toggleTeam(team.id)}
-                                    applications={appsByTeam[team.id] || []}
-                                    entriesByApp={entriesByApp}
-                                    availabilityByEntry={availabilityByEntry}
-                                    volumeByEntry={volumeByEntry}
-                                    expandedApps={expandedApps}
-                                    onToggleApp={toggleApp}
-                                    selectedYear={selectedYear}
-                                    getLeadershipDisplay={getLeadershipDisplay}
-                                    onViewFull={() => setViewTeam(team)}
-                                />
-                            ))}
-                        </div>
+                        teamsWithApps.map((team: Team) => (
+                            <TeamSection
+                                key={team.id}
+                                team={team}
+                                isExpanded={expandedTeams.has(team.id)}
+                                onToggle={() => toggleTeam(team.id)}
+                                applications={appsByTeam[team.id] || []}
+                                entriesByApp={entriesByApp}
+                                availabilityByEntry={availabilityByEntry}
+                                volumeByEntry={volumeByEntry}
+                                expandedApps={expandedApps}
+                                onToggleApp={toggleApp}
+                                selectedYear={selectedYear}
+                                getLeadershipDisplay={getLeadershipDisplay}
+                                onViewFull={() => setViewTeam(team)}
+                            />
+                        ))
                     )}
-                </CardContent>
-            </Card>
+                </div>
+            </div>
 
             {/* Team Scorecard Drawer */}
             <Drawer open={!!viewTeam} onOpenChange={(open) => !open && setViewTeam(null)} direction="right">
@@ -833,445 +513,9 @@ function GlobalScorecardPage() {
                                 ))}
                             </div>
                         </div>
-                    )
-                    }
-                </DrawerContent >
-            </Drawer >
-        </div >
-    );
-}
-
-// Team Section Component
-function TeamSection({
-    team,
-    isExpanded,
-    onToggle,
-    applications,
-    entriesByApp,
-    availabilityByEntry,
-    volumeByEntry,
-    expandedApps,
-    onToggleApp,
-    selectedYear,
-    getLeadershipDisplay,
-    onViewFull,
-    visibleMonths,
-}: {
-    team: Team;
-    isExpanded: boolean;
-    onToggle: () => void;
-    applications: Application[];
-    entriesByApp: Record<string, ScorecardEntry[]>;
-    availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>;
-    volumeByEntry: Record<string, Record<string, VolumeRecord>>;
-    expandedApps: Set<string>;
-    onToggleApp: (appId: string) => void;
-    selectedYear: number;
-    getLeadershipDisplay: (app: Application) => { role: string; name: string }[];
-    onViewFull: () => void;
-    visibleMonths?: { month: number; year: number }[];
-}) {
-    const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, year: selectedYear }));
-    const monthsToShow = visibleMonths || ALL_MONTHS;
-
-    // Calculate team-level stats
-    const teamStats = useMemo(() => {
-        let totalEntries = 0;
-        let breaches = 0;
-
-        applications.forEach((app) => {
-            const entries = entriesByApp[app.id] || [];
-            totalEntries += entries.length;
-
-            entries.forEach((entry) => {
-                const threshold = parseFloat(entry.availabilityThreshold);
-                const entryAvail = availabilityByEntry[entry.id] || {};
-                monthsToShow.forEach(({ month, year }) => {
-                    const av = entryAvail[`${year}-${month}`];
-                    if (av && parseFloat(av.availability) < threshold) {
-                        breaches++;
-                    }
-                });
-            });
-        });
-
-        return { apps: applications.length, entries: totalEntries, breaches };
-    }, [applications, entriesByApp, availabilityByEntry, monthsToShow]);
-
-    return (
-        <div className="border-b last:border-b-0">
-            {/* Team Header */}
-            <div
-                className="flex items-center justify-between py-2.5 px-4 hover:bg-muted/30 cursor-pointer transition-colors"
-                onClick={onToggle}
-            >
-                <div className="flex items-center gap-3">
-                    {isExpanded ? (
-                        <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                    ) : (
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     )}
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-primary" />
-                            <span className="font-semibold text-lg">{team.teamName}</span>
-                        </div>
-                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
-                            <span>{teamStats.apps} applications</span>
-                            <span>{teamStats.entries} tracked entries</span>
-                            {teamStats.breaches > 0 && (
-                                <Badge variant="destructive" className="text-[10px]">
-                                    {teamStats.breaches} breaches
-                                </Badge>
-                            )}
-                        </div>
-                    </div>
-                </div>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onViewFull();
-                    }}
-                >
-                    <Eye className="h-3.5 w-3.5" />
-                    View Full
-                </Button>
-            </div>
-
-            {/* Team Content */}
-            {isExpanded && (
-                <div className="px-4 pb-4 space-y-2">
-                    {applications.map((app) => (
-                        <ApplicationCard
-                            key={app.id}
-                            app={app}
-                            isExpanded={expandedApps.has(app.id)}
-                            onToggle={() => onToggleApp(app.id)}
-                            entries={entriesByApp[app.id] || []}
-                            availabilityByEntry={availabilityByEntry}
-                            volumeByEntry={volumeByEntry}
-                            selectedYear={selectedYear}
-                            leadership={getLeadershipDisplay(app)}
-                            visibleMonths={monthsToShow}
-                        />
-                    ))}
-                </div>
-            )}
+                </DrawerContent>
+            </Drawer>
         </div>
     );
-}
-
-// Application Card Component
-function ApplicationCard({
-    app,
-    isExpanded,
-    onToggle,
-    entries,
-    availabilityByEntry,
-    volumeByEntry,
-    selectedYear,
-    leadership,
-    visibleMonths,
-}: {
-    app: Application;
-    isExpanded: boolean;
-    onToggle: () => void;
-    entries: ScorecardEntry[];
-    availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>;
-    volumeByEntry: Record<string, Record<string, VolumeRecord>>;
-    selectedYear: number;
-    leadership: { role: string; name: string }[];
-    visibleMonths?: { month: number; year: number }[];
-}) {
-    const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, year: selectedYear }));
-    const monthsToShow = visibleMonths || ALL_MONTHS;
-
-    // Calculate app-level average availability
-    const avgAvailability = useMemo(() => {
-        let total = 0;
-        let count = 0;
-
-        entries.forEach((entry) => {
-            const entryAvail = availabilityByEntry[entry.id] || {};
-            monthsToShow.forEach(({ month, year }) => {
-                const av = entryAvail[`${year}-${month}`];
-                if (av) {
-                    total += parseFloat(av.availability);
-                    count++;
-                }
-            });
-        });
-
-        return count > 0 ? total / count : null;
-    }, [entries, availabilityByEntry, monthsToShow]);
-
-    // Calculate app-level total volume
-    const totalVolume = useMemo(() => {
-        let total = 0;
-        let hasData = false;
-
-        entries.forEach((entry) => {
-            const entryVol = volumeByEntry[entry.id] || {};
-            monthsToShow.forEach(({ month, year }) => {
-                const vol = entryVol[`${year}-${month}`];
-                if (vol) {
-                    total += vol.volume;
-                    hasData = true;
-                }
-            });
-        });
-
-        return hasData ? total : null;
-    }, [entries, volumeByEntry, monthsToShow]);
-
-    // Count breaches
-    const breachCount = useMemo(() => {
-        let breaches = 0;
-        entries.forEach((entry) => {
-            const threshold = parseFloat(entry.availabilityThreshold);
-            const entryAvail = availabilityByEntry[entry.id] || {};
-            monthsToShow.forEach(({ month, year }) => {
-                const av = entryAvail[`${year}-${month}`];
-                if (av && parseFloat(av.availability) < threshold) {
-                    breaches++;
-                }
-            });
-        });
-        return breaches;
-    }, [entries, availabilityByEntry, monthsToShow]);
-
-    return (
-        <Card className={cn(
-            "shadow-sm",
-            breachCount > 0 && "border-red-500/30"
-        )}>
-            <div
-                className="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-muted/20 transition-colors"
-                onClick={onToggle}
-            >
-                <div className="flex items-center gap-2.5 flex-1">
-                    {isExpanded ? (
-                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                    ) : (
-                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold">{app.applicationName}</span>
-                            <Badge variant="outline" className="text-[9px] h-4 px-1">{app.tla}</Badge>
-                            {app.tier && ['0', '1', '2'].includes(String(app.tier)) && (
-                                <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-red-500/10 text-red-600">
-                                    T{app.tier}
-                                </Badge>
-                            )}
-                        </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            {leadership.map((l, i) => (
-                                <span key={i} className="text-[9px] text-muted-foreground">
-                                    <span className="font-medium">{l.role}:</span> {l.name}
-                                    {i < leadership.length - 1 && " •"}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-                <div className="flex items-center gap-6 pr-2">
-                    {avgAvailability !== null && (
-                        <div className={cn(
-                            "text-right min-w-[60px]",
-                            avgAvailability < 98 ? "text-red-600" : "text-green-600"
-                        )}>
-                            <p className="text-sm font-black leading-none tabular-nums tracking-tighter">
-                                {avgAvailability.toFixed(1)}%
-                            </p>
-                            <p className="text-[8px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5">Avail</p>
-                        </div>
-                    )}
-                    {totalVolume !== null && (
-                        <div className="text-right min-w-[80px] text-blue-600">
-                            <p className="text-sm font-black leading-none tabular-nums tracking-tighter">
-                                {totalVolume > 1000000 ? `${(totalVolume / 1000000).toFixed(1)}M` : totalVolume.toLocaleString()}
-                            </p>
-                            <p className="text-[8px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5">Volume</p>
-                        </div>
-                    )}
-                    {breachCount > 0 && (
-                        <Badge variant="destructive" className="text-[10px] h-5 px-1.5 font-bold">
-                            <AlertTriangle className="h-2.5 w-2.5 mr-1" />
-                            {breachCount}
-                        </Badge>
-                    )}
-                </div>
-            </div>
-
-            {/* Expanded Content - Metrics Table */}
-            {isExpanded && entries.length > 0 && (
-                <div className="border-t px-3 pb-3 pt-2 overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="hover:bg-transparent">
-                                <TableHead className="text-xs font-bold uppercase w-[160px]">Entry</TableHead>
-                                <TableHead className="text-xs font-bold uppercase w-[50px]">Type</TableHead>
-                                {monthsToShow.map((vm) => {
-                                    const m = MONTHS[vm.month - 1];
-                                    const isFuture = vm.year === currentYear && vm.month > currentMonth;
-                                    return (
-                                        <TableHead
-                                            key={`${vm.year}-${vm.month}`}
-                                            className={cn(
-                                                "text-xs font-bold uppercase text-center w-[55px]",
-                                                isFuture && "text-muted-foreground/40"
-                                            )}
-                                        >
-                                            <div className="flex flex-col leading-none">
-                                                <span>{m}</span>
-                                                {vm.year !== selectedYear && <span className="text-[7px] opacity-40 mt-0.5">{vm.year}</span>}
-                                            </div>
-                                            {isFuture && <Lock className="h-2 w-2 inline ml-0.5" />}
-                                        </TableHead>
-                                    );
-                                })}
-                                <TableHead className="text-xs font-bold uppercase text-center w-[60px] bg-muted/30">Avg</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {entries.map((entry) => (
-                                <EntryRows
-                                    key={entry.id}
-                                    entry={entry}
-                                    availability={availabilityByEntry[entry.id] || {}}
-                                    volume={volumeByEntry[entry.id] || {}}
-                                    selectedYear={selectedYear}
-                                    visibleMonths={monthsToShow}
-                                />
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            )}
-
-            {isExpanded && entries.length === 0 && (
-                <div className="border-t px-3 py-4 text-center text-muted-foreground text-sm">
-                    No scorecard entries for this application
-                </div>
-            )}
-        </Card>
-    );
-}
-
-// Entry Rows Component (read-only view)
-function EntryRows({
-    entry,
-    availability,
-    volume,
-    selectedYear,
-    visibleMonths,
-}: {
-    entry: ScorecardEntry;
-    availability: Record<string, AvailabilityRecord>;
-    volume: Record<string, VolumeRecord>;
-    selectedYear: number;
-    visibleMonths?: { month: number; year: number }[];
-}) {
-    const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, year: selectedYear }));
-    const monthsToShow = visibleMonths || ALL_MONTHS;
-    const availThreshold = parseFloat(entry.availabilityThreshold);
-
-    // Calculate average availability
-    const avgAvail = useMemo(() => {
-        const values: number[] = [];
-        monthsToShow.forEach(({ month, year }) => {
-            const isFuture = year === currentYear && month > currentMonth;
-            const key = `${year}-${month}`;
-            if (!isFuture && availability[key]) {
-                values.push(parseFloat(availability[key].availability));
-            }
-        });
-        return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : null;
-    }, [availability, selectedYear, monthsToShow]);
-
-    // Calculate total volume
-    const totalVol = useMemo(() => {
-        let total = 0;
-        let hasData = false;
-        monthsToShow.forEach(({ month, year }) => {
-            const isFuture = year === currentYear && month > currentMonth;
-            const key = `${year}-${month}`;
-            if (!isFuture && volume[key]) {
-                total += volume[key].volume;
-                hasData = true;
-            }
-        });
-        return hasData ? total : null;
-    }, [volume, selectedYear, monthsToShow]);
-
-    const avgBreach = avgAvail !== null && avgAvail < availThreshold;
-
-    return (
-        <>
-            {/* Availability Row */}
-            <TableRow className="hover:bg-muted/10">
-                <TableCell rowSpan={2} className="align-top border-r py-1">
-                    <div className="text-xs font-medium">{entry.name}</div>
-                    <div className="text-[10px] text-muted-foreground font-mono">{entry.scorecardIdentifier}</div>
-                </TableCell>
-                <TableCell className="text-[10px] font-bold text-green-600 py-1">A%</TableCell>
-                {monthsToShow.map((vm) => {
-                    const key = `${vm.year}-${vm.month}`;
-                    const av = availability[key];
-                    const isFuture = vm.year === currentYear && vm.month > currentMonth;
-                    const value = av?.availability;
-                    const isBreach = value !== undefined && parseFloat(value) < availThreshold;
-
-                    return (
-                        <TableCell key={key} className={cn(
-                            "text-center py-1 text-xs",
-                            isFuture && "text-muted-foreground/30",
-                            isBreach && "text-red-600 font-semibold bg-red-500/5"
-                        )}>
-                            {isFuture ? "—" : value ? parseFloat(value).toFixed(1) : "—"}
-                        </TableCell>
-                    );
-                })}
-                <TableCell className={cn(
-                    "text-center py-1 text-xs font-semibold bg-muted/30",
-                    avgBreach && "text-red-600"
-                )}>
-                    {avgAvail !== null ? avgAvail.toFixed(1) : "—"}
-                </TableCell>
-            </TableRow>
-            {/* Volume Row */}
-            <TableRow className="hover:bg-muted/10 border-b">
-                <TableCell className="text-[10px] font-bold text-purple-600 py-1">Vol</TableCell>
-                {monthsToShow.map((vm) => {
-                    const key = `${vm.year}-${vm.month}`;
-                    const vol = volume[key];
-                    const isFuture = vm.year === currentYear && vm.month > currentMonth;
-
-                    return (
-                        <TableCell key={key} className={cn(
-                            "text-center py-1 text-xs",
-                            isFuture && "text-muted-foreground/30"
-                        )}>
-                            {isFuture ? "—" : vol ? formatVolume(vol.volume) : "—"}
-                        </TableCell>
-                    );
-                })}
-                <TableCell className="text-center py-1 text-xs font-semibold bg-muted/30">
-                    {totalVol !== null ? formatVolume(totalVol) : "—"}
-                </TableCell>
-            </TableRow>
-        </>
-    );
-}
-
-// Utility function
-function formatVolume(value: number): string {
-    if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
-    if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
-    if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
-    return String(value);
 }

@@ -6,11 +6,12 @@ import {
     integer,
     decimal,
     bigint,
+    boolean,
     index,
     uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { ensembleSchema, applications } from "./teams";
+import { ensembleSchema, applications, teams } from "./teams";
 
 // Scorecard Entries - Sub-applications for tracking
 export const scorecardEntries = ensembleSchema.table(
@@ -95,6 +96,42 @@ export const scorecardAvailability = ensembleSchema.table(
     ]
 );
 
+// Scorecard Publish Status - Tracks which months are published for enterprise view
+export const scorecardPublishStatus = ensembleSchema.table(
+    "scorecard_publish_status",
+    {
+        id: uuid("id").defaultRandom().primaryKey(),
+        teamId: uuid("team_id")
+            .notNull()
+            .references(() => teams.id, {
+                onDelete: "cascade",
+                onUpdate: "cascade",
+            }),
+        year: integer("year").notNull(),
+        month: integer("month").notNull(), // 1-12
+        isPublished: boolean("is_published").notNull().default(false),
+        publishedBy: varchar("published_by", { length: 255 }),
+        publishedAt: timestamp("published_at", { withTimezone: true }),
+        unpublishedBy: varchar("unpublished_by", { length: 255 }),
+        unpublishedAt: timestamp("unpublished_at", { withTimezone: true }),
+        createdAt: timestamp("created_at", { withTimezone: true })
+            .defaultNow()
+            .notNull(),
+        updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+            () => new Date()
+        ),
+    },
+    (table) => [
+        index("scorecard_publish_status_team_id_idx").on(table.teamId),
+        uniqueIndex("scorecard_publish_status_team_year_month_idx").on(
+            table.teamId,
+            table.year,
+            table.month
+        ),
+        index("scorecard_publish_status_is_published_idx").on(table.isPublished),
+    ]
+);
+
 // Monthly Volume Records
 export const scorecardVolume = ensembleSchema.table(
     "scorecard_volume",
@@ -164,6 +201,16 @@ export const scorecardVolumeRelations = relations(
     })
 );
 
+export const scorecardPublishStatusRelations = relations(
+    scorecardPublishStatus,
+    ({ one }) => ({
+        team: one(teams, {
+            fields: [scorecardPublishStatus.teamId],
+            references: [teams.id],
+        }),
+    })
+);
+
 // Types
 export type ScorecardEntry = typeof scorecardEntries.$inferSelect;
 export type NewScorecardEntry = typeof scorecardEntries.$inferInsert;
@@ -171,3 +218,6 @@ export type ScorecardAvailability = typeof scorecardAvailability.$inferSelect;
 export type NewScorecardAvailability = typeof scorecardAvailability.$inferInsert;
 export type ScorecardVolume = typeof scorecardVolume.$inferSelect;
 export type NewScorecardVolume = typeof scorecardVolume.$inferInsert;
+export type ScorecardPublishStatus = typeof scorecardPublishStatus.$inferSelect;
+export type NewScorecardPublishStatus = typeof scorecardPublishStatus.$inferInsert;
+

@@ -7,6 +7,8 @@ import {
     SheetDescription,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
     ChartContainer,
     ChartTooltip,
@@ -28,17 +30,8 @@ import {
 } from "recharts";
 import {
     TrendingUp,
-    LineChart as LineChartIcon,
-    AreaChart as AreaChartIcon,
-    BarChartIcon,
-    Check,
-    PieChart,
     Activity,
-    Layers,
     Filter,
-    ChevronRight,
-    Building2,
-    Puzzle,
 } from "lucide-react";
 import type {
     Application,
@@ -49,20 +42,16 @@ import type {
 } from "./types";
 import { cn } from "@/lib/utils";
 
-// Vibrant, distinguishable color palette using HSL values
+// Cleaner, more defined color palette
 const CHART_COLORS = [
-    "hsl(221, 83%, 53%)",   // Blue
-    "hsl(142, 71%, 45%)",   // Green
-    "hsl(262, 83%, 58%)",   // Purple
-    "hsl(25, 95%, 53%)",    // Orange
-    "hsl(346, 77%, 49%)",   // Rose
-    "hsl(174, 72%, 40%)",   // Teal
-    "hsl(43, 96%, 56%)",    // Amber
-    "hsl(289, 67%, 53%)",   // Fuchsia
-    "hsl(199, 89%, 48%)",   // Cyan
-    "hsl(0, 72%, 51%)",     // Red
-    "hsl(84, 81%, 44%)",    // Lime
-    "hsl(330, 81%, 60%)",   // Pink
+    "#2563eb", // Blue 600
+    "#0891b2", // Cyan 600
+    "#4f46e5", // Indigo 600
+    "#ea580c", // Orange 600
+    "#db2777", // Pink 600
+    "#16a34a", // Green 600
+    "#ca8a04", // Yellow 600
+    "#9333ea", // Purple 600
 ];
 
 interface MetricsChartSheetProps {
@@ -324,19 +313,19 @@ export function MetricsChartSheet({
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent
                 side="right"
-                className="w-full sm:max-w-3xl lg:max-w-5xl xl:max-w-[1400px] min-w-[90vw] p-0 flex flex-col bg-slate-50/50 dark:bg-zinc-950/50 backdrop-blur-md"
+                className="w-full sm:max-w-3xl lg:max-w-5xl xl:max-w-[1200px] min-w-[50vw] p-0 flex flex-col bg-background"
                 showCloseButton={true}
             >
-                <SheetHeader className="px-8 py-6 border-b sticky top-0 bg-background/80 backdrop-blur-xl z-20 shadow-sm">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 text-primary shadow-inner border border-white/50 dark:border-white/5">
-                            <Activity className="w-6 h-6" />
+                <SheetHeader className="px-6 py-4 border-b">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-md bg-primary/10 text-primary">
+                            <Activity className="w-5 h-5" />
                         </div>
                         <div>
-                            <SheetTitle className="text-2xl font-bold tracking-tight text-foreground">
+                            <SheetTitle className="text-xl font-semibold">
                                 Metrics Visualization
                             </SheetTitle>
-                            <SheetDescription className="text-muted-foreground/90 font-medium mt-1">
+                            <SheetDescription className="text-muted-foreground text-xs mt-0.5">
                                 Comparing {viewLevel === "applications" ? applications.length + " applications" : allEntries.length + " sub-applications"} for {filterLabel}
                             </SheetDescription>
                         </div>
@@ -344,109 +333,70 @@ export function MetricsChartSheet({
                 </SheetHeader>
 
                 <div className="flex-1 flex flex-col overflow-hidden">
+
                     {/* Controls Section */}
-                    <div className="px-8 py-6 z-10 space-y-6">
+                    <div className="px-6 py-4 space-y-4 border-b bg-muted/30">
 
                         {/* Top Toolbar */}
-                        <div className="flex flex-col xl:flex-row gap-4 p-1.5 rounded-2xl bg-white dark:bg-zinc-900 border shadow-sm">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                            <div className="flex flex-wrap items-center gap-4">
+                                {/* View Level Toggle */}
+                                <Tabs
+                                    value={viewLevel}
+                                    onValueChange={(v) => setViewLevel(v as ViewLevel)}
+                                    className="w-auto"
+                                >
+                                    <TabsList className="h-8">
+                                        <TabsTrigger value="applications" className="text-xs px-3">Applications</TabsTrigger>
+                                        <TabsTrigger value="entries" className="text-xs px-3">Sub-Apps</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
 
-                            {/* View Level Toggle */}
-                            <div className="bg-muted/30 p-1.5 rounded-xl flex">
-                                <button
-                                    onClick={() => setViewLevel("applications")}
-                                    className={cn(
-                                        "flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-                                        viewLevel === "applications"
-                                            ? "bg-white dark:bg-zinc-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                                    )}
+                                <div className="h-4 w-px bg-border hidden md:block" />
+
+                                {/* Metric Toggle */}
+                                <Tabs
+                                    value={chartMetric}
+                                    onValueChange={(v) => setChartMetric(v as "availability" | "volume")}
+                                    className="w-auto"
                                 >
-                                    <Building2 className="w-4 h-4" />
-                                    Applications
-                                </button>
-                                <button
-                                    onClick={() => setViewLevel("entries")}
-                                    className={cn(
-                                        "flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-                                        viewLevel === "entries"
-                                            ? "bg-white dark:bg-zinc-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                                    )}
-                                >
-                                    <Puzzle className="w-4 h-4" />
-                                    Sub-Apps
-                                </button>
+                                    <TabsList className="h-8">
+                                        <TabsTrigger value="availability" className="text-xs px-3">Availability</TabsTrigger>
+                                        <TabsTrigger value="volume" className="text-xs px-3">Volume</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
                             </div>
 
-                            <div className="w-px bg-border my-2 hidden xl:block" />
-
-                            {/* Metric Toggle */}
-                            <div className="bg-muted/30 p-1.5 rounded-xl flex-1 flex">
-                                <button
-                                    onClick={() => setChartMetric("availability")}
-                                    className={cn(
-                                        "flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-                                        chartMetric === "availability"
-                                            ? "bg-white dark:bg-zinc-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                                    )}
-                                >
-                                    <Activity className="w-4 h-4" />
-                                    Availability
-                                </button>
-                                <button
-                                    onClick={() => setChartMetric("volume")}
-                                    className={cn(
-                                        "flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-                                        chartMetric === "volume"
-                                            ? "bg-white dark:bg-zinc-800 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                                    )}
-                                >
-                                    <PieChart className="w-4 h-4" />
-                                    Volume
-                                </button>
-                            </div>
-
-                            <div className="w-px bg-border my-2 hidden xl:block" />
-
-                            {/* Chart Type Toggle */}
-                            <div className="bg-muted/30 p-1.5 rounded-xl flex items-center">
+                            {/* Chart Type */}
+                            <div className="flex items-center bg-muted rounded-md p-1 border">
                                 {(["area", "bar", "line"] as const).map((type) => (
-                                    <button
+                                    <Button
                                         key={type}
+                                        variant={chartType === type ? "secondary" : "ghost"}
+                                        size="sm"
                                         onClick={() => setChartType(type)}
                                         className={cn(
-                                            "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200",
-                                            chartType === type
-                                                ? "bg-white dark:bg-zinc-800 text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                            "h-7 px-2.5 text-xs font-medium rounded-sm",
+                                            chartType === type && "bg-white shadow-sm dark:bg-zinc-800"
                                         )}
                                     >
-                                        {type === "area" && <AreaChartIcon className="w-4 h-4" />}
-                                        {type === "bar" && <BarChartIcon className="w-4 h-4" />}
-                                        {type === "line" && <LineChartIcon className="w-4 h-4" />}
-                                        <span className="capitalize hidden sm:inline">{type}</span>
-                                    </button>
+                                        <span className="capitalize">{type}</span>
+                                    </Button>
                                 ))}
                             </div>
                         </div>
 
                         {/* Selection Area */}
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between px-1">
-                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
-                                    <Layers className="w-4 h-4 text-primary" />
-                                    {viewLevel === "applications" ? "Select Applications" : "Select Sub-Applications"}
-                                    <span className="ml-2 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
-                                        {currentSelectionIds.size} Selected
-                                    </span>
-                                </div>
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                    {viewLevel === "applications" ? "Applications" : "Sub-Applications"} ({currentSelectionIds.size})
+                                </span>
                                 <div className="flex gap-2">
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-7 text-xs font-medium gap-1.5 hover:bg-primary/5 hover:text-primary transition-colors text-muted-foreground"
+                                        className="h-6 text-[10px] px-2 text-muted-foreground"
                                         onClick={viewLevel === "applications" ? selectAllApps : selectAllEntries}
                                     >
                                         Select All
@@ -454,7 +404,7 @@ export function MetricsChartSheet({
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="h-7 text-xs font-medium gap-1.5 hover:bg-destructive/5 hover:text-destructive transition-colors text-muted-foreground"
+                                        className="h-6 text-[10px] px-2 text-muted-foreground"
                                         onClick={viewLevel === "applications" ? clearAllApps : clearAllEntries}
                                     >
                                         Reset
@@ -462,102 +412,71 @@ export function MetricsChartSheet({
                                 </div>
                             </div>
 
-                            <div className="flex flex-wrap gap-2.5 max-h-[160px] overflow-y-auto pr-2 pb-2">
+                            <div className="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto">
                                 {viewLevel === "applications" ? (
-                                    // Application chips
                                     applications.map((app) => {
                                         const isSelected = selectedAppIds.has(app.id);
                                         const color = appColorMap[app.id];
-                                        const entryCount = entriesByApp[app.id]?.length || 0;
 
                                         return (
-                                            <button
+                                            <Badge
                                                 key={app.id}
+                                                variant={isSelected ? "default" : "outline"}
                                                 onClick={() => toggleApp(app.id)}
                                                 className={cn(
-                                                    "group relative inline-flex items-center gap-2 pl-2 pr-4 py-2 rounded-xl text-xs font-semibold transition-all duration-300 border select-none overflow-hidden",
-                                                    isSelected
-                                                        ? "border-transparent bg-white dark:bg-zinc-800 text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                                                        : "border-transparent bg-muted/40 text-muted-foreground hover:bg-muted/70"
+                                                    "cursor-pointer font-normal text-xs px-2 py-1 gap-2 hover:bg-muted-foreground/10 transition-colors",
+                                                    !isSelected && "bg-transparent text-muted-foreground border-dashed border-muted-foreground/30"
                                                 )}
+                                                style={isSelected ? {
+                                                    backgroundColor: `${color}15`,
+                                                    color: color,
+                                                    borderColor: `${color}40`,
+                                                    borderWidth: "1px",
+                                                    borderStyle: "solid"
+                                                } : {}}
                                             >
                                                 <div
-                                                    className={cn(
-                                                        "absolute left-0 top-0 bottom-0 w-1 transition-all",
-                                                        isSelected ? "opacity-100" : "opacity-0"
-                                                    )}
-                                                    style={{ backgroundColor: color }}
+                                                    className={cn("w-2 h-2 rounded-full")}
+                                                    style={{ backgroundColor: isSelected ? color : 'currentColor', opacity: isSelected ? 1 : 0.3 }}
                                                 />
-
-                                                <div
-                                                    className={cn(
-                                                        "w-4 h-4 rounded-full flex items-center justify-center transition-all duration-300 border",
-                                                        isSelected ? "border-transparent text-white scale-100" : "border-muted-foreground/30 bg-transparent scale-90"
-                                                    )}
-                                                    style={isSelected ? { backgroundColor: color } : {}}
-                                                >
-                                                    {isSelected && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
-                                                </div>
-
-                                                <span className="truncate max-w-[120px]">
-                                                    {app.tla || app.applicationName}
-                                                </span>
-                                                <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded-full">
-                                                    {entryCount}
-                                                </span>
-                                            </button>
+                                                {app.tla || app.applicationName}
+                                            </Badge>
                                         );
                                     })
                                 ) : (
-                                    // Entry chips - grouped by application
                                     applications.map((app) => {
                                         const appEntries = entriesByApp[app.id] || [];
                                         if (appEntries.length === 0) return null;
 
                                         return (
-                                            <div key={app.id} className="flex flex-wrap gap-2 items-center">
-                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider px-2 py-1 bg-muted/30 rounded-lg flex items-center gap-1">
-                                                    <Building2 className="w-3 h-3" />
-                                                    {app.tla || app.applicationName}
-                                                    <ChevronRight className="w-3 h-3" />
-                                                </span>
+                                            <div key={app.id} className="contents">
                                                 {appEntries.map((entry) => {
                                                     const isSelected = selectedEntryIds.has(entry.id);
                                                     const color = entryColorMap[entry.id];
 
                                                     return (
-                                                        <button
+                                                        <Badge
                                                             key={entry.id}
+                                                            variant={isSelected ? "default" : "outline"}
                                                             onClick={() => toggleEntry(entry.id)}
                                                             className={cn(
-                                                                "group relative inline-flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 border select-none overflow-hidden",
-                                                                isSelected
-                                                                    ? "border-transparent bg-white dark:bg-zinc-800 text-foreground shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-                                                                    : "border-transparent bg-muted/40 text-muted-foreground hover:bg-muted/70"
+                                                                "cursor-pointer font-normal text-xs px-2 py-1 gap-2 hover:bg-muted-foreground/10 transition-colors",
+                                                                !isSelected && "bg-transparent text-muted-foreground border-dashed border-muted-foreground/30"
                                                             )}
+                                                            style={isSelected ? {
+                                                                backgroundColor: `${color}15`,
+                                                                color: color,
+                                                                borderColor: `${color}40`,
+                                                                borderWidth: "1px",
+                                                                borderStyle: "solid"
+                                                            } : {}}
                                                         >
                                                             <div
-                                                                className={cn(
-                                                                    "absolute left-0 top-0 bottom-0 w-1 transition-all",
-                                                                    isSelected ? "opacity-100" : "opacity-0"
-                                                                )}
-                                                                style={{ backgroundColor: color }}
+                                                                className={cn("w-2 h-2 rounded-full")}
+                                                                style={{ backgroundColor: isSelected ? color : 'currentColor', opacity: isSelected ? 1 : 0.3 }}
                                                             />
-
-                                                            <div
-                                                                className={cn(
-                                                                    "w-3.5 h-3.5 rounded-full flex items-center justify-center transition-all duration-300 border",
-                                                                    isSelected ? "border-transparent text-white scale-100" : "border-muted-foreground/30 bg-transparent scale-90"
-                                                                )}
-                                                                style={isSelected ? { backgroundColor: color } : {}}
-                                                            >
-                                                                {isSelected && <Check className="w-2 h-2" strokeWidth={3} />}
-                                                            </div>
-
-                                                            <span className="truncate max-w-[100px]">
-                                                                {entry.name}
-                                                            </span>
-                                                        </button>
+                                                            {entry.name}
+                                                        </Badge>
                                                     );
                                                 })}
                                             </div>
@@ -569,58 +488,50 @@ export function MetricsChartSheet({
                     </div>
 
                     {/* Main Chart Area */}
-                    <div className="flex-1 px-8 pb-8 overflow-y-auto min-h-0">
+                    <div className="flex-1 px-6 py-6 overflow-y-auto min-h-0">
                         {currentSelection.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-12 border-2 border-dashed border-muted-foreground/10 rounded-3xl bg-white/50 dark:bg-zinc-900/50">
-                                <div className="p-4 rounded-full bg-muted/50 mb-4">
-                                    <Filter className="w-8 h-8 opacity-40" />
+                            <div className="h-full flex flex-col items-center justify-center text-muted-foreground p-12 border-2 border-dashed border-muted-foreground/10 rounded-xl bg-muted/5">
+                                <div className="p-3 rounded-full bg-muted mb-3">
+                                    <Filter className="w-6 h-6 opacity-40" />
                                 </div>
-                                <p className="font-semibold text-lg text-foreground/70">No Items Selected</p>
-                                <p className="text-sm mt-1 max-w-xs text-center">
-                                    Select {viewLevel === "applications" ? "applications" : "sub-applications"} from the list above to visualize their metrics.
+                                <p className="font-semibold text-sm text-foreground/70">No Items Selected</p>
+                                <p className="text-xs mt-1 max-w-xs text-center text-muted-foreground">
+                                    Select {viewLevel === "applications" ? "applications" : "sub-applications"} to visualize.
                                 </p>
                             </div>
                         ) : (
-                            <div className="space-y-8 pb-8">
-                                <div className="h-[500px] w-full border rounded-3xl p-6 bg-white dark:bg-zinc-900 shadow-sm ring-1 ring-black/5 dark:ring-white/5">
+                            <div className="space-y-6 pb-8">
+                                <div className="h-[450px] w-full border rounded-xl p-4 bg-background shadow-xs">
                                     <ChartContainer config={chartConfig} className="h-full w-full">
                                         {chartType === 'area' ? (
                                             <AreaChart
                                                 key={`${chartType}-${chartMetric}-${currentSelectionIds.size}-${viewLevel}`}
                                                 data={chartData}
-                                                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                                                margin={{ top: 20, right: 10, left: 0, bottom: 20 }}
                                             >
-                                                <defs>
-                                                    {currentSelection.map((item) => (
-                                                        <linearGradient key={`gradient-${item.id}`} id={`gradient-${item.id}`} x1="0" y1="0" x2="0" y2="1">
-                                                            <stop offset="5%" stopColor={currentColorMap[item.id]} stopOpacity={0.4} />
-                                                            <stop offset="95%" stopColor={currentColorMap[item.id]} stopOpacity={0.05} />
-                                                        </linearGradient>
-                                                    ))}
-                                                </defs>
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted/30" />
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted/20" />
                                                 <XAxis
                                                     dataKey="month"
                                                     tickLine={false}
                                                     axisLine={false}
                                                     tickMargin={12}
-                                                    fontSize={12}
-                                                    className="fill-muted-foreground font-medium"
+                                                    fontSize={11}
+                                                    className="fill-muted-foreground"
                                                 />
                                                 <YAxis
                                                     tickLine={false}
                                                     axisLine={false}
                                                     tickMargin={12}
-                                                    fontSize={12}
+                                                    fontSize={11}
                                                     tickFormatter={formatYAxis}
                                                     domain={chartMetric === 'availability' ? [0, 100] : ['auto', 'auto']}
-                                                    className="fill-muted-foreground font-medium"
+                                                    className="fill-muted-foreground"
                                                 />
                                                 <ChartTooltip
                                                     content={
                                                         <ChartTooltipContent
-                                                            indicator="dot"
-                                                            className="w-56 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-border/50 shadow-xl rounded-xl"
+                                                            indicator="line"
+                                                            className="w-48 bg-background border-border shadow-md rounded-md"
                                                             formatter={(value, name) => {
                                                                 let label = String(name);
                                                                 if (viewLevel === "applications") {
@@ -638,7 +549,7 @@ export function MetricsChartSheet({
                                                         />
                                                     }
                                                 />
-                                                <ChartLegend content={<ChartLegendContent className="py-6" />} />
+                                                <ChartLegend content={<ChartLegendContent className="pt-4" />} />
                                                 {currentSelection.map((item) => (
                                                     <Area
                                                         key={item.id}
@@ -646,10 +557,10 @@ export function MetricsChartSheet({
                                                         dataKey={item.id}
                                                         name={item.id}
                                                         stroke={currentColorMap[item.id]}
-                                                        strokeWidth={3}
-                                                        fillOpacity={1}
-                                                        fill={`url(#gradient-${item.id})`}
-                                                        animationDuration={1500}
+                                                        strokeWidth={2}
+                                                        fill={currentColorMap[item.id]}
+                                                        fillOpacity={0.1}
+                                                        animationDuration={1000}
                                                         connectNulls
                                                     />
                                                 ))}
@@ -658,31 +569,31 @@ export function MetricsChartSheet({
                                             <BarChart
                                                 key={`${chartType}-${chartMetric}-${currentSelectionIds.size}-${viewLevel}`}
                                                 data={chartData}
-                                                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                                                margin={{ top: 20, right: 10, left: 0, bottom: 20 }}
                                             >
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted/30" />
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted/20" />
                                                 <XAxis
                                                     dataKey="month"
                                                     tickLine={false}
                                                     axisLine={false}
                                                     tickMargin={12}
-                                                    fontSize={12}
-                                                    className="fill-muted-foreground font-medium"
+                                                    fontSize={11}
+                                                    className="fill-muted-foreground"
                                                 />
                                                 <YAxis
                                                     tickLine={false}
                                                     axisLine={false}
                                                     tickMargin={12}
-                                                    fontSize={12}
+                                                    fontSize={11}
                                                     tickFormatter={formatYAxis}
                                                     domain={chartMetric === 'availability' ? [0, 100] : ['auto', 'auto']}
-                                                    className="fill-muted-foreground font-medium"
+                                                    className="fill-muted-foreground"
                                                 />
                                                 <ChartTooltip
                                                     content={
                                                         <ChartTooltipContent
-                                                            indicator="dot"
-                                                            className="w-56 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-border/50 shadow-xl rounded-xl"
+                                                            indicator="line"
+                                                            className="w-48 bg-background border-border shadow-md rounded-md"
                                                             formatter={(value, name) => {
                                                                 let label = String(name);
                                                                 if (viewLevel === "applications") {
@@ -700,15 +611,15 @@ export function MetricsChartSheet({
                                                         />
                                                     }
                                                 />
-                                                <ChartLegend content={<ChartLegendContent className="py-6" />} />
+                                                <ChartLegend content={<ChartLegendContent className="pt-4" />} />
                                                 {currentSelection.map((item) => (
                                                     <Bar
                                                         key={item.id}
                                                         dataKey={item.id}
                                                         name={item.id}
                                                         fill={currentColorMap[item.id]}
-                                                        radius={[6, 6, 0, 0]}
-                                                        animationDuration={1500}
+                                                        radius={[4, 4, 0, 0]}
+                                                        animationDuration={1000}
                                                         className="opacity-90 hover:opacity-100 transition-opacity"
                                                     />
                                                 ))}
@@ -717,31 +628,31 @@ export function MetricsChartSheet({
                                             <LineChart
                                                 key={`${chartType}-${chartMetric}-${currentSelectionIds.size}-${viewLevel}`}
                                                 data={chartData}
-                                                margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                                                margin={{ top: 20, right: 10, left: 0, bottom: 20 }}
                                             >
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted/30" />
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-muted/20" />
                                                 <XAxis
                                                     dataKey="month"
                                                     tickLine={false}
                                                     axisLine={false}
                                                     tickMargin={12}
-                                                    fontSize={12}
-                                                    className="fill-muted-foreground font-medium"
+                                                    fontSize={11}
+                                                    className="fill-muted-foreground"
                                                 />
                                                 <YAxis
                                                     tickLine={false}
                                                     axisLine={false}
                                                     tickMargin={12}
-                                                    fontSize={12}
+                                                    fontSize={11}
                                                     tickFormatter={formatYAxis}
                                                     domain={chartMetric === 'availability' ? [0, 100] : ['auto', 'auto']}
-                                                    className="fill-muted-foreground font-medium"
+                                                    className="fill-muted-foreground"
                                                 />
                                                 <ChartTooltip
                                                     content={
                                                         <ChartTooltipContent
-                                                            indicator="dot"
-                                                            className="w-56 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-border/50 shadow-xl rounded-xl"
+                                                            indicator="line"
+                                                            className="w-48 bg-background border-border shadow-md rounded-md"
                                                             formatter={(value, name) => {
                                                                 let label = String(name);
                                                                 if (viewLevel === "applications") {
@@ -759,7 +670,7 @@ export function MetricsChartSheet({
                                                         />
                                                     }
                                                 />
-                                                <ChartLegend content={<ChartLegendContent className="py-6" />} />
+                                                <ChartLegend content={<ChartLegendContent className="pt-4" />} />
                                                 {currentSelection.map((item) => (
                                                     <Line
                                                         key={item.id}
@@ -767,10 +678,10 @@ export function MetricsChartSheet({
                                                         dataKey={item.id}
                                                         name={item.id}
                                                         stroke={currentColorMap[item.id]}
-                                                        strokeWidth={3}
-                                                        dot={{ r: 4, fill: currentColorMap[item.id], strokeWidth: 2, stroke: "#fff" }}
-                                                        activeDot={{ r: 7, fill: currentColorMap[item.id], strokeWidth: 4, stroke: "white" }}
-                                                        animationDuration={1500}
+                                                        strokeWidth={2}
+                                                        dot={false}
+                                                        activeDot={{ r: 4, fill: currentColorMap[item.id], strokeWidth: 0 }}
+                                                        animationDuration={1000}
                                                         connectNulls
                                                     />
                                                 ))}
@@ -780,12 +691,12 @@ export function MetricsChartSheet({
                                 </div>
 
                                 {/* Summary Cards */}
-                                <div className="space-y-4">
-                                    <h3 className="text-base font-semibold flex items-center gap-2 text-foreground/80 px-1">
-                                        <TrendingUp className="w-5 h-5 text-primary" />
+                                <div className="space-y-3">
+                                    <h3 className="text-sm font-medium flex items-center gap-2 text-foreground/80 px-1">
+                                        <TrendingUp className="w-4 h-4 text-primary" />
                                         Performance Breakdown
                                     </h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                                         {currentSelection.map((item) => {
                                             let avgValue = 0;
                                             let count = 0;
@@ -853,33 +764,23 @@ export function MetricsChartSheet({
                                             return (
                                                 <div
                                                     key={item.id}
-                                                    className="group flex flex-col p-5 bg-white dark:bg-zinc-900 rounded-2xl border border-border/50 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 relative overflow-hidden"
+                                                    className="group flex flex-col p-4 bg-card rounded-xl border shadow-sm hover:border-primary/20 transition-all duration-300 relative overflow-hidden"
                                                 >
-                                                    <div
-                                                        className="absolute left-0 top-0 bottom-0 w-1.5 transition-all"
-                                                        style={{ backgroundColor: currentColorMap[item.id] }}
-                                                    />
-                                                    <div
-                                                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                                                        style={{ background: `linear-gradient(120deg, ${currentColorMap[item.id]}10 0%, transparent 40%)` }}
-                                                    />
-
-                                                    <div className="flex items-start justify-between mb-1 relative">
-                                                        <span className="font-semibold text-sm truncate pr-2 text-foreground/90" title={itemName}>
+                                                    <div className="flex items-start justify-between mb-2">
+                                                        <span className="font-medium text-sm truncate pr-2 text-foreground/90" title={itemName}>
                                                             {itemName}
                                                         </span>
                                                         <div
-                                                            className="w-2 h-2 rounded-full shadow-sm shrink-0"
+                                                            className="w-1.5 h-1.5 rounded-full shrink-0"
                                                             style={{ backgroundColor: currentColorMap[item.id] }}
                                                         />
                                                     </div>
-                                                    <span className="text-[10px] text-muted-foreground mb-3">{subLabel}</span>
 
-                                                    <div className="mt-auto relative">
-                                                        <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-bold">
+                                                    <div className="mt-auto">
+                                                        <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
                                                             {chartMetric === "availability" ? "Average" : "Tot. Vol."}
                                                         </p>
-                                                        <p className="text-2xl font-black tracking-tight mt-1 tabular-nums text-foreground">
+                                                        <p className="text-xl font-bold tracking-tight mt-0.5 tabular-nums text-foreground">
                                                             {displayValue}
                                                         </p>
                                                     </div>

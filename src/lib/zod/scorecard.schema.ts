@@ -5,12 +5,13 @@ export const CreateScorecardEntrySchema = z.object({
     applicationId: z.string().uuid("Invalid application ID"),
     scorecardIdentifier: z
         .string()
-        .min(2, "Identifier must be at least 2 characters")
         .max(100, "Identifier must be less than 100 characters")
         .regex(
-            /^[a-zA-Z0-9_-]+$/,
+            /^[a-zA-Z0-9_-]*$/,
             "Identifier can only contain letters, numbers, hyphens, and underscores"
-        ),
+        )
+        .optional()
+        .or(z.literal("")),
     name: z
         .string()
         .min(1, "Name is required")
@@ -108,6 +109,32 @@ export const CheckScorecardIdentifierSchema = z.object({
     excludeId: z.string().uuid().optional(), // Exclude current entry when editing
 });
 
+// Publish/Unpublish Scorecard Schema
+export const PublishScorecardSchema = z.object({
+    teamId: z.string().uuid("Invalid team ID"),
+    year: z
+        .number()
+        .int()
+        .min(2000, "Year must be 2000 or later")
+        .max(2100, "Year must be before 2100"),
+    month: z
+        .number()
+        .int()
+        .min(1, "Month must be between 1 and 12")
+        .max(12, "Month must be between 1 and 12"),
+});
+
+export const UnpublishScorecardSchema = PublishScorecardSchema;
+
+export const GetPublishStatusSchema = z.object({
+    teamId: z.string().uuid("Invalid team ID"),
+    year: z
+        .number()
+        .int()
+        .min(2000, "Year must be 2000 or later")
+        .max(2100, "Year must be before 2100"),
+});
+
 // Type exports
 export type CreateScorecardEntry = z.infer<typeof CreateScorecardEntrySchema>;
 export type UpdateScorecardEntry = z.infer<typeof UpdateScorecardEntrySchema>;
@@ -115,3 +142,7 @@ export type UpsertAvailability = z.infer<typeof UpsertAvailabilitySchema>;
 export type UpsertVolume = z.infer<typeof UpsertVolumeSchema>;
 export type BulkUpsertScorecardData = z.infer<typeof BulkUpsertScorecardDataSchema>;
 export type GetScorecardData = z.infer<typeof GetScorecardDataSchema>;
+export type PublishScorecard = z.infer<typeof PublishScorecardSchema>;
+export type UnpublishScorecard = z.infer<typeof UnpublishScorecardSchema>;
+export type GetPublishStatus = z.infer<typeof GetPublishStatusSchema>;
+

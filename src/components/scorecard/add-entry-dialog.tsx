@@ -1,4 +1,3 @@
-import React from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -93,7 +92,7 @@ export function AddEntryDialog({
                         <Label htmlFor="scorecardIdentifier">
                             Scorecard Identifier
                             <span className="text-xs text-muted-foreground ml-2">
-                                (unique, for automation)
+                                (optional, for automation)
                             </span>
                         </Label>
                         <Input
@@ -102,6 +101,9 @@ export function AddEntryDialog({
                             placeholder="e.g., kms-ideal-01"
                             className="font-mono"
                         />
+                        <p className="text-xs text-muted-foreground">
+                            A unique identifier used for API integrations. Leave empty to auto-generate.
+                        </p>
                         {errors.scorecardIdentifier && (
                             <p className="text-sm text-destructive">
                                 {errors.scorecardIdentifier.message}

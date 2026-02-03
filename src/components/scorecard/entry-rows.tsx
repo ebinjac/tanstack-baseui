@@ -1,13 +1,11 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import {
     Pencil,
     Trash2,
-    AlertTriangle,
 } from "lucide-react";
 import { upsertAvailability, upsertVolume } from "@/app/actions/scorecard";
 import type { ScorecardEntry, AvailabilityRecord, VolumeRecord, MonthInfo } from "./types";
@@ -103,25 +101,26 @@ export function EntryRows({
 
     return (
         <>
-            {/* Availability Row */}
-            <TableRow className="hover:bg-muted/20">
-                <TableCell rowSpan={2} className="align-top border-r sticky left-0 bg-background z-10">
-                    <div className="flex flex-col">
-                        <span className="font-semibold text-sm">{entry.name}</span>
-                        <span className="text-[10px] text-muted-foreground font-mono">
-                            {entry.scorecardIdentifier}
-                        </span>
-                        <div className="flex gap-1 mt-1">
-                            <Badge variant="outline" className="text-[9px] px-1.5 py-0" title={`Availability Threshold: ${availThreshold}%`}>
+            <TableRow className="hover:bg-muted/30 group transition-colors">
+                <TableCell rowSpan={2} className="align-top border-r sticky left-0 bg-background/95 backdrop-blur-sm z-10 px-4 py-5 group-hover:bg-muted/20">
+                    <div className="flex flex-col gap-1.5 min-w-[160px]">
+                        <span className="font-black text-sm tracking-tight text-foreground group-hover:text-primary transition-colors">{entry.name}</span>
+                        <div className="flex items-center gap-1.5 opacity-60">
+                            <span className="text-[10px] text-muted-foreground font-mono font-bold">
+                                {entry.scorecardIdentifier}
+                            </span>
+                        </div>
+                        <div className="flex gap-1.5 mt-2">
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-muted/30 text-[9px] font-black uppercase tracking-widest text-muted-foreground" title={`Target: ${availThreshold}%`}>
                                 A: {availThreshold}%
-                            </Badge>
-                            <Badge variant="outline" className="text-[9px] px-1.5 py-0" title={`Volume Change Threshold: ${volThreshold}%`}>
+                            </div>
+                            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-muted/30 text-[9px] font-black uppercase tracking-widest text-muted-foreground" title={`Change Threshold: ${volThreshold}%`}>
                                 V: {volThreshold}%
-                            </Badge>
+                            </div>
                         </div>
                     </div>
                 </TableCell>
-                <TableCell className="text-[10px] font-bold text-green-600 uppercase">
+                <TableCell className="text-[10px] font-black text-green-600 uppercase tracking-widest group-hover:bg-green-500/5 transition-colors border-b-border/30">
                     Avail
                 </TableCell>
                 {displayMonths.map((monthInfo) => {
@@ -131,7 +130,7 @@ export function EntryRows({
                     const isBreach = value !== undefined && parseFloat(value) < availThreshold;
 
                     return (
-                        <TableCell key={key} className="p-1 text-center">
+                        <TableCell key={key} className="p-1.5 text-center group-hover:bg-muted/10 transition-colors border-b-border/30">
                             <DataCell
                                 value={value ? `${parseFloat(value).toFixed(1)}%` : "—"}
                                 isBreach={isBreach}
@@ -159,36 +158,38 @@ export function EntryRows({
                 })}
                 {/* Avg Cell */}
                 <TableCell className={cn(
-                    "p-1 text-center font-semibold bg-primary/5",
+                    "p-1.5 text-center font-black bg-primary/[0.03] transition-colors border-b-border/30",
                     avgAvailBreach && "bg-red-500/10 text-red-600"
                 )}>
                     {avgAvailability !== null ? (
-                        <span className="text-xs">
-                            {avgAvailability.toFixed(1)}%
-                            {avgAvailBreach && <AlertTriangle className="h-3 w-3 inline ml-1 text-red-500" />}
-                        </span>
+                        <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-xs tracking-tighter tabular-nums drop-shadow-sm">
+                                {avgAvailability.toFixed(1)}%
+                            </span>
+                            {avgAvailBreach && <div className="h-1 w-4 bg-red-500 rounded-full animate-pulse" />}
+                        </div>
                     ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-xs text-muted-foreground/40">—</span>
                     )}
                 </TableCell>
                 {isAdmin && (
-                    <TableCell rowSpan={2} className="align-middle text-right">
-                        <div className="flex justify-end gap-1">
+                    <TableCell rowSpan={2} className="align-middle text-right pr-6 group-hover:bg-muted/10">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-7 w-7"
+                                className="h-8 w-8 hover:bg-primary/10 hover:text-primary rounded-lg transition-all"
                                 onClick={onEdit}
                             >
-                                <Pencil className="h-3.5 w-3.5" />
+                                <Pencil className="h-4 w-4" />
                             </Button>
                             <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-7 w-7 text-red-500 hover:text-red-600"
+                                className="h-8 w-8 text-red-500/60 hover:text-red-600 hover:bg-red-500/10 rounded-lg transition-all"
                                 onClick={onDelete}
                             >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="h-4 w-4" />
                             </Button>
                         </div>
                     </TableCell>
@@ -196,8 +197,8 @@ export function EntryRows({
             </TableRow>
 
             {/* Volume Row */}
-            <TableRow className="hover:bg-muted/20 border-b-2">
-                <TableCell className="text-[10px] font-bold text-purple-600 uppercase">
+            <TableRow className="hover:bg-muted/30 group border-b-2 border-b-border/30 transition-colors">
+                <TableCell className="text-[10px] font-black text-purple-600 uppercase tracking-widest group-hover:bg-purple-500/5 transition-colors">
                     Vol
                 </TableCell>
                 {displayMonths.map((monthInfo, index) => {
@@ -208,7 +209,7 @@ export function EntryRows({
                     const isBreach = change !== null && Math.abs(change) > volThreshold;
 
                     return (
-                        <TableCell key={key} className="p-1 text-center">
+                        <TableCell key={key} className="p-1.5 text-center group-hover:bg-muted/10 transition-colors">
                             <DataCell
                                 value={value !== undefined ? formatVolume(value) : "—"}
                                 isBreach={isBreach}
@@ -236,11 +237,11 @@ export function EntryRows({
                     );
                 })}
                 {/* Total Cell */}
-                <TableCell className="p-1 text-center font-semibold bg-primary/5">
+                <TableCell className="p-1.5 text-center font-black bg-primary/[0.03] text-indigo-700/80 group-hover:bg-primary/[0.06] transition-colors tabular-nums">
                     {totalVolume !== null ? (
-                        <span className="text-xs">{formatVolume(totalVolume)}</span>
+                        <span className="text-xs tracking-tighter">{formatVolume(totalVolume)}</span>
                     ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-xs text-muted-foreground/40">—</span>
                     )}
                 </TableCell>
             </TableRow>

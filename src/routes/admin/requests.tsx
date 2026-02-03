@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -164,20 +165,22 @@ function AdminRequests() {
                     <TooltipContent>Filter by status</TooltipContent>
                   </Tooltip>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel>Status Filter</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setStatusFilter('all')} className="flex items-center justify-between">
-                      All {statusFilter === 'all' && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter('pending')} className="flex items-center justify-between">
-                      Pending {statusFilter === 'pending' && <CheckCircle2 className="h-4 w-4 text-amber-500" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter('approved')} className="flex items-center justify-between">
-                      Approved {statusFilter === 'approved' && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter('rejected')} className="flex items-center justify-between">
-                      Rejected {statusFilter === 'rejected' && <CheckCircle2 className="h-4 w-4 text-red-500" />}
-                    </DropdownMenuItem>
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel>Status Filter</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setStatusFilter('all')} className="flex items-center justify-between">
+                        All {statusFilter === 'all' && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setStatusFilter('pending')} className="flex items-center justify-between">
+                        Pending {statusFilter === 'pending' && <CheckCircle2 className="h-4 w-4 text-amber-500" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setStatusFilter('approved')} className="flex items-center justify-between">
+                        Approved {statusFilter === 'approved' && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setStatusFilter('rejected')} className="flex items-center justify-between">
+                        Rejected {statusFilter === 'rejected' && <CheckCircle2 className="h-4 w-4 text-red-500" />}
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TooltipProvider>

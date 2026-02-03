@@ -105,64 +105,84 @@ export function ApplicationCard({
 
     return (
         <Card className={cn(
-            "shadow-sm",
-            breachCount > 0 && "border-red-500/30"
+            "transition-all duration-300 border-border/50 bg-background/50 group overflow-hidden",
+            isExpanded ? "ring-1 ring-primary/20 shadow-md" : "hover:bg-muted/30"
         )}>
             <div
-                className="flex items-center justify-between py-2 px-3 cursor-pointer hover:bg-muted/20 transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center justify-between py-4 px-5 cursor-pointer relative"
                 onClick={onToggle}
             >
-                <div className="flex items-center gap-2.5 flex-1">
-                    {isExpanded ? (
-                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                    ) : (
-                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                    <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold">{app.applicationName}</span>
-                            <Badge variant="outline" className="text-[9px] h-4 px-1">{app.tla}</Badge>
-                            {app.tier && ['0', '1', '2'].includes(String(app.tier)) && (
-                                <Badge variant="secondary" className="text-[9px] h-4 px-1 bg-red-500/10 text-red-600">
+                {/* Identity Layer */}
+                <div className="flex items-center gap-4 min-w-0">
+                    <div className={cn(
+                        "h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300",
+                        isExpanded ? "bg-primary text-primary-foreground shadow-lg scale-110" : "bg-primary/5 text-primary border border-primary/10"
+                    )}>
+                        {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 min-w-0">
+                        <div className="flex items-center flex-wrap gap-2">
+                            <span className="font-black text-lg tracking-tight group-hover:text-primary transition-colors truncate">
+                                {app.applicationName}
+                            </span>
+                            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-background/50 border-primary/20 text-primary px-2 h-5">
+                                {app.tla}
+                            </Badge>
+                            {app.tier && ["0", "1", "2"].includes(String(app.tier)) && (
+                                <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[9px] font-black uppercase tracking-widest h-5 px-1.5">
                                     T{app.tier}
                                 </Badge>
                             )}
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            {leadership.map((l, i) => (
-                                <span key={i} className="text-[9px] text-muted-foreground">
-                                    <span className="font-medium">{l.role}:</span> {l.name}
-                                    {i < leadership.length - 1 && " •"}
-                                </span>
+                        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
+                            {leadership.slice(0, 2).map((l, i) => (
+                                <div key={i} className="flex items-center gap-1.5">
+                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{l.role}</span>
+                                    <span className="text-[10px] font-bold text-foreground/80">{l.name}</span>
+                                </div>
                             ))}
                         </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-6 pr-2">
+
+                {/* Status Layer */}
+                <div className="flex items-center gap-8 mt-4 sm:mt-0 bg-background/40 p-2 sm:p-0 rounded-xl border border-border/10 sm:border-none">
                     {avgAvailability !== null && (
-                        <div className={cn(
-                            "text-right min-w-[60px]",
-                            avgAvailability < 98 ? "text-red-600" : "text-green-600"
-                        )}>
-                            <p className="text-sm font-black leading-none tabular-nums tracking-tighter">
-                                {avgAvailability.toFixed(1)}%
-                            </p>
-                            <p className="text-[8px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5">Avail</p>
+                        <div className="flex flex-col items-end group/stat">
+                            <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest leading-none mb-1.5 opacity-60">
+                                Availability
+                            </span>
+                            <div className="flex items-center gap-2">
+                                <div className={cn(
+                                    "h-1.5 w-1.5 rounded-full",
+                                    avgAvailability < 98 ? "bg-red-500 animate-pulse" : "bg-green-500"
+                                )} />
+                                <span className={cn(
+                                    "text-xl font-black tabular-nums tracking-tighter leading-none",
+                                    avgAvailability < 98 ? "text-red-600" : "text-green-600"
+                                )}>
+                                    {avgAvailability.toFixed(1)}%
+                                </span>
+                            </div>
                         </div>
                     )}
+
                     {totalVolume !== null && (
-                        <div className="text-right min-w-[80px] text-blue-600">
-                            <p className="text-sm font-black leading-none tabular-nums tracking-tighter">
+                        <div className="flex flex-col items-end group/stat">
+                            <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest leading-none mb-1.5 opacity-60">
+                                Annual Volume
+                            </span>
+                            <span className="text-xl font-black tabular-nums tracking-tighter leading-none text-indigo-600">
                                 {totalVolume > 1000000 ? `${(totalVolume / 1000000).toFixed(1)}M` : totalVolume.toLocaleString()}
-                            </p>
-                            <p className="text-[8px] text-muted-foreground uppercase font-bold tracking-widest mt-0.5">Volume</p>
+                            </span>
                         </div>
                     )}
+
                     {breachCount > 0 && (
-                        <Badge variant="destructive" className="text-[10px] h-5 px-1.5 font-bold">
-                            <AlertTriangle className="h-2.5 w-2.5 mr-1" />
-                            {breachCount}
-                        </Badge>
+                        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-red-500/10 border border-red-500/20 text-red-600">
+                            <AlertTriangle className="h-5 w-5" />
+                        </div>
                     )}
                 </div>
             </div>

@@ -12,6 +12,7 @@ import {
   BookOpen,
   Shield
 } from 'lucide-react'
+import { HeroSection } from '../components/landing/hero-section'
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
@@ -32,7 +33,7 @@ function RouteComponent() {
   // Active team ID effect
   useEffect(() => {
     const savedTeamId = localStorage.getItem('ensemble-last-team-id')
-    if (savedTeamId && session?.permissions.find(t => t.teamId === savedTeamId)) {
+    if (savedTeamId && session?.permissions?.find(t => t.teamId === savedTeamId)) {
       setActiveTeamId(savedTeamId)
     } else if (session?.permissions && session.permissions.length > 0) {
       setActiveTeamId(session.permissions[0].teamId)
@@ -46,131 +47,14 @@ function RouteComponent() {
   return (
     <div className="min-h-screen bg-background text-foreground relative selection:bg-primary/20">
 
-      {/* Dynamic Background */}
-      <div className="fixed inset-0 pointer-events-none -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/10 via-background to-background">
-        <motion.div
-          style={{ y }}
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-primary/10 blur-[130px] rounded-full mix-blend-screen opacity-60 dark:opacity-20"
-        />
-      </div>
+      <HeroSection
+        session={session}
+        scorecardHref={scorecardHref}
+        turnoverHref={turnoverHref}
+        linkManagerHref={linkManagerHref}
+      />
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-
-        {/* Creative Hero Section */}
-        <motion.section
-          className="min-h-[85vh] flex flex-col items-center justify-center text-center space-y-12 relative pt-10"
-          style={{ opacity }}
-        >
-          {/* Logo Animation */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 1, ease: "easeOut" }}
-            className="relative w-20 h-20 flex items-center justify-center"
-          >
-            <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-            <div className="relative bg-gradient-to-tr from-primary to-blue-600 p-0.5 rounded-2xl rotate-3">
-              <div className="bg-background rounded-2xl p-3 flex items-center justify-center h-full w-full">
-                <Layers className="w-8 h-8 text-primary" />
-              </div>
-            </div>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute -inset-4 border border-dashed border-primary/20 rounded-full"
-            />
-          </motion.div>
-
-          <div className="space-y-6 max-w-4xl z-10">
-            <motion.h1
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-              className="text-5xl md:text-7xl font-bold tracking-tighter text-foreground"
-            >
-              Operational Excellence, <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-b from-primary to-blue-600">Centralized.</span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
-              className="text-xl text-muted-foreground font-light max-w-2xl mx-auto leading-relaxed"
-            >
-              Stop toggling between fragmented tools. <strong>Ensemble</strong> unifies your daily operations—metrics, handovers, and resources—into one seamless workspace.
-            </motion.p>
-          </div>
-
-          {/* Quick Access Grid */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="flex flex-col md:flex-row gap-4 w-full max-w-4xl justify-center z-20"
-          >
-            <Link to={scorecardHref as any} className="flex-1 group">
-              <div className="bg-card hover:bg-muted/50 border border-border/50 hover:border-primary/30 rounded-xl p-4 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-xl flex flex-col items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                  <LayoutDashboard className="w-5 h-5" />
-                </div>
-                <div className="text-center">
-                  <h3 className="font-semibold text-sm">Scorecards</h3>
-                  <p className="text-xs text-muted-foreground mt-1">View Metrics</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link to={turnoverHref as any} className="flex-1 group">
-              <div className="bg-card hover:bg-muted/50 border border-border/50 hover:border-blue-500/30 rounded-xl p-4 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-xl flex flex-col items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform">
-                  <RefreshCcw className="w-5 h-5" />
-                </div>
-                <div className="text-center">
-                  <h3 className="font-semibold text-sm">Turnover</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Shift Logs</p>
-                </div>
-              </div>
-            </Link>
-
-            <Link to={linkManagerHref as any} className="flex-1 group">
-              <div className="bg-card hover:bg-muted/50 border border-border/50 hover:border-indigo-500/30 rounded-xl p-4 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-xl flex flex-col items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                  <Link2 className="w-5 h-5" />
-                </div>
-                <div className="text-center">
-                  <h3 className="font-semibold text-sm">Link Manager</h3>
-                  <p className="text-xs text-muted-foreground mt-1">Resources</p>
-                </div>
-              </div>
-            </Link>
-
-            {!session && (
-              <Link to="/teams/register" className="flex-1 group">
-                <div className="bg-gradient-to-br from-primary/5 to-blue-500/5 hover:from-primary/10 hover:to-blue-500/10 border border-primary/20 hover:border-primary/50 rounded-xl p-4 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-xl flex flex-col items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                    <ArrowRight className="w-5 h-5" />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="font-semibold text-sm">Get Started</h3>
-                    <p className="text-xs text-muted-foreground mt-1">Register Team</p>
-                  </div>
-                </div>
-              </Link>
-            )}
-          </motion.div>
-
-          {/* Scroll Indicator */}
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 text-muted-foreground/50"
-          >
-            <div className="w-px h-16 bg-gradient-to-b from-transparent via-primary/30 to-transparent mx-auto mb-2" />
-            <span className="text-xs uppercase tracking-[0.3em]">Scroll</span>
-          </motion.div>
-        </motion.section>
-
 
         {/* Tools Section - Sliding Hover Demo Grid */}
         <section className="py-32 space-y-24">

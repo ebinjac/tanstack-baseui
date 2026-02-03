@@ -22,7 +22,7 @@ import { getTeamApplications } from "@/app/actions/applications"
 import { LinkWithRelations } from "@/db/schema/links"
 import { toast } from "sonner"
 import { useState, useEffect } from "react"
-import { Globe2, Lock, Plus, Loader2, X, Link as LinkIcon, Type, Layers, Box, Tag, Check, Pencil } from "lucide-react"
+import { Globe2, Lock, Plus, Loader2, X, Link as LinkIcon, Type, Layers, Box, Tag, Check } from "lucide-react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -186,7 +186,7 @@ export function CreateLinkDialog({
             {(trigger || mode === 'create') && (
                 <DialogTrigger
                     render={(trigger as any) || (
-                        <Button className=" gap-2 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 font-bold">
+                        <Button className="h-11 px-5 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-bold text-xs rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-95 duration-200">
                             <Plus className="w-4 h-4" /> Add Link
                         </Button>
                     )}
@@ -195,7 +195,7 @@ export function CreateLinkDialog({
             <DialogContent className="sm:max-w-[650px] max-h-[90vh] overflow-y-auto p-0 gap-0 bg-background/95 backdrop-blur-xl border-border/50 shadow-2xl">
                 <DialogHeader className="p-6 pb-4 border-b">
                     <DialogTitle className="text-xl">
-                        {mode === 'view' ? 'Link Details' : mode === 'edit' ? 'Edit Link' : 'Add New Link'}
+                        {mode === 'view' ? 'Link Details' : mode === 'edit' ? 'Edit Link' : 'You are now adding a link'}
                     </DialogTitle>
                     <DialogDescription>
                         {mode === 'view' ? 'Information about this shared resource.' : 'Share a resource with your team.'}
@@ -207,7 +207,7 @@ export function CreateLinkDialog({
                     {/* Basic Info Group */}
                     <div className="space-y-4">
                         <div className="grid gap-2 relative">
-                            <Label htmlFor="url" className="text-xs font-semibold uppercase text-muted-foreground ml-1">Destination URL</Label>
+                            <Label htmlFor="url" className="text-xs font-semibold text-muted-foreground ml-1">Destination URL</Label>
                             <div className="relative">
                                 <LinkIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
@@ -222,7 +222,7 @@ export function CreateLinkDialog({
                         </div>
 
                         <div className="grid gap-2">
-                            <Label htmlFor="title" className="text-xs font-semibold uppercase text-muted-foreground ml-1">Display Title</Label>
+                            <Label htmlFor="title" className="text-xs font-semibold text-muted-foreground ml-1">Display Title</Label>
                             <div className="relative">
                                 <Type className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
@@ -239,7 +239,7 @@ export function CreateLinkDialog({
 
                     {/* Visibility - Redesigned */}
                     <div className="space-y-2">
-                        <Label className="text-xs font-semibold uppercase text-muted-foreground ml-1">Visibility</Label>
+                        <Label className="text-xs font-semibold text-muted-foreground ml-1">Visibility</Label>
                         <Controller
                             control={form.control}
                             name="visibility"
@@ -262,7 +262,7 @@ export function CreateLinkDialog({
                                                     : "border-muted bg-popover/50 hover:bg-accent hover:text-accent-foreground"
                                             )}
                                         >
-                                            <div className={cn("p-2 rounded-full border shadow-sm", field.value === "private" ? "bg-background" : "bg-background")}>
+                                            <div className={cn("p-2 rounded-full border", field.value === "private" ? "bg-background" : "bg-background")}>
                                                 <Lock className={cn("h-5 w-5", field.value === "private" ? "text-primary" : "text-muted-foreground")} />
                                             </div>
                                             <div className="flex flex-col">
@@ -299,7 +299,7 @@ export function CreateLinkDialog({
                     <div className="grid grid-cols-2 gap-6">
                         {/* Application Select */}
                         <div className="grid gap-2">
-                            <Label className="text-xs font-semibold uppercase text-muted-foreground ml-1 flex items-center gap-1"><Box className="w-3 h-3" /> Application</Label>
+                            <Label className="text-xs font-semibold text-muted-foreground ml-1 flex items-center gap-1"><Box className="w-3 h-3" /> Application</Label>
                             <Controller
                                 control={form.control}
                                 name="applicationId"
@@ -317,11 +317,15 @@ export function CreateLinkDialog({
                                                 }
                                             </SelectValue>
                                         </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="none" className="text-muted-foreground">No Application</SelectItem>
+                                        <SelectContent className="rounded-xl min-w-[300px] max-h-[400px]">
+                                            <SelectItem value="none" className="text-muted-foreground font-semibold">No Application</SelectItem>
                                             {applications?.map((app) => (
-                                                <SelectItem key={app.id} value={app.id}>
-                                                    {app.applicationName} <span className="text-muted-foreground ml-1 text-xs">({app.tla})</span>
+                                                <SelectItem key={app.id} value={app.id} className="font-semibold">
+                                                    <span className="flex items-center gap-2">
+                                                        <span className="text-primary/60 shrink-0">{app.applicationName}</span>
+                                                        <span className="text-muted-foreground/30 shrink-0">•</span>
+                                                        <span className="text-[10px] tracking-wider opacity-50">{app.tla}</span>
+                                                    </span>
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -332,13 +336,13 @@ export function CreateLinkDialog({
 
                         <div className="grid gap-2">
                             <div className="flex items-center justify-between">
-                                <Label className="text-xs font-semibold uppercase text-muted-foreground ml-1 flex items-center gap-1"><Layers className="w-3 h-3" /> Category</Label>
+                                <Label className="text-xs font-semibold text-muted-foreground ml-1 flex items-center gap-1"><Layers className="w-3 h-3" /> Category</Label>
                                 {!isCreatingCategory && (
                                     <Button
                                         type="button"
                                         variant="ghost"
                                         size="sm"
-                                        className="h-5 px-2 text-[10px] text-muted-foreground hover:text-primary"
+                                        className="h-5 px-2 text-[11px] text-muted-foreground hover:text-primary"
                                         onClick={() => setIsCreatingCategory(true)}
                                     >
                                         <Plus className="w-3 h-3 mr-1" /> New
@@ -401,10 +405,10 @@ export function CreateLinkDialog({
                                                     }
                                                 </SelectValue>
                                             </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none" className="text-muted-foreground">No Category</SelectItem>
+                                            <SelectContent className="rounded-xl min-w-[240px]">
+                                                <SelectItem value="none" className="text-muted-foreground font-semibold">No Category</SelectItem>
                                                 {categories?.map((cat) => (
-                                                    <SelectItem key={cat.id} value={cat.id}>
+                                                    <SelectItem key={cat.id} value={cat.id} className="font-semibold">
                                                         {cat.name}
                                                     </SelectItem>
                                                 ))}
@@ -419,7 +423,7 @@ export function CreateLinkDialog({
 
                     {/* Tags */}
                     <div className="grid gap-2">
-                        <Label className="text-xs font-semibold uppercase text-muted-foreground ml-1 flex items-center gap-1"><Tag className="w-3 h-3" /> Tags</Label>
+                        <Label className="text-xs font-semibold text-muted-foreground ml-1 flex items-center gap-1"><Tag className="w-3 h-3" /> Tags</Label>
                         <div className="bg-muted/30 border border-muted-foreground/20 rounded-md p-2 focus-within:ring-1 focus-within:ring-ring focus-within:border-ring transition-all">
                             <div className="flex flex-wrap gap-2 mb-2">
                                 {(form.watch('tags') as string[])?.map((tag) => (
@@ -449,7 +453,7 @@ export function CreateLinkDialog({
 
                     {/* Optional Details */}
                     <div className="grid gap-2">
-                        <Label htmlFor="description" className="text-xs font-semibold uppercase text-muted-foreground ml-1">Notes</Label>
+                        <Label htmlFor="description" className="text-xs font-semibold text-muted-foreground ml-1">Notes</Label>
                         <Textarea
                             id="description"
                             placeholder="Add any helpful context..."

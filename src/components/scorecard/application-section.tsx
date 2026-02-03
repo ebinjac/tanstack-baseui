@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,13 +11,10 @@ import {
 import { cn } from "@/lib/utils";
 import {
     ChevronDown,
-    ChevronRight,
     Plus,
     Activity,
-    BarChart3,
     Info,
     Hash,
-    Lock,
 } from "lucide-react";
 import type {
     Application,
@@ -96,68 +93,59 @@ export function ApplicationSection({
     };
 
     return (
-        <div>
+        <div className={cn(
+            "transition-all duration-500 overflow-hidden",
+            isExpanded ? "bg-muted/5 pb-6" : "bg-transparent"
+        )}>
             {/* Header - clickable to expand/collapse */}
             <div
-                className="flex items-center justify-between p-4 hover:bg-muted/20 cursor-pointer transition-all group border-l-4 border-l-transparent aria-expanded:border-l-primary"
+                className={cn(
+                    "flex flex-col sm:flex-row sm:items-center justify-between p-5 cursor-pointer transition-all group relative",
+                    isExpanded ? "border-l-4 border-l-primary bg-primary/[0.02]" : "hover:bg-muted/30 border-l-4 border-l-transparent"
+                )}
                 onClick={onToggle}
                 aria-expanded={isExpanded}
             >
                 {/* Left Side: App Identity */}
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted/50 group-hover:bg-primary/10 transition-colors">
-                        {isExpanded ? (
-                            <ChevronDown className="h-5 w-5 text-primary" />
-                        ) : (
-                            <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-transform group-hover:translate-x-0.5" />
-                        )}
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                            <span className="font-bold text-lg tracking-tight group-hover:text-primary transition-colors">
+                <div className="flex items-center gap-5">
+                    <div className="flex flex-col gap-1.5 min-w-0">
+                        <div className="flex items-center flex-wrap gap-2">
+                            <span className="font-black text-xl tracking-tight group-hover:text-primary transition-colors truncate">
                                 {app.applicationName}
                             </span>
-                            <Badge variant="outline" className="text-[10px] font-bold bg-background px-2 h-5 border-muted-foreground/20">
+                            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-background/50 border-primary/20 text-primary px-2 h-5">
                                 {app.tla}
                             </Badge>
-                            {app.tier && ["0", "1", "2"].includes(String(app.tier)) && (
-                                <Badge
-                                    variant="secondary"
-                                    className="text-[10px] bg-red-500/10 text-red-600 border-red-500/20 font-bold px-2 h-5"
-                                >
-                                    T{app.tier}
-                                </Badge>
-                            )}
                         </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
-                                <Hash className="h-3 w-3 opacity-50" />
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                            <div className="flex items-center gap-1 bg-muted/50 px-2 py-0.5 rounded text-[11px] font-bold font-mono">
+                                <Hash className="h-3 w-3 opacity-60" />
                                 {app.assetId}
-                            </span>
+                            </div>
                             <span className="text-muted-foreground/30">•</span>
-                            <span className="text-[11px] text-muted-foreground font-medium">
-                                {entries.length} tracked {entries.length === 1 ? "entry" : "entries"}
-                            </span>
+                            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider opacity-70">
+                                <Activity className="h-3 w-3" />
+                                {entries.length} {entries.length === 1 ? "Component" : "Components"}
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Right Side: Summary Metrics & Actions */}
-                <div className="flex items-center gap-10">
-                    <div className="hidden xl:flex items-center gap-10 border-r border-muted/50 pr-10">
+                <div className="flex items-center gap-8 mt-4 sm:mt-0">
+                    <div className="hidden lg:flex items-center gap-8 border-r border-border/50 pr-8">
                         {appStats.avgAvailability !== null && (
-                            <div className="flex flex-col items-end gap-0.5">
-                                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-none">
-                                    Accumulated Availability
+                            <div className="flex flex-col items-end group/stat">
+                                <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-none mb-2">
+                                    Availability
                                 </span>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <Activity className={cn(
-                                        "h-4 w-4",
-                                        appStats.avgAvailability < 98 ? "text-red-500" : "text-green-500"
+                                <div className="flex items-center gap-2.5">
+                                    <div className={cn(
+                                        "h-2 w-2 rounded-full animate-pulse",
+                                        appStats.avgAvailability < 98 ? "bg-red-500" : "bg-green-500"
                                     )} />
                                     <span className={cn(
-                                        "text-xl font-black tabular-nums tracking-tighter",
+                                        "text-2xl font-black tabular-nums tracking-tighter leading-none",
                                         appStats.avgAvailability < 98 ? "text-red-600" : "text-green-600"
                                     )}>
                                         {appStats.avgAvailability.toFixed(2)}%
@@ -166,107 +154,115 @@ export function ApplicationSection({
                             </div>
                         )}
 
-                        <div className="flex flex-col items-end gap-0.5">
-                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-none">
-                                Total Annual Volume
+                        <div className="flex flex-col items-end group/stat">
+                            <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-none mb-2 text-right">
+                                Annual Volume
                             </span>
-                            <div className="flex items-center gap-2 mt-1 text-indigo-600">
-                                <BarChart3 className="h-4 w-4" />
-                                <span className="text-xl font-black tabular-nums tracking-tighter">
+                            <div className="flex items-center gap-2 text-indigo-600">
+                                <Hash className="h-3.5 w-3.5" />
+                                <span className="text-2xl font-black tabular-nums tracking-tighter leading-none">
                                     {formatVolume(appStats.totalVolume)}
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         {isAdmin && (
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-9 gap-2 shadow-sm border-muted-foreground/20 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all font-bold px-4"
+                                className="h-10 gap-2 border-primary/20 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all font-black uppercase tracking-widest text-[10px] px-5 shadow-sm active:scale-95"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onAddEntry();
                                 }}
                             >
                                 <Plus className="h-4 w-4" />
-                                Add Sub-App
+                                Add Entry
                             </Button>
                         )}
+                        <div className={cn(
+                            "hidden sm:flex transition-transform duration-300",
+                            isExpanded ? "rotate-0 text-primary" : "-rotate-90 text-muted-foreground group-hover:translate-y-1"
+                        )}>
+                            <ChevronDown className="h-5 w-5" />
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Collapsible Content */}
             {isExpanded && (
-                <div className="px-4 pb-4">
+                <div className="px-5">
                     {entries.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground bg-muted/20 rounded-lg">
-                            <Info className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">No sub-applications tracked yet.</p>
+                        <div className="text-center py-12 text-muted-foreground bg-background/50 border-2 border-dashed border-border/50 rounded-2xl mx-5 mb-5">
+                            <Info className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                            <h4 className="font-bold text-foreground">No Performance Data</h4>
+                            <p className="text-xs max-w-[200px] mx-auto mt-1">Start tracking metrics by adding components to this application.</p>
                             {isAdmin && (
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="mt-3 gap-2"
+                                    className="mt-5 gap-2 font-bold uppercase tracking-widest text-[10px]"
                                     onClick={onAddEntry}
                                 >
                                     <Plus className="h-3.5 w-3.5" />
-                                    Add First Entry
+                                    Add Your First Entry
                                 </Button>
                             )}
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="hover:bg-transparent">
-                                        <TableHead className="w-[180px] font-bold text-xs uppercase tracking-wider sticky left-0 bg-background z-10">
-                                            Entry
-                                        </TableHead>
-                                        <TableHead className="w-[50px] font-bold text-xs uppercase tracking-wider">
-                                            Type
-                                        </TableHead>
-                                        {displayMonths.map((m) => (
-                                            <TableHead
-                                                key={`${m.year}-${m.month}`}
-                                                className={cn(
-                                                    "w-[70px] text-center font-bold text-xs uppercase tracking-wider",
-                                                    m.isFuture && "text-muted-foreground/50"
-                                                )}
-                                            >
-                                                {m.label}
-                                                {m.isFuture && <Lock className="h-2.5 w-2.5 inline ml-1 opacity-50" />}
+                        <div className="bg-background rounded-2xl border border-border/50 shadow-sm overflow-hidden mb-2">
+                            <div className="overflow-x-auto">
+                                <Table>
+                                    <TableHeader className="bg-muted/30">
+                                        <TableRow className="hover:bg-transparent border-b border-border/50">
+                                            <TableHead className="w-[150px] font-black text-[10px] uppercase tracking-widest sticky left-0 bg-muted/80 backdrop-blur-sm z-10 py-3">
+                                                Component Identity
                                             </TableHead>
+                                            <TableHead className="w-[50px] font-black text-[10px] uppercase tracking-widest py-3">
+                                                Type
+                                            </TableHead>
+                                            {displayMonths.map((m) => (
+                                                <TableHead
+                                                    key={`${m.year}-${m.month}`}
+                                                    className={cn(
+                                                        "w-[65px] text-center font-black text-[10px] uppercase tracking-widest py-3",
+                                                        m.isFuture && "text-muted-foreground/30"
+                                                    )}
+                                                >
+                                                    {m.label}
+                                                </TableHead>
+                                            ))}
+                                            {/* Avg/Total Column */}
+                                            <TableHead className="w-[95px] text-center font-black text-[10px] uppercase tracking-widest bg-primary/10 text-primary py-4">
+                                                Performance
+                                            </TableHead>
+                                            {isAdmin && (
+                                                <TableHead className="w-[100px] text-right font-black text-[10px] uppercase tracking-widest py-4 pr-6">
+                                                    Manage
+                                                </TableHead>
+                                            )}
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {entries.map((entry) => (
+                                            <EntryRows
+                                                key={entry.id}
+                                                entry={entry}
+                                                isAdmin={isAdmin}
+                                                availability={availabilityByEntry[entry.id] || {}}
+                                                volume={volumeByEntry[entry.id] || {}}
+                                                displayMonths={displayMonths}
+                                                onEdit={() => onEditEntry(entry)}
+                                                onDelete={() => onDeleteEntry(entry)}
+                                                teamId={teamId}
+                                            />
                                         ))}
-                                        {/* Avg/Total Column */}
-                                        <TableHead className="w-[80px] text-center font-bold text-xs uppercase tracking-wider bg-primary/5">
-                                            Avg/Total
-                                        </TableHead>
-                                        {isAdmin && (
-                                            <TableHead className="w-[80px] text-right font-bold text-xs uppercase tracking-wider">
-                                                Actions
-                                            </TableHead>
-                                        )}
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {entries.map((entry) => (
-                                        <EntryRows
-                                            key={entry.id}
-                                            entry={entry}
-                                            isAdmin={isAdmin}
-                                            availability={availabilityByEntry[entry.id] || {}}
-                                            volume={volumeByEntry[entry.id] || {}}
-                                            displayMonths={displayMonths}
-                                            onEdit={() => onEditEntry(entry)}
-                                            onDelete={() => onDeleteEntry(entry)}
-                                            teamId={teamId}
-                                        />
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                    </TableBody>
+                                </Table>
+                            </div>
                         </div>
                     )}
                 </div>

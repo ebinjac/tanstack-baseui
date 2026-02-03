@@ -17,6 +17,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as TeamsRegisterRouteImport } from './routes/teams/register'
 import { Route as AdminTeamsRouteImport } from './routes/admin/teams'
 import { Route as AdminRequestsRouteImport } from './routes/admin/requests'
+import { Route as AdminHealthRouteImport } from './routes/admin/health'
 import { Route as TeamsTeamIdTurnoverRouteImport } from './routes/teams/$teamId/turnover'
 import { Route as TeamsTeamIdSettingsRouteImport } from './routes/teams/$teamId/settings'
 import { Route as TeamsTeamIdScorecardRouteImport } from './routes/teams/$teamId/scorecard'
@@ -67,6 +68,11 @@ const AdminTeamsRoute = AdminTeamsRouteImport.update({
 const AdminRequestsRoute = AdminRequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminHealthRoute = AdminHealthRouteImport.update({
+  id: '/health',
+  path: '/health',
   getParentRoute: () => AdminRoute,
 } as any)
 const TeamsTeamIdTurnoverRoute = TeamsTeamIdTurnoverRouteImport.update({
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/profile': typeof ProfileRoute
   '/scorecard': typeof ScorecardRoute
+  '/admin/health': typeof AdminHealthRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/admin/teams': typeof AdminTeamsRoute
   '/teams/register': typeof TeamsRegisterRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/profile': typeof ProfileRoute
   '/scorecard': typeof ScorecardRoute
+  '/admin/health': typeof AdminHealthRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/admin/teams': typeof AdminTeamsRoute
   '/teams/register': typeof TeamsRegisterRoute
@@ -180,6 +188,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/profile': typeof ProfileRoute
   '/scorecard': typeof ScorecardRoute
+  '/admin/health': typeof AdminHealthRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/admin/teams': typeof AdminTeamsRoute
   '/teams/register': typeof TeamsRegisterRoute
@@ -203,6 +212,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/profile'
     | '/scorecard'
+    | '/admin/health'
     | '/admin/requests'
     | '/admin/teams'
     | '/teams/register'
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/'
     | '/profile'
     | '/scorecard'
+    | '/admin/health'
     | '/admin/requests'
     | '/admin/teams'
     | '/teams/register'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/profile'
     | '/scorecard'
+    | '/admin/health'
     | '/admin/requests'
     | '/admin/teams'
     | '/teams/register'
@@ -334,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRequestsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/health': {
+      id: '/admin/health'
+      path: '/health'
+      fullPath: '/admin/health'
+      preLoaderRoute: typeof AdminHealthRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/teams/$teamId/turnover': {
       id: '/teams/$teamId/turnover'
       path: '/teams/$teamId/turnover'
@@ -415,12 +434,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdminRouteChildren {
+  AdminHealthRoute: typeof AdminHealthRoute
   AdminRequestsRoute: typeof AdminRequestsRoute
   AdminTeamsRoute: typeof AdminTeamsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminHealthRoute: AdminHealthRoute,
   AdminRequestsRoute: AdminRequestsRoute,
   AdminTeamsRoute: AdminTeamsRoute,
   AdminIndexRoute: AdminIndexRoute,

@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import {
     LayoutDashboard,
     RefreshCcw,
@@ -10,6 +11,10 @@ import {
     BookOpen,
     User,
     LogOut,
+    Menu,
+    X,
+    ChevronRight,
+    Command,
 } from "lucide-react"
 
 import {
@@ -26,7 +31,6 @@ import {
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -51,26 +55,34 @@ const getTools = (teamId: string | null) => [
     {
         title: "Scorecard",
         href: teamId ? `/teams/${teamId}/scorecard` : "/scorecard",
-        description: "View performance metrics and team health scorecards.",
+        description: "Real-time performance metrics and health monitoring.",
         icon: LayoutDashboard,
+        color: "from-blue-500 to-blue-600",
+        bgColor: "bg-blue-500/10",
     },
     {
         title: "Turnover",
         href: teamId ? `/teams/${teamId}/turnover` : "/turnover",
-        description: "Manage shift handovers and transition history.",
+        description: "Seamless shift handovers and transition tracking.",
         icon: RefreshCcw,
+        color: "from-indigo-500 to-indigo-600",
+        bgColor: "bg-indigo-500/10",
     },
     {
         title: "Link Manager",
         href: teamId ? `/teams/${teamId}/link-manager` : "/link-manager",
-        description: "Centralized repository for all your important links.",
+        description: "Centralized repository for all your documentation.",
         icon: Link2,
+        color: "from-violet-500 to-violet-600",
+        bgColor: "bg-violet-500/10",
     },
     {
         title: "EnvMatrix",
         href: teamId ? `/teams/${teamId}/envmatrix` : "/envmatrix",
-        description: "Track application versions across different environments.",
+        description: "Track versions across environments effortlessly.",
         icon: Layers,
+        color: "from-purple-500 to-purple-600",
+        bgColor: "bg-purple-500/10",
     },
 ]
 
@@ -81,6 +93,17 @@ export function Header({ session }: { session: SessionData | null }) {
 
     const isAdmin = teams.some(t => t.role === 'ADMIN')
     const [isRefreshing, setIsRefreshing] = useState(false)
+    const [scrolled, setScrolled] = useState(false)
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+    // Scroll detection for header transformation
+    useEffect(() => {
+        const handleScroll = () => {
+            setScrolled(window.scrollY > 20)
+        }
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('scroll', handleScroll)
+    }, [])
 
     // Refresh permissions logic
     const handleRefreshPermissions = async () => {
@@ -126,166 +149,319 @@ export function Header({ session }: { session: SessionData | null }) {
     const tools = getTools(selectedTeamId)
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className=" mx-auto flex h-16 items-center px-8">
-                <div className="mr-8 flex items-center space-x-2">
-                    <Link to="/" className="flex items-center space-x-2">
-                        <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg shadow-lg shadow-primary/20">
-                            <span className="text-primary-foreground font-bold italic">E</span>
-                        </div>
-                        <span className="hidden text-xl font-bold tracking-tight sm:inline-block">
-                            Ensemble
-                        </span>
-                    </Link>
-                </div>
+        <>
+            <header
+                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ease-out ${scrolled
+                    ? 'bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm'
+                    : 'bg-transparent'
+                    }`}
+            >
+                {/* Subtle gradient line at top */}
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
-                <NavigationMenu className="hidden md:flex">
-                    <NavigationMenuList>
-                        <NavigationMenuItem>
-                            <NavigationMenuTrigger>Tools</NavigationMenuTrigger>
-                            <NavigationMenuContent>
-                                <div className="w-[400px] p-3 md:w-[500px] lg:w-[600px] bg-background/95 backdrop-blur-xl rounded-xl border shadow-xl overflow-hidden relative">
-                                    <div className="mb-3 px-2 flex items-center justify-between">
-                                        <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                                            Platform Suite
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="flex h-16 items-center justify-between">
+
+                        {/* Logo Section */}
+                        <div className="flex items-center gap-8">
+                            <Link to="/" className="flex items-center gap-3 group">
+                                <motion.div
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="relative"
+                                >
+                                    {/* Custom Ensemble Logo SVG */}
+                                    <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary to-blue-600 p-[1px] shadow-lg shadow-primary/25 overflow-hidden">
+                                        <div className="h-full w-full rounded-[11px] bg-primary flex items-center justify-center">
+                                            <svg
+                                                viewBox="0 0 32 32"
+                                                className="w-6 h-6 text-primary-foreground"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
+                                                {/* Central hub */}
+                                                <circle cx="16" cy="16" r="3" fill="currentColor" stroke="none" />
+                                                {/* Orbiting nodes */}
+                                                <circle cx="16" cy="6" r="2" fill="currentColor" stroke="none" />
+                                                <circle cx="24.5" cy="11" r="2" fill="currentColor" stroke="none" />
+                                                <circle cx="24.5" cy="21" r="2" fill="currentColor" stroke="none" />
+                                                <circle cx="16" cy="26" r="2" fill="currentColor" stroke="none" />
+                                                <circle cx="7.5" cy="21" r="2" fill="currentColor" stroke="none" />
+                                                <circle cx="7.5" cy="11" r="2" fill="currentColor" stroke="none" />
+                                                {/* Connection lines */}
+                                                <line x1="16" y1="13" x2="16" y2="8" />
+                                                <line x1="18.5" y1="14" x2="22.5" y2="12" />
+                                                <line x1="18.5" y1="18" x2="22.5" y2="20" />
+                                                <line x1="16" y1="19" x2="16" y2="24" />
+                                                <line x1="13.5" y1="18" x2="9.5" y2="20" />
+                                                <line x1="13.5" y1="14" x2="9.5" y2="12" />
+                                            </svg>
                                         </div>
-                                        <div className="h-px flex-1 bg-border/40 ml-4" />
                                     </div>
-                                    <ul className="grid grid-cols-2 gap-2 relative z-10">
-                                        {tools.map((tool) => (
-                                            <li key={tool.title}>
-                                                <NavigationMenuLink
-                                                    render={
-                                                        <Link
-                                                            to={tool.href as any}
-                                                            className="group block h-full select-none rounded-lg border border-transparent p-3 leading-none transition-all duration-200 hover:bg-muted/50 dark:hover:bg-muted/80 hover:border-border/50 focus:outline-none text-left"
-                                                        >
-                                                            <div className="flex flex-col items-start gap-3">
-                                                                <div className="flex items-center gap-3 w-full">
-                                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
-                                                                        <tool.icon className="h-4 w-4" />
-                                                                    </div>
-                                                                    <div className="flex flex-col space-y-1">
-                                                                        <div className="text-sm font-semibold text-foreground leading-none group-hover:text-primary transition-colors">
-                                                                            {tool.title}
-                                                                        </div>
-                                                                        <div className="h-0.5 w-4 bg-primary/20 group-hover:w-8 group-hover:bg-primary/50 transition-all duration-300 rounded-full" />
-                                                                    </div>
-                                                                </div>
-                                                                <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground/80 font-medium pl-0.5">
-                                                                    {tool.description}
-                                                                </p>
-                                                            </div>
-                                                        </Link>
-                                                    }
-                                                />
-                                            </li>
-                                        ))}
-                                    </ul>
+                                    {/* Glow effect */}
+                                    <div className="absolute inset-0 rounded-xl bg-primary/30 blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300" />
+                                </motion.div>
+                                <div className="hidden sm:flex flex-col">
+                                    <span className="text-lg font-bold tracking-tight text-foreground leading-none">
+                                        Ensemble
+                                    </span>
+                                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
+                                        Platform
+                                    </span>
                                 </div>
-                            </NavigationMenuContent>
-                        </NavigationMenuItem>
-                        <NavigationMenuItem>
-                            <Link to={"/support" as any} className="group h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 inline-flex">
-                                <HelpCircle className="mr-2 h-4 w-4" />
-                                Support
                             </Link>
-                        </NavigationMenuItem>
-                        <NavigationMenuItem>
-                            <Link to={"/about" as any} className="group h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 inline-flex">
-                                <Info className="mr-2 h-4 w-4" />
-                                About
-                            </Link>
-                        </NavigationMenuItem>
-                        <NavigationMenuItem>
-                            <Link to={"/know-more" as any} className="group h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 inline-flex">
-                                <BookOpen className="mr-2 h-4 w-4" />
-                                Know More
-                            </Link>
-                        </NavigationMenuItem>
-                    </NavigationMenuList>
-                </NavigationMenu>
 
-                <div className="flex flex-1 items-center justify-end space-x-4">
-                    <nav className="flex items-center space-x-2">
-                        <TeamSwitcher teams={teams} />
-                        <ModeToggle />
+                            {/* Desktop Navigation */}
+                            <NavigationMenu className="hidden lg:flex">
+                                <NavigationMenuList className="gap-1">
+                                    <NavigationMenuItem>
+                                        <NavigationMenuTrigger className="h-9 px-4 rounded-full bg-transparent hover:bg-muted/50 data-[state=open]:bg-muted/50 transition-colors">
+                                            <Command className="w-4 h-4 mr-2 text-primary" />
+                                            <span>Tools</span>
+                                        </NavigationMenuTrigger>
+                                        <NavigationMenuContent>
+                                            <div className="w-[550px] p-4 bg-background/95 backdrop-blur-2xl rounded-2xl border border-border/50 shadow-2xl shadow-black/10 overflow-hidden">
+                                                {/* Header */}
+                                                <div className="flex items-center justify-between mb-4 px-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                            <Command className="w-3 h-3 text-primary" />
+                                                        </div>
+                                                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                                            Platform Suite
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-medium">
+                                                        <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[9px]">⌘</kbd>
+                                                        <span>+</span>
+                                                        <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[9px]">K</kbd>
+                                                    </div>
+                                                </div>
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger
-                                render={
-                                    <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                                        <Avatar className="h-9 w-9">
-                                            <AvatarImage src="" alt={user?.attributes.fullName} />
-                                            <AvatarFallback className="bg-primary/10 text-primary">
+                                                {/* Tools Grid */}
+                                                <ul className="grid grid-cols-2 gap-2">
+                                                    {tools.map((tool, index) => (
+                                                        <motion.li
+                                                            key={tool.title}
+                                                            initial={{ opacity: 0, y: 10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            transition={{ delay: index * 0.05 }}
+                                                        >
+                                                            <NavigationMenuLink
+                                                                render={
+                                                                    <Link
+                                                                        to={tool.href as any}
+                                                                        className="group flex flex-col p-4 rounded-xl border border-transparent bg-transparent hover:bg-muted/50 hover:border-border/50 transition-all duration-300"
+                                                                    >
+                                                                        <div className="flex items-start gap-3">
+                                                                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tool.bgColor} text-primary group-hover:scale-110 transition-transform duration-300`}>
+                                                                                <tool.icon className="h-5 w-5" />
+                                                                            </div>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                                                                                        {tool.title}
+                                                                                    </span>
+                                                                                    <ChevronRight className="w-3 h-3 text-muted-foreground opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300" />
+                                                                                </div>
+                                                                                <p className="mt-1 text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                                                                                    {tool.description}
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </Link>
+                                                                }
+                                                            />
+                                                        </motion.li>
+                                                    ))}
+                                                </ul>
+
+                                                {/* Footer */}
+                                                <div className="mt-4 pt-3 border-t border-border/50">
+                                                    <Link
+                                                        to={"/teams/register" as any}
+                                                        className="flex items-center justify-between p-3 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors group"
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <Sparkles className="w-4 h-4 text-primary" />
+                                                            <span className="text-sm font-medium text-foreground">Create a new workspace</span>
+                                                        </div>
+                                                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </NavigationMenuContent>
+                                    </NavigationMenuItem>
+
+                                    {[
+                                        { href: "/support", icon: HelpCircle, label: "Support" },
+                                        { href: "/about", icon: Info, label: "About" },
+                                        { href: "/know-more", icon: BookOpen, label: "Docs" },
+                                    ].map((item) => (
+                                        <NavigationMenuItem key={item.label}>
+                                            <Link
+                                                to={item.href as any}
+                                                className="group inline-flex h-9 items-center justify-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
+                                            >
+                                                <item.icon className="w-4 h-4 mr-2 group-hover:text-primary transition-colors" />
+                                                {item.label}
+                                            </Link>
+                                        </NavigationMenuItem>
+                                    ))}
+                                </NavigationMenuList>
+                            </NavigationMenu>
+                        </div>
+
+                        {/* Right Section */}
+                        <div className="flex items-center gap-2">
+                            {/* Team Switcher */}
+                            <div className="hidden sm:block">
+                                <TeamSwitcher teams={teams} />
+                            </div>
+
+                            {/* Separator */}
+                            <div className="hidden sm:block h-6 w-px bg-border/50" />
+
+                            {/* Mode Toggle */}
+                            <ModeToggle />
+
+                            {/* User Menu */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger
+                                    render={
+                                        <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:ring-2 hover:ring-primary/20 transition-all">
+                                            <Avatar className="h-9 w-9 border-2 border-transparent hover:border-primary/20 transition-colors">
+                                                <AvatarImage src="" alt={user?.attributes.fullName} />
+                                                <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-semibold text-sm">
+                                                    {user?.attributes.firstName?.[0]}{user?.attributes.lastName?.[0]}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            {/* Online indicator */}
+                                            <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-background" />
+                                        </Button>
+                                    }
+                                />
+                                <DropdownMenuContent className="w-64 p-2" align="end" sideOffset={8}>
+                                    {/* User Info Header */}
+                                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mb-2">
+                                        <Avatar className="h-10 w-10">
+                                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                                                 {user?.attributes.firstName?.[0]}{user?.attributes.lastName?.[0]}
                                             </AvatarFallback>
                                         </Avatar>
-                                    </Button>
-                                }
-                            />
-                            <DropdownMenuContent className="w-56" align="end">
-                                <DropdownMenuGroup>
-                                    <DropdownMenuLabel className="font-normal">
-                                        <div className="flex flex-col space-y-1">
-                                            <p className="text-sm font-medium leading-none">{user?.attributes.fullName}</p>
-                                            <p className="text-muted-foreground text-xs leading-none">
-                                                {user?.attributes.email}
-                                            </p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-foreground truncate">{user?.attributes.fullName}</p>
+                                            <p className="text-xs text-muted-foreground truncate">{user?.attributes.email}</p>
                                         </div>
-                                    </DropdownMenuLabel>
-                                </DropdownMenuGroup>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuGroup>
-                                    <DropdownMenuItem render={
-                                        <Link to="/profile" className="flex items-center w-full cursor-pointer">
-                                            <User className="mr-2 h-4 w-4" />
-                                            <span>Profile</span>
-                                        </Link>
-                                    } />
+                                    </div>
 
-                                    <DropdownMenuItem
-                                        onClick={handleRefreshPermissions}
-                                        disabled={isRefreshing}
-                                        className="cursor-pointer"
-                                    >
-                                        <RefreshCcw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                                        <span>Refresh Permissions</span>
-                                    </DropdownMenuItem>
-
-                                    {isAdmin && (
+                                    <DropdownMenuGroup>
                                         <DropdownMenuItem render={
-                                            <Link to="/admin" className="flex items-center w-full cursor-pointer text-primary">
-                                                <ShieldCheck className="mr-2 h-4 w-4" />
-                                                <span className="font-semibold">Admin Panel</span>
+                                            <Link to="/profile" className="flex items-center w-full cursor-pointer rounded-lg">
+                                                <User className="mr-3 h-4 w-4 text-muted-foreground" />
+                                                <span>Profile</span>
                                             </Link>
                                         } />
-                                    )}
-                                </DropdownMenuGroup>
 
-                                <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                            onClick={handleRefreshPermissions}
+                                            disabled={isRefreshing}
+                                            className="cursor-pointer rounded-lg"
+                                        >
+                                            <RefreshCcw className={`mr-3 h-4 w-4 text-muted-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
+                                            <span>Refresh Permissions</span>
+                                        </DropdownMenuItem>
 
-                                <DropdownMenuGroup>
-                                    <DropdownMenuItem className="cursor-pointer">
-                                        <LifeBuoy className="mr-2 h-4 w-4" />
-                                        <span>Help & Support</span>
+                                        {isAdmin && (
+                                            <DropdownMenuItem render={
+                                                <Link to="/admin" className="flex items-center w-full cursor-pointer rounded-lg">
+                                                    <ShieldCheck className="mr-3 h-4 w-4 text-primary" />
+                                                    <span className="font-semibold text-primary">Admin Panel</span>
+                                                </Link>
+                                            } />
+                                        )}
+                                    </DropdownMenuGroup>
+
+                                    <DropdownMenuSeparator className="my-2" />
+
+                                    <DropdownMenuGroup>
+                                        <DropdownMenuItem className="cursor-pointer rounded-lg">
+                                            <LifeBuoy className="mr-3 h-4 w-4 text-muted-foreground" />
+                                            <span>Help & Support</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem className="cursor-pointer rounded-lg">
+                                            <Sparkles className="mr-3 h-4 w-4 text-muted-foreground" />
+                                            <span>What's New</span>
+                                            <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground/50" />
+                                        </DropdownMenuItem>
+                                    </DropdownMenuGroup>
+
+                                    <DropdownMenuSeparator className="my-2" />
+
+                                    <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer rounded-lg" variant="destructive">
+                                        <LogOut className="mr-3 h-4 w-4" />
+                                        <span>Log out</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem className="cursor-pointer">
-                                        <Sparkles className="mr-2 h-4 w-4" />
-                                        <span>What's New</span>
-                                        <ExternalLink className="ml-auto h-3 w-3 opacity-50" />
-                                    </DropdownMenuItem>
-                                </DropdownMenuGroup>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive" variant="destructive">
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Log out</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </nav>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+
+                            {/* Mobile Menu Button - Only visible below lg breakpoint */}
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="hidden max-lg:flex h-9 w-9 rounded-full"
+                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                style={{ display: 'var(--mobile-menu-display, none)' }}
+                            >
+                                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                            </Button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </header>
+            </header>
+
+            {/* Mobile Menu */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.2 }}
+                        className="fixed inset-x-0 top-16 z-40 lg:hidden"
+                    >
+                        <div className="bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-xl">
+                            <div className="max-w-7xl mx-auto px-4 py-4 space-y-2">
+                                {tools.map((tool) => (
+                                    <Link
+                                        key={tool.title}
+                                        to={tool.href as any}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors"
+                                    >
+                                        <div className={`h-10 w-10 rounded-xl ${tool.bgColor} flex items-center justify-center`}>
+                                            <tool.icon className="h-5 w-5 text-primary" />
+                                        </div>
+                                        <div>
+                                            <div className="font-medium text-foreground">{tool.title}</div>
+                                            <div className="text-xs text-muted-foreground">{tool.description}</div>
+                                        </div>
+                                    </Link>
+                                ))}
+                                <div className="pt-2 border-t border-border/50 mt-2">
+                                    <TeamSwitcher teams={teams} />
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Spacer for fixed header */}
+            <div className="h-16" />
+        </>
     )
 }

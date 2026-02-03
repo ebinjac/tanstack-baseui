@@ -5,6 +5,7 @@ import {
     Settings,
     ChevronRight,
     ShieldCheck,
+    Activity,
 } from "lucide-react"
 import {
     Sidebar,
@@ -35,6 +36,11 @@ const items = [
         title: "Teams",
         url: "/admin/teams",
         icon: Users,
+    },
+    {
+        title: "System Health",
+        url: "/admin/health",
+        icon: Activity,
     },
 ]
 

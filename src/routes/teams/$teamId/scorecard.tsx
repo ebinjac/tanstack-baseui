@@ -41,14 +41,10 @@ import {
   Hash,
   Percent,
   Calendar,
-  Filter,
-  LayoutDashboard,
   CheckCircle2,
-
   Send,
   Eye,
   EyeOff,
-
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -411,181 +407,153 @@ function ScorecardPage() {
     : TIME_PERIOD_OPTIONS.find(p => p.value === selectedPeriod)?.label || "";
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-7xl space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="container mx-auto py-8 px-6 max-w-7xl space-y-8 animate-in fade-in duration-500">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/50">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <BarChart3 className="h-8 w-8 text-primary" />
+          <h1 className="text-4xl font-black tracking-tight text-foreground">
             Scorecard
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Track availability and volume metrics for {team.teamName}
+          <p className="text-sm text-muted-foreground mt-2 font-medium flex items-center gap-2">
+            Metrics tracking for
+            <span className="text-foreground font-black px-2 py-0.5 rounded bg-muted/50 border border-border/50">
+              {team.teamName}
+            </span>
           </p>
         </div>
 
-        <Link to="/scorecard">
-          <Button variant="outline" size="sm" className="gap-2 h-9">
-            <LayoutDashboard className="h-4 w-4" />
-            Enterprise Scorecard
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/scorecard">
+            <Button variant="outline" size="sm" className="gap-2 h-10 px-4 font-black uppercase tracking-widest text-[10px] border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all active:scale-95 shadow-sm">
+              <Activity className="h-4 w-4 text-primary" />
+              Enterprise View
+            </Button>
+          </Link>
+          {isAdmin && (
+            <Link to="/teams/$teamId/settings" params={{ teamId }}>
+              <Button variant="ghost" size="sm" className="h-10 px-3 hover:bg-muted/50 transition-all font-bold text-xs">
+                Manage Apps
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatsCard
-          icon={<Activity className="h-4 w-4 text-blue-500" />}
+          icon={<Activity className="text-blue-500" />}
           label="Applications"
           value={stats.apps}
         />
         <StatsCard
-          icon={<Hash className="h-4 w-4 text-indigo-500" />}
-          label="Tracked Entries"
+          icon={<Hash className="text-indigo-500" />}
+          label="Tracked Tech"
           value={stats.entries}
         />
         <StatsCard
-          icon={<Percent className="h-4 w-4 text-green-500" />}
-          label="Availability Records"
+          icon={<Percent className="text-green-500" />}
+          label="Availability"
           value={stats.availRecords}
           sublabel={filterLabel}
         />
         <StatsCard
-          icon={<TrendingUp className="h-4 w-4 text-purple-500" />}
-          label="Volume Records"
+          icon={<TrendingUp className="text-purple-500" />}
+          label="Volume Log"
           value={stats.volRecords}
           sublabel={filterLabel}
         />
         <StatsCard
-          icon={<AlertTriangle className="h-4 w-4 text-red-500" />}
-          label="Breaches"
+          icon={<AlertTriangle className="text-red-500" />}
+          label="SLA Breaches"
           value={stats.availBreaches}
           highlight={stats.availBreaches > 0}
           sublabel={filterLabel}
         />
       </div>
 
-      {/* Publish Status for Admin */}
+      {/* Sync Status Bar */}
       {isAdmin && (
-        <Card className={cn(
-          "shadow-sm transition-all",
+        <div className={cn(
+          "flex flex-col md:flex-row md:items-center justify-between gap-4 px-5 py-3 rounded-2xl border transition-all duration-300",
           (unpublishedMonths.length > 0 || pendingChangesMonths.length > 0)
-            ? pendingChangesMonths.length > 0
-              ? "border-orange-500/50 bg-gradient-to-r from-orange-500/5 to-orange-500/10"
-              : "border-amber-500/50 bg-gradient-to-r from-amber-500/5 to-amber-500/10"
-            : "border-green-500/50 bg-gradient-to-r from-green-500/5 to-green-500/10"
+            ? "border-orange-500/30 bg-orange-500/[0.04] ring-1 ring-orange-500/10"
+            : "border-green-500/20 bg-green-500/[0.02]"
         )}>
-          <CardHeader className="py-3 px-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            {(unpublishedMonths.length > 0 || pendingChangesMonths.length > 0) ? (
               <div className="flex items-center gap-3">
-                {(unpublishedMonths.length > 0 || pendingChangesMonths.length > 0) ? (
-                  <div className={cn(
-                    "p-2 rounded-full",
-                    pendingChangesMonths.length > 0 ? "bg-orange-500/20" : "bg-amber-500/20"
-                  )}>
-                    <AlertTriangle className={cn(
-                      "h-5 w-5",
-                      pendingChangesMonths.length > 0 ? "text-orange-500" : "text-amber-500"
-                    )} />
-                  </div>
-                ) : (
-                  <div className="p-2 rounded-full bg-green-500/20">
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  </div>
-                )}
-                <div>
-                  <CardTitle className="text-base">
-                    {pendingChangesMonths.length > 0 && unpublishedMonths.length > 0
-                      ? `${pendingChangesMonths.length} Pending + ${unpublishedMonths.length} Unpublished`
-                      : pendingChangesMonths.length > 0
-                        ? `${pendingChangesMonths.length} Month${pendingChangesMonths.length > 1 ? 's' : ''} with Pending Changes`
-                        : unpublishedMonths.length > 0
-                          ? `${unpublishedMonths.length} Month${unpublishedMonths.length > 1 ? 's' : ''} Not Published`
-                          : "All Months Published"
-                    }
-                  </CardTitle>
-                  <CardDescription className="text-sm">
-                    {pendingChangesMonths.length > 0
-                      ? "Data was modified after publishing. Republish to sync changes to Enterprise Scorecard."
-                      : unpublishedMonths.length > 0
-                        ? "These scorecards are not visible in the Enterprise Scorecard yet."
-                        : "All scorecard data is visible in the Enterprise Scorecard."
-                    }
-                  </CardDescription>
+                <AlertTriangle className="h-5 w-5 text-orange-600 animate-pulse" />
+                <div className="flex flex-col">
+                  <span className="text-xs font-black uppercase tracking-widest text-orange-700">
+                    Sync Required
+                  </span>
+                  <span className="text-[10px] font-bold text-orange-600/70">
+                    Select a month below to publish changes
+                  </span>
                 </div>
               </div>
-
-              {/* Publish Management */}
-              <div className="flex flex-wrap items-center gap-2">
-                {displayMonths.filter(m => !m.isFuture).map(({ year, month, label }) => {
-                  const key = `${year}-${month}`;
-                  const hasPending = pendingChangesMonths.some(p => p.year === year && p.month === month);
-                  const isUnpublished = unpublishedMonths.some(u => u.year === year && u.month === month);
-
-                  // Determine the state: pending > unpublished > published
-                  let colorClass = "";
-                  let icon = null;
-
-                  if (hasPending) {
-                    colorClass = "bg-orange-500/20 text-orange-700 dark:text-orange-400 hover:bg-orange-500/30 ring-1 ring-orange-500/50";
-                    icon = <AlertTriangle className="h-3 w-3" />;
-                  } else if (isUnpublished) {
-                    colorClass = "bg-amber-500/20 text-amber-700 dark:text-amber-400 hover:bg-amber-500/30";
-                    icon = <EyeOff className="h-3 w-3" />;
-                  } else {
-                    colorClass = "bg-green-500/20 text-green-700 dark:text-green-400 hover:bg-green-500/30";
-                    icon = <Eye className="h-3 w-3" />;
-                  }
-
-                  return (
-                    <div
-                      key={key}
-                      className={cn(
-                        "flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-all cursor-pointer",
-                        colorClass
-                      )}
-                      onClick={() => (hasPending || isUnpublished) ? handlePublishClick(year, month) : handleUnpublishClick(year, month)}
-                      title={hasPending ? "Pending changes - click to republish" : isUnpublished ? "Not published - click to publish" : "Published - click to unpublish"}
-                    >
-                      {icon}
-                      <span>{label}</span>
-                    </div>
-                  );
-                })}
+            ) : (
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                <span className="text-xs font-black uppercase tracking-widest text-green-700/70">
+                  Fully Synchronized
+                </span>
               </div>
-            </div>
-          </CardHeader>
-        </Card>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1">
+            {displayMonths.filter(m => !m.isFuture).map(({ year, month, label }) => {
+              const key = `${year}-${month}`;
+              const hasPending = pendingChangesMonths.some(p => p.year === year && p.month === month);
+              const isUnpublished = unpublishedMonths.some(u => u.year === year && u.month === month);
+
+              let colorClass = "";
+              if (hasPending) colorClass = "bg-orange-500/10 text-orange-700 border-orange-500/20";
+              else if (isUnpublished) colorClass = "bg-amber-500/10 text-amber-700 border-amber-500/20";
+              else colorClass = "bg-green-500/5 text-green-700/50 border-green-500/10 hover:bg-green-500/10";
+
+              return (
+                <button
+                  key={key}
+                  className={cn(
+                    "px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight transition-all border active:scale-95",
+                    colorClass
+                  )}
+                  onClick={() => (hasPending || isUnpublished) ? handlePublishClick(year, month) : handleUnpublishClick(year, month)}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* Main Content */}
-      <Card className="shadow-sm border-muted/60">
-        <CardHeader className="py-3 px-4 border-b">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <Card className="shadow-sm border-border/50 overflow-hidden rounded-3xl bg-card/30 backdrop-blur-sm">
+        <CardHeader className="py-5 px-6 border-b border-border/40 bg-muted/20">
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
             <div>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-primary" />
-                Application Metrics
+              <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+                <BarChart3 className="h-6 w-6 text-primary" />
+                Service Metrics
               </CardTitle>
-              <CardDescription>
-                View and edit availability and volume data. Future months are locked.
+              <CardDescription className="text-sm font-medium mt-1">
+                Performance tracking and reliability metrics for application services.
               </CardDescription>
             </div>
 
-            {/* Filters */}
-            <div className="flex items-center gap-2 bg-muted/30 p-2 rounded-lg">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Filter className="h-4 w-4" />
-              </div>
-
-              {/* View Mode Toggle */}
-              <div className="flex rounded-md border border-border overflow-hidden">
+            {/* Structured Toolbar */}
+            <div className="flex flex-wrap items-center gap-3 bg-background/60 p-1.5 rounded-2xl border border-border/50 shadow-sm backdrop-blur-md">
+              <div className="flex rounded-xl border border-border p-1 bg-muted/30">
                 <button
                   className={cn(
-                    "px-3 py-1.5 text-xs font-medium transition-colors",
+                    "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg",
                     viewMode === "period"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-background hover:bg-muted"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted"
                   )}
                   onClick={() => setViewMode("period")}
                 >
@@ -593,10 +561,10 @@ function ScorecardPage() {
                 </button>
                 <button
                   className={cn(
-                    "px-3 py-1.5 text-xs font-medium transition-colors border-l",
+                    "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg",
                     viewMode === "year"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-background hover:bg-muted"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:bg-muted"
                   )}
                   onClick={() => setViewMode("year")}
                 >
@@ -604,51 +572,24 @@ function ScorecardPage() {
                 </button>
               </div>
 
-              <div className="h-6 w-px bg-muted mx-1" />
+              <div className="h-6 w-px bg-border/50 mx-1" />
 
-              {/* Visualize Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-xs gap-1.5 hover:bg-background border border-transparent hover:border-border transition-all text-primary hover:text-primary"
-                onClick={() => setShowChart(true)}
-              >
-                <TrendingUp className="h-3.5 w-3.5" />
-                Visualize
-              </Button>
-
-              <div className="h-6 w-px bg-muted mx-1" />
-
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 px-2 text-xs gap-1.5 hover:bg-background border border-transparent hover:border-border transition-all"
-                onClick={toggleAllApps}
-              >
-                <ChevronsUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-                {expandedApps.size > 0 && expandedApps.size === (scorecardData?.applications?.length || 0)
-                  ? "Collapse All"
-                  : "Expand All"}
-              </Button>
-
-              <div className="h-6 w-px bg-muted mx-1" />
-
-              {/* Period Selector (when in period mode) */}
-              {viewMode === "period" && (
+              {/* Period/Year Selector */}
+              {viewMode === "period" ? (
                 <Select
                   value={selectedPeriod}
                   onValueChange={(val) => setSelectedPeriod(val as TimePeriod)}
                 >
-                  <SelectTrigger className="w-[160px] bg-background border-none shadow-none h-8 font-medium">
-                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectTrigger className="w-[160px] bg-background border border-border/50 h-9 font-bold text-xs rounded-xl focus:ring-primary/20 transition-all">
+                    <Calendar className="h-4 w-4 mr-2 text-primary" />
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl border-border/50 shadow-xl">
                     {TIME_PERIOD_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
+                      <SelectItem key={option.value} value={option.value} className="py-2 focus:bg-primary/10">
                         <div className="flex flex-col">
-                          <span>{option.label}</span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="font-bold text-xs">{option.label}</span>
+                          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
                             {option.description}
                           </span>
                         </div>
@@ -656,27 +597,50 @@ function ScorecardPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              )}
-
-              {/* Year Selector (when in year mode) */}
-              {viewMode === "year" && (
+              ) : (
                 <Select
                   value={String(selectedYear)}
                   onValueChange={(val) => setSelectedYear(Number(val))}
                 >
-                  <SelectTrigger className="w-[120px] bg-background border-none shadow-none h-8 font-medium">
-                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectTrigger className="w-[120px] bg-background border border-border/50 h-9 font-bold text-xs rounded-xl focus:ring-primary/20 transition-all">
+                    <Calendar className="h-4 w-4 mr-2 text-primary" />
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="rounded-xl border-border/50 shadow-xl">
                     {AVAILABLE_YEARS.map((year) => (
-                      <SelectItem key={year} value={String(year)}>
-                        {year}
+                      <SelectItem key={year} value={String(year)} className="focus:bg-primary/10 font-bold text-xs py-2">
+                        Year {year}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               )}
+
+              <div className="h-6 w-px bg-border/50 mx-1" />
+
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 px-3 text-[10px] font-black uppercase tracking-widest gap-2 bg-background hover:bg-primary/5 hover:text-primary hover:border-primary/40 border-border/50 transition-all rounded-xl active:scale-95"
+                  onClick={() => setShowChart(true)}
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Visualize
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-3 text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-muted/50 transition-all rounded-xl border border-transparent hover:border-border/50"
+                  onClick={toggleAllApps}
+                >
+                  <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                  {expandedApps.size > 0 && expandedApps.size === (scorecardData?.applications?.length || 0)
+                    ? "Collapse All"
+                    : "Expand All"}
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -841,6 +805,6 @@ function ScorecardPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </div >
   );
 }

@@ -21,10 +21,12 @@ function AdminLayout() {
   // Simple logic to determine breadcrumbs based on path
   const isRequests = location.pathname.includes('/requests')
   const isTeams = location.pathname.includes('/teams')
+  const isHealth = location.pathname.includes('/health')
 
   let pageName = 'Dashboard'
   if (isRequests) pageName = 'Team Requests'
   if (isTeams) pageName = 'Teams'
+  if (isHealth) pageName = 'System Health'
 
   return (
     <SidebarProvider>

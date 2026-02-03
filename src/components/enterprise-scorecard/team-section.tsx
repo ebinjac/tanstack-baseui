@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { ChevronDown, ChevronRight, Eye } from "lucide-react";
 import { ApplicationCard } from "./application-card";
 import type {
@@ -75,39 +76,64 @@ export function TeamSection({
 
     return (
         <div className="group">
-            {/* Compact Team Header */}
+            {/* Premium Team Header */}
             <div
-                className="flex items-center justify-between py-2 px-3 hover:bg-muted/40 cursor-pointer transition-colors"
+                className={cn(
+                    "flex items-center justify-between py-3 px-4 transition-all cursor-pointer border-b border-transparent",
+                    isExpanded ? "bg-muted/30 border-border/50" : "hover:bg-muted/40"
+                )}
                 onClick={onToggle}
             >
-                <div className="flex items-center gap-2 min-w-0">
-                    {isExpanded ? (
-                        <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-                    ) : (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                    )}
-                    <span className="font-medium text-sm truncate">{team.teamName}</span>
-                    <span className="text-xs text-muted-foreground shrink-0">
-                        {teamStats.apps} apps • {teamStats.entries} entries
-                    </span>
-                    {teamStats.breaches > 0 && (
-                        <Badge variant="destructive" className="h-5 text-[10px] px-1.5 shrink-0">
-                            {teamStats.breaches}
-                        </Badge>
-                    )}
+                <div className="flex items-center gap-4 min-w-0">
+                    <div className={cn(
+                        "flex items-center justify-center h-8 w-8 rounded-xl border transition-all",
+                        isExpanded ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border shadow-sm text-muted-foreground"
+                    )}>
+                        {isExpanded ? (
+                            <ChevronDown className="h-5 w-5" />
+                        ) : (
+                            <ChevronRight className="h-5 w-5" />
+                        )}
+                    </div>
+
+                    <div className="flex flex-col">
+                        <span className="font-black text-lg tracking-tight group-hover:text-primary transition-colors">
+                            {team.teamName}
+                        </span>
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                                {teamStats.apps} Applications
+                            </span>
+                            <span className="text-muted-foreground/30">•</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                                {teamStats.entries} Metrics
+                            </span>
+                            {teamStats.breaches > 0 && (
+                                <>
+                                    <span className="text-muted-foreground/30">•</span>
+                                    <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[9px] font-black uppercase tracking-widest h-4 px-1.5">
+                                        {teamStats.breaches} Breaches
+                                    </Badge>
+                                </>
+                            )}
+                        </div>
+                    </div>
                 </div>
-                <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onViewFull();
-                    }}
-                >
-                    <Eye className="h-3.5 w-3.5 mr-1" />
-                    View
-                </Button>
+
+                <div className="flex items-center gap-3">
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-9 px-4 text-[10px] font-black uppercase tracking-widest gap-2 bg-background/50 border border-border/10 hover:border-primary/40 hover:text-primary transition-all opacity-0 group-hover:opacity-100"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onViewFull();
+                        }}
+                    >
+                        <Eye className="h-4 w-4" />
+                        View Report
+                    </Button>
+                </div>
             </div>
 
             {/* Team Content */}

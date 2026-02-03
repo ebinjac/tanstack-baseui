@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Check, ChevronRight, User, Users, Shield, BookUser, Loader2 } from 'lucide-react'
+import { Check, ChevronRight, User, Users, Shield, BookUser, Loader2, Activity } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
@@ -22,9 +22,9 @@ export const Route = createFileRoute('/teams/register')({
 
 const STEPS = [
   { id: 1, title: 'Team Details', description: 'Basic information about your team', icon: Users },
-  { id: 2, title: 'Access & Groups', description: 'Configure permissions and groups', icon: Shield },
-  { id: 3, title: 'Contact Info', description: 'Primary contact for this team', icon: BookUser },
-  { id: 4, title: 'Review', description: 'Verify and submit your request', icon: Check },
+  { id: 2, title: 'Access Control', description: 'Configure permissions and groups', icon: Shield },
+  { id: 3, title: 'Contact Information', description: 'Primary contact for this team', icon: BookUser },
+  { id: 4, title: 'Review & Submit', description: 'Verify and complete registration', icon: Check },
 ]
 
 function TeamRegistrationPage() {
@@ -70,6 +70,7 @@ function TeamRegistrationPage() {
     const timer = setTimeout(checkName, 500)
     return () => clearTimeout(timer)
   }, [teamName, setError, clearErrors])
+
   const [isSuccess, setIsSuccess] = useState(false)
 
   const registerMutation = useMutation({
@@ -116,35 +117,38 @@ function TeamRegistrationPage() {
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen p-6 md:p-12 flex items-center justify-center">
+      <div className="min-h-screen p-6 md:p-12 flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4 }}
-          className="w-full max-w-xl"
+          className="w-full max-w-lg"
         >
-          <Card className="text-center p-8 space-y-6 shadow-2xl border-none ring-1 ring-gray-200 dark:ring-gray-800">
-            <div className="mx-auto w-24 h-24 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-6">
-              <Check className="h-12 w-12 text-green-600 dark:text-green-400" />
+          <Card className="text-center p-10 space-y-6 shadow-xl rounded-2xl border-border/50 bg-card/50 backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-1 bg-success" />
+            <div className="mx-auto w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mb-6">
+              <Check className="h-10 w-10 text-success" />
             </div>
             <div className="space-y-3">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Request Submitted</h2>
-              <p className="text-gray-500 dark:text-gray-400 text-lg">
-                Your team registration request has been received.
+              <h2 className="text-3xl font-bold tracking-tight text-foreground">Registration Submitted</h2>
+              <p className="text-muted-foreground text-lg">
+                Your request has been sent for review.
               </p>
-              <p className="text-gray-600 dark:text-gray-300">
-                We have sent a confirmation email to <span className="font-semibold text-gray-900 dark:text-white">{getValues('contactEmail')}</span>.
-                You will be notified once an administrator reviews and approves your request.
-              </p>
+              <div className="max-w-sm mx-auto p-4 rounded-xl bg-muted/40 border border-border/50 text-sm">
+                <p className="leading-relaxed">
+                  A confirmation email has been sent to <span className="font-semibold text-primary">{getValues('contactEmail')}</span>.
+                  You will be notified once an administrator approves the request.
+                </p>
+              </div>
             </div>
 
-            <div className="pt-8">
+            <div className="pt-6">
               <Button
                 size="lg"
                 onClick={() => router.navigate({ to: '/' })}
-                className="bg-blue-600 hover:bg-blue-700 text-white min-w-[200px]"
+                className="w-full md:w-auto px-8"
               >
-                Return to Home
+                Return to Dashboard
               </Button>
             </div>
           </Card>
@@ -154,20 +158,32 @@ function TeamRegistrationPage() {
   }
 
   return (
-    <div className="min-h-screen 0 p-6 md:p-12">
-      <div className="max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background text-foreground relative overflow-hidden selection:bg-primary/20">
+      {/* Background Ornaments */}
+      <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Header */}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-100">Register New Team</h1>
-          <p className="text-gray-500 dark:text-gray-400 text-lg">Create a new team workspace and manage your applications.</p>
-        </div>
+      <div className="container mx-auto px-4 py-8 md:py-16 max-w-5xl relative z-10">
+        <div className="flex flex-col lg:flex-row gap-12">
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Sidebar Design */}
+          <div className="lg:w-[320px] space-y-10">
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold uppercase tracking-wider">
+                Team Registration
+              </div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Create Workspace
+              </h1>
+              <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
+                Follow the steps to register your team and provision a new digital workspace on the Ensemble platform.
+              </p>
+            </div>
 
-          {/* Sidebar Stepper */}
-          <div className="lg:col-span-4 space-y-6">
-            <nav aria-label="Progress" className="space-y-1">
+            <nav className="relative space-y-2">
+              {/* Stepper Vertical Line */}
+              <div className="absolute left-5 top-2 bottom-2 w-px bg-border/60" />
+
               {STEPS.map((step) => {
                 const isCurrent = currentStep === step.id
                 const isCompleted = currentStep > step.id
@@ -177,94 +193,131 @@ function TeamRegistrationPage() {
                   <div
                     key={step.id}
                     className={`
-                                    relative flex items-center p-4 rounded-xl border transition-all duration-200
-                                    ${isCurrent
-                        ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/10 dark:border-blue-500 shadow-sm'
-                        : isCompleted
-                          ? 'border-green-200 bg-green-50/30 dark:border-green-900 dark:bg-green-950/10'
-                          : 'border-transparent hover:bg-gray-100 dark:hover:bg-gray-800'
-                      }
-                                `}
+                      relative flex items-start p-2 gap-3 transition-all duration-200
+                      ${isCurrent ? 'bg-primary/5 rounded-lg' : ''}
+                    `}
                   >
                     <div className={`
-                                    flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 transition-colors
-                                    ${isCurrent
-                        ? 'border-blue-600 bg-blue-600 text-white'
+                      relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300
+                      ${isCurrent
+                        ? 'border-primary bg-primary text-primary-foreground'
                         : isCompleted
-                          ? 'border-green-500 bg-green-500 text-white'
-                          : 'border-gray-300 text-gray-500 dark:border-gray-700'
+                          ? 'border-success bg-success text-success-foreground'
+                          : 'border-border bg-background text-muted-foreground'
                       }
-                                `}>
-                      {isCompleted ? <Check className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
+                    `}>
+                      {isCompleted ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
                     </div>
-                    <div className="ml-4 min-w-0">
-                      <p className={`text-sm font-medium ${isCurrent ? 'text-blue-700 dark:text-blue-400' : 'text-gray-900 dark:text-gray-200'}`}>
+                    <div className="min-w-0 pt-0.5">
+                      <p className={`text-xs font-semibold tracking-tight ${isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
                         {step.title}
                       </p>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{step.description}</p>
+                      <p className={`text-[11px] mt-0.5 transition-opacity duration-300 ${isCurrent ? 'opacity-100 text-muted-foreground' : 'opacity-60 text-muted-foreground'}`}>
+                        {step.description}
+                      </p>
                     </div>
                   </div>
                 )
               })}
             </nav>
+
+            <div className="hidden lg:block pt-4">
+              <div className="p-5 rounded-xl bg-muted/30 border border-border/50 space-y-3 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                  <Shield className="w-3.5 h-3.5 text-primary" />
+                  Security Note
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Access is managed via Active Directory groups. Ensure the groups are active before submitting.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Main Form Area */}
-          <div className="lg:col-span-8">
-            <Card className="border-none shadow-xl ring-1 ring-gray-200 dark:ring-gray-800 overflow-hidden">
-              <CardHeader className="border-b border-gray-100 dark:border-gray-800 pb-6">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  {STEPS[currentStep - 1].title}
-                  <span className="text-sm font-normal text-gray-400 ml-auto">Step {currentStep} of {STEPS.length}</span>
-                </CardTitle>
-                <CardDescription>
-                  {STEPS[currentStep - 1].description}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-6 min-h-[400px]">
-                <form className="space-y-6">
+          <div className="flex-1">
+            <Card className="rounded-xl border-border/50 shadow-lg bg-card/60 backdrop-blur-xl flex flex-col min-h-[500px]">
+              {/* Card Header with Progress Bar */}
+              <div className="px-6 pt-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xl font-bold tracking-tight">{STEPS[currentStep - 1].title}</h3>
+                    <p className="text-sm text-muted-foreground">{STEPS[currentStep - 1].description}</p>
+                  </div>
+                  <div className="text-right flex items-center gap-2">
+                    <span className="text-sm font-medium text-muted-foreground">Step</span>
+                    <span className="text-xl font-bold text-primary">{currentStep}</span>
+                    <span className="text-xs text-muted-foreground/50">/ {STEPS.length}</span>
+                  </div>
+                </div>
+                {/* Progress Bar */}
+                <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-primary"
+                    initial={{ width: "0%" }}
+                    animate={{ width: `${(currentStep / STEPS.length) * 100}%` }}
+                    transition={{ type: "spring", stiffness: 80, damping: 15 }}
+                  />
+                </div>
+              </div>
+
+              <CardContent className="flex-1 px-6 py-6 mt-2">
+                <form className="h-full">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={currentStep}
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.25 }}
+                      className="space-y-6 h-full"
                     >
 
-                      {/* Step 1: Team Details */}
+                      {/* Step 1: Team Identity */}
                       {currentStep === 1 && (
                         <div className="space-y-6">
-                          <div className="space-y-2">
-                            <Label htmlFor="teamName" className="text-base font-semibold">Team Name <span className="text-red-500">*</span></Label>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="teamName" className="text-sm font-semibold">
+                              Team Name <span className="text-primary">*</span>
+                            </Label>
                             <div className="relative">
                               <Input
                                 id="teamName"
-                                placeholder="e.g. Engineering Platform"
-                                className="h-12 text-lg pr-12"
+                                placeholder="e.g. Platform Operations"
+                                className={`h-10 bg-background/50 transition-all ${errors.teamName ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                                 {...form.register('teamName')}
                               />
-                              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                 {isCheckingName ? (
-                                  <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                                 ) : teamName?.length >= 3 && !errors.teamName ? (
-                                  <Check className="h-5 w-5 text-green-500" />
+                                  <Check className="h-4 w-4 text-success" />
                                 ) : null}
                               </div>
                             </div>
-                            {errors.teamName && <p className="text-sm text-red-500 font-medium">{errors.teamName.message}</p>}
-                            <p className="text-sm text-gray-500">This will be the unique identifier for your team workspace.</p>
+                            {errors.teamName && (
+                              <p className="text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                                {errors.teamName.message}
+                              </p>
+                            )}
+                            <p className="text-[11px] text-muted-foreground pl-0.5">
+                              This name will identify your team workspace across the platform.
+                            </p>
                           </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="comments" className="text-base font-semibold">Description / Comments</Label>
+                          <div className="space-y-1.5">
+                            <Label htmlFor="comments" className="text-sm font-semibold">
+                              Description & Notes
+                            </Label>
                             <Textarea
                               id="comments"
-                              placeholder="Briefly describe the purpose of this team..."
-                              className="min-h-[120px] resize-none text-base"
+                              placeholder="Describe the team's primary function and scope..."
+                              className="min-h-[120px] bg-background/50 resize-none text-sm"
                               {...form.register('comments')}
                             />
-                            <p className="text-sm text-gray-500">Help approvers understand the purpose of this team.</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              Provide context to help administrators process your request efficiently.
+                            </p>
                           </div>
                         </div>
                       )}
@@ -273,38 +326,46 @@ function TeamRegistrationPage() {
                       {currentStep === 2 && (
                         <div className="space-y-6">
                           <div className="grid gap-6">
-                            <div className="space-y-2">
-                              <Label htmlFor="userGroup" className="text-base font-semibold">User Group (read-only) <span className="text-red-500">*</span></Label>
+                            <div className="space-y-1.5">
+                              <Label htmlFor="userGroup" className="text-sm font-semibold">
+                                User Active Directory Group <span className="text-primary">*</span>
+                              </Label>
                               <div className="relative">
-                                <Users className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
                                   id="userGroup"
-                                  placeholder="e.g. ENSEMBLE-USERS-L"
-                                  className="pl-10 h-12"
+                                  placeholder="e.g. ENSEMBLE-PE-USERS"
+                                  className="pl-10 h-10 bg-background/50"
                                   {...form.register('userGroup')}
                                 />
                               </div>
-                              {errors.userGroup && <p className="text-sm text-red-500">{errors.userGroup.message}</p>}
+                              {errors.userGroup && <p className="text-[11px] text-destructive font-medium mt-1">{errors.userGroup.message}</p>}
                             </div>
 
-                            <div className="space-y-2">
-                              <Label htmlFor="adminGroup" className="text-base font-semibold">Admin Group (full access) <span className="text-red-500">*</span></Label>
+                            <div className="space-y-1.5">
+                              <Label htmlFor="adminGroup" className="text-sm font-semibold">
+                                Admin Active Directory Group <span className="text-primary">*</span>
+                              </Label>
                               <div className="relative">
-                                <Shield className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
+                                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
                                   id="adminGroup"
-                                  placeholder="e.g. ENSEMBLE-ADMINS-L"
-                                  className="pl-10 h-12"
+                                  placeholder="e.g. ENSEMBLE-PE-ADMINS"
+                                  className="pl-10 h-10 bg-background/50"
                                   {...form.register('adminGroup')}
                                 />
                               </div>
-                              {errors.adminGroup && <p className="text-sm text-red-500">{errors.adminGroup.message}</p>}
+                              {errors.adminGroup && <p className="text-[11px] text-destructive font-medium mt-1">{errors.adminGroup.message}</p>}
                             </div>
                           </div>
-                          <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg text-sm text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-900">
-                            <p className="flex gap-2">
-                              <Shield className="h-5 w-5 flex-shrink-0" />
-                              Ensure these Active Directory groups exist before submission. Access is controlled via these groups.
+
+                          <div className="bg-muted/40 p-4 rounded-lg border border-border/50 space-y-2">
+                            <div className="flex items-center gap-2 text-xs font-bold">
+                              <Activity className="w-3.5 h-3.5 text-primary" />
+                              Group Verification
+                            </div>
+                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                              Access permissions are derived from these groups. Ensure the group names are exact and currently active in the corporate directory.
                             </p>
                           </div>
                         </div>
@@ -313,33 +374,39 @@ function TeamRegistrationPage() {
                       {/* Step 3: Contact Info */}
                       {currentStep === 3 && (
                         <div className="space-y-6">
-                          <div className="space-y-2">
-                            <Label htmlFor="contactName" className="text-base font-semibold">Primary Contact Name <span className="text-red-500">*</span></Label>
-                            <div className="relative">
-                              <User className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                              <Input
-                                id="contactName"
-                                placeholder="e.g. Jane Doe"
-                                className="pl-10 h-12"
-                                {...form.register('contactName')}
-                              />
+                          <div className="grid gap-6">
+                            <div className="space-y-1.5">
+                              <Label htmlFor="contactName" className="text-sm font-semibold">
+                                Primary Point of Contact <span className="text-primary">*</span>
+                              </Label>
+                              <div className="relative">
+                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                  id="contactName"
+                                  placeholder="Full Name"
+                                  className="pl-10 h-10 bg-background/50"
+                                  {...form.register('contactName')}
+                                />
+                              </div>
+                              {errors.contactName && <p className="text-[11px] text-destructive font-medium mt-1">{errors.contactName.message}</p>}
                             </div>
-                            {errors.contactName && <p className="text-sm text-red-500">{errors.contactName.message}</p>}
-                          </div>
 
-                          <div className="space-y-2">
-                            <Label htmlFor="contactEmail" className="text-base font-semibold">Contact Email <span className="text-red-500">*</span></Label>
-                            <div className="relative">
-                              <BookUser className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
-                              <Input
-                                id="contactEmail"
-                                type="email"
-                                placeholder="e.g. jane.doe@company.com"
-                                className="pl-10 h-12"
-                                {...form.register('contactEmail')}
-                              />
+                            <div className="space-y-1.5">
+                              <Label htmlFor="contactEmail" className="text-sm font-semibold">
+                                Contact Email Address <span className="text-primary">*</span>
+                              </Label>
+                              <div className="relative">
+                                <BookUser className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                <Input
+                                  id="contactEmail"
+                                  type="email"
+                                  placeholder="email@company.com"
+                                  className="pl-10 h-10 bg-background/50"
+                                  {...form.register('contactEmail')}
+                                />
+                              </div>
+                              {errors.contactEmail && <p className="text-[11px] text-destructive font-medium mt-1">{errors.contactEmail.message}</p>}
                             </div>
-                            {errors.contactEmail && <p className="text-sm text-red-500">{errors.contactEmail.message}</p>}
                           </div>
                         </div>
                       )}
@@ -347,25 +414,38 @@ function TeamRegistrationPage() {
                       {/* Step 4: Review */}
                       {currentStep === 4 && (
                         <div className="space-y-6">
-                          <div className="rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-                            <dl className="divide-y divide-gray-100 dark:divide-gray-800">
-                              {[
-                                { label: "Team Name", value: getValues('teamName') },
-                                { label: "User Group", value: getValues('userGroup') },
-                                { label: "Admin Group", value: getValues('adminGroup') },
-                                { label: "Contact Name", value: getValues('contactName') },
-                                { label: "Contact Email", value: getValues('contactEmail') },
-                                { label: "Comments", value: getValues('comments') || "None" },
-                              ].map((item, i) => (
-                                <div key={i} className="grid grid-cols-3 gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                  <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">{item.label}</dt>
-                                  <dd className="col-span-2 text-sm text-gray-900 dark:text-white font-medium">{item.value}</dd>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {[
+                              { label: "Team Name", value: getValues('teamName'), icon: Users },
+                              { label: "User Access", value: getValues('userGroup'), icon: Users },
+                              { label: "Admin Access", value: getValues('adminGroup'), icon: Shield },
+                              { label: "Contact Name", value: getValues('contactName'), icon: User },
+                              { label: "Contact Email", value: getValues('contactEmail'), icon: BookUser },
+                              { label: "Additional Notes", value: getValues('comments') || "No additional notes provided", icon: Activity, full: true },
+                            ].map((item, i) => (
+                              <div
+                                key={i}
+                                className={`p-4 rounded-xl bg-muted/30 border border-border/50 space-y-1 transition-colors ${item.full ? 'md:col-span-2' : ''}`}
+                              >
+                                <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                  <item.icon className="w-3 h-3" />
+                                  {item.label}
                                 </div>
-                              ))}
-                            </dl>
+                                <div className="text-sm font-medium text-foreground truncate">
+                                  {item.value}
+                                </div>
+                              </div>
+                            ))}
                           </div>
-                          <div className="bg-yellow-50 dark:bg-yellow-950/20 p-4 rounded-lg text-sm text-yellow-700 dark:text-yellow-400 border border-yellow-100 dark:border-yellow-900">
-                            Please verfiy all details are correct. Once submitted, this request will be sent for approval.
+
+                          <div className="bg-warning/10 p-4 rounded-lg border border-warning/20 text-warning-foreground">
+                            <div className="flex items-center gap-2 mb-1.5 text-xs font-bold">
+                              <Shield className="w-3.5 h-3.5" />
+                              Final Validation
+                            </div>
+                            <p className="text-[11px] leading-relaxed">
+                              Please review the information above. By clicking submit, you confirm the details are correct and authorized.
+                            </p>
                           </div>
                         </div>
                       )}
@@ -374,49 +454,52 @@ function TeamRegistrationPage() {
                 </form>
               </CardContent>
 
-              <CardFooter className="flex justify-between border-t border-gray-100 dark:border-gray-800 pt-6">
+              <CardFooter className="px-6 py-6 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 border-t border-border/40 mt-auto">
                 <Button
                   variant="ghost"
+                  size="sm"
                   onClick={handleBack}
                   disabled={currentStep === 1 || registerMutation.isPending || isCheckingName}
-                  className="text-gray-500 hover:text-gray-900"
+                  className="text-muted-foreground hover:text-foreground font-medium"
                 >
-                  Back
+                  Previous Step
                 </Button>
 
-                {currentStep < 4 ? (
-                  <Button
-                    onClick={handleNext}
-                    disabled={isCheckingName}
-                    className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 min-w-[120px]"
-                  >
-                    {isCheckingName ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Checking...
-                      </>
-                    ) : (
-                      <>
-                        Continue <ChevronRight className="ml-1 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={onSubmit}
-                    disabled={registerMutation.isPending}
-                    className="bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-600/20 min-w-[150px]"
-                  >
-                    {registerMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Submitting...
-                      </>
-                    ) : (
-                      'Confirm & Submit'
-                    )}
-                  </Button>
-                )}
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                  {currentStep < 4 ? (
+                    <Button
+                      onClick={handleNext}
+                      disabled={isCheckingName}
+                      className="w-full sm:w-auto"
+                    >
+                      {isCheckingName ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Verifying...
+                        </>
+                      ) : (
+                        <>
+                          Continue <ChevronRight className="ml-1.5 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={onSubmit}
+                      disabled={registerMutation.isPending}
+                      className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                    >
+                      {registerMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        'Submit Registration'
+                      )}
+                    </Button>
+                  )}
+                </div>
               </CardFooter>
             </Card>
           </div>

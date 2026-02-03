@@ -25,7 +25,7 @@ import {
     Building2,
     X,
     FileSpreadsheet,
-    FileText,
+    RotateCcw,
 } from "lucide-react";
 import { getGlobalScorecardData } from "@/app/actions/scorecard";
 
@@ -278,27 +278,54 @@ function GlobalScorecardPage() {
     };
 
     return (
-        <div className="container mx-auto py-6 px-4 max-w-7xl space-y-4">
-            {/* Stats Summary Header */}
+        <div className="container mx-auto py-8 px-6 max-w-7xl space-y-8 animate-in fade-in duration-500">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/50">
+                <div>
+                    <h1 className="text-4xl font-black tracking-tight text-foreground">
+                        Enterprise Scorecard
+                    </h1>
+                    <p className="text-sm text-muted-foreground mt-2 font-medium">
+                        Global performance metrics and compliance across <span className="text-foreground font-black">{teamsWithApps.length}</span> active teams.
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 h-10 px-4 font-black uppercase tracking-widest text-[10px] border-primary/20 hover:bg-primary/5 hover:text-primary transition-all active:scale-95 shadow-sm"
+                        onClick={handleClearAllFilters}
+                        disabled={!isLoading && teamsWithApps.length === scorecardData?.teams?.length && leadershipType === 'all' && !leadershipSearch && !teamSearch && !appSearch}
+                    >
+                        <RotateCcw className="h-4 w-4" />
+                        Reset All
+                    </Button>
+                </div>
+            </div>
+
+            {/* Stats Overview */}
             <StatsSummary stats={stats} />
 
-            {/* Advanced Filters */}
-            <EnterpriseFilters
-                selectedYear={selectedYear}
-                leadershipType={leadershipType}
-                leadershipSearch={leadershipSearch}
-                teamSearch={teamSearch}
-                appSearch={appSearch}
-                onYearChange={setSelectedYear}
-                onLeadershipTypeChange={setLeadershipType}
-                onLeadershipSearchChange={setLeadershipSearch}
-                onTeamSearchChange={setTeamSearch}
-                onAppSearchChange={setAppSearch}
-                onClearAll={handleClearAllFilters}
-                teams={scorecardData?.teams || []}
-                applications={scorecardData?.applications || []}
-                leadershipOptions={scorecardData?.leadershipOptions}
-            />
+            {/* Structured Search & Filters */}
+            <div className="bg-background/60 p-1.5 rounded-2xl border border-border/50 shadow-sm backdrop-blur-md">
+                <EnterpriseFilters
+                    selectedYear={selectedYear}
+                    leadershipType={leadershipType}
+                    leadershipSearch={leadershipSearch}
+                    teamSearch={teamSearch}
+                    appSearch={appSearch}
+                    onYearChange={setSelectedYear}
+                    onLeadershipTypeChange={setLeadershipType}
+                    onLeadershipSearchChange={setLeadershipSearch}
+                    onTeamSearchChange={setTeamSearch}
+                    onAppSearchChange={setAppSearch}
+                    onClearAll={handleClearAllFilters}
+                    teams={scorecardData?.teams || []}
+                    applications={scorecardData?.applications || []}
+                    leadershipOptions={scorecardData?.leadershipOptions}
+                />
+            </div>
 
             {/* Team Scorecards List */}
             <div>
@@ -345,37 +372,37 @@ function GlobalScorecardPage() {
             <Drawer open={!!viewTeam} onOpenChange={(open) => !open && setViewTeam(null)} direction="right">
                 <DrawerContent className="h-full w-screen !max-w-full p-0 flex flex-col focus:outline-none rounded-none border-none shadow-none">
                     {viewTeam && (
-                        <div className="flex flex-col h-full bg-background rounded-l-2xl overflow-hidden">
-                            <DrawerHeader className="p-4 border-b bg-muted/20 shrink-0">
-                                <div className="flex items-center justify-between w-full">
+                        <div className="flex flex-col h-full bg-background rounded-l-3xl overflow-hidden">
+                            <DrawerHeader className="p-6 border-b bg-muted/20 shrink-0">
+                                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                                     <div className="flex items-center gap-6">
-                                        <div className="flex-shrink-0">
-                                            <DrawerTitle className="text-xl font-bold flex items-center gap-2 tracking-tight">
-                                                <Building2 className="h-5 w-5 text-primary" />
+                                        <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-sm">
+                                            <Building2 className="h-7 w-7" />
+                                        </div>
+                                        <div>
+                                            <DrawerTitle className="text-3xl font-black tracking-tight flex items-center gap-3">
                                                 {viewTeam.teamName}
                                             </DrawerTitle>
-                                            <DrawerDescription className="text-xs font-medium text-muted-foreground/80">
-                                                Enterprise Scorecard • {selectedYear}
+                                            <DrawerDescription className="text-sm font-medium text-muted-foreground mt-1">
+                                                Enterprise Performance Report • <span className="text-foreground font-black">{selectedYear}</span>
                                             </DrawerDescription>
                                         </div>
 
-                                        <div className="h-8 w-px bg-muted-foreground/20 hidden md:block" />
+                                        <div className="h-10 w-px bg-border mx-2 hidden md:block" />
 
-                                        {/* Range Filter */}
-                                        <div className="flex items-center gap-2 bg-background/50 p-1 rounded-lg border border-muted/50 hidden md:flex">
-                                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-2">Range</span>
+                                        {/* Range Selector */}
+                                        <div className="bg-background/60 p-1 rounded-xl border border-border/50 shadow-sm flex items-center gap-1">
                                             {[
                                                 { id: 'full', label: 'Full Year' },
                                                 { id: 'ytd', label: 'YTD' },
                                                 { id: 'last3', label: 'Last 3M' },
-                                                { id: 'last6', label: 'Last 6M' },
-                                                { id: 'last12', label: 'Last 12M' }
+                                                { id: 'last6', label: 'Last 6M' }
                                             ].map((r) => (
                                                 <button
                                                     key={r.id}
                                                     onClick={() => setDrawerRange(r.id)}
                                                     className={cn(
-                                                        "px-2.5 py-1 text-[10px] font-bold rounded-md transition-all uppercase tracking-wider",
+                                                        "px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
                                                         drawerRange === r.id
                                                             ? "bg-primary text-primary-foreground shadow-sm"
                                                             : "text-muted-foreground hover:bg-muted"
@@ -387,105 +414,83 @@ function GlobalScorecardPage() {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-3">
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={() => handleExportCSV(viewTeam)}
-                                            className="h-9 px-3 gap-2 bg-background/80 border-muted/50 hover:border-primary/50 transition-all font-bold text-[11px] uppercase tracking-wider"
+                                            className="h-10 px-4 gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-black uppercase tracking-widest text-[10px] rounded-xl shadow-sm"
                                         >
-                                            <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
-                                            CSV
+                                            <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                                            CSV Export
                                         </Button>
-
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => window.print()}
-                                            className="h-9 px-3 gap-2 bg-background/80 border-muted/50 hover:border-primary/50 transition-all font-bold text-[11px] uppercase tracking-wider"
-                                        >
-                                            <FileText className="h-3.5 w-3.5 text-red-600" />
-                                            PDF
-                                        </Button>
-
-                                        <div className="h-8 w-px bg-muted-foreground/20 mx-1" />
 
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => setViewTeam(null)}
-                                            className="rounded-full h-8 w-8 hover:bg-muted transition-colors"
+                                            className="rounded-full h-10 w-10 hover:bg-muted transition-colors border border-transparent hover:border-border"
                                         >
-                                            <X className="h-4 w-4" />
+                                            <X className="h-5 w-5" />
                                         </Button>
                                     </div>
                                 </div>
                             </DrawerHeader>
 
-                            <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-8 pb-10">
+                            <div className="flex-1 overflow-y-auto p-8 space-y-10 pb-20 max-w-7xl mx-auto w-full">
                                 {(appsByTeam[viewTeam.id] || []).map((app) => (
-                                    <div key={app.id} className="space-y-4">
-                                        <div className="flex items-center justify-between bg-muted/10 p-4 rounded-xl border border-muted/30">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
-                                                    <Activity className="h-5 w-5 text-primary" />
+                                    <div key={app.id} className="space-y-6">
+                                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border/50 pb-4">
+                                            <div className="flex items-center gap-5">
+                                                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm">
+                                                    <Activity className="h-6 w-6 text-primary" />
                                                 </div>
                                                 <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <h3 className="text-lg font-bold tracking-tight">
+                                                    <div className="flex items-center gap-3">
+                                                        <h3 className="text-2xl font-black tracking-tight">
                                                             {app.applicationName}
                                                         </h3>
-                                                        <Badge variant="outline" className="text-[10px] font-bold px-1.5 h-4 bg-background">
+                                                        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-background/50 border-primary/20 text-primary px-2 h-5">
                                                             {app.tla}
                                                         </Badge>
                                                         {app.tier && ["0", "1", "2"].includes(String(app.tier)) && (
-                                                            <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[10px] font-bold px-1.5 h-4">
-                                                                T{app.tier}
+                                                            <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[10px] font-black uppercase tracking-widest h-5 px-2">
+                                                                Tier {app.tier}
                                                             </Badge>
                                                         )}
                                                     </div>
-                                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[11px] text-muted-foreground font-medium">
+                                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
                                                         {getLeadershipDisplay(app).map((l, i) => (
-                                                            <span key={i} className="flex items-center">
-                                                                <span className="text-foreground/60 mr-1">{l.role}:</span>
-                                                                <span className="text-foreground font-bold">{l.name}</span>
-                                                                {i < getLeadershipDisplay(app).length - 1 && <span className="ml-3 text-muted-foreground/30">|</span>}
-                                                            </span>
+                                                            <div key={i} className="flex items-center gap-1.5 grayscale opacity-70">
+                                                                <span className="text-[10px] font-black uppercase tracking-widest">{l.role}:</span>
+                                                                <span className="text-[11px] font-bold text-foreground">{l.name}</span>
+                                                            </div>
                                                         ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="hidden lg:flex items-center gap-8 pr-2">
-                                                <div className="text-right">
-                                                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest opacity-60">Asset ID</p>
-                                                    <p className="font-mono text-sm font-bold tracking-tight">{app.assetId}</p>
-                                                </div>
-                                                <div className="h-8 w-px bg-muted-foreground/20" />
-                                                <div className="text-right">
-                                                    <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest opacity-60">Status</p>
-                                                    <div className="flex items-center gap-1.5">
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
-                                                        <p className="font-bold text-[11px] text-green-600">ACTIVE</p>
+                                                        <span className="text-muted-foreground/30 hidden md:block">•</span>
+                                                        <div className="flex items-center gap-1.5 opacity-60">
+                                                            <span className="text-[10px] font-black uppercase tracking-widest">Asset ID:</span>
+                                                            <span className="text-[11px] font-mono font-bold text-foreground">{app.assetId}</span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="rounded-xl border border-muted/30 shadow-md overflow-hidden bg-muted/5 backdrop-blur-sm">
+                                        <div className="rounded-2xl border border-border/50 shadow-xl overflow-hidden bg-card/30 backdrop-blur-md">
                                             <Table>
-                                                <TableHeader className="bg-muted/30">
-                                                    <TableRow className="hover:bg-transparent border-b-muted/30">
-                                                        <TableHead className="w-[200px] font-bold text-[10px] uppercase tracking-widest py-2.5 pl-4">SUB-APP</TableHead>
-                                                        <TableHead className="w-[60px] font-bold text-[10px] uppercase tracking-widest py-2.5">METRIC</TableHead>
+                                                <TableHeader className="bg-muted/50">
+                                                    <TableRow className="hover:bg-transparent border-b-border/30">
+                                                        <TableHead className="w-[240px] font-black text-[10px] uppercase tracking-[0.2em] py-4 pl-6">Metric Configuration</TableHead>
+                                                        <TableHead className="w-[60px] font-black text-[10px] uppercase tracking-[0.2em] py-4">Core</TableHead>
                                                         {visibleMonths.map(vm => (
-                                                            <TableHead key={`${vm.year}-${vm.month}`} className="text-center font-bold text-[10px] uppercase tracking-widest py-2.5">
+                                                            <TableHead key={`${vm.year}-${vm.month}`} className="text-center font-black text-[10px] uppercase tracking-[0.2em] py-4">
                                                                 <div className="flex flex-col leading-none">
                                                                     <span>{MONTHS[vm.month - 1]}</span>
-                                                                    {vm.year !== selectedYear && <span className="text-[7px] opacity-60 mt-0.5">{vm.year}</span>}
+                                                                    {vm.year !== selectedYear && <span className="text-[8px] opacity-60 mt-1">{vm.year}</span>}
                                                                 </div>
                                                             </TableHead>
                                                         ))}
-                                                        <TableHead className="text-center font-bold text-[10px] uppercase tracking-widest py-2.5 bg-primary/5 text-primary pr-4">YEAR</TableHead>
+                                                        <TableHead className="text-center font-black text-[10px] uppercase tracking-[0.2em] py-4 bg-primary/5 text-primary pr-6">Performance</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>
@@ -501,8 +506,8 @@ function GlobalScorecardPage() {
                                                     ))}
                                                     {(!entriesByApp[app.id] || entriesByApp[app.id].length === 0) && (
                                                         <TableRow>
-                                                            <TableCell colSpan={15} className="h-20 text-center text-muted-foreground italic text-sm">
-                                                                No active metrics configured
+                                                            <TableCell colSpan={visibleMonths.length + 3} className="h-32 text-center text-muted-foreground italic font-medium">
+                                                                No active metrics registered for this application
                                                             </TableCell>
                                                         </TableRow>
                                                     )}

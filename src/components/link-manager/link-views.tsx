@@ -27,7 +27,6 @@ import {
     Pencil,
     Info,
     Box,
-    Tag,
     Layers,
     CheckSquare,
     Square
@@ -113,7 +112,7 @@ export function TableView({ links, teamId, selectedLinks, onToggleSelect }: View
     }
 
     return (
-        <div className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-card/40 backdrop-blur-md border border-border/50 rounded-2xl overflow-hidden relative">
             <CreateLinkDialog
                 teamId={teamId}
                 link={dialogLink || undefined}
@@ -123,15 +122,15 @@ export function TableView({ links, teamId, selectedLinks, onToggleSelect }: View
             />
             <Table>
                 <TableHeader>
-                    <TableRow className="hover:bg-transparent uppercase text-[10px] font-black tracking-widest text-muted-foreground/60">
-                        {onToggleSelect && <TableHead className="w-[50px]"></TableHead>}
-                        <TableHead className="w-[300px]">Link</TableHead>
-                        <TableHead>Application</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Visibility</TableHead>
-                        <TableHead>Usage</TableHead>
-                        <TableHead>Last Used</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                    <TableRow className="hover:bg-transparent border-border/30 h-14">
+                        {onToggleSelect && <TableHead className="w-[60px]"></TableHead>}
+                        <TableHead className="w-[340px] text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 pl-6">Resource Details</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Application</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Classification</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Access</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Engagement</TableHead>
+                        <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Created</TableHead>
+                        <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 pr-8">Manage</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -139,19 +138,19 @@ export function TableView({ links, teamId, selectedLinks, onToggleSelect }: View
                         <TableRow
                             key={link.id}
                             className={cn(
-                                "group transition-colors",
-                                selectedLinks?.has(link.id) && "bg-primary/5"
+                                "group transition-all h-20 border-border/20",
+                                selectedLinks?.has(link.id) ? "bg-primary/5" : "hover:bg-muted/30"
                             )}
                         >
                             {onToggleSelect && (
-                                <TableCell>
+                                <TableCell className="pl-6">
                                     <button
                                         onClick={() => onToggleSelect(link.id)}
                                         className={cn(
-                                            "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                                            "w-9 h-9 rounded-xl flex items-center justify-center transition-all border",
                                             selectedLinks?.has(link.id)
-                                                ? "bg-primary text-primary-foreground"
-                                                : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                                                ? "bg-primary text-primary-foreground border-primary"
+                                                : "bg-background border-border/50 text-muted-foreground/40 hover:text-primary hover:border-primary/40 hover:bg-primary/5"
                                         )}
                                     >
                                         {selectedLinks?.has(link.id) ? (
@@ -162,34 +161,36 @@ export function TableView({ links, teamId, selectedLinks, onToggleSelect }: View
                                     </button>
                                 </TableCell>
                             )}
-                            <TableCell className="max-w-[300px]">
-                                <div className="flex flex-col overflow-hidden">
-                                    <span
-                                        className="font-bold text-foreground cursor-pointer hover:text-primary transition-colors truncate block"
-                                        onClick={() => handleOpen(link)}
-                                        title={link.title}
-                                    >
-                                        {link.title}
-                                    </span>
+                            <TableCell className="max-w-[340px] pl-6">
+                                <div className="flex flex-col gap-1.5 overflow-hidden">
+                                    <div className="flex items-center gap-2">
+                                        <span
+                                            className="font-black text-sm tracking-tight text-foreground cursor-pointer hover:text-primary transition-colors truncate block"
+                                            onClick={() => handleOpen(link)}
+                                        >
+                                            {link.title}
+                                        </span>
+                                        <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                                    </div>
+
                                     <Tooltip>
                                         <TooltipTrigger
                                             render={
-                                                <span className="text-[10px] text-muted-foreground truncate italic block cursor-help">
+                                                <span className="text-[10px] text-muted-foreground/60 truncate italic block cursor-help font-medium">
                                                     {link.url}
                                                 </span>
                                             }
                                         />
-                                        <TooltipContent className="max-w-md break-all">
-                                            {link.url}
+                                        <TooltipContent className="max-w-md break-all rounded-xl p-3 shadow-2xl">
+                                            <span className="font-bold text-xs">{link.url}</span>
                                         </TooltipContent>
                                     </Tooltip>
 
                                     {link.tags && link.tags.length > 0 && (
                                         <div className="flex gap-1 mt-1 flex-wrap">
                                             {link.tags.slice(0, 3).map((tag, i) => (
-                                                <span key={i} className="inline-flex items-center text-[8px] px-1 bg-muted/50 rounded-sm text-muted-foreground/70 font-bold border border-border/50 uppercase tracking-tighter">
-                                                    <Tag className="w-2 h-2 mr-0.5 opacity-40" />
-                                                    {tag}
+                                                <span key={i} className="inline-flex items-center text-[9px] px-1.5 py-0.5 bg-muted/40 rounded-md text-muted-foreground font-black uppercase tracking-widest border border-border/40">
+                                                    #{tag}
                                                 </span>
                                             ))}
                                         </div>
@@ -198,77 +199,82 @@ export function TableView({ links, teamId, selectedLinks, onToggleSelect }: View
                             </TableCell>
                             <TableCell>
                                 {link.application ? (
-                                    <Badge variant="outline" className="text-[10px] font-bold bg-primary/[0.03] text-primary border-primary/20">
-                                        <Box className="w-3 h-3 mr-1" />
-                                        {link.application.applicationName}
+                                    <Badge variant="outline" className="h-6 gap-1.5 text-[9px] font-black uppercase tracking-widest bg-blue-500/5 text-blue-600 border-blue-500/20 rounded-lg shrink-0 px-2.5">
+                                        <Box className="w-3 h-3" /> {link.application.tla}
                                     </Badge>
                                 ) : (
-                                    <span className="text-muted-foreground/40 italic text-xs">None</span>
+                                    <span className="text-muted-foreground/20 font-black uppercase tracking-widest text-[9px]">Global Target</span>
                                 )}
                             </TableCell>
                             <TableCell>
                                 {link.category ? (
-                                    <Badge variant="outline" className="text-[10px] font-bold bg-purple-500/[0.03] text-purple-600 border-purple-500/20">
-                                        <Layers className="w-3 h-3 mr-1" />
-                                        {link.category.name}
+                                    <Badge variant="outline" className="h-6 gap-1.5 text-[9px] font-black uppercase tracking-widest bg-purple-500/5 text-purple-600 border-purple-500/20 rounded-lg shrink-0 px-2.5">
+                                        <Layers className="w-3 h-3" /> {link.category.name}
                                     </Badge>
                                 ) : (
-                                    <span className="text-muted-foreground/40 italic text-xs">None</span>
+                                    <span className="text-muted-foreground/20 font-black uppercase tracking-widest text-[9px]">Unclassified</span>
                                 )}
                             </TableCell>
                             <TableCell>
                                 {link.visibility === "public" ? (
-                                    <Badge variant="secondary" className="text-[10px] font-bold text-blue-500 bg-blue-500/10 border-blue-500/10">
-                                        <Globe2 className="w-3 h-3 mr-1" /> PUBLIC
+                                    <Badge variant="outline" className="h-6 gap-1.5 text-[9px] font-black uppercase tracking-widest bg-green-500/5 text-green-600 border-green-500/20 rounded-lg shrink-0 px-2.5">
+                                        <Globe2 className="w-3 h-3" /> PUBLIC
                                     </Badge>
                                 ) : (
-                                    <Badge variant="secondary" className="text-[10px] font-bold text-amber-500 bg-amber-500/10 border-amber-500/10">
-                                        <Lock className="w-3 h-3 mr-1" /> PRIVATE
+                                    <Badge variant="outline" className="h-6 gap-1.5 text-[9px] font-black uppercase tracking-widest bg-muted/50 text-muted-foreground border-border/50 rounded-lg shrink-0 px-2.5">
+                                        <Lock className="w-3 h-3" /> PRIVATE
                                     </Badge>
                                 )}
                             </TableCell>
                             <TableCell>
-                                <div className="flex items-center gap-1.5 text-xs font-medium">
-                                    <MousePointer2 className="w-3 h-3 text-muted-foreground" />
-                                    {link.usageCount || 0} clicks
+                                <div className="flex flex-col gap-0.5">
+                                    <div className="flex items-center gap-1.5 text-xs font-black tracking-tight leading-none">
+                                        <MousePointer2 className="w-3 h-3 text-primary opacity-60" />
+                                        {link.usageCount || 0}
+                                    </div>
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Insights</span>
                                 </div>
                             </TableCell>
                             <TableCell>
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                    <Calendar className="w-3 h-3" />
-                                    {link.createdAt ? format(new Date(link.createdAt), "MMM d, yyyy") : "Never"}
+                                <div className="flex flex-col gap-0.5">
+                                    <div className="flex items-center gap-1.5 text-xs font-black tracking-tight leading-none">
+                                        <Calendar className="w-3 h-3 text-muted-foreground/60" />
+                                        {link.createdAt ? format(new Date(link.createdAt), "MMM d") : "N/A"}
+                                    </div>
+                                    <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">Deployed</span>
                                 </div>
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right pr-8">
                                 <DropdownMenu>
                                     <DropdownMenuTrigger
                                         render={
-                                            <Button variant="ghost" size="icon-sm">
+                                            <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:bg-muted/50 rounded-2xl">
                                                 <MoreHorizontal className="w-4 h-4" />
                                             </Button>
                                         }
                                     />
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleOpen(link)}>
-                                            <ExternalLink className="w-4 h-4 mr-2" /> Open link
+                                    <DropdownMenuContent align="end" className="rounded-xl p-1.5 border-border/50 shadow-2xl min-w-[180px]">
+                                        <DropdownMenuItem onClick={() => handleOpen(link)} className="gap-3 py-2 rounded-lg text-xs font-semibold cursor-pointer">
+                                            <ExternalLink className="w-4 h-4 opacity-50" /> Navigate Home
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => {
                                             setDialogLink(link)
                                             setDialogMode('view')
-                                        }}>
-                                            <Info className="mr-2 h-4 w-4" /> View Details
+                                        }} className="gap-3 py-2 rounded-lg text-xs font-semibold cursor-pointer">
+                                            <Info className="mr-2 h-4 w-4 opacity-50" /> Asset Intelligence
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => {
                                             setDialogLink(link)
                                             setDialogMode('edit')
-                                        }}>
-                                            <Pencil className="mr-2 h-4 w-4" /> Edit
+                                        }} className="gap-3 py-2 rounded-lg text-xs font-semibold cursor-pointer">
+                                            <Pencil className="mr-2 h-4 w-4 opacity-50" /> Refine Metadata
                                         </DropdownMenuItem>
+                                        <div className="h-px bg-border/50 my-1 mx-2" />
                                         <DropdownMenuItem
-                                            className="text-destructive focus:text-destructive"
+                                            className="text-destructive focus:text-destructive gap-3 py-2 rounded-lg text-xs font-semibold cursor-pointer"
                                             onClick={() => deleteMutation.mutate({ data: { id: link.id, teamId } })}
                                         >
-                                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                            <Trash2 className="w-4 h-4 opacity-50" /> Terminate Link
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -297,16 +303,22 @@ export function CompactView({ links, teamId, selectedLinks, onToggleSelect }: Vi
     }
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {links.map((link) => (
                 <div
                     key={link.id}
                     className={cn(
-                        "group bg-card border border-border/50 p-2.5 rounded-xl flex items-center justify-between hover:shadow-md hover:border-primary/30 transition-all cursor-pointer relative",
-                        selectedLinks?.has(link.id) && "ring-2 ring-primary bg-primary/5"
+                        "group bg-card/40 backdrop-blur-sm border border-border/50 p-3 rounded-xl flex items-center justify-between hover:shadow-lg hover:border-primary/30 hover:bg-card transition-all cursor-pointer relative overflow-hidden",
+                        selectedLinks?.has(link.id) && "ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5"
                     )}
                     onClick={() => handleOpen(link)}
                 >
+                    {/* Access Indicator Dots */}
+                    <div className={cn(
+                        "absolute top-0 right-0 h-8 w-8 flex items-center justify-center -mr-1 -mt-1 opacity-[0.05] rounded-full",
+                        link.visibility === "public" ? "bg-blue-500" : "bg-amber-500"
+                    )} />
+
                     {onToggleSelect && (
                         <button
                             onClick={(e) => {
@@ -314,10 +326,10 @@ export function CompactView({ links, teamId, selectedLinks, onToggleSelect }: Vi
                                 onToggleSelect(link.id)
                             }}
                             className={cn(
-                                "absolute -top-1.5 -left-1.5 z-10 w-6 h-6 rounded-lg flex items-center justify-center transition-all shadow-md",
+                                "absolute -top-1 -left-1 z-10 w-6 h-6 rounded-md flex items-center justify-center transition-all shadow-md border",
                                 selectedLinks?.has(link.id)
-                                    ? "bg-primary text-primary-foreground scale-100"
-                                    : "bg-background border border-border/50 text-muted-foreground opacity-0 group-hover:opacity-100 scale-90 hover:scale-100"
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-background border-border/50 text-muted-foreground/30 opacity-0 group-hover:opacity-100 scale-90 hover:scale-100"
                             )}
                         >
                             {selectedLinks?.has(link.id) ? (
@@ -329,8 +341,8 @@ export function CompactView({ links, teamId, selectedLinks, onToggleSelect }: Vi
                     )}
                     <div className="flex items-center gap-3 overflow-hidden">
                         <div className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
-                            link.visibility === "public" ? "bg-blue-500/10 text-blue-500" : "bg-amber-500/10 text-amber-500"
+                            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105",
+                            link.visibility === "public" ? "bg-blue-500/5 text-blue-600 border-blue-500/20" : "bg-amber-500/5 text-amber-600 border-amber-500/20"
                         )}>
                             {link.visibility === "public" ? <Globe2 className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                         </div>
@@ -338,47 +350,27 @@ export function CompactView({ links, teamId, selectedLinks, onToggleSelect }: Vi
                             <Tooltip>
                                 <TooltipTrigger
                                     render={
-                                        <span className="text-sm font-bold truncate group-hover:text-primary transition-colors block">
+                                        <span className="text-[12px] font-bold tracking-tight truncate group-hover:text-primary transition-colors block leading-tight">
                                             {link.title}
                                         </span>
                                     }
                                 />
-                                <TooltipContent className="max-w-xs break-all">
-                                    <p className="font-bold">{link.title}</p>
-                                    <p className="text-[10px] opacity-70 mt-1">{link.url}</p>
+                                <TooltipContent className="max-w-xs break-all rounded-lg p-2.5 shadow-xl">
+                                    <p className="font-bold text-[11px]">{link.title}</p>
+                                    <p className="text-[9px] font-medium opacity-60 mt-0.5 truncate">{link.url}</p>
                                 </TooltipContent>
                             </Tooltip>
-                            <div className="flex items-center gap-1.5 overflow-hidden">
-                                {link.application && (
-                                    <span className="text-[9px] font-black text-primary uppercase truncate">
-                                        {link.application.tla || link.application.applicationName}
-                                    </span>
-                                )}
-                                {link.application && link.category && (
-                                    <span className="text-[9px] text-muted-foreground/30">•</span>
-                                )}
-                                {link.category && (
-                                    <span className="text-[9px] font-bold text-muted-foreground/60 uppercase truncate">
-                                        {link.category.name}
-                                    </span>
-                                )}
-                                <span className="text-[9px] text-muted-foreground truncate">
-                                    • {link.usageCount || 0} clks
+                            <div className="flex items-center gap-1.5 overflow-hidden mt-0.5">
+                                <span className="text-[8px] font-bold text-primary uppercase tracking-wider truncate">
+                                    {link.application?.tla || "GLOBAL"}
+                                </span>
+                                <span className="text-[8px] text-muted-foreground/20 font-bold">•</span>
+                                <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-wider truncate">
+                                    {link.usageCount || 0} INSIGHTS
                                 </span>
                             </div>
-                            {link.tags && link.tags.length > 0 && (
-                                <div className="flex gap-1 mt-0.5 overflow-hidden">
-                                    {link.tags.slice(0, 2).map((tag, i) => (
-                                        <span key={i} className="inline-flex items-center text-[8px] px-1 bg-muted/50 rounded-sm text-muted-foreground font-medium">
-                                            <Tag className="w-2 h-2 mr-0.5 opacity-50" />
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
                         </div>
                     </div>
-                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </div>
             ))}
         </div>

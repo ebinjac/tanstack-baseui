@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
-    AlertTriangle,
     Lock,
     ArrowUpRight,
     ArrowDownRight,
@@ -65,13 +64,12 @@ export function DataCell({
         return (
             <div
                 className={cn(
-                    "text-xs px-2 py-1 rounded opacity-40 cursor-not-allowed",
+                    "text-[10px] font-bold px-2 py-1 rounded-md opacity-20 cursor-not-allowed uppercase tracking-wider",
                     "bg-muted/30 text-muted-foreground"
                 )}
                 title="Cannot edit future months"
             >
-                <Lock className="h-3 w-3 inline mr-1" />
-                —
+                <Lock className="h-3 w-3" />
             </div>
         );
     }
@@ -80,14 +78,16 @@ export function DataCell({
         return (
             <div
                 className={cn(
-                    "text-xs px-2 py-1 rounded",
-                    isBreach && "bg-red-500/10 text-red-600 font-semibold"
+                    "text-[11px] font-black px-2 py-1 rounded-md tabular-nums transition-all border border-transparent",
+                    isBreach
+                        ? "bg-red-500/10 text-red-600 border-red-500/20"
+                        : "text-muted-foreground/80"
                 )}
                 title={reason || undefined}
             >
                 {value}
                 {isBreach && (
-                    <AlertTriangle className="h-3 w-3 inline ml-1 text-red-500" />
+                    <div className="h-1 w-full bg-red-500 rounded-full mt-0.5" />
                 )}
             </div>
         );
@@ -95,11 +95,11 @@ export function DataCell({
 
     if (isEditing) {
         return (
-            <div className="space-y-1">
+            <div className="space-y-1.5 p-1 bg-background border border-primary/20 rounded-lg shadow-md animate-in zoom-in-95 duration-200 z-50 min-w-[120px]">
                 <Input
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
-                    className="h-7 text-xs text-center w-full"
+                    className="h-8 text-[11px] text-center w-full font-black tabular-nums border-primary/20"
                     placeholder={type === "availability" ? "99.5%" : "10000"}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") handleSave();
@@ -110,17 +110,17 @@ export function DataCell({
                 <Textarea
                     value={editReason}
                     onChange={(e) => setEditReason(e.target.value)}
-                    className="h-12 text-xs resize-none"
-                    placeholder="Reason (optional)"
+                    className="h-16 text-[10px] resize-none border-primary/10"
+                    placeholder="Reason for breach..."
                 />
-                <div className="flex gap-1">
-                    <Button size="sm" className="h-6 text-xs flex-1" onClick={handleSave}>
-                        Save
+                <div className="flex gap-1.5">
+                    <Button size="sm" className="h-7 text-[10px] flex-1 font-black uppercase tracking-widest" onClick={handleSave}>
+                        Apply
                     </Button>
                     <Button
                         size="sm"
-                        variant="outline"
-                        className="h-6 text-xs"
+                        variant="ghost"
+                        className="h-7 text-[10px] font-bold"
                         onClick={() => setIsEditing(false)}
                     >
                         Cancel
@@ -133,30 +133,34 @@ export function DataCell({
     return (
         <button
             className={cn(
-                "text-xs px-2 py-1 rounded w-full transition-colors",
-                "hover:bg-primary/10 cursor-pointer",
-                isBreach && "bg-red-500/10 text-red-600 font-semibold"
+                "text-[11px] font-black px-2 py-1.5 rounded-md w-full transition-all tabular-nums border border-transparent",
+                "hover:bg-primary/10 hover:border-primary/20 cursor-pointer hover:scale-105 active:scale-95 group/cell",
+                isBreach
+                    ? "bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-500/20"
+                    : "text-foreground group-hover/cell:text-primary"
             )}
             onClick={() => setIsEditing(true)}
-            title={reason || undefined}
+            title={reason || (isBreach ? "Threshold Breach - Click to edit reason" : "Click to edit data")}
         >
-            {value}
+            <span className="relative">
+                {value}
+                {type === "volume" && changeValue != null && (
+                    <span
+                        className={cn(
+                            "absolute -top-2 -right-3 text-[8px] font-black",
+                            changeValue > 0 ? "text-green-600" : "text-red-500"
+                        )}
+                    >
+                        {changeValue > 0 ? (
+                            <ArrowUpRight className="h-2 w-2" />
+                        ) : (
+                            <ArrowDownRight className="h-2 w-2" />
+                        )}
+                    </span>
+                )}
+            </span>
             {isBreach && (
-                <AlertTriangle className="h-3 w-3 inline ml-1 text-red-500" />
-            )}
-            {type === "volume" && changeValue != null && (
-                <span
-                    className={cn(
-                        "ml-1 text-[9px]",
-                        changeValue > 0 ? "text-green-600" : "text-red-600"
-                    )}
-                >
-                    {changeValue > 0 ? (
-                        <ArrowUpRight className="h-3 w-3 inline" />
-                    ) : (
-                        <ArrowDownRight className="h-3 w-3 inline" />
-                    )}
-                </span>
+                <div className="h-0.5 w-full bg-red-500 rounded-full mt-1.5" />
             )}
         </button>
     );

@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -110,27 +111,29 @@ function AdminTeams() {
               <TooltipProvider>
                 <DropdownMenu>
                   <Tooltip>
-                    <TooltipTrigger asChild>
-                      <DropdownMenuTrigger asChild>
+                    <TooltipTrigger render={
+                      <DropdownMenuTrigger render={
                         <Button variant="outline" size="icon" className="h-10 w-10">
                           <Filter className="h-4 w-4" />
                         </Button>
-                      </DropdownMenuTrigger>
-                    </TooltipTrigger>
+                      } />
+                    } />
                     <TooltipContent>Filter by status</TooltipContent>
                   </Tooltip>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuLabel>Status Filter</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => setStatusFilter('all')} className="flex items-center justify-between">
-                      All {statusFilter === 'all' && <CheckCircle2 className="h-4 w-4 text-primary" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter('active')} className="flex items-center justify-between">
-                      Active {statusFilter === 'active' && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setStatusFilter('inactive')} className="flex items-center justify-between">
-                      Inactive {statusFilter === 'inactive' && <CheckCircle2 className="h-4 w-4 text-red-500" />}
-                    </DropdownMenuItem>
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel>Status Filter</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setStatusFilter('all')} className="flex items-center justify-between">
+                        All {statusFilter === 'all' && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setStatusFilter('active')} className="flex items-center justify-between">
+                        Active {statusFilter === 'active' && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setStatusFilter('inactive')} className="flex items-center justify-between">
+                        Inactive {statusFilter === 'inactive' && <CheckCircle2 className="h-4 w-4 text-red-500" />}
+                      </DropdownMenuItem>
+                    </DropdownMenuGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TooltipProvider>
@@ -214,7 +217,7 @@ function AdminTeams() {
                         <div className="flex justify-end items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <TooltipProvider>
                             <Tooltip>
-                              <TooltipTrigger asChild>
+                              <TooltipTrigger render={
                                 <Button
                                   size="icon"
                                   variant="ghost"
@@ -223,16 +226,16 @@ function AdminTeams() {
                                 >
                                   <ExternalLink className="h-5 w-5" />
                                 </Button>
-                              </TooltipTrigger>
+                              } />
                               <TooltipContent>View Details</TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                            <DropdownMenuTrigger render={
                               <Button variant="ghost" size="icon" className="h-9 w-9">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
-                            </DropdownMenuTrigger>
+                            } />
                             <DropdownMenuContent align="end" className="w-40">
                               <DropdownMenuItem className="gap-2" onClick={() => { setSelectedTeam(team); setIsDetailsOpen(true); }}>
                                 <ExternalLink className="h-4 w-4" /> View Details

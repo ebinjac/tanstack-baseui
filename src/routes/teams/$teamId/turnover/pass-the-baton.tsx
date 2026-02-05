@@ -78,7 +78,7 @@ function PassTheBatonPage() {
       {/* Application Tabs */}
       {applications && applications.length > 0 ? (
         <div>
-          <div className="flex flex-wrap gap-2 p-2 bg-muted/30 rounded-2xl border">
+          <div className="flex flex-wrap gap-2 p-1.5 bg-muted/10 rounded-2xl border border-muted/20 backdrop-blur-sm">
             {applications.map((app: Application, index: number) => {
               const isActive = app.id === activeAppId;
 
@@ -87,22 +87,32 @@ function PassTheBatonPage() {
                   key={app.id}
                   onClick={() => setActiveAppId(app.id)}
                   className={cn(
-                    "relative px-5 py-3 rounded-xl font-medium transition-all duration-200",
+                    "relative flex flex-col items-start min-w-[110px] px-4 py-2.5 rounded-xl transition-all duration-300 ease-out group overflow-hidden",
                     isActive
-                      ? "bg-primary text-primary-foreground shadow-lg"
-                      : "bg-transparent hover:bg-muted text-muted-foreground hover:text-foreground"
+                      ? "bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-md shadow-primary/20 ring-1 ring-white/10"
+                      : "bg-background/20 hover:bg-muted/40 border border-transparent hover:border-muted-foreground/5 text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <div className="text-sm font-bold">{app.applicationName}</div>
+                  {/* Subtle glass effect for active state */}
+                  {isActive && (
+                    <div className="absolute top-0 right-0 -mr-2 -mt-2 w-10 h-10 bg-white/5 rounded-full blur-xl animate-pulse" />
+                  )}
+
+                  <div className={cn(
+                    "text-lg font-black tracking-tight leading-none mb-1 transition-all duration-300 group-hover:scale-105",
+                    isActive ? "text-primary-foreground" : "text-foreground/80"
+                  )}>
+                    {app.tla}
+                  </div>
                   <div
                     className={cn(
-                      "text-xs",
+                      "text-[10px] font-medium truncate max-w-[140px] text-left opacity-90",
                       isActive
                         ? "text-primary-foreground/80"
-                        : "text-muted-foreground"
+                        : "text-muted-foreground group-hover:text-foreground/70"
                     )}
                   >
-                    {app.tla}
+                    {app.applicationName}
                   </div>
                 </button>
               );

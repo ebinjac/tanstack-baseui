@@ -304,7 +304,14 @@ export function EntryCard({
 
                         {/* RFC Status Badge */}
                         {entry.section === "RFC" && entry.rfcDetails && (
-                            <Badge variant="outline" className="shrink-0 text-xs">
+                            <Badge variant="outline" className="shrink-0 text-[10px] gap-1.5 px-2 py-0 h-5">
+                                <div className={cn(
+                                    "w-1.5 h-1.5 rounded-full",
+                                    entry.rfcDetails.rfcStatus === "Approved" || entry.rfcDetails.rfcStatus === "Implemented" ? "bg-green-500" :
+                                        entry.rfcDetails.rfcStatus === "Rejected" || entry.rfcDetails.rfcStatus === "Cancelled" ? "bg-red-500" :
+                                            entry.rfcDetails.rfcStatus === "In Progress" || entry.rfcDetails.rfcStatus === "Pending Approval" ? "bg-blue-500" :
+                                                "bg-slate-400"
+                                )} />
                                 {entry.rfcDetails.rfcStatus}
                             </Badge>
                         )}

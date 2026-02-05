@@ -2,7 +2,6 @@ import {
     LayoutDashboard,
     Users,
     ClipboardList,
-    Settings,
     ChevronRight,
     ShieldCheck,
     Activity,
@@ -10,7 +9,6 @@ import {
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
@@ -89,19 +87,6 @@ export function AdminSidebar() {
                     </SidebarGroupContent>
                 </SidebarGroup>
             </SidebarContent>
-            <SidebarFooter className="border-t border-sidebar-border/50 pt-4">
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            tooltip="Settings"
-                            className="hover:bg-sidebar-accent"
-                        >
-                            <Settings className="h-5 w-5 text-sidebar-foreground/70" />
-                            <span className="font-medium">Settings</span>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarFooter>
         </Sidebar>
     )
 }

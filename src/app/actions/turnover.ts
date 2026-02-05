@@ -138,36 +138,39 @@ export const updateTurnoverEntry = createServerFn({ method: "POST" })
         if (!existingEntry) throw new Error("Entry not found");
 
         // Update main entry
+        const updateData: any = {
+            updatedBy: userName,
+            updatedAt: new Date(),
+        };
+        if (data.title !== undefined) updateData.title = data.title;
+        if (data.description !== undefined) updateData.description = data.description;
+        if (data.comments !== undefined) updateData.comments = data.comments;
+        if (data.isImportant !== undefined) updateData.isImportant = data.isImportant;
+
         await db
             .update(turnoverEntries)
-            .set({
-                title: data.title,
-                description: data.description,
-                comments: data.comments,
-                isImportant: data.isImportant,
-                updatedBy: userName,
-                updatedAt: new Date(),
-            })
+            .set(updateData)
             .where(eq(turnoverEntries.id, data.id));
 
         // Update section-specific details
         switch (existingEntry.section) {
             case "RFC":
-                if (data.rfcNumber && data.rfcStatus && data.validatedBy) {
+                if (data.rfcNumber || data.rfcStatus || data.validatedBy) {
                     const existingRfc = await db.query.turnoverRfcDetails.findFirst({
                         where: eq(turnoverRfcDetails.entryId, data.id),
                     });
 
+                    const rfcUpdateData: any = {};
+                    if (data.rfcNumber) rfcUpdateData.rfcNumber = data.rfcNumber;
+                    if (data.rfcStatus) rfcUpdateData.rfcStatus = data.rfcStatus;
+                    if (data.validatedBy) rfcUpdateData.validatedBy = data.validatedBy;
+
                     if (existingRfc) {
                         await db
                             .update(turnoverRfcDetails)
-                            .set({
-                                rfcNumber: data.rfcNumber,
-                                rfcStatus: data.rfcStatus,
-                                validatedBy: data.validatedBy,
-                            })
+                            .set(rfcUpdateData)
                             .where(eq(turnoverRfcDetails.entryId, data.id));
-                    } else {
+                    } else if (data.rfcNumber && data.rfcStatus && data.validatedBy) {
                         await db.insert(turnoverRfcDetails).values({
                             entryId: data.id,
                             rfcNumber: data.rfcNumber,

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm, type FieldValues } from "react-hook-form";
+import { useForm, type FieldValues, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
     Dialog,
@@ -198,24 +198,35 @@ export function EntryDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-4xl min-w-[700px] p-0 gap-0 overflow-hidden sm:rounded-2xl border shadow-2xl bg-background">
+            <DialogContent className="max-w-2xl min-w-[750px] p-0 gap-0 overflow-hidden sm:rounded-2xl border-0 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] bg-background">
 
-                {/* Visual Header */}
-                <div className="px-8 py-8 border-b bg-muted/20">
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm shrink-0 bg-background border">
-                            <SectionIcon className="w-7 h-7 text-primary" />
-                        </div>
-                        <div className="flex-1 space-y-1 text-center sm:text-left">
-                            <DialogTitle className="text-2xl font-bold tracking-tight text-foreground">
-                                {isEditing ? "Edit Entry" : `New ${sectionConfig.name}`}
-                            </DialogTitle>
-                            <p className="text-muted-foreground font-medium text-base">
-                                {isEditing
-                                    ? `Update existing details for this ${sectionConfig.shortName} entry.`
-                                    : `Provide the details below to log a new ${sectionConfig.shortName} entry.`}
-                            </p>
-                        </div>
+                {/* Premium Header */}
+                <div className={cn(
+                    "px-6 py-5 border-b flex items-center gap-4",
+                    section === "RFC" ? "bg-gradient-to-br from-blue-50/80 to-blue-100/30 dark:from-blue-950/30 dark:to-blue-900/10" :
+                        section === "INC" ? "bg-gradient-to-br from-red-50/80 to-red-100/30 dark:from-red-950/30 dark:to-red-900/10" :
+                            section === "ALERTS" ? "bg-gradient-to-br from-orange-50/80 to-amber-100/30 dark:from-orange-950/30 dark:to-orange-900/10" :
+                                section === "MIM" ? "bg-gradient-to-br from-purple-50/80 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/10" :
+                                    section === "COMMS" ? "bg-gradient-to-br from-green-50/80 to-emerald-100/30 dark:from-green-950/30 dark:to-green-900/10" : "bg-muted/20"
+                )}>
+
+                    <div className={cn(
+                        "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white/50 dark:ring-white/10",
+                        section === "RFC" ? "bg-gradient-to-br from-blue-400 to-blue-600 shadow-blue-500/25" :
+                            section === "INC" ? "bg-gradient-to-br from-red-400 to-red-600 shadow-red-500/25" :
+                                section === "ALERTS" ? "bg-gradient-to-br from-orange-400 to-amber-500 shadow-orange-500/25" :
+                                    section === "MIM" ? "bg-gradient-to-br from-purple-400 to-purple-600 shadow-purple-500/25" :
+                                        section === "COMMS" ? "bg-gradient-to-br from-emerald-400 to-green-600 shadow-green-500/25" : "bg-gradient-to-br from-slate-400 to-slate-500 shadow-slate-500/25"
+                    )}>
+                        <SectionIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="relative z-10">
+                        <DialogTitle className="text-xl font-bold tracking-tight">
+                            {isEditing ? "Modify Entry" : `New ${sectionConfig.name}`}
+                        </DialogTitle>
+                        <p className="text-xs text-muted-foreground/80 font-medium mt-0.5">
+                            {isEditing ? "Update details for this entry." : `Log a new ${sectionConfig.shortName.toLowerCase()} record.`}
+                        </p>
                     </div>
                 </div>
 
@@ -223,150 +234,149 @@ export function EntryDialog({
                 <form
                     onSubmit={form.handleSubmit(onSubmit, (errors) => {
                         console.log("Form validation errors:", errors);
-                        toast.error("Please check the required fields");
+                        toast.error("Please verify all required fields");
                     })}
-                    className="flex flex-col h-full max-h-[75vh]"
+                    className="flex flex-col max-h-[80vh]"
                 >
-                    <div className="flex-1 overflow-y-auto p-8 space-y-6">
+                    <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
 
                         {/* Section I: Core Identifiers */}
-                        <div className="space-y-4">
-                            {(section === "RFC" || section === "INC" || section === "MIM" || section === "ALERTS" || section === "COMMS") && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {(section === "RFC" || section === "INC" || section === "MIM" || section === "ALERTS" || section === "COMMS") && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
+                                        <Activity className="w-3 h-3 text-primary" />
+                                    </div>
+                                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Details</h4>
+                                </div>
+                                <div className={cn(
+                                    "grid gap-4 p-4 rounded-xl border bg-muted/5",
+                                    section === "RFC" ? "grid-cols-3" : "grid-cols-2"
+                                )}>
                                     {section === "RFC" && (
                                         <>
-                                            <div className="space-y-3">
-                                                <Label htmlFor="rfcNumber" className="flex items-center gap-2 text-foreground font-medium">
-                                                    <Hash className="w-4 h-4 text-muted-foreground" />
+                                            <div className="space-y-2">
+                                                <Label htmlFor="rfcNumber" className="text-xs font-semibold">
                                                     RFC Number <span className="text-destructive">*</span>
                                                 </Label>
                                                 <Input
                                                     id="rfcNumber"
                                                     placeholder="CHG..."
-                                                    className="font-mono"
+                                                    className="font-mono h-10 text-sm bg-background border-muted-foreground/15 focus:border-primary/40 focus:ring-2 focus:ring-primary/10 rounded-lg"
                                                     {...form.register("rfcNumber")}
                                                 />
-                                                {form.formState.errors.rfcNumber && (
-                                                    <p className="text-xs font-medium text-destructive mt-1">
-                                                        {form.formState.errors.rfcNumber.message}
-                                                    </p>
-                                                )}
                                             </div>
-                                            <div className="space-y-3">
-                                                <Label htmlFor="rfcStatus" className="flex items-center gap-2 text-foreground font-medium">
-                                                    <Activity className="w-4 h-4 text-muted-foreground" />
+                                            <div className="space-y-2">
+                                                <Label htmlFor="rfcStatus" className="text-xs font-semibold">
                                                     Status <span className="text-destructive">*</span>
                                                 </Label>
-                                                <Select
-                                                    value={form.watch("rfcStatus")}
-                                                    onValueChange={(val) =>
-                                                        form.setValue("rfcStatus", val as any)
-                                                    }
-                                                >
-                                                    <SelectTrigger className="w-full">
-                                                        <SelectValue placeholder="Select status" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        {RFC_STATUS_OPTIONS.map((status) => (
-                                                            <SelectItem key={status} value={status}>
-                                                                {status}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectContent>
-                                                </Select>
-                                                {form.formState.errors.rfcStatus && (
-                                                    <p className="text-xs font-medium text-destructive mt-1">
-                                                        {form.formState.errors.rfcStatus.message}
-                                                    </p>
-                                                )}
+                                                <Controller
+                                                    name="rfcStatus"
+                                                    control={form.control}
+                                                    render={({ field }) => (
+                                                        <Select
+                                                            value={field.value}
+                                                            onValueChange={field.onChange}
+                                                        >
+                                                            <SelectTrigger className="h-9 text-sm">
+                                                                <SelectValue placeholder="Select status">
+                                                                    {field.value && (
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className={cn(
+                                                                                "w-2 h-2 rounded-full",
+                                                                                field.value === "Approved" || field.value === "Implemented" ? "bg-green-500" :
+                                                                                    field.value === "Rejected" || field.value === "Cancelled" ? "bg-red-500" :
+                                                                                        field.value === "In Progress" || field.value === "Pending Approval" ? "bg-blue-500" :
+                                                                                            "bg-slate-400"
+                                                                            )} />
+                                                                            {field.value}
+                                                                        </div>
+                                                                    )}
+                                                                </SelectValue>
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {RFC_STATUS_OPTIONS.map((status) => (
+                                                                    <SelectItem key={status} value={status}>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className={cn(
+                                                                                "w-2 h-2 rounded-full",
+                                                                                status === "Approved" || status === "Implemented" ? "bg-green-500" :
+                                                                                    status === "Rejected" || status === "Cancelled" ? "bg-red-500" :
+                                                                                        status === "In Progress" || status === "Pending Approval" ? "bg-blue-500" :
+                                                                                            "bg-slate-400"
+                                                                            )} />
+                                                                            {status}
+                                                                        </div>
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                    )}
+                                                />
                                             </div>
-                                            <div className="space-y-3 sm:col-span-2">
-                                                <Label htmlFor="validatedBy" className="flex items-center gap-2 text-foreground font-medium">
-                                                    <UserCheck className="w-4 h-4 text-muted-foreground" />
+                                            <div className="space-y-2">
+                                                <Label htmlFor="validatedBy" className="text-xs font-semibold">
                                                     Validated By <span className="text-destructive">*</span>
                                                 </Label>
                                                 <Input
                                                     id="validatedBy"
-                                                    placeholder="Enter validator name or ID..."
+                                                    placeholder="Validator name..."
+                                                    className="h-9 text-sm"
                                                     {...form.register("validatedBy")}
                                                 />
-                                                {form.formState.errors.validatedBy && (
-                                                    <p className="text-xs font-medium text-destructive mt-1">
-                                                        {form.formState.errors.validatedBy.message}
-                                                    </p>
-                                                )}
                                             </div>
                                         </>
                                     )}
 
                                     {section === "INC" && (
-                                        <div className="space-y-3 sm:col-span-2">
-                                            <Label htmlFor="incidentNumber" className="flex items-center gap-2 text-foreground font-medium">
-                                                <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                                        <div className="space-y-2 sm:col-span-2">
+                                            <Label htmlFor="incidentNumber" className="text-xs font-semibold">
                                                 Incident Number <span className="text-destructive">*</span>
                                             </Label>
                                             <Input
                                                 id="incidentNumber"
                                                 placeholder="INC..."
-                                                className="font-mono text-lg"
+                                                className="font-mono h-10 text-lg font-bold"
                                                 {...form.register("incidentNumber")}
                                             />
-                                            {form.formState.errors.incidentNumber && (
-                                                <p className="text-xs font-medium text-destructive mt-1">
-                                                    {form.formState.errors.incidentNumber.message}
-                                                </p>
-                                            )}
                                         </div>
                                     )}
 
                                     {section === "ALERTS" && (
-                                        <div className="space-y-3 sm:col-span-2">
-                                            <Label htmlFor="title" className="flex items-center gap-2 text-foreground font-medium">
-                                                <Bell className="w-4 h-4 text-muted-foreground" />
+                                        <div className="space-y-2 sm:col-span-2">
+                                            <Label htmlFor="title" className="text-xs font-semibold">
                                                 Alert Title <span className="text-destructive">*</span>
                                             </Label>
                                             <Input
                                                 id="title"
-                                                placeholder="Brief title of the alert..."
-                                                className="font-medium"
+                                                placeholder="Alert title..."
+                                                className="h-9 text-sm"
                                                 {...form.register("title")}
                                             />
-                                            {form.formState.errors.title && (
-                                                <p className="text-xs font-medium text-destructive mt-1">
-                                                    {form.formState.errors.title.message}
-                                                </p>
-                                            )}
                                         </div>
                                     )}
 
                                     {section === "MIM" && (
                                         <>
-                                            <div className="space-y-3 sm:col-span-2">
-                                                <Label htmlFor="mimLink" className="flex items-center gap-2 text-foreground font-medium">
-                                                    <LinkIcon className="w-4 h-4 text-muted-foreground" />
-                                                    MIM Bridge Link <span className="text-destructive">*</span>
+                                            <div className="space-y-2 sm:col-span-2">
+                                                <Label htmlFor="mimLink" className="text-xs font-semibold">
+                                                    Bridge Link <span className="text-destructive">*</span>
                                                 </Label>
                                                 <Input
                                                     id="mimLink"
                                                     placeholder="https://..."
-                                                    type="url"
+                                                    className="h-9 text-sm"
                                                     {...form.register("mimLink")}
                                                 />
-                                                {form.formState.errors.mimLink && (
-                                                    <p className="text-xs font-medium text-destructive mt-1">
-                                                        {form.formState.errors.mimLink.message}
-                                                    </p>
-                                                )}
                                             </div>
-                                            <div className="space-y-3 sm:col-span-2">
-                                                <Label htmlFor="mimSlackLink" className="flex items-center gap-2 text-foreground font-medium">
-                                                    <Hash className="w-4 h-4 text-muted-foreground" />
+                                            <div className="space-y-2 sm:col-span-2">
+                                                <Label htmlFor="mimSlackLink" className="text-xs font-semibold">
                                                     Slack Channel
                                                 </Label>
                                                 <Input
                                                     id="mimSlackLink"
-                                                    placeholder="https://slack.com..."
-                                                    type="url"
+                                                    placeholder="Slack link..."
+                                                    className="h-9 text-sm"
                                                     {...form.register("mimSlackLink")}
                                                 />
                                             </div>
@@ -375,136 +385,121 @@ export function EntryDialog({
 
                                     {section === "COMMS" && (
                                         <>
-                                            <div className="space-y-3 sm:col-span-2">
-                                                <Label htmlFor="emailSubject" className="flex items-center gap-2 text-foreground font-medium">
-                                                    <Mail className="w-4 h-4 text-muted-foreground" />
-                                                    Email Subject / Primary Link <span className="text-destructive">*</span>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="emailSubject" className="text-xs font-semibold">
+                                                    Subject <span className="text-muted-foreground text-[10px]">(or Slack)</span>
                                                 </Label>
                                                 <Input
                                                     id="emailSubject"
-                                                    placeholder="Subject line or URL..."
+                                                    placeholder="Email subject..."
+                                                    className="h-9 text-sm font-medium"
                                                     {...form.register("emailSubject")}
                                                 />
-                                                {form.formState.errors.emailSubject && (
-                                                    <p className="text-xs font-medium text-destructive mt-1">
-                                                        {form.formState.errors.emailSubject.message}
-                                                    </p>
-                                                )}
                                             </div>
-                                            <div className="space-y-3 sm:col-span-2">
-                                                <Label htmlFor="slackLink" className="flex items-center gap-2 text-foreground font-medium">
-                                                    <Hash className="w-4 h-4 text-muted-foreground" />
-                                                    Slack Link (Optional)
+                                            <div className="space-y-2">
+                                                <Label htmlFor="slackLink" className="text-xs font-semibold">
+                                                    Slack Thread <span className="text-muted-foreground text-[10px]">(or Subject)</span>
                                                 </Label>
                                                 <Input
                                                     id="slackLink"
-                                                    placeholder="https://slack.com..."
-                                                    type="url"
+                                                    placeholder="Thread link..."
+                                                    className="h-9 text-sm font-medium"
                                                     {...form.register("slackLink")}
                                                 />
                                             </div>
                                         </>
                                     )}
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
 
-                        {/* Section II: Description */}
+                        {/* Section II: Narrative Content */}
                         <div className="space-y-4">
-                            {section === "FYI" ? (
-                                <div className="space-y-3">
-                                    <Label htmlFor="description" className="flex items-center gap-2 text-foreground text-base font-medium">
-                                        <StickyNote className="w-4 h-4 text-muted-foreground" />
-                                        Content <span className="text-destructive">*</span>
+                            <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
+                                    <FileText className="w-3 h-3 text-primary" />
+                                </div>
+                                <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Content</h4>
+                            </div>
+                            <div className="space-y-4 rounded-xl border bg-muted/5 p-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="description" className="text-xs font-semibold">
+                                        Description {section === "FYI" && <span className="text-destructive">*</span>}
                                     </Label>
                                     <Textarea
                                         id="description"
-                                        placeholder="Enter the information to share..."
-                                        rows={6}
-                                        className="min-h-[120px] resize-y"
-                                        {...form.register("description")}
-                                    />
-                                    {form.formState.errors.description && (
-                                        <p className="text-xs font-medium text-destructive mt-1">
-                                            {form.formState.errors.description.message}
-                                        </p>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    <Label htmlFor="description" className="flex items-center gap-2 text-foreground font-medium">
-                                        <FileText className="w-4 h-4 text-muted-foreground" />
-                                        Description
-                                    </Label>
-                                    <Textarea
-                                        id="description"
-                                        placeholder={`Describe the ${sectionConfig.shortName.toLowerCase()} details and impact...`}
-                                        rows={3}
-                                        className="resize-y"
+                                        placeholder="Brief overview..."
+                                        rows={section === "FYI" ? 4 : 2}
+                                        className="text-sm border-muted-foreground/10 focus:ring-1"
                                         {...form.register("description")}
                                     />
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Section III: Comments & Notes */}
-                        <div className="space-y-3">
-                            <Label htmlFor="comments" className="flex items-center gap-2 text-foreground font-medium">
-                                <MessageCircle className="w-4 h-4 text-muted-foreground" />
-                                Additional Comments
-                            </Label>
-                            <div className="rounded-md border overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:border-primary transition-all">
-                                <RichTextEditor
-                                    value={form.watch("comments") || ""}
-                                    onChange={(value) => form.setValue("comments", value)}
-                                    placeholder="Add detailed notes, timeline updates, or context..."
-                                    disabled={isPending}
-                                    className="border-none shadow-none min-h-[150px]"
-                                />
+                                <div className="space-y-2">
+                                    <Label htmlFor="comments" className="text-xs font-semibold">
+                                        Detailed Comments
+                                    </Label>
+                                    <div className="rounded-lg border overflow-hidden bg-background">
+                                        <RichTextEditor
+                                            value={form.watch("comments") || ""}
+                                            onChange={(value) => form.setValue("comments", value)}
+                                            placeholder="Additional details..."
+                                            disabled={isPending}
+                                            className="min-h-[140px]"
+                                        />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        {/* Section IV: Importance Toggle */}
-                        <div className="bg-muted/30 p-5 rounded-xl border flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-4">
-                                <div className={cn("p-2.5 rounded-lg border shadow-sm", form.watch("isImportant") ? "bg-primary/10 text-primary border-primary/20" : "bg-background text-muted-foreground")}>
-                                    <Star className={cn("w-5 h-5", form.watch("isImportant") && "fill-current")} />
+                        {/* Section III: Toggle */}
+                        <div className={cn(
+                            "flex items-center justify-between p-4 rounded-xl border transition-all duration-200",
+                            form.watch("isImportant")
+                                ? "bg-gradient-to-r from-orange-50 to-amber-50/50 border-orange-200 dark:from-orange-950/30 dark:to-amber-950/20 dark:border-orange-800/30"
+                                : "bg-muted/5"
+                        )}>
+                            <div className="flex items-center gap-3">
+                                <div className={cn(
+                                    "w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200",
+                                    form.watch("isImportant")
+                                        ? "bg-gradient-to-br from-orange-400 to-amber-500 text-white shadow-md shadow-orange-500/20"
+                                        : "bg-muted text-muted-foreground"
+                                )}>
+                                    <Star className={cn("w-4 h-4 transition-transform", form.watch("isImportant") && "fill-current scale-110")} />
                                 </div>
-                                <div className="space-y-0.5">
-                                    <Label htmlFor="isImportant" className="text-base font-semibold cursor-pointer">
-                                        Mark as Important
-                                    </Label>
-                                    <p className="text-sm text-muted-foreground mr-1">
-                                        Flag high-priority entries for attention.
-                                    </p>
+                                <div>
+                                    <p className="text-sm font-bold">Mark as Important</p>
+                                    <p className="text-[10px] text-muted-foreground">Highlight for urgent attention</p>
                                 </div>
                             </div>
                             <Switch
                                 id="isImportant"
                                 checked={form.watch("isImportant")}
-                                onCheckedChange={(checked) =>
-                                    form.setValue("isImportant", checked)
-                                }
+                                onCheckedChange={(checked) => form.setValue("isImportant", checked)}
+                                className="data-[state=checked]:bg-orange-500"
                             />
                         </div>
                     </div>
 
-                    <div className="p-8 border-t bg-muted/20 flex items-center justify-end gap-3 shrink-0">
+                    {/* Footer */}
+                    <div className="px-6 py-4 border-t bg-gradient-to-r from-muted/20 via-muted/10 to-muted/20 flex items-center justify-end gap-3 shrink-0">
                         <Button
                             type="button"
                             variant="ghost"
                             onClick={() => onOpenChange(false)}
                             disabled={isPending}
+                            className="h-9 px-4 font-medium text-muted-foreground hover:text-foreground"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={isPending}
-                            className="min-w-[140px]"
+                            className="h-9 px-6 font-bold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/95 hover:to-primary/85 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/25 transition-all"
                         >
-                            {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                            {isEditing ? "Save Changes" : "Create Entry"}
+                            {isPending && <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />}
+                            {isEditing ? "Save Updates" : "Create Entry"}
                         </Button>
                     </div>
                 </form>

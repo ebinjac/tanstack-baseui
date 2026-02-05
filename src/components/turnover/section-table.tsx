@@ -126,8 +126,14 @@ export function SectionTable({
                             )}
                         </div>
 
-                        <Button onClick={handleAdd} size="sm" className="gap-2">
-                            <Plus className="w-4 h-4" />
+                        <Button
+                            onClick={handleAdd}
+                            size="sm"
+                            className="bg-gradient-to-br from-primary via-primary to-primary/90 hover:to-primary text-primary-foreground shadow-[0_8px_16px_-6px_rgba(59,130,246,0.3)] hover:shadow-[0_12px_20px_-8px_rgba(59,130,246,0.4)] transition-all duration-300 active:scale-95 rounded-xl border-t border-white/10 gap-2 px-4 h-9 font-semibold"
+                        >
+                            <div className="bg-white/20 rounded-md p-0.5 group-hover:bg-white/30 transition-colors">
+                                <Plus className="w-3.5 h-3.5" />
+                            </div>
                             Add Entry
                         </Button>
                     </CardHeader>
@@ -156,8 +162,12 @@ export function SectionTable({
                                 <p className="text-sm text-muted-foreground mb-4">
                                     Get started by adding a new entry to this section.
                                 </p>
-                                <Button onClick={handleAdd} variant="outline" size="sm">
-                                    <Plus className="w-4 h-4 mr-2" />
+                                <Button
+                                    onClick={handleAdd}
+                                    variant="outline"
+                                    className="border-dashed border-2 hover:border-solid hover:bg-muted/50 transition-all duration-300 rounded-xl px-8 h-11 font-semibold group"
+                                >
+                                    <Plus className="w-4 h-4 mr-2 text-muted-foreground group-hover:text-primary transition-colors" />
                                     Add First Entry
                                 </Button>
                             </div>
@@ -166,7 +176,7 @@ export function SectionTable({
                         {/* Entries List */}
                         {!isLoading && entries.length > 0 && (
                             <div className="space-y-3">
-                                {entries.map((entry: TurnoverEntryWithDetails, index: number) => (
+                                {entries.map((entry: TurnoverEntryWithDetails) => (
                                     <div key={entry.id}>
                                         <EntryCard
                                             entry={entry}

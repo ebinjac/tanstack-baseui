@@ -2,6 +2,7 @@ import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-rout
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,6 +11,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from '@/components/ui/breadcrumb'
+import { ArrowLeft } from 'lucide-react'
 
 export const Route = createFileRoute('/admin')({
   component: AdminLayout,
@@ -48,7 +50,13 @@ function AdminLayout() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Link to="/">
+              <Button variant="outline" size="sm" className="gap-2 rounded-lg font-medium text-xs h-8">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Back to Home
+              </Button>
+            </Link>
             <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold">
               Administrator View
             </div>

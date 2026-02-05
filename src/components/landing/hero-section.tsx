@@ -167,31 +167,22 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
                                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                                 </span>
                                 <span className="text-xs font-semibold tracking-wider uppercase text-blue-700 dark:text-blue-300">
-                                    Enterprise Ready & Production Grade
+                                    Beta Version
                                 </span>
-                                <Sparkles className="w-3 h-3 text-blue-500" />
                             </div>
                         </motion.div>
 
                         {/* Main Headline */}
-                        <div className="space-y-4">
-                            <motion.p
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4, duration: 0.6 }}
-                                className="text-sm md:text-base font-medium tracking-[0.3em] uppercase text-muted-foreground"
-                            >
-                                The Future of Team Operations
-                            </motion.p>
+                        <div className="space-y-4 overflow-visible py-4">
 
                             <motion.h1
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                                className="text-6xl md:text-[8rem] font-black tracking-tighter leading-[0.85] select-none"
+                                className="text-6xl md:text-[8rem] font-black tracking-tighter leading-[0.9] select-none"
                             >
                                 <span className="block text-foreground">Ensemble.</span>
-                                <span className="block relative">
+                                <span className="block relative pb-4">
                                     <span className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
                                         {words[currentWord]}
                                     </span>
@@ -211,29 +202,6 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
                             <br className="hidden md:block" />
                             <span className="text-foreground/80 font-normal">Ensemble is your single, secure mission control for every operational tool.</span>
                         </motion.p>
-
-                        {/* Stats Row */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.9, duration: 0.6 }}
-                            className="flex flex-wrap justify-center gap-8 md:gap-16 pt-4"
-                        >
-                            {[
-                                { value: 100, suffix: '%', label: 'Uptime SLA' },
-                                { value: 50, suffix: '+', label: 'Teams Active' },
-                                { value: 10, suffix: 'K+', label: 'Daily Operations' },
-                            ].map((stat, i) => (
-                                <div key={i} className="text-center group">
-                                    <div className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
-                                        <AnimatedNumber value={stat.value} suffix={stat.suffix} />
-                                    </div>
-                                    <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mt-1 group-hover:text-blue-500 transition-colors">
-                                        {stat.label}
-                                    </div>
-                                </div>
-                            ))}
-                        </motion.div>
                     </motion.div>
 
                     {/* === BENTO GRID === */}

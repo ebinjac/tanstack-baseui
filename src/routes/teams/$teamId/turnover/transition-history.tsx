@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { format } from "date-fns";
@@ -17,7 +17,6 @@ import {
     X,
     CheckCircle2,
     AlertCircle,
-    AlertTriangle,
     Bell,
     Zap,
     MessageSquare,
@@ -42,18 +41,17 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { getFinalizedTurnovers } from "@/app/actions/turnover";
 import { SECTION_CONFIG, type TurnoverSection } from "@/lib/zod/turnover.schema";
 import type { FinalizedTurnover } from "@/db/schema/turnover";
+import { EntryCard } from "@/components/turnover/entry-card";
 
 export const Route = createFileRoute(
     "/teams/$teamId/turnover/transition-history"
@@ -123,11 +121,21 @@ function TransitionHistoryPage() {
 
     // Add missing snapshotFilter state
     const [snapshotFilter, setSnapshotFilter] = useState("");
+    const [expandedApps, setExpandedApps] = useState<Record<string, boolean>>({});
+
+    // Toggle app expansion
+    const toggleApp = (appId: string) => {
+        setExpandedApps((prev) => ({
+            ...prev,
+            [appId]: !prev[appId],
+        }));
+    };
 
     // Open snapshot detail
     const openSnapshot = async (turnover: FinalizedTurnover) => {
         setSelectedSnapshot(turnover);
         setSnapshotDialogOpen(true);
+        setExpandedApps({});
     };
 
     // Get initials
@@ -150,525 +158,505 @@ function TransitionHistoryPage() {
     const hasFilters = searchQuery || dateRange?.from || dateRange?.to;
 
     return (
-        <div className="p-8 mx-auto space-y-8">
-            {/* Header */}
-            <div
-                className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
-            >
-                <div className="flex items-center gap-3">
-                    <div>
-                        <h1 className="text-3xl font-black tracking-tight">
+        <div className="flex-1 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
+            <div className="max-w-7xl mx-auto space-y-8 p-8 pt-6">
+                {/* Header */}
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <div className="flex flex-col">
+                        <h1 className="text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
                             Transition History
                         </h1>
-                        <p className="text-muted-foreground">
-                            Archive of all finalized shift handovers and transitions.
-                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-[10px] font-bold bg-primary/5 border-primary/20 text-primary px-2 h-5">
+                                Archives
+                            </Badge>
+                            <span className="text-muted-foreground/30">•</span>
+                            <p className="text-sm font-medium text-muted-foreground">
+                                Browse all finalized shift handovers and transitions
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* View Toggle */}
+                        <div className="flex items-center gap-1 p-1 bg-background/50 rounded-xl border-none">
+                            <Button
+                                variant={viewMode === "grid" ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => setViewMode("grid")}
+                                className="gap-2 h-9 rounded-lg"
+                            >
+                                <Grid3X3 className="w-4 h-4" />
+                                Grid
+                            </Button>
+                            <Button
+                                variant={viewMode === "list" ? "default" : "ghost"}
+                                size="sm"
+                                onClick={() => setViewMode("list")}
+                                className="gap-2 h-9 rounded-lg"
+                            >
+                                <List className="w-4 h-4" />
+                                List
+                            </Button>
+                        </div>
+
+                        {/* Search */}
+                        <div className="relative group w-80">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                            <Input
+                                placeholder="Search by notes, user..."
+                                className="h-11 pl-12 rounded-xl bg-background/50 border-none focus:ring-2 focus:ring-primary/20 focus:bg-background transition-all font-bold text-sm"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {/* View Toggle */}
-                <div className="flex items-center gap-2 p-1 bg-muted/30 rounded-lg">
-                    <Button
-                        variant={viewMode === "grid" ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => setViewMode("grid")}
-                        className="gap-2"
-                    >
-                        <Grid3X3 className="w-4 h-4" />
-                        Grid
-                    </Button>
-                    <Button
-                        variant={viewMode === "list" ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => setViewMode("list")}
-                        className="gap-2"
-                    >
-                        <List className="w-4 h-4" />
-                        List
-                    </Button>
-                </div>
-            </div>
-
-            {/* Filters */}
-            <div
-                className="flex flex-wrap items-center gap-4"
-            >
-                {/* Search */}
-                <div className="relative flex-1 min-w-[200px] max-w-md">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search by notes, user..."
-                        className="pl-9"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                </div>
-
-                {/* Date Range Picker */}
-                <Popover>
-                    <PopoverTrigger>
-                        <Button
-                            id="date"
-                            variant="outline"
-                            className={cn(
-                                "justify-start text-left font-normal gap-2 h-10 px-4",
-                                !dateRange && "text-muted-foreground"
-                            )}
-                        >
-                            <CalendarIcon className="w-4 h-4" />
-                            {dateRange?.from ? (
-                                dateRange.to ? (
-                                    <>
-                                        {format(dateRange.from, "LLL dd, y")} -{" "}
-                                        {format(dateRange.to, "LLL dd, y")}
-                                    </>
+                {/* Filters Row */}
+                <div className="flex flex-wrap items-center gap-3">
+                    {/* Date Range Picker */}
+                    <Popover>
+                        <PopoverTrigger>
+                            <Button
+                                id="date"
+                                variant="outline"
+                                className={cn(
+                                    "justify-start text-left font-normal gap-2 h-11 px-4 text-sm rounded-xl",
+                                    !dateRange && "text-muted-foreground"
+                                )}
+                            >
+                                <CalendarIcon className="w-4 h-4" />
+                                {dateRange?.from ? (
+                                    dateRange.to ? (
+                                        <>
+                                            {format(dateRange.from, "LLL dd, y")} -{" "}
+                                            {format(dateRange.to, "LLL dd, y")}
+                                        </>
+                                    ) : (
+                                        format(dateRange.from, "LLL dd, y")
+                                    )
                                 ) : (
-                                    format(dateRange.from, "LLL dd, y")
-                                )
-                            ) : (
-                                <span>Pick a date range</span>
-                            )}
+                                    <span>Pick a date range</span>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                                initialFocus
+                                mode="range"
+                                defaultMonth={dateRange?.from}
+                                selected={dateRange}
+                                onSelect={setDateRange}
+                                numberOfMonths={2}
+                            />
+                        </PopoverContent>
+                    </Popover>
+
+                    {/* Clear */}
+                    {hasFilters && (
+                        <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-2 text-muted-foreground h-11 rounded-xl">
+                            <X className="w-4 h-4" />
+                            Clear filters
                         </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                        <CalendarComponent
-                            initialFocus
-                            mode="range"
-                            defaultMonth={dateRange?.from}
-                            selected={dateRange}
-                            onSelect={setDateRange}
-                            numberOfMonths={2}
-                        />
-                    </PopoverContent>
-                </Popover>
-
-                {/* Clear */}
-                {hasFilters && (
-                    <Button variant="ghost" onClick={clearFilters} className="gap-2 text-muted-foreground">
-                        <X className="w-4 h-4" />
-                        Clear Filters
-                    </Button>
-                )}
-            </div>
-
-            {/* Results */}
-            {filteredTurnovers.length === 0 ? (
-                <div
-                    className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed"
-                >
-                    <History className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-xl font-bold mb-2">No History Found</h3>
-                    <p className="text-muted-foreground">
-                        {hasFilters
-                            ? "No turnovers match your filters."
-                            : "No finalized turnovers yet."}
-                    </p>
+                    )}
                 </div>
-            ) : (
-                <>
-                    {viewMode === "grid" ? (
-                        <div
-                            key="grid"
-                            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                        >
-                            {filteredTurnovers.map((turnover: FinalizedTurnover) => (
-                                <div
-                                    key={turnover.id}
-                                >
+
+                {/* Results */}
+                {filteredTurnovers.length === 0 ? (
+                    <div className="text-center py-16 bg-muted/10 rounded-xl border border-dashed">
+                        <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                            <History className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-lg font-semibold mb-1">No History Found</h3>
+                        <p className="text-sm text-muted-foreground">
+                            {hasFilters
+                                ? "No turnovers match your filters."
+                                : "No finalized turnovers yet."}
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        {viewMode === "grid" ? (
+                            <div
+                                key="grid"
+                                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                            >
+                                {filteredTurnovers.map((turnover: FinalizedTurnover) => (
                                     <Card
-                                        className="cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+                                        key={turnover.id}
+                                        className={cn(
+                                            "cursor-pointer hover:shadow-md transition-all duration-200 border-l-[3px]",
+                                            Number(turnover.importantCount) > 0
+                                                ? "border-l-orange-400 hover:border-l-orange-500"
+                                                : "border-l-primary/40 hover:border-l-primary"
+                                        )}
                                         onClick={() => openSnapshot(turnover)}
                                     >
                                         <CardHeader className="pb-3">
                                             <div className="flex items-center justify-between">
-                                                <div>
-                                                    <p className="text-lg font-bold">
-                                                        {format(new Date(turnover.finalizedAt), "MMM dd, yyyy")}
-                                                    </p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {format(new Date(turnover.finalizedAt), "h:mm a")}
-                                                    </p>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center">
+                                                        <History className="w-5 h-5 text-muted-foreground" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-base font-semibold">
+                                                            {format(new Date(turnover.finalizedAt), "MMM dd, yyyy")}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {format(new Date(turnover.finalizedAt), "h:mm a")}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                                 {Number(turnover.importantCount) > 0 && (
-                                                    <Badge className="gap-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                                                    <Badge variant="outline" className="gap-1 text-orange-600 border-orange-200 bg-orange-50 text-xs">
                                                         <Star className="w-3 h-3 fill-current" />
                                                         {turnover.importantCount}
                                                     </Badge>
                                                 )}
                                             </div>
                                         </CardHeader>
-                                        <Separator />
-                                        <CardContent className="pt-4">
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <FileText className="w-4 h-4 text-muted-foreground" />
-                                                    <span>{turnover.totalApplications} Apps</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-sm">
-                                                    <Layers className="w-4 h-4 text-muted-foreground" />
-                                                    <span>{turnover.totalEntries} Entries</span>
-                                                </div>
+                                        <CardContent className="pt-0">
+                                            <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
+                                                <span className="flex items-center gap-1.5">
+                                                    <FileText className="w-3.5 h-3.5" />
+                                                    {turnover.totalApplications} Apps
+                                                </span>
+                                                <span className="flex items-center gap-1.5">
+                                                    <Layers className="w-3.5 h-3.5" />
+                                                    {turnover.totalEntries} Entries
+                                                </span>
                                             </div>
-                                            <div className="flex items-center justify-between">
+                                            <div className="flex items-center justify-between pt-3 border-t">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                                                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
                                                         {getInitials(turnover.finalizedBy)}
                                                     </div>
-                                                    <span className="text-sm">{turnover.finalizedBy}</span>
+                                                    <span className="text-sm text-muted-foreground">{turnover.finalizedBy}</span>
                                                 </div>
                                                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
                                             </div>
                                         </CardContent>
                                     </Card>
-                                </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div
-                            key="list"
-                            className="space-y-2"
-                        >
-                            {filteredTurnovers.map((turnover: FinalizedTurnover) => (
-                                <div
-                                    key={turnover.id}
-                                >
+                                ))}
+                            </div>
+                        ) : (
+                            <div
+                                key="list"
+                                className="space-y-2"
+                            >
+                                {filteredTurnovers.map((turnover: FinalizedTurnover) => (
                                     <Card
-                                        className="cursor-pointer hover:bg-muted/30 transition-colors"
+                                        key={turnover.id}
+                                        className={cn(
+                                            "cursor-pointer hover:bg-muted/20 transition-colors border-l-[3px]",
+                                            Number(turnover.importantCount) > 0
+                                                ? "border-l-orange-400"
+                                                : "border-l-primary/40"
+                                        )}
                                         onClick={() => openSnapshot(turnover)}
                                     >
                                         <CardContent className="p-4">
                                             <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-6">
-                                                    <div>
-                                                        <p className="font-bold">
+                                                <div className="flex items-center gap-5">
+                                                    <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                                                        <History className="w-4 h-4 text-muted-foreground" />
+                                                    </div>
+                                                    <div className="min-w-[100px]">
+                                                        <p className="font-semibold text-sm">
                                                             {format(new Date(turnover.finalizedAt), "MMM dd, yyyy")}
                                                         </p>
-                                                        <p className="text-sm text-muted-foreground">
+                                                        <p className="text-xs text-muted-foreground">
                                                             {format(new Date(turnover.finalizedAt), "h:mm a")}
                                                         </p>
                                                     </div>
-                                                    <Separator orientation="vertical" className="h-10" />
-                                                    <div className="flex items-center gap-4 text-sm">
-                                                        <span className="flex items-center gap-1">
-                                                            <FileText className="w-4 h-4 text-muted-foreground" />
+                                                    <Separator orientation="vertical" className="h-8" />
+                                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                                        <span className="flex items-center gap-1.5">
+                                                            <FileText className="w-3.5 h-3.5" />
                                                             {turnover.totalApplications} Apps
                                                         </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Layers className="w-4 h-4 text-muted-foreground" />
+                                                        <span className="flex items-center gap-1.5">
+                                                            <Layers className="w-3.5 h-3.5" />
                                                             {turnover.totalEntries} Entries
                                                         </span>
                                                     </div>
-                                                    <Separator orientation="vertical" className="h-10" />
-                                                    <p className="text-sm text-muted-foreground line-clamp-1 max-w-xs">
-                                                        {turnover.notes || "No notes"}
-                                                    </p>
+                                                    {turnover.notes && (
+                                                        <>
+                                                            <Separator orientation="vertical" className="h-8" />
+                                                            <p className="text-sm text-muted-foreground line-clamp-1 max-w-xs">
+                                                                {turnover.notes}
+                                                            </p>
+                                                        </>
+                                                    )}
                                                 </div>
-                                                <div className="flex items-center gap-4">
+                                                <div className="flex items-center gap-3">
                                                     {Number(turnover.importantCount) > 0 && (
-                                                        <Badge className="gap-1 bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300">
+                                                        <Badge variant="outline" className="gap-1 text-orange-600 border-orange-200 bg-orange-50 text-xs">
                                                             <Star className="w-3 h-3 fill-current" />
                                                             {turnover.importantCount}
                                                         </Badge>
                                                     )}
                                                     <div className="flex items-center gap-2">
-                                                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
+                                                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
                                                             {getInitials(turnover.finalizedBy)}
                                                         </div>
-                                                        <span className="text-sm">{turnover.finalizedBy}</span>
+                                                        <span className="text-sm text-muted-foreground">{turnover.finalizedBy}</span>
                                                     </div>
+                                                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                                                 </div>
                                             </div>
                                         </CardContent>
                                     </Card>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 pt-4">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage((p) => Math.max(0, p - 1))}
+                            disabled={page === 0}
+                            className="gap-1"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                            Previous
+                        </Button>
+                        <div className="px-3 py-1.5 bg-muted/50 rounded-md text-sm text-muted-foreground">
+                            {page + 1} / {totalPages}
                         </div>
-                    )}
-                </>
-            )}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                            disabled={page >= totalPages - 1}
+                            className="gap-1"
+                        >
+                            Next
+                            <ChevronRight className="w-4 h-4" />
+                        </Button>
+                    </div>
+                )}
 
-            {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                    >
-                        <ChevronLeft className="w-4 h-4 mr-1" />
-                        Previous
-                    </Button>
-                    <span className="text-sm text-muted-foreground">
-                        Page {page + 1} of {totalPages}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                        disabled={page >= totalPages - 1}
-                    >
-                        Next
-                        <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
-                </div>
-            )}
-
-            {/* Snapshot Detail Dialog - Full Screen */}
-            <Dialog open={snapshotDialogOpen} onOpenChange={setSnapshotDialogOpen}>
-                <DialogContent className="min-w-[100vw] h-[100vh] max-w-[100vw] max-h-[100vh] rounded-none p-0 gap-0 flex flex-col overflow-y-scroll">
-                    {/* Fixed Header */}
-                    <DialogHeader className="px-6 py-4 border-b shrink-0">
-                        <DialogTitle className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                <History className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <p className="text-lg font-bold">Turnover Snapshot</p>
-                                {selectedSnapshot && (
-                                    <p className="text-sm font-normal text-muted-foreground">
-                                        {format(new Date(selectedSnapshot.finalizedAt), "MMMM dd, yyyy 'at' h:mm a")}
-                                        <span className="mx-2">•</span>
-                                        Finalized by <span className="font-medium text-foreground">{selectedSnapshot.finalizedBy}</span>
-                                    </p>
-                                )}
-                            </div>
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    {/* Scrollable Content */}
-                    {selectedSnapshot && (
-                        <ScrollArea className="flex-1">
-                            <div className="p-6 space-y-6">
-                                {/* Filter & Notes Row */}
-                                <div className="flex flex-col lg:flex-row gap-4">
-                                    <div className="relative w-full lg:max-w-md">
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                                        <Input
-                                            placeholder="Filter entries..."
-                                            className="pl-10"
-                                            value={snapshotFilter}
-                                            onChange={(e) => setSnapshotFilter(e.target.value)}
-                                        />
-                                    </div>
-                                    {selectedSnapshot.notes && (
-                                        <div className="flex-1 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                                            <div className="flex gap-2">
-                                                <FileText className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                                                <div>
-                                                    <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">Shift Notes</p>
-                                                    <p className="text-sm text-foreground/80">{selectedSnapshot.notes}</p>
-                                                </div>
-                                            </div>
-                                        </div>
+                {/* Snapshot Detail Dialog - Full Screen */}
+                <Dialog open={snapshotDialogOpen} onOpenChange={setSnapshotDialogOpen}>
+                    <DialogContent className="min-w-[100vw] h-[100vh] max-w-[100vw] max-h-[100vh] rounded-none p-0 gap-0 flex flex-col overflow-y-scroll">
+                        {/* Fixed Header */}
+                        <DialogHeader className="px-6 py-4 border-b shrink-0">
+                            <DialogTitle className="flex items-center gap-3">
+                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                    <History className="w-5 h-5" />
+                                </div>
+                                <div>
+                                    <p className="text-lg font-bold">Turnover Snapshot</p>
+                                    {selectedSnapshot && (
+                                        <p className="text-sm font-normal text-muted-foreground">
+                                            {format(new Date(selectedSnapshot.finalizedAt), "MMMM dd, yyyy 'at' h:mm a")}
+                                            <span className="mx-2">•</span>
+                                            Finalized by <span className="font-medium text-foreground">{selectedSnapshot.finalizedBy}</span>
+                                        </p>
                                     )}
                                 </div>
+                            </DialogTitle>
+                        </DialogHeader>
 
-                                {/* Applications */}
-                                <div className="space-y-6">
-                                    {(() => {
-                                        const snapshotData = selectedSnapshot.snapshotData as any[];
-
-                                        // Group by application
-                                        const groupedByApp: Record<string, any[]> = {};
-                                        snapshotData.forEach((entry) => {
-                                            const appId = entry.applicationId;
-                                            if (!groupedByApp[appId]) groupedByApp[appId] = [];
-
-                                            if (snapshotFilter) {
-                                                const searchLower = snapshotFilter.toLowerCase();
-                                                const matchesFilter =
-                                                    entry.title?.toLowerCase().includes(searchLower) ||
-                                                    entry.description?.toLowerCase().includes(searchLower) ||
-                                                    entry.comments?.toLowerCase().includes(searchLower) ||
-                                                    entry.createdBy?.toLowerCase().includes(searchLower) ||
-                                                    entry.application?.applicationName?.toLowerCase().includes(searchLower) ||
-                                                    entry.application?.tla?.toLowerCase().includes(searchLower) ||
-                                                    entry.rfcDetails?.rfcNumber?.toLowerCase().includes(searchLower) ||
-                                                    entry.incDetails?.incidentNumber?.toLowerCase().includes(searchLower) ||
-                                                    entry.mimDetails?.mimLink?.toLowerCase().includes(searchLower) ||
-                                                    entry.commsDetails?.emailSubject?.toLowerCase().includes(searchLower);
-
-                                                if (!matchesFilter) return;
-                                            }
-
-                                            groupedByApp[appId].push(entry);
-                                        });
-
-                                        const appGroups = Object.entries(groupedByApp).filter(([, entries]) => entries.length > 0);
-
-                                        if (appGroups.length === 0) {
-                                            return (
-                                                <div className="text-center py-12 text-muted-foreground">
-                                                    <History className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                                                    <p>No entries match your filter.</p>
+                        {/* Scrollable Content */}
+                        {selectedSnapshot && (
+                            <ScrollArea className="flex-1">
+                                <div className="p-6 space-y-6">
+                                    {/* Filter & Notes Row */}
+                                    <div className="flex flex-col lg:flex-row gap-4">
+                                        <div className="relative w-full lg:max-w-md">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                                            <Input
+                                                placeholder="Filter entries..."
+                                                className="pl-10"
+                                                value={snapshotFilter}
+                                                onChange={(e) => setSnapshotFilter(e.target.value)}
+                                            />
+                                        </div>
+                                        {selectedSnapshot.notes && (
+                                            <div className="flex-1 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                                <div className="flex gap-2">
+                                                    <FileText className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                                                    <div>
+                                                        <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">Shift Notes</p>
+                                                        <p className="text-sm text-foreground/80">{selectedSnapshot.notes}</p>
+                                                    </div>
                                                 </div>
-                                            );
-                                        }
+                                            </div>
+                                        )}
+                                    </div>
 
-                                        return appGroups.map(([appId, appEntries]) => {
-                                            const app = appEntries[0]?.application;
-                                            const criticalCount = appEntries.filter((e) => e.isImportant).length;
+                                    {/* Applications */}
+                                    <div className="space-y-6">
+                                        {(() => {
+                                            const snapshotData = selectedSnapshot.snapshotData as any[];
 
-                                            // Group by section
-                                            const groupedBySection: Record<string, any[]> = {};
-                                            appEntries.forEach((entry) => {
-                                                if (!groupedBySection[entry.section]) groupedBySection[entry.section] = [];
-                                                groupedBySection[entry.section].push(entry);
+                                            // Group by application
+                                            const groupedByApp: Record<string, any[]> = {};
+                                            snapshotData.forEach((entry) => {
+                                                const appId = entry.applicationId;
+                                                if (!groupedByApp[appId]) groupedByApp[appId] = [];
+
+                                                if (snapshotFilter) {
+                                                    const searchLower = snapshotFilter.toLowerCase();
+                                                    const matchesFilter =
+                                                        entry.title?.toLowerCase().includes(searchLower) ||
+                                                        entry.description?.toLowerCase().includes(searchLower) ||
+                                                        entry.comments?.toLowerCase().includes(searchLower) ||
+                                                        entry.createdBy?.toLowerCase().includes(searchLower) ||
+                                                        entry.application?.applicationName?.toLowerCase().includes(searchLower) ||
+                                                        entry.application?.tla?.toLowerCase().includes(searchLower) ||
+                                                        entry.rfcDetails?.rfcNumber?.toLowerCase().includes(searchLower) ||
+                                                        entry.incDetails?.incidentNumber?.toLowerCase().includes(searchLower) ||
+                                                        entry.mimDetails?.mimLink?.toLowerCase().includes(searchLower) ||
+                                                        entry.commsDetails?.emailSubject?.toLowerCase().includes(searchLower);
+
+                                                    if (!matchesFilter) return;
+                                                }
+
+                                                groupedByApp[appId].push(entry);
                                             });
 
-                                            const sectionOrder: TurnoverSection[] = ["MIM", "INC", "RFC", "ALERTS", "COMMS", "FYI"];
-                                            const sortedSections = sectionOrder
-                                                .filter((s) => groupedBySection[s])
-                                                .map((s) => [s, groupedBySection[s]] as [string, any[]]);
+                                            const appGroups = Object.entries(groupedByApp).filter(([, entries]) => entries.length > 0);
 
-                                            return (
-                                                <div key={appId} className="space-y-4 mb-10">
-                                                    {/* App Header Row */}
-                                                    <div className="flex items-center justify-between px-2">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-white dark:bg-zinc-900 border shadow-sm">
-                                                                <Layers className="w-6 h-6 text-primary" />
-                                                            </div>
-                                                            <div>
-                                                                <div className="flex items-center gap-3">
-                                                                    <h3 className="text-xl font-bold tracking-tight">
-                                                                        {app?.applicationName || "Unknown Application"}
-                                                                    </h3>
-                                                                    {app?.tla && (
-                                                                        <Badge variant="outline" className="font-mono text-xs text-muted-foreground">
-                                                                            {app.tla}
-                                                                        </Badge>
-                                                                    )}
-                                                                </div>
-                                                                <p className="text-sm text-muted-foreground mt-0.5">
-                                                                    {appEntries.length} total entries
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                        {criticalCount > 0 && (
-                                                            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-destructive/10 border border-destructive/20">
-                                                                <AlertTriangle className="w-4 h-4 text-destructive" />
-                                                                <span className="text-sm font-semibold text-destructive">{criticalCount} Critical Items</span>
-                                                            </div>
-                                                        )}
+                                            if (appGroups.length === 0) {
+                                                return (
+                                                    <div className="text-center py-12 text-muted-foreground">
+                                                        <History className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                                                        <p>No entries match your filter.</p>
                                                     </div>
+                                                );
+                                            }
 
-                                                    {/* Sections as Individual Cards */}
-                                                    <div className="grid grid-cols-1 gap-6">
-                                                        {sortedSections.map(([section, entries]) => {
-                                                            const sConfig = SECTION_CONFIG[section as TurnoverSection];
-                                                            const SectionIcon = SECTION_ICONS[section as TurnoverSection];
+                                            return appGroups.map(([appId, appEntries]) => {
+                                                const app = appEntries[0]?.application;
+                                                const criticalCount = appEntries.filter((e) => e.isImportant).length;
+                                                const isExpanded = expandedApps[appId];
 
-                                                            return (
-                                                                <div key={section} className="rounded-xl border bg-card shadow-sm overflow-hidden">
-                                                                    {/* Section Header */}
-                                                                    <div className="flex items-center gap-3 px-6 py-4 border-b bg-muted/30">
-                                                                        <div className={cn("p-2 rounded-md", sConfig.colorClass.replace("text-", "bg-").replace("500", "500/10").replace("600", "600/10"))}>
-                                                                            <SectionIcon className={cn("w-4 h-4", sConfig.colorClass)} />
-                                                                        </div>
+                                                // Group by section
+                                                const groupedBySection: Record<string, any[]> = {};
+                                                appEntries.forEach((entry) => {
+                                                    if (!groupedBySection[entry.section]) groupedBySection[entry.section] = [];
+                                                    groupedBySection[entry.section].push(entry);
+                                                });
+
+                                                const sectionOrder: TurnoverSection[] = ["MIM", "INC", "RFC", "ALERTS", "COMMS", "FYI"];
+                                                const sortedSections = sectionOrder
+                                                    .filter((s) => groupedBySection[s])
+                                                    .map((s) => [s, groupedBySection[s]] as [string, any[]]);
+
+                                                return (
+                                                    <div key={appId}>
+                                                        <Collapsible open={isExpanded} onOpenChange={() => toggleApp(appId)}>
+                                                            <Card className={cn(
+                                                                "overflow-hidden border-l-[3px] transition-colors mb-4",
+                                                                criticalCount > 0 ? "border-l-orange-400" : "border-l-primary/40"
+                                                            )}>
+                                                                <CollapsibleTrigger className="w-full text-left outline-none">
+                                                                    <div className="px-4 py-3 cursor-pointer flex items-center justify-between hover:bg-muted/40 transition-colors">
                                                                         <div className="flex items-center gap-3">
-                                                                            <h4 className="font-semibold text-base">{sConfig.name}</h4>
-                                                                            <Badge variant="secondary" className="text-xs font-normal">
-                                                                                {entries.length}
-                                                                            </Badge>
+                                                                            <div className={cn(
+                                                                                "h-7 w-7 rounded-md flex items-center justify-center",
+                                                                                criticalCount > 0 ? "bg-orange-100 text-orange-600" : "bg-primary/10 text-primary"
+                                                                            )}>
+                                                                                <Layers className="h-3.5 w-3.5" />
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <h3 className="text-sm font-semibold text-foreground">
+                                                                                    {app?.applicationName || "Unknown Application"}
+                                                                                </h3>
+                                                                                {app?.tla && (
+                                                                                    <Badge variant="secondary" className="text-[10px] font-medium px-1.5 py-0">
+                                                                                        {app.tla}
+                                                                                    </Badge>
+                                                                                )}
+                                                                                <span className="text-xs text-muted-foreground">
+                                                                                    · {appEntries.length} items · Tier {app?.tier || "N/A"}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <div className="flex items-center gap-2">
+                                                                            {criticalCount > 0 && (
+                                                                                <Badge variant="outline" className="text-[10px] font-medium text-orange-600 border-orange-200 bg-orange-50">
+                                                                                    {criticalCount} Critical
+                                                                                </Badge>
+                                                                            )}
+                                                                            <div className="h-6 w-6 rounded-md flex items-center justify-center hover:bg-muted/50 transition-colors">
+                                                                                <ChevronRight className={cn(
+                                                                                    "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                                                                                    isExpanded && "rotate-90"
+                                                                                )} />
+                                                                            </div>
                                                                         </div>
                                                                     </div>
+                                                                </CollapsibleTrigger>
 
-                                                                    {/* Table Content */}
-                                                                    <div className="overflow-x-auto">
-                                                                        <Table>
-                                                                            <TableHeader>
-                                                                                <TableRow className="hover:bg-transparent border-b-border/50">
-                                                                                    <TableHead className="w-[60px] text-center bg-muted/5">Pri</TableHead>
-                                                                                    <TableHead className="bg-muted/5">Description</TableHead>
-                                                                                    <TableHead className="w-[120px] bg-muted/5">Status</TableHead>
-                                                                                    <TableHead className="w-[30%] bg-muted/5">Team Notes</TableHead>
-                                                                                    <TableHead className="w-[150px] text-right bg-muted/5">Author</TableHead>
-                                                                                </TableRow>
-                                                                            </TableHeader>
-                                                                            <TableBody>
-                                                                                {entries.map((entry) => (
-                                                                                    <TableRow key={entry.id} className="group hover:bg-muted/30">
-                                                                                        <TableCell className="text-center py-4 align-top">
-                                                                                            {entry.isImportant ? (
-                                                                                                <div className="relative inline-flex">
-                                                                                                    <div className="absolute inset-0 bg-orange-400/20 rounded-full blur-sm" />
-                                                                                                    <Star className="relative w-4 h-4 text-orange-500 fill-orange-500" />
-                                                                                                </div>
-                                                                                            ) : (
-                                                                                                <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/20 mx-auto mt-2" />
-                                                                                            )}
-                                                                                        </TableCell>
-                                                                                        <TableCell className="py-4 align-top">
-                                                                                            <span className="font-medium text-sm block mb-1">
-                                                                                                {entry.title}
-                                                                                            </span>
-                                                                                            {entry.description && (
-                                                                                                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                                                                                                    {entry.description}
-                                                                                                </p>
-                                                                                            )}
-                                                                                        </TableCell>
-                                                                                        <TableCell className="py-4 align-top">
-                                                                                            <Badge
-                                                                                                variant="outline"
-                                                                                                className={cn(
-                                                                                                    "font-medium text-[11px] px-2 py-0.5",
-                                                                                                    entry.status === "RESOLVED"
-                                                                                                        ? "border-green-500/30 text-green-700 bg-green-500/5 dark:text-green-400"
-                                                                                                        : "border-muted-foreground/30 text-muted-foreground"
-                                                                                                )}
-                                                                                            >
-                                                                                                {entry.status === "RESOLVED" ? "Resolved" : "Active"}
-                                                                                            </Badge>
-                                                                                        </TableCell>
-                                                                                        <TableCell className="py-4 align-top">
-                                                                                            {entry.comments ? (
-                                                                                                <div className="flex gap-2">
-                                                                                                    <MessageSquare className="w-3.5 h-3.5 text-muted-foreground/40 mt-1 shrink-0" />
-                                                                                                    <div
-                                                                                                        className="text-sm text-muted-foreground prose prose-sm dark:prose-invert max-w-none prose-p:my-0 leading-relaxed"
-                                                                                                        dangerouslySetInnerHTML={{ __html: entry.comments }}
-                                                                                                    />
-                                                                                                </div>
-                                                                                            ) : (
-                                                                                                <span className="text-muted-foreground/20 text-xs italic">—</span>
-                                                                                            )}
-                                                                                        </TableCell>
-                                                                                        <TableCell className="py-4 align-top text-right">
-                                                                                            <div className="flex items-center justify-end gap-2.5">
-                                                                                                <div className="text-right">
-                                                                                                    <p className="text-xs font-medium text-foreground">{entry.createdBy}</p>
-                                                                                                    <p className="text-[10px] text-muted-foreground">Owner</p>
-                                                                                                </div>
-                                                                                                <div className="h-8 w-8 rounded-full bg-primary/5 border border-primary/10 flex items-center justify-center text-xs font-bold text-primary shadow-sm">
-                                                                                                    {getInitials(entry.createdBy)}
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </TableCell>
-                                                                                    </TableRow>
-                                                                                ))}
-                                                                            </TableBody>
-                                                                        </Table>
+                                                                <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-1 data-[state=open]:slide-in-from-top-1 duration-200 overflow-hidden">
+                                                                    <div className="px-4 pb-4 pt-3 space-y-4 border-t bg-muted/5">
+                                                                        {sortedSections.map(([section, entries]) => {
+                                                                            const sConfig = SECTION_CONFIG[section as TurnoverSection];
+                                                                            const SectionIcon = SECTION_ICONS[section as TurnoverSection];
+
+                                                                            return (
+                                                                                <div key={section} className="space-y-2">
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <div className={cn(
+                                                                                            "h-5 w-5 rounded flex items-center justify-center",
+                                                                                            sConfig.colorClass.includes('blue') ? "bg-blue-100" :
+                                                                                                sConfig.colorClass.includes('red') ? "bg-red-100" :
+                                                                                                    sConfig.colorClass.includes('amber') ? "bg-amber-100" :
+                                                                                                        sConfig.colorClass.includes('purple') ? "bg-purple-100" :
+                                                                                                            sConfig.colorClass.includes('green') ? "bg-green-100" :
+                                                                                                                "bg-muted"
+                                                                                        )}>
+                                                                                            <SectionIcon className={cn("h-3 w-3", sConfig.colorClass)} />
+                                                                                        </div>
+                                                                                        <span className="text-xs font-medium text-muted-foreground">
+                                                                                            {sConfig.name}
+                                                                                        </span>
+                                                                                        <span className="text-[10px] text-muted-foreground/60 bg-muted/50 px-1.5 py-0.5 rounded-full">
+                                                                                            {entries.length}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <div className="space-y-2 pl-7">
+                                                                                        {entries.map((entry) => (
+                                                                                            <EntryCard
+                                                                                                key={entry.id}
+                                                                                                entry={entry}
+                                                                                                teamId={teamId}
+                                                                                                readOnly
+                                                                                            />
+                                                                                        ))}
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        })}
                                                                     </div>
-                                                                </div>
-                                                            );
-                                                        })}
+                                                                </CollapsibleContent>
+                                                            </Card>
+                                                        </Collapsible>
                                                     </div>
-                                                </div>
-                                            );
-                                        });
-                                    })()}
-                                </div>
+                                                );
+                                            });
+                                        })()}
+                                    </div>
 
-                                {/* Bottom Spacer for scroll */}
-                                <div className="h-8" />
-                            </div>
-                        </ScrollArea>
-                    )}
-                </DialogContent>
-            </Dialog>
+                                    {/* Bottom Spacer for scroll */}
+                                    <div className="h-8" />
+                                </div>
+                            </ScrollArea>
+                        )}
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
     );
 }

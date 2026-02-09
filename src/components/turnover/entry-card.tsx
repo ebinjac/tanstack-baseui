@@ -22,7 +22,7 @@ import {
     Hash,
     Loader2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
     DropdownMenu,
@@ -44,7 +44,6 @@ import {
 import {
     Dialog,
     DialogContent,
-    DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
 import {
@@ -62,6 +61,7 @@ import {
 import { toast } from "sonner";
 import { SECTION_CONFIG, type TurnoverSection } from "@/lib/zod/turnover.schema";
 import type { TurnoverEntryWithDetails } from "@/db/schema/turnover";
+import type { Application } from "@/db/schema/teams";
 
 // SLA calculation
 type SlaStatus = "OVERDUE" | "AT_RISK" | "UNATTENDED" | "STALE" | "HEALTHY";
@@ -135,6 +135,9 @@ interface EntryCardProps {
     teamId: string;
     onEdit?: (entry: TurnoverEntryWithDetails) => void;
     readOnly?: boolean;
+    // Group-related props - for showing which app an entry belongs to
+    showApplicationBadge?: boolean;
+    groupApplications?: Application[];
 }
 
 export function EntryCard({
@@ -142,6 +145,8 @@ export function EntryCard({
     teamId,
     onEdit,
     readOnly = false,
+    showApplicationBadge = false,
+    groupApplications: _groupApplications = [],
 }: EntryCardProps) {
     const queryClient = useQueryClient();
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -265,6 +270,16 @@ export function EntryCard({
                             {getPrimaryId()}
                         </span>
 
+                        {/* Application Badge (for grouped entries) */}
+                        {showApplicationBadge && entry.application && (
+                            <Badge
+                                variant="outline"
+                                className="shrink-0 text-[10px] font-bold px-2 py-0 h-5 bg-primary/5 border-primary/20"
+                            >
+                                {entry.application.tla}
+                            </Badge>
+                        )}
+
                         {/* Status Badge */}
                         {entry.status === "RESOLVED" && (
                             <Badge
@@ -356,10 +371,8 @@ export function EntryCard({
                                 </Button>
 
                                 <DropdownMenu>
-                                    <DropdownMenuTrigger>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                                            <MoreHorizontal className="w-4 h-4" />
-                                        </Button>
+                                    <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8")}>
+                                        <MoreHorizontal className="w-4 h-4" />
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end">
                                         <DropdownMenuItem onClick={() => onEdit?.(entry)}>

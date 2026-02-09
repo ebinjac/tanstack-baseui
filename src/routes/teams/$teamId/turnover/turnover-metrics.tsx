@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { format, subDays } from "date-fns";
 import {
-  BarChart3,
   Activity,
   CheckCircle2,
   AlertCircle,
@@ -29,6 +28,7 @@ import { getTurnoverMetrics } from "@/app/actions/turnover";
 import { SECTION_CONFIG, type TurnoverSection } from "@/lib/zod/turnover.schema";
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Pie, PieChart as RechartsPieChart, Legend } from "recharts";
 import type { DateRange } from "react-day-picker";
+import { StatsSummaryItem } from "@/components/link-manager/shared";
 
 export const Route = createFileRoute(
   "/teams/$teamId/turnover/turnover-metrics"
@@ -89,15 +89,15 @@ function TurnoverMetricsPage() {
     }));
   }, [metrics]);
 
-  // Chart config
+  // Chart config - using direct HSL values for proper color rendering
   const chartConfig = {
     created: {
       label: "Created",
-      color: "hsl(var(--chart-1))",
+      color: "hsl(221.2 83.2% 53.3%)", // Blue
     },
     resolved: {
       label: "Resolved",
-      color: "hsl(var(--chart-2))",
+      color: "hsl(142.1 76.2% 36.3%)", // Green
     },
     RFC: {
       label: SECTION_CONFIG.RFC.shortName,
@@ -190,57 +190,30 @@ function TurnoverMetricsPage() {
         transition={{ delay: 0.1 }}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
       >
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Entries</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics?.kpis.totalEntries || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all sections
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Resolved</CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics?.kpis.resolvedEntries || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {metrics?.kpis.resolutionRate || 0}% Resolution Rate
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Open Issues</CardTitle>
-            <AlertCircle className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics?.kpis.openEntries || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Requires attention
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Critical Items</CardTitle>
-            <Star className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics?.kpis.criticalItems || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Marked as Important
-            </p>
-          </CardContent>
-        </Card>
+        <StatsSummaryItem
+          label="Total Entries"
+          value={metrics?.kpis.totalEntries || 0}
+          icon={Activity}
+          color="primary"
+        />
+        <StatsSummaryItem
+          label="Resolved"
+          value={metrics?.kpis.resolvedEntries || 0}
+          icon={CheckCircle2}
+          color="blue"
+        />
+        <StatsSummaryItem
+          label="Open Issues"
+          value={metrics?.kpis.openEntries || 0}
+          icon={AlertCircle}
+          color="amber"
+        />
+        <StatsSummaryItem
+          label="Critical Items"
+          value={metrics?.kpis.criticalItems || 0}
+          icon={Star}
+          color="indigo"
+        />
       </motion.div>
 
       {/* Charts */}

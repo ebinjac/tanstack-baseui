@@ -14,13 +14,13 @@ import {
 } from 'lucide-react'
 import { HeroSection } from '../components/landing/hero-section'
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/')(({
   component: RouteComponent,
   loader: async () => {
     const session = await getSession()
     return { session }
   },
-})
+}))
 
 function RouteComponent() {
   const { session } = Route.useLoaderData()
@@ -107,11 +107,11 @@ function RouteComponent() {
             </Link>
 
             {/* Tool 2: Turnover */}
-            <Link to={turnoverHref as any} className="group relative h-[500px] rounded-[2.5rem] bg-card border border-border/50 overflow-hidden hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <Link to={turnoverHref as any} className="group relative h-[500px] rounded-[2.5rem] bg-card border border-border/50 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
               <div className="relative p-10 z-10 pointer-events-none">
-                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-600 flex items-center justify-center mb-6 shadow-inner">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6 shadow-inner">
                   <RefreshCcw className="w-7 h-7" />
                 </div>
                 <h3 className="text-3xl font-bold mb-3">Seamless Turnover</h3>
@@ -129,35 +129,35 @@ function RouteComponent() {
                       transition={{ delay: i * 0.2 }}
                       className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/50"
                     >
-                      <div className={`w-8 h-8 rounded-full flex-shrink-0 ${i === 0 ? 'bg-blue-500' : 'bg-muted-foreground/30'}`} />
+                      <div className={`w-8 h-8 rounded-full flex-shrink-0 ${i === 0 ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
                       <div className="space-y-1.5 flex-1">
                         <div className="h-2 w-3/4 bg-foreground/10 rounded-full" />
                         <div className="h-2 w-1/2 bg-foreground/5 rounded-full" />
                       </div>
                     </motion.div>
                   ))}
-                  <div className="absolute inset-0 bg-blue-500/5 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-t-xl">
-                    <span className="bg-blue-600 text-white px-4 py-2 rounded-full font-medium text-sm shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">Start Handover</span>
+                  <div className="absolute inset-0 bg-primary/5 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center rounded-t-xl">
+                    <span className="bg-primary text-primary-foreground px-4 py-2 rounded-full font-medium text-sm shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">Start Handover</span>
                   </div>
                 </div>
               </div>
             </Link>
 
             {/* Tool 3: Link Manager */}
-            <Link to={linkManagerHref as any} className="group lg:col-span-2 relative h-[400px] rounded-[2.5rem] bg-card border border-border/50 overflow-hidden hover:shadow-2xl hover:shadow-indigo-500/5 transition-all duration-500 flex flex-col md:flex-row">
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+            <Link to={linkManagerHref as any} className="group lg:col-span-2 relative h-[400px] rounded-[2.5rem] bg-card border border-border/50 overflow-hidden hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 flex flex-col md:flex-row">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
               <div className="relative p-10 md:w-1/2 z-10 flex flex-col justify-center">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-600 flex items-center justify-center mb-6 shadow-inner">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6 shadow-inner">
                   <Link2 className="w-7 h-7" />
                 </div>
                 <h3 className="text-3xl font-bold mb-3">Link Manager</h3>
                 <p className="text-muted-foreground text-lg">Your team's central repository for documentation, dashboards, and critical URLs. Never lose a bookmark again.</p>
 
                 <div className="mt-8 flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform translate-y-2 group-hover:translate-y-0">
-                  <span className="px-3 py-1 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">Tags</span>
-                  <span className="px-3 py-1 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">Search</span>
-                  <span className="px-3 py-1 rounded-md bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-xs font-semibold">Categories</span>
+                  <span className="px-3 py-1 rounded-md bg-primary/10 text-primary text-xs font-semibold">Tags</span>
+                  <span className="px-3 py-1 rounded-md bg-primary/10 text-primary text-xs font-semibold">Search</span>
+                  <span className="px-3 py-1 rounded-md bg-primary/10 text-primary text-xs font-semibold">Categories</span>
                 </div>
               </div>
 
@@ -173,7 +173,7 @@ function RouteComponent() {
                       className="absolute top-0 right-10 w-48 h-16 bg-background rounded-xl shadow-lg border border-border p-3 flex items-center gap-3 z-10"
                       style={{ zIndex: 3 - i }}
                     >
-                      <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex-shrink-0" />
+                      <div className="w-8 h-8 rounded-lg bg-primary/20 flex-shrink-0" />
                       <div className="space-y-1.5 w-full">
                         <div className="h-2 w-3/4 bg-muted rounded-full" />
                         <div className="h-1.5 w-1/2 bg-muted/50 rounded-full" />
@@ -213,14 +213,14 @@ function RouteComponent() {
               </div>
 
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/30 ring-4 ring-background">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/30 ring-4 ring-background">
                   <Activity className="w-8 h-8" />
                 </div>
               </div>
 
               <div className="md:w-1/2 p-6 md:p-0">
                 <div className="bg-card border border-border/50 rounded-2xl shadow-xl overflow-hidden relative group hover:shadow-2xl transition-all duration-500 max-w-md">
-                  <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-600 relative">
+                  <div className="h-32 bg-gradient-to-r from-primary to-primary/80 relative">
                     <div className="absolute -bottom-8 left-6">
                       <div className="w-20 h-20 rounded-2xl bg-background p-1 shadow-lg">
                         <div className="w-full h-full rounded-xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold">V</div>
@@ -241,8 +241,8 @@ function RouteComponent() {
                       </div>
                     </div>
                     <div className="flex gap-2 pt-2">
-                      <span className="px-2 py-1 rounded-md bg-blue-100 text-blue-700 text-xs font-bold border border-blue-200">EST (UTC-5)</span>
-                      <span className="px-2 py-1 rounded-md bg-indigo-100 text-indigo-700 text-xs font-bold border border-indigo-200">Engineering</span>
+                      <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-bold border border-primary/20">EST (UTC-5)</span>
+                      <span className="px-2 py-1 rounded-md bg-secondary text-secondary-foreground text-xs font-bold border border-border">Engineering</span>
                     </div>
                   </div>
                 </div>
@@ -264,7 +264,7 @@ function RouteComponent() {
               </div>
 
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/30 ring-4 ring-background">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/30 ring-4 ring-background">
                   <Shield className="w-8 h-8" />
                 </div>
               </div>
@@ -277,10 +277,10 @@ function RouteComponent() {
                   </div>
                   <div className="p-2">
                     {[
-                      { name: "Sarah Connor", role: "Owner", active: true, color: "bg-orange-500" },
-                      { name: "John Smith", role: "Admin", active: true, color: "bg-blue-500" },
-                      { name: "Elena R.", role: "Contributor", active: true, color: "bg-purple-500" },
-                      { name: "Mike Ross", role: "Viewer", active: false, color: "bg-slate-500" },
+                      { name: "Sarah Connor", role: "Owner", active: true, color: "bg-warning" },
+                      { name: "John Smith", role: "Admin", active: true, color: "bg-primary" },
+                      { name: "Elena R.", role: "Contributor", active: true, color: "bg-chart-3" },
+                      { name: "Mike Ross", role: "Viewer", active: false, color: "bg-muted-foreground" },
                     ].map((user, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 hover:bg-muted/30 rounded-lg transition-colors group cursor-default">
                         <div className={`w-8 h-8 rounded-full ${user.color} flex items-center justify-center text-white text-xs font-bold`}>
@@ -290,9 +290,9 @@ function RouteComponent() {
                           <div className="text-sm font-semibold leading-none mb-1">{user.name}</div>
                           <div className="text-[10px] text-muted-foreground">User ID: 89932-{i}</div>
                         </div>
-                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold border ${user.role === 'Owner' ? 'bg-orange-100 text-orange-700 border-orange-200' :
-                          user.role === 'Admin' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                            'bg-slate-100 text-slate-700 border-slate-200'
+                        <div className={`px-2 py-0.5 rounded text-[10px] font-bold border ${user.role === 'Owner' ? 'bg-warning/10 text-warning border-warning/20' :
+                          user.role === 'Admin' ? 'bg-primary/10 text-primary border-primary/20' :
+                            'bg-muted text-muted-foreground border-border'
                           }`}>
                           {user.role}
                         </div>
@@ -318,7 +318,7 @@ function RouteComponent() {
               </div>
 
               <div className="relative z-10">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/30 ring-4 ring-background">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/30 ring-4 ring-background">
                   <BookOpen className="w-8 h-8" />
                 </div>
               </div>
@@ -426,9 +426,9 @@ function RouteComponent() {
                 {/* Mock Browser Header */}
                 <div className="bg-muted/50 border-b border-border p-3 flex items-center gap-2">
                   <div className="flex gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-400/80" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/80" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-400/80" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-destructive/80" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-warning/80" />
+                    <div className="w-2.5 h-2.5 rounded-full bg-success/80" />
                   </div>
                   <div className="h-5 w-1/3 bg-background rounded-md ml-2 border border-border/50" />
                 </div>
@@ -440,8 +440,8 @@ function RouteComponent() {
                       <h4 className="font-bold text-lg">Platform Health</h4>
                       <div className="text-xs text-muted-foreground">Last updated: Just now</div>
                     </div>
-                    <div className="px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-bold border border-green-500/20 flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <div className="px-3 py-1 rounded-full bg-success/10 text-success text-xs font-bold border border-success/20 flex items-center gap-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
                       OPERATIONAL
                     </div>
                   </div>
@@ -455,7 +455,7 @@ function RouteComponent() {
                       <div key={i} className="p-4 rounded-xl bg-muted/30 border border-border/50 space-y-1">
                         <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{stat.label}</div>
                         <div className="text-xl font-bold font-mono">{stat.val}</div>
-                        <div className={`text-xs font-medium ${stat.good ? 'text-green-600' : 'text-red-500'}`}>{stat.trend} vs last week</div>
+                        <div className={`text-xs font-medium ${stat.good ? 'text-success' : 'text-destructive'}`}>{stat.trend} vs last week</div>
                       </div>
                     ))}
                   </div>
@@ -482,7 +482,7 @@ function RouteComponent() {
           {/* Tool 2: Turnover - High Fidelity UI */}
           <div className="flex flex-col md:flex-row-reverse items-center gap-16 md:gap-24">
             <div className="md:w-1/2 space-y-8">
-              <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600 shadow-lg shadow-blue-500/10 ring-1 ring-blue-500/20">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20">
                 <RefreshCcw className="w-8 h-8" />
               </div>
               <div className="space-y-4">
@@ -499,7 +499,7 @@ function RouteComponent() {
                   { title: "Audit Trail", desc: "Full history of every shift transition" }
                 ].map((feat, i) => (
                   <li key={i} className="flex items-start gap-4">
-                    <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-600 mt-0.5">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary mt-0.5">
                       <Shield className="w-3.5 h-3.5" />
                     </div>
                     <div>
@@ -520,12 +520,12 @@ function RouteComponent() {
               >
                 <div className="p-6 border-b border-border bg-muted/10 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="px-2.5 py-1 rounded bg-blue-600 text-white text-xs font-bold">SHIFT #4029</div>
+                    <div className="px-2.5 py-1 rounded bg-primary text-primary-foreground text-xs font-bold">SHIFT #4029</div>
                     <span className="text-sm text-muted-foreground">Oct 24, 14:00 - 22:00</span>
                   </div>
                   <div className="flex -space-x-2">
-                    <div className="w-8 h-8 rounded-full border-2 border-background bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">JD</div>
-                    <div className="w-8 h-8 rounded-full border-2 border-background bg-blue-600 flex items-center justify-center text-[10px] font-bold text-white">AS</div>
+                    <div className="w-8 h-8 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">JD</div>
+                    <div className="w-8 h-8 rounded-full border-2 border-background bg-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground">AS</div>
                   </div>
                 </div>
                 <div className="p-0 bg-background">
@@ -535,7 +535,7 @@ function RouteComponent() {
                     { type: "Task", title: "Verify User Metrics", id: "TSK-009", time: "20:15", status: "Pending" },
                   ].map((item, i) => (
                     <div key={i} className="p-4 border-b border-border/50 last:border-0 flex gap-4 hover:bg-muted/20 transition-colors">
-                      <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${item.status === 'Open' ? 'bg-red-500' : item.status === 'Complete' ? 'bg-green-500' : 'bg-orange-400'}`} />
+                      <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${item.status === 'Open' ? 'bg-destructive' : item.status === 'Complete' ? 'bg-success' : 'bg-warning'}`} />
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="font-semibold text-sm">{item.title}</span>
@@ -543,13 +543,13 @@ function RouteComponent() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] font-bold bg-muted px-1.5 py-0.5 rounded text-muted-foreground">{item.id}</span>
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${item.status === 'Open' ? 'bg-red-100 text-red-700' : item.status === 'Complete' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{item.status}</span>
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${item.status === 'Open' ? 'bg-destructive/10 text-destructive' : item.status === 'Complete' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'}`}>{item.status}</span>
                         </div>
                       </div>
                     </div>
                   ))}
                   <div className="p-4 bg-muted/10">
-                    <div className="w-full py-2.5 rounded-lg bg-blue-600 text-white font-semibold text-sm flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-md">
+                    <div className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors shadow-md">
                       Complete Handover
                     </div>
                   </div>
@@ -561,7 +561,7 @@ function RouteComponent() {
           {/* Tool 3: Link Manager - High Fidelity UI */}
           <div className="flex flex-col md:flex-row items-center gap-16 md:gap-24">
             <div className="md:w-1/2 space-y-8">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/20">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20">
                 <Link2 className="w-8 h-8" />
               </div>
               <div className="space-y-4">
@@ -577,7 +577,7 @@ function RouteComponent() {
                   { title: "One-Click Access", desc: "Launch tools directly from the dashboard" }
                 ].map((feat, i) => (
                   <li key={i} className="flex items-start gap-4">
-                    <div className="w-6 h-6 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-600 mt-0.5">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary mt-0.5">
                       <ArrowRight className="w-3.5 h-3.5" />
                     </div>
                     <div>
@@ -609,19 +609,19 @@ function RouteComponent() {
                 {/* Links Grid */}
                 <div className="grid grid-cols-2 gap-4">
                   {[
-                    { name: "Production Logs", tool: "Splunk", color: "bg-green-500" },
-                    { name: "API Documentation", tool: "Confluence", color: "bg-blue-500" },
-                    { name: "Sprint Board", tool: "Jira", color: "bg-blue-600" },
-                    { name: "CI/CD Pipelines", tool: "Jenkins", color: "bg-orange-500" },
-                    { name: "Design System", tool: "Figma", color: "bg-purple-500" },
-                    { name: "Cloud Console", tool: "AWS", color: "bg-yellow-500" }
+                    { name: "Production Logs", tool: "Splunk", color: "bg-success" },
+                    { name: "API Documentation", tool: "Confluence", color: "bg-primary" },
+                    { name: "Sprint Board", tool: "Jira", color: "bg-primary" },
+                    { name: "CI/CD Pipelines", tool: "Jenkins", color: "bg-warning" },
+                    { name: "Design System", tool: "Figma", color: "bg-chart-3" },
+                    { name: "Cloud Console", tool: "AWS", color: "bg-warning" }
                   ].map((link, i) => (
-                    <div key={i} className="group p-3 rounded-lg border border-border/50 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 hover:border-indigo-500/30 transition-all cursor-pointer flex items-center gap-3">
+                    <div key={i} className="group p-3 rounded-lg border border-border/50 hover:bg-primary/5 hover:border-primary/30 transition-all cursor-pointer flex items-center gap-3">
                       <div className={`w-8 h-8 rounded-lg ${link.color} flex items-center justify-center text-white font-bold text-[10px] shadow-sm`}>
                         {link.tool[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold truncate group-hover:text-indigo-600 transition-colors">{link.name}</div>
+                        <div className="text-sm font-semibold truncate group-hover:text-primary transition-colors">{link.name}</div>
                         <div className="text-[10px] text-muted-foreground">{link.tool}</div>
                       </div>
                     </div>
@@ -634,7 +634,7 @@ function RouteComponent() {
           {/* Tool 4: EnvMatrix - High Fidelity UI */}
           <div className="flex flex-col md:flex-row-reverse items-center gap-16 md:gap-24">
             <div className="md:w-1/2 space-y-8">
-              <div className="w-16 h-16 rounded-2xl bg-teal-500/10 flex items-center justify-center text-teal-600 shadow-lg shadow-teal-500/10 ring-1 ring-teal-500/20">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20">
                 <Layers className="w-8 h-8" />
               </div>
               <div className="space-y-4">
@@ -651,7 +651,7 @@ function RouteComponent() {
                   { title: "Dependency Mapping", desc: "Visualize connections between services" }
                 ].map((feat, i) => (
                   <li key={i} className="flex items-start gap-4">
-                    <div className="w-6 h-6 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-600 mt-0.5">
+                    <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary mt-0.5">
                       <Activity className="w-3.5 h-3.5" />
                     </div>
                     <div>
@@ -692,13 +692,13 @@ function RouteComponent() {
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted border border-border/50">{svc.env}</span>
                     </div>
                     <div className="flex justify-end pr-2">
-                      <div className={`flex items-center gap-1.5 text-[10px] font-bold ${svc.status === 'Healthy' ? 'text-green-600' :
-                        svc.status === 'Degraded' ? 'text-yellow-600' :
-                          svc.status === 'Offline' ? 'text-red-500' : 'text-blue-500'
+                      <div className={`flex items-center gap-1.5 text-[10px] font-bold ${svc.status === 'Healthy' ? 'text-success' :
+                        svc.status === 'Degraded' ? 'text-warning' :
+                          svc.status === 'Offline' ? 'text-destructive' : 'text-primary'
                         }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${svc.status === 'Healthy' ? 'bg-green-500' :
-                          svc.status === 'Degraded' ? 'bg-yellow-500' :
-                            svc.status === 'Offline' ? 'bg-red-500' : 'bg-blue-500 animate-pulse'
+                        <div className={`w-1.5 h-1.5 rounded-full ${svc.status === 'Healthy' ? 'bg-success' :
+                          svc.status === 'Degraded' ? 'bg-warning' :
+                            svc.status === 'Offline' ? 'bg-destructive' : 'bg-primary animate-pulse'
                           }`} />
                         {svc.status.toUpperCase()}
                       </div>

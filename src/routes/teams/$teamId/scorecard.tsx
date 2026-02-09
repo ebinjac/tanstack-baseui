@@ -407,404 +407,419 @@ function ScorecardPage() {
     : TIME_PERIOD_OPTIONS.find(p => p.value === selectedPeriod)?.label || "";
 
   return (
-    <div className="container mx-auto py-8 px-6 max-w-7xl space-y-8 animate-in fade-in duration-500">
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/50">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight text-foreground">
-            Scorecard
-          </h1>
-          <p className="text-sm text-muted-foreground mt-2 font-medium flex items-center gap-2">
-            Metrics tracking for
-            <span className="text-foreground font-black px-2 py-0.5 rounded bg-muted/50 border border-border/50">
-              {team.teamName}
-            </span>
-          </p>
-        </div>
+    <div className="flex-1 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
+      <div className="max-w-7xl mx-auto space-y-8 p-8 pt-6">
+        {/* Header Section */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="flex flex-col">
+            <h1 className="text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+              Performance Scorecard
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-md uppercase tracking-wider">
+                <BarChart3 className="h-3 w-3" />
+                Metrics
+              </span>
+              <span className="text-muted-foreground/30">•</span>
+              <p className="text-sm font-medium text-muted-foreground">
+                Tracking for{" "}
+                <span className="text-foreground font-bold">{team.teamName}</span>
+              </p>
+            </div>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <Link to="/scorecard">
-            <Button variant="outline" size="sm" className="gap-2 h-10 px-4 font-black uppercase tracking-widest text-[10px] border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all active:scale-95 shadow-sm">
-              <Activity className="h-4 w-4 text-primary" />
-              Enterprise View
-            </Button>
-          </Link>
-          {isAdmin && (
-            <Link to="/teams/$teamId/settings" params={{ teamId }}>
-              <Button variant="ghost" size="sm" className="h-10 px-3 hover:bg-muted/50 transition-all font-bold text-xs">
-                Manage Apps
+          <div className="flex flex-wrap items-center gap-3">
+            <Link to="/scorecard">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-11 px-5 gap-2 rounded-xl bg-background/50 border-none hover:bg-accent/50 transition-all font-bold text-xs"
+              >
+                <Activity className="h-4 w-4 text-primary" />
+                Enterprise View
               </Button>
             </Link>
-          )}
-        </div>
-      </div>
-
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatsCard
-          icon={<Activity className="text-blue-500" />}
-          label="Applications"
-          value={stats.apps}
-        />
-        <StatsCard
-          icon={<Hash className="text-indigo-500" />}
-          label="Tracked Tech"
-          value={stats.entries}
-        />
-        <StatsCard
-          icon={<Percent className="text-green-500" />}
-          label="Availability"
-          value={stats.availRecords}
-          sublabel={filterLabel}
-        />
-        <StatsCard
-          icon={<TrendingUp className="text-purple-500" />}
-          label="Volume Log"
-          value={stats.volRecords}
-          sublabel={filterLabel}
-        />
-        <StatsCard
-          icon={<AlertTriangle className="text-red-500" />}
-          label="SLA Breaches"
-          value={stats.availBreaches}
-          highlight={stats.availBreaches > 0}
-          sublabel={filterLabel}
-        />
-      </div>
-
-      {/* Sync Status Bar */}
-      {isAdmin && (
-        <div className={cn(
-          "flex flex-col md:flex-row md:items-center justify-between gap-4 px-5 py-3 rounded-2xl border transition-all duration-300",
-          (unpublishedMonths.length > 0 || pendingChangesMonths.length > 0)
-            ? "border-orange-500/30 bg-orange-500/[0.04] ring-1 ring-orange-500/10"
-            : "border-green-500/20 bg-green-500/[0.02]"
-        )}>
-          <div className="flex items-center gap-3">
-            {(unpublishedMonths.length > 0 || pendingChangesMonths.length > 0) ? (
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="h-5 w-5 text-orange-600 animate-pulse" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-black uppercase tracking-widest text-orange-700">
-                    Sync Required
-                  </span>
-                  <span className="text-[10px] font-bold text-orange-600/70">
-                    Select a month below to publish changes
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <span className="text-xs font-black uppercase tracking-widest text-green-700/70">
-                  Fully Synchronized
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1">
-            {displayMonths.filter(m => !m.isFuture).map(({ year, month, label }) => {
-              const key = `${year}-${month}`;
-              const hasPending = pendingChangesMonths.some(p => p.year === year && p.month === month);
-              const isUnpublished = unpublishedMonths.some(u => u.year === year && u.month === month);
-
-              let colorClass = "";
-              if (hasPending) colorClass = "bg-orange-500/10 text-orange-700 border-orange-500/20";
-              else if (isUnpublished) colorClass = "bg-amber-500/10 text-amber-700 border-amber-500/20";
-              else colorClass = "bg-green-500/5 text-green-700/50 border-green-500/10 hover:bg-green-500/10";
-
-              return (
-                <button
-                  key={key}
-                  className={cn(
-                    "px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight transition-all border active:scale-95",
-                    colorClass
-                  )}
-                  onClick={() => (hasPending || isUnpublished) ? handlePublishClick(year, month) : handleUnpublishClick(year, month)}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <Card className="shadow-sm border-border/50 overflow-hidden rounded-3xl bg-card/30 backdrop-blur-sm">
-        <CardHeader className="py-5 px-6 border-b border-border/40 bg-muted/20">
-          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-            <div>
-              <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                <BarChart3 className="h-6 w-6 text-primary" />
-                Service Metrics
-              </CardTitle>
-              <CardDescription className="text-sm font-medium mt-1">
-                Performance tracking and reliability metrics for application services.
-              </CardDescription>
-            </div>
-
-            {/* Structured Toolbar */}
-            <div className="flex flex-wrap items-center gap-3 bg-background/60 p-1.5 rounded-2xl border border-border/50 shadow-sm backdrop-blur-md">
-              <div className="flex rounded-xl border border-border p-1 bg-muted/30">
-                <button
-                  className={cn(
-                    "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg",
-                    viewMode === "period"
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-muted"
-                  )}
-                  onClick={() => setViewMode("period")}
-                >
-                  Period
-                </button>
-                <button
-                  className={cn(
-                    "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg",
-                    viewMode === "year"
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:bg-muted"
-                  )}
-                  onClick={() => setViewMode("year")}
-                >
-                  Year
-                </button>
-              </div>
-
-              <div className="h-6 w-px bg-border/50 mx-1" />
-
-              {/* Period/Year Selector */}
-              {viewMode === "period" ? (
-                <Select
-                  value={selectedPeriod}
-                  onValueChange={(val) => setSelectedPeriod(val as TimePeriod)}
-                >
-                  <SelectTrigger className="w-[160px] bg-background border border-border/50 h-9 font-bold text-xs rounded-xl focus:ring-primary/20 transition-all">
-                    <Calendar className="h-4 w-4 mr-2 text-primary" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-border/50 shadow-xl">
-                    {TIME_PERIOD_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="py-2 focus:bg-primary/10">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-xs">{option.label}</span>
-                          <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
-                            {option.description}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Select
-                  value={String(selectedYear)}
-                  onValueChange={(val) => setSelectedYear(Number(val))}
-                >
-                  <SelectTrigger className="w-[120px] bg-background border border-border/50 h-9 font-bold text-xs rounded-xl focus:ring-primary/20 transition-all">
-                    <Calendar className="h-4 w-4 mr-2 text-primary" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="rounded-xl border-border/50 shadow-xl">
-                    {AVAILABLE_YEARS.map((year) => (
-                      <SelectItem key={year} value={String(year)} className="focus:bg-primary/10 font-bold text-xs py-2">
-                        Year {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-
-              <div className="h-6 w-px bg-border/50 mx-1" />
-
-              <div className="flex items-center gap-1.5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-9 px-3 text-[10px] font-black uppercase tracking-widest gap-2 bg-background hover:bg-primary/5 hover:text-primary hover:border-primary/40 border-border/50 transition-all rounded-xl active:scale-95"
-                  onClick={() => setShowChart(true)}
-                >
-                  <TrendingUp className="h-4 w-4" />
-                  Visualize
-                </Button>
-
+            {isAdmin && (
+              <Link to="/teams/$teamId/settings" params={{ teamId }}>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 px-3 text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-muted/50 transition-all rounded-xl border border-transparent hover:border-border/50"
-                  onClick={toggleAllApps}
+                  className="h-11 px-4 rounded-xl hover:bg-muted/50 transition-all font-bold text-xs"
                 >
-                  <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
-                  {expandedApps.size > 0 && expandedApps.size === (scorecardData?.applications?.length || 0)
-                    ? "Collapse All"
-                    : "Expand All"}
+                  Manage Apps
                 </Button>
-              </div>
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <StatsCard
+            icon={<Activity className="text-blue-500" />}
+            label="Applications"
+            value={stats.apps}
+          />
+          <StatsCard
+            icon={<Hash className="text-indigo-500" />}
+            label="Tracked Tech"
+            value={stats.entries}
+          />
+          <StatsCard
+            icon={<Percent className="text-green-500" />}
+            label="Availability"
+            value={stats.availRecords}
+            sublabel={filterLabel}
+          />
+          <StatsCard
+            icon={<TrendingUp className="text-purple-500" />}
+            label="Volume Log"
+            value={stats.volRecords}
+            sublabel={filterLabel}
+          />
+          <StatsCard
+            icon={<AlertTriangle className="text-red-500" />}
+            label="SLA Breaches"
+            value={stats.availBreaches}
+            highlight={stats.availBreaches > 0}
+            sublabel={filterLabel}
+          />
+        </div>
+
+        {/* Sync Status Bar */}
+        {isAdmin && (
+          <div className={cn(
+            "flex flex-col md:flex-row md:items-center justify-between gap-4 px-5 py-3 rounded-2xl border transition-all duration-300",
+            (unpublishedMonths.length > 0 || pendingChangesMonths.length > 0)
+              ? "border-orange-500/30 bg-orange-500/[0.04] ring-1 ring-orange-500/10"
+              : "border-green-500/20 bg-green-500/[0.02]"
+          )}>
+            <div className="flex items-center gap-3">
+              {(unpublishedMonths.length > 0 || pendingChangesMonths.length > 0) ? (
+                <div className="flex items-center gap-3">
+                  <AlertTriangle className="h-5 w-5 text-orange-600 animate-pulse" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-black uppercase tracking-widest text-orange-700">
+                      Sync Required
+                    </span>
+                    <span className="text-[10px] font-bold text-orange-600/70">
+                      Select a month below to publish changes
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                  <span className="text-xs font-black uppercase tracking-widest text-green-700/70">
+                    Fully Synchronized
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-1">
+              {displayMonths.filter(m => !m.isFuture).map(({ year, month, label }) => {
+                const key = `${year}-${month}`;
+                const hasPending = pendingChangesMonths.some(p => p.year === year && p.month === month);
+                const isUnpublished = unpublishedMonths.some(u => u.year === year && u.month === month);
+
+                let colorClass = "";
+                if (hasPending) colorClass = "bg-orange-500/10 text-orange-700 border-orange-500/20";
+                else if (isUnpublished) colorClass = "bg-amber-500/10 text-amber-700 border-amber-500/20";
+                else colorClass = "bg-green-500/5 text-green-700/50 border-green-500/10 hover:bg-green-500/10";
+
+                return (
+                  <button
+                    key={key}
+                    className={cn(
+                      "px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight transition-all border active:scale-95",
+                      colorClass
+                    )}
+                    onClick={() => (hasPending || isUnpublished) ? handlePublishClick(year, month) : handleUnpublishClick(year, month)}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        )}
+
+        {/* Main Content */}
+        <Card className="shadow-sm border-border/50 overflow-hidden rounded-3xl bg-card/30 backdrop-blur-sm">
+          <CardHeader className="py-5 px-6 border-b border-border/40 bg-muted/20">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+              <div>
+                <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+                  <BarChart3 className="h-6 w-6 text-primary" />
+                  Service Metrics
+                </CardTitle>
+                <CardDescription className="text-sm font-medium mt-1">
+                  Performance tracking and reliability metrics for application services.
+                </CardDescription>
+              </div>
+
+              {/* Structured Toolbar */}
+              <div className="flex flex-wrap items-center gap-3 bg-background/60 p-1.5 rounded-2xl border border-border/50 shadow-sm backdrop-blur-md">
+                <div className="flex rounded-xl border border-border p-1 bg-muted/30">
+                  <button
+                    className={cn(
+                      "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg",
+                      viewMode === "period"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-muted"
+                    )}
+                    onClick={() => setViewMode("period")}
+                  >
+                    Period
+                  </button>
+                  <button
+                    className={cn(
+                      "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg",
+                      viewMode === "year"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-muted"
+                    )}
+                    onClick={() => setViewMode("year")}
+                  >
+                    Year
+                  </button>
+                </div>
+
+                <div className="h-6 w-px bg-border/50 mx-1" />
+
+                {/* Period/Year Selector */}
+                {viewMode === "period" ? (
+                  <Select
+                    value={selectedPeriod}
+                    onValueChange={(val) => setSelectedPeriod(val as TimePeriod)}
+                  >
+                    <SelectTrigger className="w-[160px] bg-background border border-border/50 h-9 font-bold text-xs rounded-xl focus:ring-primary/20 transition-all">
+                      <Calendar className="h-4 w-4 mr-2 text-primary" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                      {TIME_PERIOD_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value} className="py-2 focus:bg-primary/10">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-xs">{option.label}</span>
+                            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                              {option.description}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select
+                    value={String(selectedYear)}
+                    onValueChange={(val) => setSelectedYear(Number(val))}
+                  >
+                    <SelectTrigger className="w-[120px] bg-background border border-border/50 h-9 font-bold text-xs rounded-xl focus:ring-primary/20 transition-all">
+                      <Calendar className="h-4 w-4 mr-2 text-primary" />
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                      {AVAILABLE_YEARS.map((year) => (
+                        <SelectItem key={year} value={String(year)} className="focus:bg-primary/10 font-bold text-xs py-2">
+                          Year {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                <div className="h-6 w-px bg-border/50 mx-1" />
+
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 px-3 text-[10px] font-black uppercase tracking-widest gap-2 bg-background hover:bg-primary/5 hover:text-primary hover:border-primary/40 border-border/50 transition-all rounded-xl active:scale-95"
+                    onClick={() => setShowChart(true)}
+                  >
+                    <TrendingUp className="h-4 w-4" />
+                    Visualize
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 px-3 text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-muted/50 transition-all rounded-xl border border-transparent hover:border-border/50"
+                    onClick={toggleAllApps}
+                  >
+                    <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                    {expandedApps.size > 0 && expandedApps.size === (scorecardData?.applications?.length || 0)
+                      ? "Collapse All"
+                      : "Expand All"}
+                  </Button>
+                </div>
+              </div>
             </div>
-          ) : !scorecardData?.applications?.length ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <Activity className="h-12 w-12 text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-semibold">No Applications Found</h3>
-              <p className="text-muted-foreground text-sm max-w-md mt-2">
-                Add applications in Team Settings to start tracking metrics.
-              </p>
-              <Link to="/teams/$teamId/settings" params={{ teamId }}>
-                <Button className="mt-4">Go to Settings</Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="divide-y">
-              {scorecardData.applications.map((app: Application) => (
-                <ApplicationSection
-                  key={app.id}
-                  app={app}
-                  isAdmin={isAdmin}
-                  isExpanded={expandedApps.has(app.id)}
-                  onToggle={() => toggleApp(app.id)}
-                  entries={entriesByApp[app.id] || []}
-                  availabilityByEntry={availabilityByEntry}
-                  volumeByEntry={volumeByEntry}
-                  displayMonths={displayMonths}
-                  onAddEntry={() => setAddEntryAppId(app.id)}
-                  onEditEntry={(entry) => setEditingEntry(entry)}
-                  onDeleteEntry={(entry) => setDeletingEntry(entry)}
-                  teamId={teamId}
-                />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : !scorecardData?.applications?.length ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <Activity className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                <h3 className="text-lg font-semibold">No Applications Found</h3>
+                <p className="text-muted-foreground text-sm max-w-md mt-2">
+                  Add applications in Team Settings to start tracking metrics.
+                </p>
+                <Link to="/teams/$teamId/settings" params={{ teamId }}>
+                  <Button className="mt-4">Go to Settings</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {scorecardData.applications.map((app: Application) => (
+                  <ApplicationSection
+                    key={app.id}
+                    app={app}
+                    isAdmin={isAdmin}
+                    isExpanded={expandedApps.has(app.id)}
+                    onToggle={() => toggleApp(app.id)}
+                    entries={entriesByApp[app.id] || []}
+                    availabilityByEntry={availabilityByEntry}
+                    volumeByEntry={volumeByEntry}
+                    displayMonths={displayMonths}
+                    onAddEntry={() => setAddEntryAppId(app.id)}
+                    onEditEntry={(entry) => setEditingEntry(entry)}
+                    onDeleteEntry={(entry) => setDeletingEntry(entry)}
+                    teamId={teamId}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Add Entry Dialog */}
-      {addEntryAppId && (
-        <AddEntryDialog
-          applicationId={addEntryAppId}
-          open={!!addEntryAppId}
-          onOpenChange={(open) => !open && setAddEntryAppId(null)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["scorecard", teamId],
-            });
-            setAddEntryAppId(null);
-          }}
+        {/* Add Entry Dialog */}
+        {addEntryAppId && (
+          <AddEntryDialog
+            applicationId={addEntryAppId}
+            open={!!addEntryAppId}
+            onOpenChange={(open) => !open && setAddEntryAppId(null)}
+            onSuccess={() => {
+              queryClient.invalidateQueries({
+                queryKey: ["scorecard", teamId],
+              });
+              setAddEntryAppId(null);
+            }}
+          />
+        )}
+
+        {/* Edit Entry Dialog */}
+        {editingEntry && (
+          <EditEntryDialog
+            entry={editingEntry}
+            open={!!editingEntry}
+            onOpenChange={(open) => !open && setEditingEntry(null)}
+            onSuccess={() => {
+              queryClient.invalidateQueries({
+                queryKey: ["scorecard", teamId],
+              });
+              setEditingEntry(null);
+            }}
+          />
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {deletingEntry && (
+          <DeleteEntryDialog
+            entry={deletingEntry}
+            open={!!deletingEntry}
+            onOpenChange={(open) => !open && setDeletingEntry(null)}
+            onSuccess={() => {
+              queryClient.invalidateQueries({
+                queryKey: ["scorecard", teamId],
+              });
+              setDeletingEntry(null);
+            }}
+          />
+        )}
+
+        {/* Metrics Chart Sheet */}
+        <MetricsChartSheet
+          open={showChart}
+          onOpenChange={setShowChart}
+          applications={scorecardData?.applications || []}
+          entriesByApp={entriesByApp}
+          availabilityByEntry={availabilityByEntry}
+          volumeByEntry={volumeByEntry}
+          displayMonths={displayMonths}
+          filterLabel={filterLabel}
         />
-      )}
 
-      {/* Edit Entry Dialog */}
-      {editingEntry && (
-        <EditEntryDialog
-          entry={editingEntry}
-          open={!!editingEntry}
-          onOpenChange={(open) => !open && setEditingEntry(null)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["scorecard", teamId],
-            });
-            setEditingEntry(null);
-          }}
-        />
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      {deletingEntry && (
-        <DeleteEntryDialog
-          entry={deletingEntry}
-          open={!!deletingEntry}
-          onOpenChange={(open) => !open && setDeletingEntry(null)}
-          onSuccess={() => {
-            queryClient.invalidateQueries({
-              queryKey: ["scorecard", teamId],
-            });
-            setDeletingEntry(null);
-          }}
-        />
-      )}
-
-      {/* Metrics Chart Sheet */}
-      <MetricsChartSheet
-        open={showChart}
-        onOpenChange={setShowChart}
-        applications={scorecardData?.applications || []}
-        entriesByApp={entriesByApp}
-        availabilityByEntry={availabilityByEntry}
-        volumeByEntry={volumeByEntry}
-        displayMonths={displayMonths}
-        filterLabel={filterLabel}
-      />
-
-      {/* Publish/Unpublish Confirmation Dialog */}
-      <AlertDialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              {publishAction === "publish" ? (
-                <>
-                  <Send className="h-5 w-5 text-green-500" />
-                  Publish Scorecard
-                </>
-              ) : (
-                <>
-                  <EyeOff className="h-5 w-5 text-amber-500" />
-                  Unpublish Scorecard
-                </>
-              )}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              {publishAction === "publish" ? (
-                <>
-                  <p>
-                    You are about to publish the scorecard for{" "}
-                    <strong>
-                      {publishMonth ? MONTH_NAMES[publishMonth.month - 1] : ""} {publishMonth?.year}
-                    </strong>.
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Once published, this data will be visible in the Enterprise Scorecard for all users.
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>
-                    You are about to unpublish the scorecard for{" "}
-                    <strong>
-                      {publishMonth ? MONTH_NAMES[publishMonth.month - 1] : ""} {publishMonth?.year}
-                    </strong>.
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    This will hide the data from the Enterprise Scorecard. You can republish it later.
-                  </p>
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmPublishAction}
-              disabled={publishMutation.isPending || unpublishMutation.isPending}
-              className={cn(
-                publishAction === "publish"
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-amber-600 hover:bg-amber-700"
-              )}
-            >
-              {(publishMutation.isPending || unpublishMutation.isPending) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              {publishAction === "publish" ? "Publish" : "Unpublish"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div >
+        {/* Publish/Unpublish Confirmation Dialog */}
+        <AlertDialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                {publishAction === "publish" ? (
+                  <>
+                    <Send className="h-5 w-5 text-green-500" />
+                    Publish Scorecard
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="h-5 w-5 text-amber-500" />
+                    Unpublish Scorecard
+                  </>
+                )}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                {publishAction === "publish" ? (
+                  <>
+                    <p>
+                      You are about to publish the scorecard for{" "}
+                      <strong>
+                        {publishMonth ? MONTH_NAMES[publishMonth.month - 1] : ""} {publishMonth?.year}
+                      </strong>.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Once published, this data will be visible in the Enterprise Scorecard for all users.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p>
+                      You are about to unpublish the scorecard for{" "}
+                      <strong>
+                        {publishMonth ? MONTH_NAMES[publishMonth.month - 1] : ""} {publishMonth?.year}
+                      </strong>.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      This will hide the data from the Enterprise Scorecard. You can republish it later.
+                    </p>
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmPublishAction}
+                disabled={publishMutation.isPending || unpublishMutation.isPending}
+                className={cn(
+                  publishAction === "publish"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-amber-600 hover:bg-amber-700"
+                )}
+              >
+                {(publishMutation.isPending || unpublishMutation.isPending) && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {publishAction === "publish" ? "Publish" : "Unpublish"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
   );
 }

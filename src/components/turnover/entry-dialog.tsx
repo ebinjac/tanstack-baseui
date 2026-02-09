@@ -29,14 +29,9 @@ import {
     HelpCircle,
     Star,
     Loader2,
-    StickyNote,
-    MessageCircle,
     FileText,
-    LinkIcon,
-    Mail,
-    UserCheck,
-    Hash,
     Activity,
+    Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -51,6 +46,7 @@ import {
     updateTurnoverEntry,
 } from "@/app/actions/turnover";
 import type { TurnoverEntryWithDetails } from "@/db/schema/turnover";
+import type { Application } from "@/db/schema/teams";
 
 const RFC_STATUS_OPTIONS = [
     "Draft",
@@ -78,6 +74,9 @@ interface EntryDialogProps {
     applicationId: string;
     section: TurnoverSection;
     editEntry?: TurnoverEntryWithDetails | null;
+    // Group-related props
+    isGrouped?: boolean;
+    groupApplications?: Application[];
 }
 
 export function EntryDialog({
@@ -87,6 +86,8 @@ export function EntryDialog({
     applicationId,
     section,
     editEntry,
+    isGrouped = false,
+    groupApplications = [],
 }: EntryDialogProps) {
     const queryClient = useQueryClient();
     const isEditing = !!editEntry;
@@ -138,9 +139,14 @@ export function EntryDialog({
                     slackLink: editEntry.commsDetails?.slackLink || "",
                 });
             } else {
+                // For new entries in a group, default to the first application
+                const defaultAppId = isGrouped && groupApplications.length > 0
+                    ? groupApplications[0].id
+                    : applicationId;
+
                 form.reset({
                     teamId,
-                    applicationId,
+                    applicationId: defaultAppId,
                     section,
                     title: "",
                     description: "",
@@ -157,7 +163,7 @@ export function EntryDialog({
                 });
             }
         }
-    }, [open, editEntry, form, teamId, applicationId, section]);
+    }, [open, editEntry, form, teamId, applicationId, section, isGrouped, groupApplications]);
 
     const createMutation = useMutation({
         mutationFn: (data: CreateTurnoverEntryInput) =>
@@ -239,6 +245,63 @@ export function EntryDialog({
                     className="flex flex-col max-h-[80vh]"
                 >
                     <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+
+                        {/* Application Selector (Only for grouped entries) */}
+                        {isGrouped && groupApplications.length > 1 && (
+                            <div className="space-y-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
+                                        <Layers className="w-3 h-3 text-primary" />
+                                    </div>
+                                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Application</h4>
+                                </div>
+                                <div className="p-4 rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 space-y-2">
+                                    <Label htmlFor="applicationId" className="text-xs font-semibold">
+                                        Select Application <span className="text-destructive">*</span>
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground mb-2">
+                                        This entry will be logged under the selected application.
+                                    </p>
+                                    <Controller
+                                        name="applicationId"
+                                        control={form.control}
+                                        render={({ field }) => (
+                                            <Select
+                                                value={field.value}
+                                                onValueChange={field.onChange}
+                                            >
+                                                <SelectTrigger className="h-11 text-sm bg-background">
+                                                    <SelectValue placeholder="Select application">
+                                                        {field.value && (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-bold">
+                                                                    {groupApplications.find(a => a.id === field.value)?.tla}
+                                                                </span>
+                                                                <span className="text-muted-foreground">
+                                                                    {groupApplications.find(a => a.id === field.value)?.applicationName}
+                                                                </span>
+                                                            </div>
+                                                        )}
+                                                    </SelectValue>
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {groupApplications.map((app) => (
+                                                        <SelectItem key={app.id} value={app.id}>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="font-bold">{app.tla}</span>
+                                                                <span className="text-muted-foreground text-xs">
+                                                                    {app.applicationName}
+                                                                </span>
+                                                            </div>
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        )}
+                                    />
+                                </div>
+                            </div>
+                        )}
 
                         {/* Section I: Core Identifiers */}
                         {(section === "RFC" || section === "INC" || section === "MIM" || section === "ALERTS" || section === "COMMS") && (

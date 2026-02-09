@@ -5,6 +5,7 @@ import {
     ChevronsUpDown,
     PlusCircle,
     Settings,
+    Sparkles,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -64,9 +65,19 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
     if (teams.length === 0) {
         return (
             <Link to={"/teams/register" as any}>
-                <Button variant="outline" size="sm" className={cn("w-full md:w-[200px] justify-start h-9 transition-all hover:bg-muted/50", className)}>
-                    <PlusCircle className="mr-2 h-4 w-4 text-primary" />
-                    <span className="font-medium">Create Team</span>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                        "w-full md:w-[200px] justify-start h-10 transition-all",
+                        "bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20",
+                        "hover:from-primary/10 hover:to-primary/20 hover:border-primary/30",
+                        "group",
+                        className
+                    )}
+                >
+                    <PlusCircle className="mr-2 h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
+                    <span className="font-semibold text-primary">Create Team</span>
                 </Button>
             </Link>
         )
@@ -81,107 +92,177 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
             <PopoverTrigger
                 className={cn(
                     buttonVariants({ variant: "outline" }),
-                    "w-full md:w-[240px] justify-between px-3 h-10 border-border/50 bg-background/50 backdrop-blur-sm hover:bg-accent/50 transition-all active:scale-[0.98]",
+                    "w-full md:w-[260px] justify-between px-3 h-11",
+                    "border-border/40 bg-background/80 backdrop-blur-md",
+                    "hover:bg-accent/50 hover:border-border/60",
+                    "transition-all duration-200 active:scale-[0.98]",
+                    "shadow-sm hover:shadow-md",
                     className
                 )}
             >
-                <div className="flex items-center gap-2.5 overflow-hidden">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-primary/10 text-[10px] font-bold text-primary ring-1 ring-primary/20 shadow-sm">
+                <div className="flex items-center gap-3 overflow-hidden">
+                    <div className={cn(
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
+                        "text-[11px] font-bold",
+                        "transition-all duration-200",
+                        "bg-primary/10 text-primary border border-primary/20"
+                    )}>
                         {activeTeam ? getInitials(activeTeam.teamName) : "T"}
                     </div>
-                    <span className="truncate font-semibold text-sm tracking-tight">
-                        {activeTeam ? activeTeam.teamName : "Select Team..."}
-                    </span>
+                    <div className="flex flex-col items-start overflow-hidden">
+                        <span className="truncate font-semibold text-sm tracking-tight">
+                            {activeTeam ? activeTeam.teamName : "Select Team..."}
+                        </span>
+                        {activeTeam && (
+                            <span className="text-[9px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                                {activeTeam.role}
+                            </span>
+                        )}
+                    </div>
                 </div>
-                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-40 transition-opacity" />
+                <ChevronsUpDown className={cn(
+                    "ml-2 h-4 w-4 shrink-0 text-muted-foreground/50",
+                    "transition-transform duration-200",
+                    open && "rotate-180"
+                )} />
             </PopoverTrigger>
-            <PopoverContent className="w-[300px] p-0 overflow-hidden border-border/50 shadow-2xl" align="end">
-                <Command className="bg-popover">
-                    <CommandInput placeholder="Search teams..." className="h-11 border-none focus:ring-0" />
-                    <CommandList className="max-h-[300px] scrollbar-thin">
-                        <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">No matches found.</CommandEmpty>
-                        <CommandGroup heading={<span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 px-2">Workspaces</span>}>
-                            {teams.map((team) => (
-                                <CommandItem
-                                    key={team.teamId}
-                                    onSelect={() => {
-                                        setOpen(false)
-                                        localStorage.setItem(STORAGE_KEY, team.teamId)
-                                        setSelectedTeamId(team.teamId)
+            <PopoverContent
+                className={cn(
+                    "w-[320px] p-0 overflow-hidden",
+                    "border-border/50 shadow-2xl",
+                    "bg-popover/95 backdrop-blur-xl"
+                )}
+                align="end"
+            >
+                <Command className="bg-transparent">
+                    {/* Header */}
+                    <div className="px-4 py-3 border-b border-border/50">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="h-3.5 w-3.5 text-primary" />
+                            <span className="text-xs font-bold text-foreground">Switch Workspace</span>
+                        </div>
+                    </div>
 
-                                        // Detect if we are in a team context by looking for teamId param in any match
-                                        const teamMatch = [...matches].reverse().find(m => (m.params as any).teamId)
-                                        const leafMatch = matches[matches.length - 1]
+                    <CommandInput
+                        placeholder="Search workspaces..."
+                        className="h-11 border-none focus:ring-0 bg-transparent"
+                    />
+                    <CommandList className="max-h-[280px] scrollbar-thin">
+                        <CommandEmpty className="py-8 text-center">
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
+                                    <ChevronsUpDown className="h-5 w-5 text-muted-foreground/50" />
+                                </div>
+                                <span className="text-sm text-muted-foreground">No workspaces found</span>
+                            </div>
+                        </CommandEmpty>
+                        <CommandGroup className="p-2">
+                            {teams.map((team) => {
+                                const isActive = selectedTeamId === team.teamId
 
-                                        if (teamMatch && leafMatch) {
-                                            router.navigate({
-                                                to: leafMatch.routeId as any,
-                                                params: { ...(leafMatch.params as any), teamId: team.teamId },
-                                                // Keep search params if any
-                                                search: (prev: any) => prev,
-                                            } as any)
-                                        }
-                                    }}
-                                    className="flex items-center justify-between py-2 px-3 mx-1 my-0.5 rounded-md cursor-pointer group hover:bg-accent/40 data-[selected=true]:bg-accent/60 transition-colors"
-                                >
-                                    <div className="flex items-center gap-3 flex-1 overflow-hidden">
-                                        <div className={cn(
-                                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-[11px] font-bold transition-all shadow-sm",
-                                            selectedTeamId === team.teamId
-                                                ? "bg-primary/10 border-primary/30 text-primary ring-1 ring-primary/10"
-                                                : "bg-muted/30 border-border/40 text-muted-foreground"
-                                        )}>
-                                            {getInitials(team.teamName)}
-                                        </div>
-                                        <div className="flex flex-col overflow-hidden space-y-0.5">
-                                            <div className="flex items-center gap-1.5 overflow-hidden">
-                                                <span className={cn(
-                                                    "truncate text-sm font-semibold tracking-tight transition-colors",
-                                                    selectedTeamId === team.teamId ? "text-primary" : "text-foreground"
-                                                )}>
-                                                    {team.teamName}
-                                                </span>
-                                                {selectedTeamId === team.teamId && (
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
-                                                )}
-                                            </div>
-                                            <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                                                {team.role}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 ml-3">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10 hover:text-primary rounded-md"
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                setOpen(false)
+                                return (
+                                    <CommandItem
+                                        key={team.teamId}
+                                        onSelect={() => {
+                                            setOpen(false)
+                                            localStorage.setItem(STORAGE_KEY, team.teamId)
+                                            setSelectedTeamId(team.teamId)
+
+                                            // Detect if we are in a team context by looking for teamId param in any match
+                                            const teamMatch = [...matches].reverse().find(m => (m.params as any).teamId)
+                                            const leafMatch = matches[matches.length - 1]
+
+                                            if (teamMatch && leafMatch) {
                                                 router.navigate({
-                                                    to: '/teams/$teamId/settings' as any,
-                                                    params: { teamId: team.teamId }
+                                                    to: leafMatch.routeId as any,
+                                                    params: { ...(leafMatch.params as any), teamId: team.teamId },
+                                                    // Keep search params if any
+                                                    search: (prev: any) => prev,
                                                 } as any)
-                                            }}
-                                        >
-                                            <Settings className="h-3.5 w-3.5" />
-                                        </Button>
-                                    </div>
-                                </CommandItem>
-                            ))}
+                                            }
+                                        }}
+                                        className={cn(
+                                            "flex items-center justify-between py-2.5 px-3 my-0.5 rounded-xl cursor-pointer group transition-all duration-200",
+                                            isActive
+                                                ? "bg-primary/8 border border-primary/20"
+                                                : "hover:bg-accent/60 border border-transparent"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                                            <div className={cn(
+                                                "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+                                                "text-[11px] font-bold transition-all duration-200",
+                                                "border",
+                                                isActive
+                                                    ? "bg-primary/10 text-primary border-primary/30"
+                                                    : "bg-muted/40 border-border/50 text-muted-foreground group-hover:bg-muted/60"
+                                            )}>
+                                                {getInitials(team.teamName)}
+                                            </div>
+                                            <div className="flex flex-col overflow-hidden">
+                                                <div className="flex items-center gap-2 overflow-hidden">
+                                                    <span className={cn(
+                                                        "truncate text-sm font-semibold tracking-tight transition-colors",
+                                                        isActive ? "text-primary" : "text-foreground"
+                                                    )}>
+                                                        {team.teamName}
+                                                    </span>
+                                                    {isActive && (
+                                                        <div className="flex items-center gap-1 shrink-0">
+                                                            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                                            <span className="text-[9px] font-bold text-primary uppercase">Active</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                                                    {team.role}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-1 ml-2">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className={cn(
+                                                    "h-8 w-8 rounded-lg transition-all",
+                                                    "opacity-0 group-hover:opacity-100",
+                                                    "hover:bg-primary/10 hover:text-primary"
+                                                )}
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    setOpen(false)
+                                                    router.navigate({
+                                                        to: '/teams/$teamId/settings' as any,
+                                                        params: { teamId: team.teamId }
+                                                    } as any)
+                                                }}
+                                            >
+                                                <Settings className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
+                                    </CommandItem>
+                                )
+                            })}
                         </CommandGroup>
                     </CommandList>
-                    <CommandSeparator className="opacity-50" />
-                    <div className="p-2 bg-muted/20">
+                    <CommandSeparator className="opacity-30" />
+                    <div className="p-2 bg-muted/10">
                         <CommandItem
                             onSelect={() => {
                                 setOpen(false)
                                 router.navigate({ to: '/teams/register' as any })
                             }}
-                            className="flex items-center justify-center gap-2 p-2 rounded-md border border-dashed border-border/60 bg-background/50 hover:bg-background hover:border-primary/50 hover:text-primary transition-all cursor-pointer group"
+                            className={cn(
+                                "flex items-center justify-center gap-2 py-2.5 rounded-xl cursor-pointer group transition-all",
+                                "border border-dashed border-border/50",
+                                "bg-background/50 hover:bg-primary/5",
+                                "hover:border-primary/40 hover:text-primary"
+                            )}
                         >
-                            <PlusCircle className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                            <span className="text-xs font-bold uppercase tracking-wider">Create WorkSpace</span>
+                            <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <PlusCircle className="h-3.5 w-3.5 text-primary" />
+                            </div>
+                            <span className="text-xs font-bold uppercase tracking-wider">Create New Workspace</span>
                         </CommandItem>
                     </div>
                 </Command>

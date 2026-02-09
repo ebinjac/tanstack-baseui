@@ -36,6 +36,13 @@
       "when": 1768325134404,
       "tag": "0004_familiar_blur",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1770429691146,
+      "tag": "0005_strong_tinkerer",
+      "breakpoints": true
     }
   ]
 }

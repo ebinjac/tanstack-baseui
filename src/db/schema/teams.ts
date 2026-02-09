@@ -46,6 +46,9 @@ export const teams = ensembleSchema.table(
     contactName: varchar("contact_name", { length: 100 }).notNull(),
     contactEmail: varchar("contact_email", { length: 255 }).notNull(),
     isActive: boolean("is_active").notNull().default(true),
+    turnoverGroupingEnabled: boolean("turnover_grouping_enabled")
+      .notNull()
+      .default(false),
     createdBy: varchar("created_by", { length: 255 }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()

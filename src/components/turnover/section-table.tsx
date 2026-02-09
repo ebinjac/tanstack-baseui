@@ -23,6 +23,7 @@ import { SECTION_CONFIG, type TurnoverSection } from "@/lib/zod/turnover.schema"
 import { EntryCard } from "./entry-card";
 import { EntryDialog } from "./entry-dialog";
 import type { TurnoverEntryWithDetails } from "@/db/schema/turnover";
+import type { Application } from "@/db/schema/teams";
 
 const SECTION_ICONS: Record<TurnoverSection, any> = {
     RFC: CheckCircle2,
@@ -37,12 +38,17 @@ interface SectionTableProps {
     teamId: string;
     applicationId: string;
     section: TurnoverSection;
+    // Group-related props - for showing application selector in entry dialog
+    isGrouped?: boolean;
+    groupApplications?: Application[];
 }
 
 export function SectionTable({
     teamId,
     applicationId,
     section,
+    isGrouped = false,
+    groupApplications = [],
 }: SectionTableProps) {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editEntry, setEditEntry] = useState<TurnoverEntryWithDetails | null>(null);
@@ -50,12 +56,28 @@ export function SectionTable({
     const sectionConfig = SECTION_CONFIG[section];
     const SectionIcon = SECTION_ICONS[section];
 
+    // Fetch entries for all applications in the group or just the single app
+    const applicationIds = isGrouped && groupApplications.length > 0
+        ? groupApplications.map((a) => a.id)
+        : [applicationId];
+
     const { data, isLoading, isFetching } = useQuery({
-        queryKey: ["turnover-entries", teamId, applicationId, section, "with-resolved"],
-        queryFn: () =>
-            getTurnoverEntries({
-                data: { teamId, applicationId, section, includeRecentlyResolved: true },
-            }),
+        queryKey: ["turnover-entries", teamId, applicationIds, section, "with-resolved"],
+        queryFn: async () => {
+            // Fetch entries for all applications
+            const entriesPromises = applicationIds.map((appId) =>
+                getTurnoverEntries({
+                    data: { teamId, applicationId: appId, section, includeRecentlyResolved: true },
+                })
+            );
+            const results = await Promise.all(entriesPromises);
+
+            // Combine all entries and sort by createdAt
+            const allEntries = results.flatMap((r) => r.entries);
+            allEntries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+            return { entries: allEntries, total: allEntries.length };
+        },
         staleTime: 30000,
     });
 
@@ -182,6 +204,9 @@ export function SectionTable({
                                             entry={entry}
                                             teamId={teamId}
                                             onEdit={handleEdit}
+                                            // Show app badge when grouped to identify which app the entry belongs to
+                                            showApplicationBadge={isGrouped}
+                                            groupApplications={groupApplications}
                                         />
                                     </div>
                                 ))}
@@ -202,6 +227,9 @@ export function SectionTable({
                 applicationId={applicationId}
                 section={section}
                 editEntry={editEntry}
+                // Pass group info for application selector
+                isGrouped={isGrouped}
+                groupApplications={groupApplications}
             />
         </>
     );

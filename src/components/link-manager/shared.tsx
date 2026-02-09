@@ -2,7 +2,7 @@ import { Link as RouterLink } from '@tanstack/react-router'
 import { ReactNode } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { ChevronLeft, Loader2, Search, type LucideIcon } from 'lucide-react'
+import { ArrowLeft, Loader2, Search, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // ============================================================================
@@ -22,7 +22,7 @@ export function SubPageHeader({ teamId, parentLabel, sectionLabel, title, action
             <div className="flex items-center gap-6">
                 <RouterLink to="/teams/$teamId/link-manager" params={{ teamId }}>
                     <div className="h-14 w-14 rounded-2xl bg-background border border-border flex items-center justify-center hover:bg-muted/50 transition-all group shadow-sm">
-                        <ChevronLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-all" />
+                        <ArrowLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-all" />
                     </div>
                 </RouterLink>
                 <div>

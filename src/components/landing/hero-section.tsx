@@ -8,7 +8,6 @@ import {
     ArrowRight,
     Shield,
     Globe,
-    Sparkles,
     Zap,
     TrendingUp
 } from 'lucide-react'
@@ -75,63 +74,48 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
             {/* === IMMERSIVE BACKGROUND === */}
             <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
                 {/* Base gradient */}
-                <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-blue-950/5 dark:to-blue-950/20" />
+                <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-primary/5" />
 
-                {/* Animated mesh gradient */}
-                <div className="absolute inset-0">
-                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/8 via-transparent to-indigo-600/8 dark:from-blue-600/5 dark:to-indigo-600/5" />
-                    <motion.div
-                        animate={{
-                            backgroundPosition: ['0% 0%', '100% 100%'],
-                        }}
-                        transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-                        className="absolute inset-0 opacity-30"
-                        style={{
-                            backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%)',
-                            backgroundSize: '200% 200%'
-                        }}
-                    />
-                </div>
+
 
                 {/* Floating orbs */}
                 <motion.div
                     animate={{ x: [0, 50, 0], y: [0, -30, 0] }}
                     transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/10 blur-[100px]"
+                    className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-primary/20 to-primary/10 blur-[100px]"
                 />
                 <motion.div
                     animate={{ x: [0, -40, 0], y: [0, 40, 0] }}
                     transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute top-1/3 right-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-indigo-500/15 to-purple-500/10 blur-[100px]"
+                    className="absolute top-1/3 right-1/4 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-primary/15 to-primary/10 blur-[100px]"
                 />
                 <motion.div
                     animate={{ x: [0, 30, 0], y: [0, -50, 0] }}
                     transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute bottom-1/4 right-1/3 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-blue-600/10 to-indigo-600/15 blur-[80px]"
+                    className="absolute bottom-1/4 right-1/3 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-primary/10 to-primary/15 blur-[80px]"
                 />
 
                 {/* Geometric floating elements */}
-                <FloatingShape delay={0} duration={20} className="absolute left-[10%] top-[20%] w-4 h-4 border border-blue-500/20 rounded-sm" />
-                <FloatingShape delay={2} duration={25} className="absolute left-[80%] top-[30%] w-6 h-6 border border-indigo-500/20 rounded-full" />
-                <FloatingShape delay={4} duration={22} className="absolute left-[20%] top-[60%] w-3 h-3 bg-blue-500/10 rounded-full" />
-                <FloatingShape delay={1} duration={28} className="absolute left-[70%] top-[70%] w-5 h-5 border border-cyan-500/20 rotate-45" />
-                <FloatingShape delay={3} duration={24} className="absolute left-[50%] top-[40%] w-2 h-2 bg-indigo-500/20 rounded-full" />
+                <FloatingShape delay={0} duration={20} className="absolute left-[10%] top-[20%] w-4 h-4 border border-primary/20 rounded-sm" />
+                <FloatingShape delay={2} duration={25} className="absolute left-[80%] top-[30%] w-6 h-6 border border-primary/20 rounded-full" />
+                <FloatingShape delay={4} duration={22} className="absolute left-[20%] top-[60%] w-3 h-3 bg-primary/10 rounded-full" />
+                <FloatingShape delay={1} duration={28} className="absolute left-[70%] top-[70%] w-5 h-5 border border-primary/20 rotate-45" />
+                <FloatingShape delay={3} duration={24} className="absolute left-[50%] top-[40%] w-2 h-2 bg-primary/20 rounded-full" />
 
                 {/* Grid pattern with enhanced masking */}
                 <div
                     className="absolute inset-0 opacity-[0.4]"
                     style={{
                         backgroundImage: `
-                            linear-gradient(to right, rgba(59, 130, 246, 0.03) 1px, transparent 1px),
-                            linear-gradient(to bottom, rgba(59, 130, 246, 0.03) 1px, transparent 1px)
+                            linear-gradient(to right, hsl(var(--primary) / 0.03) 1px, transparent 1px),
+                            linear-gradient(to bottom, hsl(var(--primary) / 0.03) 1px, transparent 1px)
                         `,
                         backgroundSize: '60px 60px',
                         maskImage: 'radial-gradient(ellipse 80% 60% at 50% 40%, black 20%, transparent 100%)'
                     }}
                 />
 
-                {/* Spotlight effect */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-gradient-to-b from-blue-500/5 via-blue-500/10 to-transparent rounded-full blur-3xl" />
+
 
                 {/* Noise texture */}
                 <div
@@ -161,12 +145,12 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
                             transition={{ delay: 0.3, duration: 0.5 }}
                             className="flex justify-center"
                         >
-                            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/20 backdrop-blur-xl shadow-lg shadow-blue-500/5">
+                            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-gradient-to-r from-primary/10 to-primary/10 border border-primary/20 backdrop-blur-xl shadow-lg shadow-primary/5">
                                 <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
                                 </span>
-                                <span className="text-xs font-semibold tracking-wider uppercase text-blue-700 dark:text-blue-300">
+                                <span className="text-xs font-semibold tracking-wider uppercase text-primary">
                                     Beta Version
                                 </span>
                             </div>
@@ -183,7 +167,7 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
                             >
                                 <span className="block text-foreground">Ensemble.</span>
                                 <span className="block relative pb-4">
-                                    <span className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-500 to-blue-600 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                                    <span className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
                                         {words[currentWord]}
                                     </span>
                                     <span className="invisible">{words[currentWord]}</span>
@@ -213,24 +197,24 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
                     >
                         {/* Scorecard Card - Large */}
                         <Link to={scorecardHref as any} className="col-span-1 md:col-span-7 group">
-                            <div className="h-full min-h-[320px] bg-gradient-to-br from-card via-card to-blue-500/5 border border-border/50 rounded-[2rem] p-8 relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(59,130,246,0.3)] group-hover:-translate-y-2 group-hover:border-blue-500/30">
+                            <div className="h-full min-h-[320px] bg-gradient-to-br from-card via-card to-primary/5 border border-border/50 rounded-[2rem] p-8 relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.3)] group-hover:-translate-y-2 group-hover:border-primary/30">
                                 {/* Animated gradient overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/0 via-blue-600/0 to-blue-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary/0 via-primary/0 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
                                 {/* Decorative elements */}
-                                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
                                 <div className="relative z-10 flex flex-col h-full justify-between">
                                     <div className="flex items-start justify-between">
                                         <motion.div
                                             whileHover={{ rotate: 5, scale: 1.1 }}
-                                            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 text-white flex items-center justify-center shadow-xl shadow-blue-600/25"
+                                            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-xl shadow-primary/25"
                                         >
                                             <LayoutDashboard className="w-7 h-7" />
                                         </motion.div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity">Explore</span>
-                                            <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                                            <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 group-hover:scale-110">
                                                 <ArrowRight className="w-5 h-5" />
                                             </div>
                                         </div>
@@ -238,10 +222,10 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
 
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2">
-                                            <TrendingUp className="w-4 h-4 text-emerald-500" />
-                                            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Live Metrics</span>
+                                            <TrendingUp className="w-4 h-4 text-success" />
+                                            <span className="text-xs font-medium text-success">Live Metrics</span>
                                         </div>
-                                        <h3 className="text-3xl font-bold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        <h3 className="text-3xl font-bold group-hover:text-primary transition-colors">
                                             Scorecard
                                         </h3>
                                         <p className="text-muted-foreground text-base leading-relaxed max-w-sm">
@@ -252,7 +236,7 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
 
                                 {/* Abstract visualization */}
                                 <div className="absolute right-0 bottom-0 w-1/2 h-full opacity-[0.07] group-hover:opacity-[0.15] transition-opacity duration-700">
-                                    <svg viewBox="0 0 200 200" className="w-full h-full text-blue-600" fill="currentColor">
+                                    <svg viewBox="0 0 200 200" className="w-full h-full text-primary" fill="currentColor">
                                         <path d="M 0 180 Q 40 140 80 160 T 160 120 T 200 100 V 200 H 0 Z" />
                                         <path d="M 0 160 Q 50 120 100 140 T 200 80 V 200 H 0 Z" opacity="0.5" />
                                     </svg>
@@ -262,33 +246,33 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
 
                         {/* Turnover Card */}
                         <Link to={turnoverHref as any} className="col-span-1 md:col-span-5 group">
-                            <div className="h-full min-h-[320px] bg-gradient-to-br from-blue-50/80 via-blue-50/50 to-indigo-50/80 dark:from-blue-950/30 dark:via-blue-950/20 dark:to-indigo-950/30 border border-blue-200/50 dark:border-blue-800/30 rounded-[2rem] p-8 relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(99,102,241,0.3)] group-hover:-translate-y-2 group-hover:border-indigo-500/40">
+                            <div className="h-full min-h-[320px] bg-gradient-to-br from-secondary/80 via-secondary/50 to-secondary/80 border border-border/50 rounded-[2rem] p-8 relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_hsl(var(--primary)/0.3)] group-hover:-translate-y-2 group-hover:border-primary/40">
                                 {/* Animated ring */}
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] border border-blue-500/10 dark:border-blue-500/5 rounded-full group-hover:scale-150 group-hover:opacity-0 transition-all duration-1000" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] border border-primary/10 rounded-full group-hover:scale-150 group-hover:opacity-0 transition-all duration-1000" />
 
                                 <div className="relative z-10 flex flex-col h-full justify-between">
                                     <div className="flex items-start justify-between">
                                         <motion.div
                                             whileHover={{ rotate: -360 }}
                                             transition={{ duration: 0.6 }}
-                                            className="w-14 h-14 rounded-2xl bg-white dark:bg-blue-900/50 border border-blue-200 dark:border-blue-700 flex items-center justify-center text-blue-600 shadow-lg"
+                                            className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center text-primary shadow-lg"
                                         >
                                             <RefreshCcw className="w-7 h-7" />
                                         </motion.div>
-                                        <div className="w-10 h-10 rounded-full bg-blue-200/50 dark:bg-blue-800/30 flex items-center justify-center text-blue-600 dark:text-blue-300 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300 group-hover:scale-110">
+                                        <div className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 group-hover:scale-110">
                                             <ArrowRight className="w-5 h-5" />
                                         </div>
                                     </div>
 
                                     <div className="space-y-3">
                                         <div className="flex items-center gap-2">
-                                            <Zap className="w-4 h-4 text-amber-500" />
-                                            <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Instant Sync</span>
+                                            <Zap className="w-4 h-4 text-warning" />
+                                            <span className="text-xs font-medium text-warning">Instant Sync</span>
                                         </div>
-                                        <h3 className="text-3xl font-bold text-blue-700 dark:text-blue-300">
+                                        <h3 className="text-3xl font-bold text-foreground">
                                             Turnover
                                         </h3>
-                                        <p className="text-blue-600/70 dark:text-blue-400/70 text-base">
+                                        <p className="text-muted-foreground text-base">
                                             Seamless shift handoffs. Never miss a critical update again.
                                         </p>
                                     </div>
@@ -298,7 +282,7 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
 
                         {/* Link Manager Card */}
                         <Link to={linkManagerHref as any} className="col-span-1 md:col-span-4 group">
-                            <div className="h-full min-h-[220px] bg-card border border-border/50 rounded-[2rem] p-6 relative overflow-hidden transition-all duration-500 hover:shadow-xl hover:shadow-blue-500/5 group-hover:-translate-y-2 group-hover:border-blue-500/20">
+                            <div className="h-full min-h-[220px] bg-card border border-border/50 rounded-[2rem] p-6 relative overflow-hidden transition-all duration-500 hover:shadow-xl hover:shadow-primary/5 group-hover:-translate-y-2 group-hover:border-primary/20">
                                 {/* Dot pattern */}
                                 <div
                                     className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500"
@@ -309,11 +293,11 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
                                 />
 
                                 <div className="relative z-10 flex flex-col h-full justify-between">
-                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-blue-600 group-hover:from-blue-100 group-hover:to-blue-50 dark:group-hover:from-blue-900/30 dark:group-hover:to-blue-950/30 transition-all duration-300">
+                                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:from-primary/10 group-hover:to-primary/5 transition-all duration-300">
                                         <Link2 className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h3 className="text-xl font-bold mb-1 group-hover:text-blue-600 transition-colors">Knowledge Hub</h3>
+                                        <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">Knowledge Hub</h3>
                                         <p className="text-xs text-muted-foreground uppercase tracking-widest font-medium">Link Manager</p>
                                     </div>
                                 </div>
@@ -324,15 +308,15 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
                         <div className="col-span-1 md:col-span-8">
                             {!session ? (
                                 <Link to="/teams/register" className="block group">
-                                    <div className="h-full min-h-[220px] bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:via-slate-100 dark:to-white text-white dark:text-slate-900 rounded-[2rem] p-8 relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] group-hover:-translate-y-2 flex items-center justify-between">
+                                    <div className="h-full min-h-[220px] bg-gradient-to-r from-foreground via-foreground/90 to-foreground text-background rounded-[2rem] p-8 relative overflow-hidden transition-all duration-700 hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] group-hover:-translate-y-2 flex items-center justify-between">
                                         {/* Animated gradient */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/20 to-primary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
                                         {/* Shine effect */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
 
                                         <div className="space-y-4 relative z-10">
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 dark:bg-black/10 rounded-full text-xs font-bold border border-white/20 dark:border-black/20 backdrop-blur-sm">
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-background/10 rounded-full text-xs font-bold border border-background/20 backdrop-blur-sm">
                                                 <Shield className="w-3 h-3" /> Enterprise Security
                                             </div>
                                             <h3 className="text-3xl md:text-4xl font-bold">Register your Team</h3>
@@ -341,7 +325,7 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
 
                                         <motion.div
                                             whileHover={{ scale: 1.15, rotate: 5 }}
-                                            className="w-16 h-16 rounded-full bg-white/10 dark:bg-black/10 flex items-center justify-center relative z-10"
+                                            className="w-16 h-16 rounded-full bg-background/10 flex items-center justify-center relative z-10"
                                         >
                                             <ArrowRight className="w-8 h-8" />
                                         </motion.div>
@@ -349,7 +333,7 @@ export function HeroSection({ session, scorecardHref, turnoverHref, linkManagerH
                                 </Link>
                             ) : (
                                 <div className="h-full min-h-[220px] bg-gradient-to-r from-muted/30 via-muted/20 to-muted/30 border border-border/50 rounded-[2rem] p-8 flex items-center justify-center text-center relative overflow-hidden backdrop-blur-sm group">
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                                     <div className="space-y-4 relative z-10">
                                         <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-background to-muted border border-border flex items-center justify-center text-muted-foreground">
                                             <Globe className="w-6 h-6" />

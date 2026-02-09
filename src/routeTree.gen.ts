@@ -22,6 +22,7 @@ import { Route as TeamsTeamIdTurnoverRouteImport } from './routes/teams/$teamId/
 import { Route as TeamsTeamIdSettingsRouteImport } from './routes/teams/$teamId/settings'
 import { Route as TeamsTeamIdScorecardRouteImport } from './routes/teams/$teamId/scorecard'
 import { Route as TeamsTeamIdLinkManagerRouteImport } from './routes/teams/$teamId/link-manager'
+import { Route as TeamsTeamIdLinkManagerIndexRouteImport } from './routes/teams/$teamId/link-manager/index'
 import { Route as TeamsTeamIdTurnoverTurnoverMetricsRouteImport } from './routes/teams/$teamId/turnover/turnover-metrics'
 import { Route as TeamsTeamIdTurnoverTransitionHistoryRouteImport } from './routes/teams/$teamId/turnover/transition-history'
 import { Route as TeamsTeamIdTurnoverPassTheBatonRouteImport } from './routes/teams/$teamId/turnover/pass-the-baton'
@@ -95,6 +96,12 @@ const TeamsTeamIdLinkManagerRoute = TeamsTeamIdLinkManagerRouteImport.update({
   path: '/teams/$teamId/link-manager',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeamsTeamIdLinkManagerIndexRoute =
+  TeamsTeamIdLinkManagerIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => TeamsTeamIdLinkManagerRoute,
+  } as any)
 const TeamsTeamIdTurnoverTurnoverMetricsRoute =
   TeamsTeamIdTurnoverTurnoverMetricsRouteImport.update({
     id: '/turnover-metrics',
@@ -159,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/teams/$teamId/turnover/pass-the-baton': typeof TeamsTeamIdTurnoverPassTheBatonRoute
   '/teams/$teamId/turnover/transition-history': typeof TeamsTeamIdTurnoverTransitionHistoryRoute
   '/teams/$teamId/turnover/turnover-metrics': typeof TeamsTeamIdTurnoverTurnoverMetricsRoute
+  '/teams/$teamId/link-manager/': typeof TeamsTeamIdLinkManagerIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -169,7 +177,6 @@ export interface FileRoutesByTo {
   '/admin/teams': typeof AdminTeamsRoute
   '/teams/register': typeof TeamsRegisterRoute
   '/admin': typeof AdminIndexRoute
-  '/teams/$teamId/link-manager': typeof TeamsTeamIdLinkManagerRouteWithChildren
   '/teams/$teamId/scorecard': typeof TeamsTeamIdScorecardRoute
   '/teams/$teamId/settings': typeof TeamsTeamIdSettingsRoute
   '/teams/$teamId/turnover': typeof TeamsTeamIdTurnoverRouteWithChildren
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/teams/$teamId/turnover/pass-the-baton': typeof TeamsTeamIdTurnoverPassTheBatonRoute
   '/teams/$teamId/turnover/transition-history': typeof TeamsTeamIdTurnoverTransitionHistoryRoute
   '/teams/$teamId/turnover/turnover-metrics': typeof TeamsTeamIdTurnoverTurnoverMetricsRoute
+  '/teams/$teamId/link-manager': typeof TeamsTeamIdLinkManagerIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/teams/$teamId/turnover/pass-the-baton': typeof TeamsTeamIdTurnoverPassTheBatonRoute
   '/teams/$teamId/turnover/transition-history': typeof TeamsTeamIdTurnoverTransitionHistoryRoute
   '/teams/$teamId/turnover/turnover-metrics': typeof TeamsTeamIdTurnoverTurnoverMetricsRoute
+  '/teams/$teamId/link-manager/': typeof TeamsTeamIdLinkManagerIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -227,6 +236,7 @@ export interface FileRouteTypes {
     | '/teams/$teamId/turnover/pass-the-baton'
     | '/teams/$teamId/turnover/transition-history'
     | '/teams/$teamId/turnover/turnover-metrics'
+    | '/teams/$teamId/link-manager/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -237,7 +247,6 @@ export interface FileRouteTypes {
     | '/admin/teams'
     | '/teams/register'
     | '/admin'
-    | '/teams/$teamId/link-manager'
     | '/teams/$teamId/scorecard'
     | '/teams/$teamId/settings'
     | '/teams/$teamId/turnover'
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/teams/$teamId/turnover/pass-the-baton'
     | '/teams/$teamId/turnover/transition-history'
     | '/teams/$teamId/turnover/turnover-metrics'
+    | '/teams/$teamId/link-manager'
   id:
     | '__root__'
     | '/'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/teams/$teamId/turnover/pass-the-baton'
     | '/teams/$teamId/turnover/transition-history'
     | '/teams/$teamId/turnover/turnover-metrics'
+    | '/teams/$teamId/link-manager/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -377,6 +388,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamsTeamIdLinkManagerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teams/$teamId/link-manager/': {
+      id: '/teams/$teamId/link-manager/'
+      path: '/'
+      fullPath: '/teams/$teamId/link-manager/'
+      preLoaderRoute: typeof TeamsTeamIdLinkManagerIndexRouteImport
+      parentRoute: typeof TeamsTeamIdLinkManagerRoute
+    }
     '/teams/$teamId/turnover/turnover-metrics': {
       id: '/teams/$teamId/turnover/turnover-metrics'
       path: '/turnover-metrics'
@@ -449,6 +467,7 @@ interface TeamsTeamIdLinkManagerRouteChildren {
   TeamsTeamIdLinkManagerCategoriesRoute: typeof TeamsTeamIdLinkManagerCategoriesRoute
   TeamsTeamIdLinkManagerImportRoute: typeof TeamsTeamIdLinkManagerImportRoute
   TeamsTeamIdLinkManagerStatsRoute: typeof TeamsTeamIdLinkManagerStatsRoute
+  TeamsTeamIdLinkManagerIndexRoute: typeof TeamsTeamIdLinkManagerIndexRoute
 }
 
 const TeamsTeamIdLinkManagerRouteChildren: TeamsTeamIdLinkManagerRouteChildren =
@@ -457,6 +476,7 @@ const TeamsTeamIdLinkManagerRouteChildren: TeamsTeamIdLinkManagerRouteChildren =
       TeamsTeamIdLinkManagerCategoriesRoute,
     TeamsTeamIdLinkManagerImportRoute: TeamsTeamIdLinkManagerImportRoute,
     TeamsTeamIdLinkManagerStatsRoute: TeamsTeamIdLinkManagerStatsRoute,
+    TeamsTeamIdLinkManagerIndexRoute: TeamsTeamIdLinkManagerIndexRoute,
   }
 
 const TeamsTeamIdLinkManagerRouteWithChildren =

@@ -143,7 +143,7 @@ function TeamSettingsPage() {
   // Sync Mutation
   const syncMutation = useMutation({
     mutationFn: async (app: any) => {
-      const response = await fetch(`http://localhost:8008/api/central?assetId=${app.assetId}`)
+      const response = await fetch(`https://mocki.io/v1/67ffbf6c-e04e-4ad5-98e6-f1e28b2d62bd?assetId=${app.assetId}`)
       if (!response.ok) throw new Error("Failed to fetch latest registry data")
       const result = await response.json()
       const centralApp = result?.data?.application
@@ -798,7 +798,7 @@ function AddApplicationDialog({ teamId, onSuccess }: { teamId: string, onSuccess
     if (!assetIdSearch) return
     setIsSearching(true)
     try {
-      const response = await fetch(`http://localhost:8008/api/central?assetId=${assetIdSearch}`)
+      const response = await fetch(`https://mocki.io/v1/67ffbf6c-e04e-4ad5-98e6-f1e28b2d62bd?assetId=${assetIdSearch}`)
       if (!response.ok) throw new Error("Failed to fetch asset details")
       const data = await response.json()
 

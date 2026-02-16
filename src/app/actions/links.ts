@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { links, linkCategories } from "@/db/schema/links";
 import { CreateLinkSchema, BulkCreateLinkSchema } from "@/lib/zod/links.schema";
 import { z } from "zod";
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, lt, or, sql } from "drizzle-orm";
 
 /**
  * GET LINKS
@@ -18,13 +18,15 @@ export const getLinks = createServerFn({ method: "GET" })
             visibility: z.enum(["all", "private", "public"]).default("all"),
             applicationId: z.string().uuid().optional(),
             categoryId: z.string().uuid().optional(),
+            limit: z.number().int().min(1).max(100).default(30),
+            cursor: z.string().optional(), // ISO timestamp cursor for pagination
         }).parse(data)
     )
     .handler(async ({ data }) => {
         const session = await getSession();
         if (!session || !session.user.email) throw new Error("Unauthorized");
 
-        const { teamId, search, visibility, applicationId, categoryId } = data;
+        const { teamId, search, visibility, applicationId, categoryId, limit, cursor } = data;
         const userEmail = session.user.email;
 
         // Base filters: Always filter by Team
@@ -68,14 +70,39 @@ export const getLinks = createServerFn({ method: "GET" })
             );
         }
 
-        return await db.query.links.findMany({
-            where: and(...filters),
-            orderBy: [desc(links.createdAt)],
-            with: {
-                category: true,
-                application: true,
-            },
-        });
+        // Separate base filters (for count) from page filters (+ cursor for data)
+        const baseFilters = [...filters];
+        if (cursor) {
+            filters.push(lt(links.createdAt, new Date(cursor)));
+        }
+
+        // Run count (without cursor) + data (with cursor) queries in parallel
+        const [countResult, rows] = await Promise.all([
+            db.select({ count: sql<number>`cast(count(*) as integer)` })
+                .from(links)
+                .where(and(...baseFilters)),
+            db.query.links.findMany({
+                where: and(...filters),
+                orderBy: [desc(links.createdAt)],
+                limit: limit + 1,
+                with: {
+                    category: true,
+                    application: true,
+                },
+            }),
+        ]);
+
+        const hasMore = rows.length > limit;
+        const items = hasMore ? rows.slice(0, limit) : rows;
+        const nextCursor = hasMore && items.length > 0
+            ? items[items.length - 1].createdAt!.toISOString()
+            : null;
+
+        return {
+            items,
+            nextCursor,
+            totalCount: countResult[0].count,
+        };
     });
 
 /**

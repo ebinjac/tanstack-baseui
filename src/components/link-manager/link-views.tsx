@@ -7,7 +7,7 @@ import {
     TableHeader,
     TableRow
 } from "@/components/ui/table"
-import { useState } from "react"
+import { memo, useState, useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -39,9 +39,7 @@ import {
 import { LinkWithRelations } from "@/db/schema/links"
 import { LinkCard } from "./link-card"
 import { CreateLinkDialog } from "./create-link-dialog"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { deleteLink, trackLinkUsage } from "@/app/actions/links"
-import { toast } from "sonner"
+import { useLinkMutations } from "./hooks/use-link-mutations"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 
@@ -52,64 +50,99 @@ interface ViewProps {
     onToggleSelect?: (linkId: string) => void
 }
 
+// =============================================================================
+// GridView — single dialog instance lifted here
+// =============================================================================
 export function GridView({ links, teamId, selectedLinks, onToggleSelect }: ViewProps) {
-    return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {links.map((link) => (
-                <div key={link.id} className="relative group">
-                    {onToggleSelect && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                onToggleSelect(link.id)
-                            }}
-                            className={cn(
-                                "absolute -top-2 -left-2 z-10 w-8 h-8 rounded-xl flex items-center justify-center transition-all shadow-lg",
-                                selectedLinks?.has(link.id)
-                                    ? "bg-primary text-primary-foreground scale-100"
-                                    : "bg-background border border-border/50 text-muted-foreground opacity-0 group-hover:opacity-100 scale-90 hover:scale-100"
-                            )}
-                        >
-                            {selectedLinks?.has(link.id) ? (
-                                <CheckSquare className="w-4 h-4" />
-                            ) : (
-                                <Square className="w-4 h-4" />
-                            )}
-                        </button>
-                    )}
-                    <div className={cn(
-                        "transition-all rounded-2xl",
-                        selectedLinks?.has(link.id) && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                    )}>
-                        <LinkCard link={link} teamId={teamId} />
-                    </div>
-                </div>
-            ))}
-        </div>
-    )
-}
-
-export function TableView({ links, teamId, selectedLinks, onToggleSelect }: ViewProps) {
-    const queryClient = useQueryClient()
     const [dialogLink, setDialogLink] = useState<LinkWithRelations | null>(null)
     const [dialogMode, setDialogMode] = useState<'edit' | 'view' | null>(null)
 
-    const deleteMutation = useMutation({
-        mutationFn: (vars: { data: { id: string, teamId: string } }) => deleteLink(vars),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["links", teamId] })
-            toast.success("Link deleted")
-        },
-    })
+    const handleView = useCallback((link: LinkWithRelations) => {
+        setDialogLink(link)
+        setDialogMode('view')
+    }, [])
 
-    const trackUsageMutation = useMutation({
-        mutationFn: (vars: { data: { id: string } }) => trackLinkUsage(vars),
-    })
+    const handleEdit = useCallback((link: LinkWithRelations) => {
+        setDialogLink(link)
+        setDialogMode('edit')
+    }, [])
 
-    const handleOpen = (link: LinkWithRelations) => {
-        trackUsageMutation.mutate({ data: { id: link.id } })
-        window.open(link.url, "_blank", "noopener,noreferrer")
-    }
+    return (
+        <>
+            <CreateLinkDialog
+                teamId={teamId}
+                link={dialogLink || undefined}
+                mode={dialogMode || 'view'}
+                open={!!dialogMode}
+                onOpenChange={(open) => !open && setDialogMode(null)}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {links.map((link) => (
+                    <GridItem
+                        key={link.id}
+                        link={link}
+                        teamId={teamId}
+                        isSelected={selectedLinks?.has(link.id) ?? false}
+                        onToggleSelect={onToggleSelect}
+                        onView={handleView}
+                        onEdit={handleEdit}
+                    />
+                ))}
+            </div>
+        </>
+    )
+}
+
+// Memoized individual grid item so selection toggle doesn't re-render siblings
+interface GridItemProps {
+    link: LinkWithRelations
+    teamId: string
+    isSelected: boolean
+    onToggleSelect?: (linkId: string) => void
+    onView: (link: LinkWithRelations) => void
+    onEdit: (link: LinkWithRelations) => void
+}
+
+const GridItem = memo(function GridItem({ link, teamId, isSelected, onToggleSelect, onView, onEdit }: GridItemProps) {
+    return (
+        <div className="relative group">
+            {onToggleSelect && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onToggleSelect(link.id)
+                    }}
+                    className={cn(
+                        "absolute -top-2 -left-2 z-10 w-8 h-8 rounded-xl flex items-center justify-center transition-all shadow-lg",
+                        isSelected
+                            ? "bg-primary text-primary-foreground scale-100"
+                            : "bg-background border border-border/50 text-muted-foreground opacity-0 group-hover:opacity-100 scale-90 hover:scale-100"
+                    )}
+                >
+                    {isSelected ? (
+                        <CheckSquare className="w-4 h-4" />
+                    ) : (
+                        <Square className="w-4 h-4" />
+                    )}
+                </button>
+            )}
+            <div className={cn(
+                "transition-all rounded-2xl",
+                isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+            )}>
+                <LinkCard link={link} teamId={teamId} onView={onView} onEdit={onEdit} />
+            </div>
+        </div>
+    )
+})
+
+// =============================================================================
+// TableView
+// =============================================================================
+export function TableView({ links, teamId, selectedLinks, onToggleSelect }: ViewProps) {
+    const { deleteMutation, handleOpen } = useLinkMutations(teamId)
+    const [dialogLink, setDialogLink] = useState<LinkWithRelations | null>(null)
+    const [dialogMode, setDialogMode] = useState<'edit' | 'view' | null>(null)
 
     return (
         <div className="bg-card/40 backdrop-blur-md border border-border/50 rounded-2xl overflow-hidden relative">
@@ -287,92 +320,101 @@ export function TableView({ links, teamId, selectedLinks, onToggleSelect }: View
     )
 }
 
+// =============================================================================
+// CompactView
+// =============================================================================
 export function CompactView({ links, teamId, selectedLinks, onToggleSelect }: ViewProps) {
-    const queryClient = useQueryClient()
-
-    const trackUsageMutation = useMutation({
-        mutationFn: (vars: { data: { id: string } }) => trackLinkUsage(vars),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["links", teamId] })
-        }
-    })
-
-    const handleOpen = (link: LinkWithRelations) => {
-        trackUsageMutation.mutate({ data: { id: link.id } })
-        window.open(link.url, "_blank", "noopener,noreferrer")
-    }
+    const { handleOpen } = useLinkMutations(teamId)
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {links.map((link) => (
-                <div
+                <CompactItem
                     key={link.id}
-                    className={cn(
-                        "group bg-card/40 backdrop-blur-sm border border-border/50 p-3 rounded-xl flex items-center justify-between hover:shadow-lg hover:border-primary/30 hover:bg-card transition-all cursor-pointer relative overflow-hidden",
-                        selectedLinks?.has(link.id) && "ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5"
-                    )}
-                    onClick={() => handleOpen(link)}
-                >
-                    {/* Access Indicator Dots */}
-                    <div className={cn(
-                        "absolute top-0 right-0 h-8 w-8 flex items-center justify-center -mr-1 -mt-1 opacity-[0.05] rounded-full",
-                        link.visibility === "public" ? "bg-blue-500" : "bg-amber-500"
-                    )} />
-
-                    {onToggleSelect && (
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                onToggleSelect(link.id)
-                            }}
-                            className={cn(
-                                "absolute -top-1 -left-1 z-10 w-6 h-6 rounded-md flex items-center justify-center transition-all shadow-md border",
-                                selectedLinks?.has(link.id)
-                                    ? "bg-primary text-primary-foreground border-primary"
-                                    : "bg-background border-border/50 text-muted-foreground/30 opacity-0 group-hover:opacity-100 scale-90 hover:scale-100"
-                            )}
-                        >
-                            {selectedLinks?.has(link.id) ? (
-                                <CheckSquare className="w-3 h-3" />
-                            ) : (
-                                <Square className="w-3 h-3" />
-                            )}
-                        </button>
-                    )}
-                    <div className="flex items-center gap-3 overflow-hidden">
-                        <div className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105",
-                            link.visibility === "public" ? "bg-blue-500/5 text-blue-600 border-blue-500/20" : "bg-amber-500/5 text-amber-600 border-amber-500/20"
-                        )}>
-                            {link.visibility === "public" ? <Globe2 className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
-                        </div>
-                        <div className="flex flex-col overflow-hidden">
-                            <Tooltip>
-                                <TooltipTrigger
-                                    render={
-                                        <span className="text-[12px] font-bold tracking-tight truncate group-hover:text-primary transition-colors block leading-tight">
-                                            {link.title}
-                                        </span>
-                                    }
-                                />
-                                <TooltipContent className="max-w-xs break-all rounded-lg p-2.5 shadow-xl">
-                                    <p className="font-bold text-[11px]">{link.title}</p>
-                                    <p className="text-[9px] font-medium opacity-60 mt-0.5 truncate">{link.url}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                            <div className="flex items-center gap-1.5 overflow-hidden mt-0.5">
-                                <span className="text-[8px] font-bold text-primary uppercase tracking-wider truncate">
-                                    {link.application?.tla || "GLOBAL"}
-                                </span>
-                                <span className="text-[8px] text-muted-foreground/20 font-bold">•</span>
-                                <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-wider truncate">
-                                    {link.usageCount || 0} INSIGHTS
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    link={link}
+                    isSelected={selectedLinks?.has(link.id) ?? false}
+                    onToggleSelect={onToggleSelect}
+                    onOpen={handleOpen}
+                />
             ))}
         </div>
     )
 }
+
+interface CompactItemProps {
+    link: LinkWithRelations
+    isSelected: boolean
+    onToggleSelect?: (linkId: string) => void
+    onOpen: (link: LinkWithRelations) => void
+}
+
+const CompactItem = memo(function CompactItem({ link, isSelected, onToggleSelect, onOpen }: CompactItemProps) {
+    return (
+        <div
+            className={cn(
+                "group bg-card/40 backdrop-blur-sm border border-border/50 p-3 rounded-xl flex items-center justify-between hover:shadow-lg hover:border-primary/30 hover:bg-card transition-all cursor-pointer relative overflow-hidden",
+                isSelected && "ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5"
+            )}
+            onClick={() => onOpen(link)}
+        >
+            {/* Access Indicator Dots */}
+            <div className={cn(
+                "absolute top-0 right-0 h-8 w-8 flex items-center justify-center -mr-1 -mt-1 opacity-[0.05] rounded-full",
+                link.visibility === "public" ? "bg-blue-500" : "bg-amber-500"
+            )} />
+
+            {onToggleSelect && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        onToggleSelect(link.id)
+                    }}
+                    className={cn(
+                        "absolute -top-1 -left-1 z-10 w-6 h-6 rounded-md flex items-center justify-center transition-all shadow-md border",
+                        isSelected
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background border-border/50 text-muted-foreground/30 opacity-0 group-hover:opacity-100 scale-90 hover:scale-100"
+                    )}
+                >
+                    {isSelected ? (
+                        <CheckSquare className="w-3 h-3" />
+                    ) : (
+                        <Square className="w-3 h-3" />
+                    )}
+                </button>
+            )}
+            <div className="flex items-center gap-3 overflow-hidden">
+                <div className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105",
+                    link.visibility === "public" ? "bg-blue-500/5 text-blue-600 border-blue-500/20" : "bg-amber-500/5 text-amber-600 border-amber-500/20"
+                )}>
+                    {link.visibility === "public" ? <Globe2 className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                </div>
+                <div className="flex flex-col overflow-hidden">
+                    <Tooltip>
+                        <TooltipTrigger
+                            render={
+                                <span className="text-[12px] font-bold tracking-tight truncate group-hover:text-primary transition-colors block leading-tight">
+                                    {link.title}
+                                </span>
+                            }
+                        />
+                        <TooltipContent className="max-w-xs break-all rounded-lg p-2.5 shadow-xl">
+                            <p className="font-bold text-[11px]">{link.title}</p>
+                            <p className="text-[9px] font-medium opacity-60 mt-0.5 truncate">{link.url}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                    <div className="flex items-center gap-1.5 overflow-hidden mt-0.5">
+                        <span className="text-[8px] font-bold text-primary uppercase tracking-wider truncate">
+                            {link.application?.tla || "GLOBAL"}
+                        </span>
+                        <span className="text-[8px] text-muted-foreground/20 font-bold">•</span>
+                        <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-wider truncate">
+                            {link.usageCount || 0} INSIGHTS
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+})

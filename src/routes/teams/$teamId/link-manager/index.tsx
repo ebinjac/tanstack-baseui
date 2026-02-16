@@ -3,10 +3,10 @@ import { getLinks, getLinkCategories, bulkUpdateLinks } from '@/app/actions/link
 import { getTeamApplications } from '@/app/actions/applications'
 import { z } from 'zod'
 import { Button } from '@/components/ui/button'
-import { Search, Grip, Table as TableIcon, LayoutList, Globe2, Lock, Layers, Upload, Box, X, Tag, BarChart3, Activity, RotateCcw } from 'lucide-react'
+import { Search, Grip, Table as TableIcon, LayoutList, Globe2, Lock, Layers, Upload, Box, X, Tag, BarChart3, Activity, RotateCcw, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState, useCallback } from 'react'
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMemo, useState, useCallback, useRef, memo, useEffect } from 'react'
 import { CreateLinkDialog } from '@/components/link-manager/create-link-dialog'
 import { GridView, TableView, CompactView } from '@/components/link-manager/link-views'
 import { Badge } from '@/components/ui/badge'
@@ -26,13 +26,15 @@ const linkSearchSchema = z.object({
   categoryId: z.string().uuid().optional(),
 })
 
+const PAGE_SIZE = 30
+
 export const Route = createFileRoute('/teams/$teamId/link-manager/')({
   component: LinkManagerPage,
   validateSearch: (search) => linkSearchSchema.parse(search),
   loaderDeps: ({ search: { search, visibility, applicationId, categoryId } }) => ({ search, visibility, applicationId, categoryId }),
   loader: async ({ params: { teamId }, deps: { search, visibility, applicationId, categoryId } }) => {
     const [linksData, categories, applications] = await Promise.all([
-      getLinks({ data: { teamId, search, visibility: visibility || 'all', applicationId, categoryId } }),
+      getLinks({ data: { teamId, search, visibility: visibility || 'all', applicationId, categoryId, limit: PAGE_SIZE } }),
       getLinkCategories({ data: { teamId } }),
       getTeamApplications({ data: { teamId } }),
     ])
@@ -49,15 +51,51 @@ function LinkManagerPage() {
 
   const [viewMode, setViewMode] = useState<'grid' | 'table' | 'compact'>('grid')
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set())
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
-  // Client-side query to keep UI fresh on mutations
-  const { data: links } = useQuery({
+  // Infinite query for paginated links
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
     queryKey: ['links', teamId, searchParams.search, searchParams.visibility, searchParams.applicationId, searchParams.categoryId],
-    queryFn: () => getLinks({
-      data: { teamId, search: searchParams.search, visibility: searchParams.visibility || 'all', applicationId: searchParams.applicationId, categoryId: searchParams.categoryId }
+    queryFn: ({ pageParam }) => getLinks({
+      data: {
+        teamId,
+        search: searchParams.search,
+        visibility: searchParams.visibility || 'all',
+        applicationId: searchParams.applicationId,
+        categoryId: searchParams.categoryId,
+        limit: PAGE_SIZE,
+        cursor: pageParam,
+      }
     }),
-    initialData
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    initialData: { pages: [initialData], pageParams: [undefined] },
   })
+
+  // Flatten all loaded pages into a single array
+  const links = useMemo(() => data?.pages.flatMap(p => p.items) ?? [], [data])
+  const totalCount = data?.pages[0]?.totalCount ?? 0
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { rootMargin: '200px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   // Bulk update mutation
   const bulkUpdateMutation = useMutation({
@@ -94,9 +132,13 @@ function LinkManagerPage() {
     bulkUpdateMutation.mutate({ teamId, linkIds: Array.from(selectedLinks), updates: { categoryId } })
   }, [bulkUpdateMutation, teamId, selectedLinks])
 
-  // Filter handlers
+  // Filter handlers — debounced search (300ms)
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const handleSearch = useCallback((term: string) => {
-    navigate({ search: (prev: any) => ({ ...prev, search: term || undefined }) })
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+    searchTimerRef.current = setTimeout(() => {
+      navigate({ search: (prev: any) => ({ ...prev, search: term || undefined }) })
+    }, 300)
   }, [navigate])
 
   const handleVisibilityChange = useCallback((val: string | null) => {
@@ -115,17 +157,17 @@ function LinkManagerPage() {
     navigate({ search: { visibility: 'all' } })
   }, [navigate])
 
-  // Computed values
-  const activeFilterCount = [searchParams.applicationId, searchParams.categoryId, searchParams.search, searchParams.visibility && searchParams.visibility !== 'all' ? searchParams.visibility : undefined].filter(Boolean).length
-  const selectedApp = applications?.find(a => a.id === searchParams.applicationId)
-  const selectedCategory = categories?.find(c => c.id === searchParams.categoryId)
+  // Computed values — memoized to avoid recalc on every render
+  const activeFilterCount = useMemo(() => [searchParams.applicationId, searchParams.categoryId, searchParams.search, searchParams.visibility && searchParams.visibility !== 'all' ? searchParams.visibility : undefined].filter(Boolean).length, [searchParams.applicationId, searchParams.categoryId, searchParams.search, searchParams.visibility])
+  const selectedApp = useMemo(() => applications?.find(a => a.id === searchParams.applicationId), [applications, searchParams.applicationId])
+  const selectedCategory = useMemo(() => categories?.find(c => c.id === searchParams.categoryId), [categories, searchParams.categoryId])
 
   const stats = useMemo(() => ({
-    total: links.length,
+    total: totalCount,
     public: links.filter((l: any) => l.visibility === 'public').length,
     private: links.filter((l: any) => l.visibility === 'private').length,
     usage: links.reduce((acc: number, l: any) => acc + (l.usageCount || 0), 0)
-  }), [links])
+  }), [links, totalCount])
 
   return (
     <div className="flex-1 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
@@ -183,7 +225,7 @@ function LinkManagerPage() {
                 <div className="flex items-center gap-3">
                   <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                   <p className="text-[11px] font-bold text-muted-foreground">
-                    Listing <span className="text-foreground">{links.length}</span> Verified Resources
+                    Showing <span className="text-foreground">{links.length}</span> of <span className="text-foreground">{totalCount}</span> Verified Resources
                   </p>
                 </div>
               </div>
@@ -192,6 +234,20 @@ function LinkManagerPage() {
                 {viewMode === 'table' && <TableView links={links} teamId={teamId} selectedLinks={selectedLinks} onToggleSelect={toggleSelectLink} />}
                 {viewMode === 'compact' && <CompactView links={links} teamId={teamId} selectedLinks={selectedLinks} onToggleSelect={toggleSelectLink} />}
               </div>
+
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-1" />
+              {isFetchingNextPage && (
+                <div className="flex items-center justify-center py-8 gap-3">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  <p className="text-xs font-bold text-muted-foreground">Loading more resources...</p>
+                </div>
+              )}
+              {!hasNextPage && links.length > 0 && links.length >= PAGE_SIZE && (
+                <p className="text-center text-[11px] font-bold text-muted-foreground/50 py-4">
+                  All {totalCount} resources loaded
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -203,7 +259,7 @@ function LinkManagerPage() {
 // ============================================================================
 // Page Header Component
 // ============================================================================
-function PageHeader({ teamId }: { teamId: string }) {
+const PageHeader = memo(function PageHeader({ teamId }: { teamId: string }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
@@ -242,7 +298,7 @@ function PageHeader({ teamId }: { teamId: string }) {
       </div>
     </div>
   )
-}
+})
 
 // ============================================================================
 // Bulk Actions Bar Component
@@ -257,7 +313,7 @@ interface BulkActionsBarProps {
   isPending: boolean
 }
 
-function BulkActionsBar({ selectedCount, categories, onClearSelection, onSelectAll, onBulkVisibility, onBulkCategory, isPending }: BulkActionsBarProps) {
+const BulkActionsBar = memo(function BulkActionsBar({ selectedCount, categories, onClearSelection, onSelectAll, onBulkVisibility, onBulkCategory, isPending }: BulkActionsBarProps) {
   const [bulkTagsInput, setBulkTagsInput] = useState('')
 
   return (
@@ -329,7 +385,7 @@ function BulkActionsBar({ selectedCount, categories, onClearSelection, onSelectA
       </div>
     </motion.div>
   )
-}
+})
 
 // ============================================================================
 // Filter Cockpit Component
@@ -350,7 +406,7 @@ interface FilterCockpitProps {
   onClearAllFilters: () => void
 }
 
-function FilterCockpit({ searchParams, viewMode, applications, categories, selectedApp, selectedCategory, activeFilterCount, onSearch, onVisibilityChange, onApplicationChange, onCategoryChange, onViewModeChange, onClearAllFilters }: FilterCockpitProps) {
+const FilterCockpit = memo(function FilterCockpit({ searchParams, viewMode, applications, categories, selectedApp, selectedCategory, activeFilterCount, onSearch, onVisibilityChange, onApplicationChange, onCategoryChange, onViewModeChange, onClearAllFilters }: FilterCockpitProps) {
   return (
     <div className="bg-card/40 backdrop-blur-sm border border-border/50 p-1.5 rounded-2xl space-y-3 relative overflow-hidden">
       <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-3">
@@ -415,12 +471,12 @@ function FilterCockpit({ searchParams, viewMode, applications, categories, selec
       )}
     </div>
   )
-}
+})
 
 // ============================================================================
 // Visibility Pills Component
 // ============================================================================
-function VisibilityPills({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+const VisibilityPills = memo(function VisibilityPills({ value, onChange }: { value: string; onChange: (val: string) => void }) {
   const options = [
     { id: 'all', label: 'All', icon: Globe2 },
     { id: 'public', label: 'Public', icon: Globe2 },
@@ -441,12 +497,12 @@ function VisibilityPills({ value, onChange }: { value: string; onChange: (val: s
       })}
     </div>
   )
-}
+})
 
 // ============================================================================
 // View Mode Toggle Component
 // ============================================================================
-function ViewModeToggle({ value, onChange }: { value: 'grid' | 'table' | 'compact'; onChange: (mode: 'grid' | 'table' | 'compact') => void }) {
+const ViewModeToggle = memo(function ViewModeToggle({ value, onChange }: { value: 'grid' | 'table' | 'compact'; onChange: (mode: 'grid' | 'table' | 'compact') => void }) {
   const modes = [
     { id: 'grid' as const, icon: Grip },
     { id: 'table' as const, icon: TableIcon },
@@ -466,12 +522,12 @@ function ViewModeToggle({ value, onChange }: { value: 'grid' | 'table' | 'compac
       })}
     </div>
   )
-}
+})
 
 // ============================================================================
 // Active Filters Row Component
 // ============================================================================
-function ActiveFiltersRow({ searchParams, selectedApp, selectedCategory, onSearch, onApplicationChange, onCategoryChange, onVisibilityChange, onClearAllFilters }: any) {
+const ActiveFiltersRow = memo(function ActiveFiltersRow({ searchParams, selectedApp, selectedCategory, onSearch, onApplicationChange, onCategoryChange, onVisibilityChange, onClearAllFilters }: any) {
   return (
     <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-border/30 px-2 mt-2">
       <span className="text-[11px] font-bold text-muted-foreground mr-1 opacity-60">Filters:</span>
@@ -504,12 +560,12 @@ function ActiveFiltersRow({ searchParams, selectedApp, selectedCategory, onSearc
       </button>
     </div>
   )
-}
+})
 
 // ============================================================================
 // Empty Links State Component
 // ============================================================================
-function EmptyLinksState({ onClearFilters }: { onClearFilters: () => void }) {
+const EmptyLinksState = memo(function EmptyLinksState({ onClearFilters }: { onClearFilters: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-32 bg-card/10 backdrop-blur-sm border border-dashed border-border/50 rounded-[2.5rem] text-center space-y-6">
       <div className="h-24 w-24 rounded-full bg-muted/20 flex items-center justify-center text-muted-foreground animate-pulse">
@@ -524,4 +580,4 @@ function EmptyLinksState({ onClearFilters }: { onClearFilters: () => void }) {
       </Button>
     </div>
   )
-}
+})

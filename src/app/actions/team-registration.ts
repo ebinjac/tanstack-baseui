@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { teamRegistrationRequests, teams } from "@/db/schema/teams";
 import { sql } from "drizzle-orm";
 import { requireAuth } from "@/lib/middleware/auth.middleware";
+import { sendTeamRegistrationEmail, sendTeamApprovalEmail, sendTeamRejectionEmail } from "@/lib/email/email.service";
 
 export const registerTeam = createServerFn({ method: "POST" })
     .middleware([requireAuth])
@@ -29,6 +30,18 @@ export const registerTeam = createServerFn({ method: "POST" })
                 requestedAt: new Date(),
                 status: "pending",
             }).returning();
+
+            // Send confirmation email to the contact
+            const emailResult = await sendTeamRegistrationEmail({
+                to: data.contactEmail,
+                teamName: data.teamName,
+                contactName: data.contactName,
+            });
+
+            if (!emailResult.success) {
+                console.error("Failed to send confirmation email:", emailResult.error);
+                // Don't fail the registration if email fails, just log the error
+            }
 
             return { success: true, requestId: newRequest.id };
         } catch (error: unknown) {
@@ -131,6 +144,19 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
                         createdBy: request.requestedBy,
                     });
                 });
+
+                // Send approval email
+                const emailResult = await sendTeamApprovalEmail({
+                    to: request.contactEmail,
+                    teamName: request.teamName,
+                    contactName: request.contactName,
+                    reviewedBy,
+                    comments: data.comments,
+                });
+
+                if (!emailResult.success) {
+                    console.error("Failed to send approval email:", emailResult.error);
+                }
             } else {
                 await db.update(teamRegistrationRequests)
                     .set({
@@ -140,6 +166,19 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
                         comments: data.comments || request.comments,
                     })
                     .where(sql`${teamRegistrationRequests.id} = ${data.requestId}`);
+
+                // Send rejection email
+                const emailResult = await sendTeamRejectionEmail({
+                    to: request.contactEmail,
+                    teamName: request.teamName,
+                    contactName: request.contactName,
+                    reviewedBy,
+                    comments: data.comments,
+                });
+
+                if (!emailResult.success) {
+                    console.error("Failed to send rejection email:", emailResult.error);
+                }
             }
 
             return { success: true };

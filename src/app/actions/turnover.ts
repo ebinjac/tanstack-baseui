@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getSession } from "../ssr/auth";
 import { db } from "@/db";
 import {
     turnoverEntries,
@@ -22,6 +21,7 @@ import {
 } from "@/lib/zod/turnover.schema";
 import { z } from "zod";
 import { and, desc, eq, gte, lte, or, sql, count, ilike } from "drizzle-orm";
+import { requireAuth } from "@/lib/middleware/auth.middleware";
 
 // ========================
 // Entry Management
@@ -31,12 +31,10 @@ import { and, desc, eq, gte, lte, or, sql, count, ilike } from "drizzle-orm";
  * CREATE TURNOVER ENTRY
  */
 export const createTurnoverEntry = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => CreateTurnoverEntrySchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
-        const userName = `${session.user.firstName} ${session.user.lastName}`;
+    .handler(async ({ data, context }) => {
+        const userName = context.userName;
 
         // Generate title based on section if not provided
         let title = data.title;
@@ -123,12 +121,10 @@ export const createTurnoverEntry = createServerFn({ method: "POST" })
  * UPDATE TURNOVER ENTRY
  */
 export const updateTurnoverEntry = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => UpdateTurnoverEntrySchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
-        const userName = `${session.user.firstName} ${session.user.lastName}`;
+    .handler(async ({ data, context }) => {
+        const userName = context.userName;
 
         // Verify entry exists
         const existingEntry = await db.query.turnoverEntries.findFirst({
@@ -138,7 +134,7 @@ export const updateTurnoverEntry = createServerFn({ method: "POST" })
         if (!existingEntry) throw new Error("Entry not found");
 
         // Update main entry
-        const updateData: any = {
+        const updateData: Record<string, unknown> = {
             updatedBy: userName,
             updatedAt: new Date(),
         };
@@ -160,7 +156,7 @@ export const updateTurnoverEntry = createServerFn({ method: "POST" })
                         where: eq(turnoverRfcDetails.entryId, data.id),
                     });
 
-                    const rfcUpdateData: any = {};
+                    const rfcUpdateData: Record<string, unknown> = {};
                     if (data.rfcNumber) rfcUpdateData.rfcNumber = data.rfcNumber;
                     if (data.rfcStatus) rfcUpdateData.rfcStatus = data.rfcStatus;
                     if (data.validatedBy) rfcUpdateData.validatedBy = data.validatedBy;
@@ -222,7 +218,7 @@ export const updateTurnoverEntry = createServerFn({ method: "POST" })
                     }
                 }
                 break;
-            case "COMMS":
+            case "COMMS": {
                 const existingComms = await db.query.turnoverCommsDetails.findFirst({
                     where: eq(turnoverCommsDetails.entryId, data.id),
                 });
@@ -243,6 +239,7 @@ export const updateTurnoverEntry = createServerFn({ method: "POST" })
                     });
                 }
                 break;
+            }
         }
 
         return { success: true };
@@ -252,11 +249,9 @@ export const updateTurnoverEntry = createServerFn({ method: "POST" })
  * DELETE TURNOVER ENTRY
  */
 export const deleteTurnoverEntry = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => DeleteEntrySchema.parse(data))
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
         // Delete entry (cascades to extension tables)
         await db.delete(turnoverEntries).where(eq(turnoverEntries.id, data.id));
 
@@ -267,12 +262,10 @@ export const deleteTurnoverEntry = createServerFn({ method: "POST" })
  * TOGGLE IMPORTANT FLAG
  */
 export const toggleImportantEntry = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => ToggleImportantSchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
-        const userName = `${session.user.firstName} ${session.user.lastName}`;
+    .handler(async ({ data, context }) => {
+        const userName = context.userName;
 
         await db
             .update(turnoverEntries)
@@ -290,12 +283,10 @@ export const toggleImportantEntry = createServerFn({ method: "POST" })
  * RESOLVE ENTRY
  */
 export const resolveTurnoverEntry = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => ResolveEntrySchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
-        const userName = `${session.user.firstName} ${session.user.lastName}`;
+    .handler(async ({ data, context }) => {
+        const userName = context.userName;
 
         await db
             .update(turnoverEntries)
@@ -315,11 +306,9 @@ export const resolveTurnoverEntry = createServerFn({ method: "POST" })
  * GET TURNOVER ENTRIES
  */
 export const getTurnoverEntries = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => GetEntriesSchema.parse(data))
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
         const { teamId, applicationId, section, status, includeRecentlyResolved, limit = 50, offset = 0 } = data;
 
         const filters = [eq(turnoverEntries.teamId, teamId)];
@@ -385,13 +374,11 @@ export const getTurnoverEntries = createServerFn({ method: "GET" })
  * GET ENTRIES FOR DISPATCH (includes RESOLVED from today)
  */
 export const getDispatchEntries = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         z.object({ teamId: z.string().uuid() }).parse(data)
     )
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
         const { teamId } = data;
 
         // Get today's start
@@ -438,13 +425,11 @@ export const getDispatchEntries = createServerFn({ method: "GET" })
  * CHECK IF CAN FINALIZE (Cooldown check)
  */
 export const canFinalizeTurnover = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         z.object({ teamId: z.string().uuid() }).parse(data)
     )
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
         // Check last finalization time (5 hours cooldown)
         const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000);
 
@@ -474,12 +459,10 @@ export const canFinalizeTurnover = createServerFn({ method: "GET" })
  * FINALIZE TURNOVER
  */
 export const finalizeTurnover = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => FinalizeTurnoverSchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
-        const userName = `${session.user.firstName} ${session.user.lastName}`;
+    .handler(async ({ data, context }) => {
+        const userName = context.userName;
 
         // Check cooldown
         const canFinalizeResult = await canFinalizeTurnover({ data: { teamId: data.teamId } });
@@ -540,11 +523,9 @@ export const finalizeTurnover = createServerFn({ method: "POST" })
  * GET FINALIZED TURNOVERS
  */
 export const getFinalizedTurnovers = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => GetFinalizedTurnoversSchema.parse(data))
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
         const { teamId, fromDate, toDate, search, limit = 20, offset = 0 } = data;
 
         const filters = [eq(finalizedTurnovers.teamId, teamId)];
@@ -584,7 +565,7 @@ export const getFinalizedTurnovers = createServerFn({ method: "GET" })
             .where(and(...filters));
 
         return {
-            turnovers: turnovers.map((t) => ({ ...t, snapshotData: t.snapshotData as any })),
+            turnovers: turnovers.map((t) => ({ ...t, snapshotData: t.snapshotData as Record<string, {}>[] })),
             total: countResult[0]?.count || 0,
         };
     });
@@ -593,13 +574,11 @@ export const getFinalizedTurnovers = createServerFn({ method: "GET" })
  * GET FINALIZED TURNOVER BY ID
  */
 export const getFinalizedTurnoverById = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         z.object({ id: z.string().uuid() }).parse(data)
     )
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
         const turnover = await db.query.finalizedTurnovers.findFirst({
             where: eq(finalizedTurnovers.id, data.id),
         });
@@ -608,7 +587,7 @@ export const getFinalizedTurnoverById = createServerFn({ method: "GET" })
 
         return {
             ...turnover,
-            snapshotData: turnover.snapshotData as any,
+            snapshotData: turnover.snapshotData as Record<string, {}>[],
         };
     });
 
@@ -620,11 +599,9 @@ export const getFinalizedTurnoverById = createServerFn({ method: "GET" })
  * GET TURNOVER METRICS
  */
 export const getTurnoverMetrics = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => GetTurnoverMetricsSchema.parse(data))
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) throw new Error("Unauthorized");
-
         const { teamId, startDate, endDate } = data;
 
         const startDateObj = new Date(startDate);

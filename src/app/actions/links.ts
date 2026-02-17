@@ -1,16 +1,30 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getSession } from "../ssr/auth";
 import { db } from "@/db";
 import { links, linkCategories } from "@/db/schema/links";
 import { CreateLinkSchema, BulkCreateLinkSchema } from "@/lib/zod/links.schema";
 import { z } from "zod";
 import { and, desc, eq, ilike, lt, or, sql } from "drizzle-orm";
+import { requireAuth } from "@/lib/middleware/auth.middleware";
+import type { SessionData } from "@/lib/auth/config";
+
+// ─── Helpers ───
+
+interface StatsBucket {
+    count: number;
+    clicks: number;
+}
+
+/** Check if the user is an admin for a given team */
+function isTeamAdminCheck(session: SessionData, teamId: string): boolean {
+    return session.permissions.some(p => p.teamId === teamId && p.role === 'ADMIN');
+}
 
 /**
  * GET LINKS
  * Fetches links for a team based on visibility and search permissions.
  */
 export const getLinks = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         z.object({
             teamId: z.string().uuid(),
@@ -22,12 +36,9 @@ export const getLinks = createServerFn({ method: "GET" })
             cursor: z.string().optional(), // ISO timestamp cursor for pagination
         }).parse(data)
     )
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
+    .handler(async ({ data, context }) => {
         const { teamId, search, visibility, applicationId, categoryId, limit, cursor } = data;
-        const userEmail = session.user.email;
+        const userEmail = context.userEmail;
 
         // Base filters: Always filter by Team
         const filters = [eq(links.teamId, teamId)];
@@ -109,29 +120,26 @@ export const getLinks = createServerFn({ method: "GET" })
  * CREATE LINK
  */
 export const createLink = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => CreateLinkSchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
+    .handler(async ({ data, context }) => {
         // Validations
         if (data.visibility === "public") {
             // Check Admin permissions if creating a public link
-            const permission = session.permissions?.find((p: any) => p.teamId === data.teamId);
-            const isAdmin = permission?.role === "ADMIN";
-            if (!isAdmin) {
-                // If not admin, they can ONLY create private links
+            if (!isTeamAdminCheck(context.session, data.teamId)) {
                 throw new Error("Only Admins can create Public links");
             }
         }
+
+        const userEmail = context.userEmail;
 
         // Insert
         await db.insert(links).values({
             ...data,
             applicationId: (data.applicationId && data.applicationId !== 'none') ? data.applicationId : null,
             categoryId: (data.categoryId && data.categoryId !== 'none') ? data.categoryId : null,
-            userEmail: session.user.email,
-            createdBy: session.user.email,
+            userEmail,
+            createdBy: userEmail,
         });
 
         return { success: true };
@@ -141,11 +149,9 @@ export const createLink = createServerFn({ method: "POST" })
  * DELETE LINK
  */
 export const deleteLink = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => z.object({ id: z.string().uuid(), teamId: z.string().uuid() }).parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
+    .handler(async ({ data, context }) => {
         const link = await db.query.links.findFirst({
             where: eq(links.id, data.id),
         });
@@ -153,9 +159,8 @@ export const deleteLink = createServerFn({ method: "POST" })
         if (!link) throw new Error("Link not found");
 
         // RBAC for Deletion
-        const permission = session.permissions?.find((p: any) => p.teamId === data.teamId);
-        const isAdmin = permission?.role === "ADMIN";
-        const isOwner = link.userEmail === session.user.email;
+        const isAdmin = isTeamAdminCheck(context.session, data.teamId);
+        const isOwner = link.userEmail === context.userEmail;
 
         if (link.visibility === "public") {
             if (!isAdmin) throw new Error("Only Admins can delete Public links");
@@ -172,22 +177,21 @@ export const deleteLink = createServerFn({ method: "POST" })
  * INCREMENT USAGE
  */
 export const trackLinkUsage = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
     .handler(async ({ data }) => {
-        // Simple fire-and-forget increment, generally safe to allow any auth user
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
         await db.update(links)
             .set({ usageCount: sql`${links.usageCount} + 1` })
             .where(eq(links.id, data.id));
 
         return { success: true };
     });
+
 /**
  * UPDATE LINK
  */
 export const updateLink = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((input: unknown) => z.object({
         id: z.string().uuid(),
         teamId: z.string().uuid(),
@@ -199,10 +203,7 @@ export const updateLink = createServerFn({ method: "POST" })
         applicationId: z.string().uuid().nullable().optional(),
         tags: z.array(z.string()).optional(),
     }).parse(input))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
+    .handler(async ({ data, context }) => {
         const link = await db.query.links.findFirst({
             where: eq(links.id, data.id),
         });
@@ -210,9 +211,8 @@ export const updateLink = createServerFn({ method: "POST" })
         if (!link) throw new Error("Link not found");
 
         // RBAC for Update
-        const permission = session.permissions?.find((p: any) => p.teamId === link.teamId);
-        const isAdmin = permission?.role === "ADMIN";
-        const isOwner = link.userEmail === session.user.email;
+        const isAdmin = isTeamAdminCheck(context.session, link.teamId);
+        const isOwner = link.userEmail === context.userEmail;
 
         if (link.visibility === "public") {
             if (!isAdmin) throw new Error("Only Admins can update Public links");
@@ -222,17 +222,22 @@ export const updateLink = createServerFn({ method: "POST" })
         }
 
         const { id, ...updateFields } = data;
+        const userEmail = context.userEmail;
 
-        const updates = {
+        const updates: Record<string, unknown> = {
             ...updateFields,
             applicationId: (updateFields.applicationId && updateFields.applicationId !== 'none') ? updateFields.applicationId : (updateFields.applicationId === 'none' ? null : undefined),
             categoryId: (updateFields.categoryId && updateFields.categoryId !== 'none') ? updateFields.categoryId : (updateFields.categoryId === 'none' ? null : undefined),
-            updatedBy: session.user.email,
+            updatedBy: userEmail,
             updatedAt: new Date(),
         };
 
         // Remove undefined fields to avoid overwriting with null
-        Object.keys(updates).forEach(key => (updates as any)[key] === undefined && delete (updates as any)[key]);
+        for (const key of Object.keys(updates)) {
+            if (updates[key] === undefined) {
+                delete updates[key];
+            }
+        }
 
         await db.update(links)
             .set(updates)
@@ -245,22 +250,16 @@ export const updateLink = createServerFn({ method: "POST" })
  * BULK CREATE LINKS
  */
 export const bulkCreateLinks = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => BulkCreateLinkSchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session?.user?.email) {
-            throw new Error("Unauthorized");
-        }
+    .handler(async ({ data, context }) => {
+        const userEmail = context.userEmail;
 
         // Check permissions
         // If any link is public, user must be admin
         const hasPublicLinks = data.links.some(l => l.visibility === 'public');
         if (hasPublicLinks) {
-            // Find permission for this team
-            const permission = session.permissions?.find((p: any) => p.teamId === data.teamId);
-            const isAdmin = permission?.role === 'ADMIN';
-
-            if (!isAdmin) {
+            if (!isTeamAdminCheck(context.session, data.teamId)) {
                 throw new Error("Only admins can create public links");
             }
         }
@@ -272,10 +271,10 @@ export const bulkCreateLinks = createServerFn({ method: "POST" })
             ...link,
             id: crypto.randomUUID(),
             teamId: data.teamId,
-            userEmail: session.user.email!,
-            createdBy: session.user.email!,
+            userEmail,
+            createdBy: userEmail,
             createdAt: new Date(),
-            updatedBy: session.user.email!,
+            updatedBy: userEmail,
             updatedAt: new Date(),
             usageCount: 0,
             applicationId: link.applicationId || null,
@@ -294,6 +293,7 @@ export const bulkCreateLinks = createServerFn({ method: "POST" })
  * Updates multiple links at once with the same values
  */
 export const bulkUpdateLinks = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         z.object({
             teamId: z.string().uuid(),
@@ -303,20 +303,16 @@ export const bulkUpdateLinks = createServerFn({ method: "POST" })
                 categoryId: z.string().uuid().nullable().optional(),
                 applicationId: z.string().uuid().nullable().optional(),
                 tagsToAdd: z.array(z.string()).optional(),
-                replaceTags: z.boolean().optional(), // If true, replace all tags; if false, append
+                replaceTags: z.boolean().optional(),
             }),
         }).parse(data)
     )
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
+    .handler(async ({ data, context }) => {
         const { teamId, linkIds, updates } = data;
-        const userEmail = session.user.email;
+        const userEmail = context.userEmail;
 
         // Get permission for this team
-        const permission = session.permissions?.find((p: any) => p.teamId === teamId);
-        const isAdmin = permission?.role === "ADMIN";
+        const isAdmin = isTeamAdminCheck(context.session, teamId);
 
         // Fetch all links to be updated
         const linksToUpdate = await db.query.links.findMany({
@@ -347,7 +343,7 @@ export const bulkUpdateLinks = createServerFn({ method: "POST" })
         }
 
         // Build the update object
-        const updatePayload: any = {
+        const updatePayload: Record<string, unknown> = {
             updatedBy: userEmail,
             updatedAt: new Date(),
         };
@@ -399,11 +395,9 @@ export const bulkUpdateLinks = createServerFn({ method: "POST" })
  * GET LINK CATEGORIES
  */
 export const getLinkCategories = createServerFn({ method: "GET" })
-    .inputValidator((data: { teamId: string }) => data)
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => z.object({ teamId: z.string().uuid() }).parse(data))
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
         return await db.query.linkCategories.findMany({
             where: eq(linkCategories.teamId, data.teamId),
             orderBy: [desc(linkCategories.createdAt)],
@@ -414,20 +408,18 @@ export const getLinkCategories = createServerFn({ method: "GET" })
  * CREATE LINK CATEGORY
  */
 export const createLinkCategory = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         z.object({
             teamId: z.string().uuid(),
             name: z.string().min(1).max(100),
         }).parse(data)
     )
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
+    .handler(async ({ data, context }) => {
         const [newCategory] = await db.insert(linkCategories).values({
             teamId: data.teamId,
             name: data.name,
-            createdBy: session.user.email,
+            createdBy: context.userEmail,
         }).returning();
 
         return newCategory;
@@ -437,6 +429,7 @@ export const createLinkCategory = createServerFn({ method: "POST" })
  * UPDATE LINK CATEGORY
  */
 export const updateLinkCategory = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         z.object({
             id: z.string().uuid(),
@@ -445,9 +438,6 @@ export const updateLinkCategory = createServerFn({ method: "POST" })
         }).parse(data)
     )
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
         const { id, ...updates } = data;
 
         await db.update(linkCategories)
@@ -463,15 +453,13 @@ export const updateLinkCategory = createServerFn({ method: "POST" })
  * DELETE LINK CATEGORY
  */
 export const deleteLinkCategory = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         z.object({
             id: z.string().uuid(),
         }).parse(data)
     )
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
         // Note: Links with this categoryId will be set to null due to onDelete: "set null"
         await db.delete(linkCategories).where(eq(linkCategories.id, data.id));
 
@@ -482,15 +470,13 @@ export const deleteLinkCategory = createServerFn({ method: "POST" })
  * GET LINK STATS
  */
 export const getLinkStats = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         z.object({
             teamId: z.string().uuid(),
         }).parse(data)
     )
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session || !session.user.email) throw new Error("Unauthorized");
-
         const { teamId } = data;
 
         // Fetch all links for the team to calculate stats
@@ -511,7 +497,7 @@ export const getLinkStats = createServerFn({ method: "GET" })
             .slice(0, 5);
 
         // Category breakdown
-        const categoryStatsMap = allLinks.reduce((acc: any, link) => {
+        const categoryStatsMap = allLinks.reduce<Record<string, StatsBucket>>((acc, link) => {
             const catName = link.category?.name || "Uncategorized";
             if (!acc[catName]) acc[catName] = { count: 0, clicks: 0 };
             acc[catName].count++;
@@ -520,7 +506,7 @@ export const getLinkStats = createServerFn({ method: "GET" })
         }, {});
 
         // Application breakdown
-        const applicationStatsMap = allLinks.reduce((acc: any, link) => {
+        const applicationStatsMap = allLinks.reduce<Record<string, StatsBucket>>((acc, link) => {
             const appName = link.application?.applicationName || "No Application";
             if (!acc[appName]) acc[appName] = { count: 0, clicks: 0 };
             acc[appName].count++;
@@ -529,7 +515,7 @@ export const getLinkStats = createServerFn({ method: "GET" })
         }, {});
 
         // Visibility breakdown
-        const visibilityStatsMap = allLinks.reduce((acc: any, link) => {
+        const visibilityStatsMap = allLinks.reduce<Record<string, StatsBucket>>((acc, link) => {
             const vis = link.visibility;
             if (!acc[vis]) acc[vis] = { count: 0, clicks: 0 };
             acc[vis].count++;
@@ -541,8 +527,8 @@ export const getLinkStats = createServerFn({ method: "GET" })
             totalLinks,
             totalClicks,
             topLinks,
-            categoryStats: Object.entries(categoryStatsMap).map(([name, stats]: any) => ({ name, ...stats })),
-            applicationStats: Object.entries(applicationStatsMap).map(([name, stats]: any) => ({ name, ...stats })),
-            visibilityStats: Object.entries(visibilityStatsMap).map(([name, stats]: any) => ({ name, ...stats })),
+            categoryStats: Object.entries(categoryStatsMap).map(([name, stats]) => ({ name, ...stats })),
+            applicationStats: Object.entries(applicationStatsMap).map(([name, stats]) => ({ name, ...stats })),
+            visibilityStats: Object.entries(visibilityStatsMap).map(([name, stats]) => ({ name, ...stats })),
         };
     });

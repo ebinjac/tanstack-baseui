@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { db } from "@/db";
 import {
     scorecardEntries,
@@ -6,7 +7,6 @@ import {
     scorecardVolume,
     scorecardPublishStatus,
 } from "@/db/schema";
-import { getSession } from "@/app/ssr/auth";
 import { eq } from "drizzle-orm";
 import {
     CreateScorecardEntrySchema,
@@ -19,24 +19,13 @@ import {
     UnpublishScorecardSchema,
     GetPublishStatusSchema,
 } from "@/lib/zod/scorecard.schema";
-import type {
-    CreateScorecardEntry,
-    UpdateScorecardEntry,
-    UpsertAvailability,
-    UpsertVolume,
-    GetScorecardData,
-    PublishScorecard,
-    UnpublishScorecard,
-    GetPublishStatus,
-} from "@/lib/zod/scorecard.schema";
+import { requireAuth, assertTeamAdmin, assertTeamMember } from "@/lib/middleware/auth.middleware";
 
 // Get all scorecard data for a team and year
 export const getScorecardData = createServerFn({ method: "GET" })
-    .inputValidator((data: GetScorecardData) => GetScorecardDataSchema.parse(data))
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => GetScorecardDataSchema.parse(data))
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
         // Get all applications for the team
         const teamApps = await db.query.applications.findMany({
             where: (apps, { eq }) => eq(apps.teamId, data.teamId),
@@ -83,11 +72,9 @@ export const getScorecardData = createServerFn({ method: "GET" })
 
 // Create a new scorecard entry (sub-application)
 export const createScorecardEntry = createServerFn({ method: "POST" })
-    .inputValidator((data: CreateScorecardEntry) => CreateScorecardEntrySchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => CreateScorecardEntrySchema.parse(data))
+    .handler(async ({ data, context }) => {
         // Get the application to verify team access
         const app = await db.query.applications.findFirst({
             where: (apps, { eq }) => eq(apps.id, data.applicationId),
@@ -95,14 +82,9 @@ export const createScorecardEntry = createServerFn({ method: "POST" })
 
         if (!app) throw new Error("Application not found");
 
-        const isAdmin = session.permissions.some(
-            (p) => p.teamId === app.teamId && p.role === "ADMIN"
-        );
-        if (!isAdmin)
-            throw new Error("Forbidden: You must be a team admin to create entries");
+        assertTeamAdmin(context.session, app.teamId);
 
-        const userEmail = session.user.email;
-        if (!userEmail) throw new Error("User email is required for auditing");
+        const userEmail = context.userEmail;
 
         // Generate or use provided scorecardIdentifier
         let identifier = data.scorecardIdentifier?.trim();
@@ -153,11 +135,9 @@ export const createScorecardEntry = createServerFn({ method: "POST" })
 
 // Update a scorecard entry
 export const updateScorecardEntry = createServerFn({ method: "POST" })
-    .inputValidator((data: UpdateScorecardEntry) => UpdateScorecardEntrySchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => UpdateScorecardEntrySchema.parse(data))
+    .handler(async ({ data, context }) => {
         // Get the entry
         const entry = await db.query.scorecardEntries.findFirst({
             where: (entries, { eq }) => eq(entries.id, data.id),
@@ -172,13 +152,9 @@ export const updateScorecardEntry = createServerFn({ method: "POST" })
 
         if (!app) throw new Error("Application not found");
 
-        const isAdmin = session.permissions.some(
-            (p) => p.teamId === app.teamId && p.role === "ADMIN"
-        );
-        if (!isAdmin)
-            throw new Error("Forbidden: You must be a team admin to update entries");
+        assertTeamAdmin(context.session, app.teamId);
 
-        const userEmail = session.user.email;
+        const userEmail = context.userEmail;
 
         // Check uniqueness if updating identifier
         const newIdentifier = data.scorecardIdentifier;
@@ -218,11 +194,9 @@ export const updateScorecardEntry = createServerFn({ method: "POST" })
 
 // Delete a scorecard entry
 export const deleteScorecardEntry = createServerFn({ method: "POST" })
-    .inputValidator((data: { entryId: string }) => data)
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => z.object({ entryId: z.string().uuid() }).parse(data))
+    .handler(async ({ data, context }) => {
         // Get the entry
         const entry = await db.query.scorecardEntries.findFirst({
             where: (entries, { eq }) => eq(entries.id, data.entryId),
@@ -237,11 +211,7 @@ export const deleteScorecardEntry = createServerFn({ method: "POST" })
 
         if (!app) throw new Error("Application not found");
 
-        const isAdmin = session.permissions.some(
-            (p) => p.teamId === app.teamId && p.role === "ADMIN"
-        );
-        if (!isAdmin)
-            throw new Error("Forbidden: You must be a team admin to delete entries");
+        assertTeamAdmin(context.session, app.teamId);
 
         try {
             await db
@@ -258,11 +228,9 @@ export const deleteScorecardEntry = createServerFn({ method: "POST" })
 
 // Upsert (create or update) availability for a month
 export const upsertAvailability = createServerFn({ method: "POST" })
-    .inputValidator((data: UpsertAvailability) => UpsertAvailabilitySchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => UpsertAvailabilitySchema.parse(data))
+    .handler(async ({ data, context }) => {
         // Get the entry
         const entry = await db.query.scorecardEntries.findFirst({
             where: (entries, { eq }) => eq(entries.id, data.scorecardEntryId),
@@ -277,13 +245,9 @@ export const upsertAvailability = createServerFn({ method: "POST" })
 
         if (!app) throw new Error("Application not found");
 
-        const isTeamMember = session.permissions.some(
-            (p) => p.teamId === app.teamId
-        );
-        if (!isTeamMember) throw new Error("Forbidden: Not a team member");
+        assertTeamMember(context.session, app.teamId);
 
-        const userEmail = session.user.email;
-        if (!userEmail) throw new Error("User email is required for auditing");
+        const userEmail = context.userEmail;
 
         try {
             // Check if record exists
@@ -328,11 +292,9 @@ export const upsertAvailability = createServerFn({ method: "POST" })
 
 // Upsert (create or update) volume for a month
 export const upsertVolume = createServerFn({ method: "POST" })
-    .inputValidator((data: UpsertVolume) => UpsertVolumeSchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => UpsertVolumeSchema.parse(data))
+    .handler(async ({ data, context }) => {
         // Get the entry
         const entry = await db.query.scorecardEntries.findFirst({
             where: (entries, { eq }) => eq(entries.id, data.scorecardEntryId),
@@ -347,13 +309,9 @@ export const upsertVolume = createServerFn({ method: "POST" })
 
         if (!app) throw new Error("Application not found");
 
-        const isTeamMember = session.permissions.some(
-            (p) => p.teamId === app.teamId
-        );
-        if (!isTeamMember) throw new Error("Forbidden: Not a team member");
+        assertTeamMember(context.session, app.teamId);
 
-        const userEmail = session.user.email;
-        if (!userEmail) throw new Error("User email is required for auditing");
+        const userEmail = context.userEmail;
 
         try {
             // Check if record exists
@@ -398,9 +356,7 @@ export const upsertVolume = createServerFn({ method: "POST" })
 
 // Check if scorecard identifier is unique
 export const checkScorecardIdentifier = createServerFn({ method: "GET" })
-    .inputValidator((data: { identifier: string; excludeId?: string }) =>
-        CheckScorecardIdentifierSchema.parse(data)
-    )
+    .inputValidator((data: unknown) => CheckScorecardIdentifierSchema.parse(data))
     .handler(async ({ data }) => {
         const existing = await db.query.scorecardEntries.findFirst({
             where: (entries, { eq, and, ne }) => {
@@ -420,11 +376,13 @@ export const checkScorecardIdentifier = createServerFn({ method: "GET" })
 // Get global scorecard data for all teams with leadership filters
 // Now filters data based on publish status - only shows data that was published and not modified since
 export const getGlobalScorecardData = createServerFn({ method: "GET" })
-    .inputValidator((data: { year: number; leadershipFilter?: string; leadershipType?: string }) => data)
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => z.object({
+        year: z.number().int().min(2000).max(2100),
+        leadershipFilter: z.string().optional(),
+        leadershipType: z.string().optional(),
+    }).parse(data))
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
         // Get all active teams
         const allTeams = await db.query.teams.findMany({
             where: (teams, { eq }) => eq(teams.isActive, true),
@@ -540,20 +498,16 @@ export const getGlobalScorecardData = createServerFn({ method: "GET" })
             });
 
             // Filter availability to only include published data
-            // Data is considered published if:
-            // 1. The month has a publish record for that team
-            // 2. The data was created/updated before or at the publish timestamp
             availabilityData = rawAvailability.filter((av) => {
                 const appId = entryToApp[av.scorecardEntryId];
                 const teamId = appToTeam[appId];
                 const key = `${av.year}-${av.month}`;
                 const publishedAt = publishTimestamps[teamId]?.[key];
 
-                if (!publishedAt) return false; // Not published at all
+                if (!publishedAt) return false;
 
-                // Check if data was updated after publishing (should not show)
                 const dataUpdatedAt = av.updatedAt || av.createdAt;
-                if (!dataUpdatedAt) return true; // No update timestamp, consider it published
+                if (!dataUpdatedAt) return true;
 
                 return new Date(dataUpdatedAt) <= new Date(publishedAt);
             });
@@ -565,11 +519,10 @@ export const getGlobalScorecardData = createServerFn({ method: "GET" })
                 const key = `${vol.year}-${vol.month}`;
                 const publishedAt = publishTimestamps[teamId]?.[key];
 
-                if (!publishedAt) return false; // Not published at all
+                if (!publishedAt) return false;
 
-                // Check if data was updated after publishing (should not show)
                 const dataUpdatedAt = vol.updatedAt || vol.createdAt;
-                if (!dataUpdatedAt) return true; // No update timestamp, consider it published
+                if (!dataUpdatedAt) return true;
 
                 return new Date(dataUpdatedAt) <= new Date(publishedAt);
             });
@@ -597,11 +550,9 @@ export const getGlobalScorecardData = createServerFn({ method: "GET" })
 
 // Get publish status for a team/year
 export const getPublishStatus = createServerFn({ method: "GET" })
-    .inputValidator((data: GetPublishStatus) => GetPublishStatusSchema.parse(data))
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => GetPublishStatusSchema.parse(data))
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
         // Get all publish status records for this team and year
         const publishStatus = await db.query.scorecardPublishStatus.findMany({
             where: (ps, { eq, and: andOp }) =>
@@ -628,19 +579,12 @@ export const getPublishStatus = createServerFn({ method: "GET" })
 
 // Publish scorecard for a specific month
 export const publishScorecard = createServerFn({ method: "POST" })
-    .inputValidator((data: PublishScorecard) => PublishScorecardSchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => PublishScorecardSchema.parse(data))
+    .handler(async ({ data, context }) => {
+        assertTeamAdmin(context.session, data.teamId);
 
-        // Check admin permissions
-        const isAdmin = session.permissions.some(
-            (p) => p.teamId === data.teamId && p.role === "ADMIN"
-        );
-        if (!isAdmin) throw new Error("Forbidden: You must be a team admin to publish scorecard");
-
-        const userEmail = session.user.email;
-        if (!userEmail) throw new Error("User email is required for auditing");
+        const userEmail = context.userEmail;
 
         try {
             // Check if record exists
@@ -685,19 +629,12 @@ export const publishScorecard = createServerFn({ method: "POST" })
 
 // Unpublish scorecard for a specific month
 export const unpublishScorecard = createServerFn({ method: "POST" })
-    .inputValidator((data: UnpublishScorecard) => UnpublishScorecardSchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => UnpublishScorecardSchema.parse(data))
+    .handler(async ({ data, context }) => {
+        assertTeamAdmin(context.session, data.teamId);
 
-        // Check admin permissions
-        const isAdmin = session.permissions.some(
-            (p) => p.teamId === data.teamId && p.role === "ADMIN"
-        );
-        if (!isAdmin) throw new Error("Forbidden: You must be a team admin to unpublish scorecard");
-
-        const userEmail = session.user.email;
-        if (!userEmail) throw new Error("User email is required for auditing");
+        const userEmail = context.userEmail;
 
         try {
             // Check if record exists
@@ -732,11 +669,9 @@ export const unpublishScorecard = createServerFn({ method: "POST" })
 
 // Get all published months for global scorecard (for filtering)
 export const getGlobalPublishStatus = createServerFn({ method: "GET" })
-    .inputValidator((data: { year: number }) => data)
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => z.object({ year: z.number().int().min(2000).max(2100) }).parse(data))
     .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
         // Get all published records for the year
         const publishedRecords = await db.query.scorecardPublishStatus.findMany({
             where: (ps, { eq, and: andOp }) =>
@@ -754,4 +689,3 @@ export const getGlobalPublishStatus = createServerFn({ method: "GET" })
 
         return { publishedByTeam };
     });
-

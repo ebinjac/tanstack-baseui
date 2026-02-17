@@ -7,7 +7,7 @@ import { teams, applications } from "@/db/schema/teams";
 import { eq, asc, inArray, sql } from "drizzle-orm";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getSession } from "@/app/ssr/auth";
+import { requireAuth } from "@/lib/middleware/auth.middleware";
 
 // ============================================================================
 // Schemas
@@ -57,7 +57,7 @@ const SyncGroupStructureSchema = z.object({
     teamId: z.string().uuid(),
     groups: z.array(
         z.object({
-            id: z.string(), // Can be temporary ID fornew groups
+            id: z.string(), // Can be temporary ID for new groups
             name: z.string(),
             applicationIds: z.array(z.string().uuid()),
             color: z.string().optional(),
@@ -69,6 +69,7 @@ const SyncGroupStructureSchema = z.object({
 // Get Application Groups for a Team
 // ============================================================================
 export const getApplicationGroups = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         GetApplicationGroupsSchema.parse(data)
     )
@@ -134,7 +135,7 @@ export const getApplicationGroups = createServerFn({ method: "GET" })
                 ungroupedApplications,
                 groupingEnabled: team?.turnoverGroupingEnabled ?? false,
             };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to fetch application groups:", error);
             throw new Error("Failed to fetch application groups");
         }
@@ -144,15 +145,12 @@ export const getApplicationGroups = createServerFn({ method: "GET" })
 // Create Application Group
 // ============================================================================
 export const createApplicationGroup = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         CreateApplicationGroupSchema.parse(data)
     )
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
-        const userEmail = session.user.email;
-        if (!userEmail) throw new Error("User email is required for auditing");
+    .handler(async ({ data, context }) => {
+        const userEmail = context.userEmail;
 
         try {
             // Get max display order
@@ -176,7 +174,7 @@ export const createApplicationGroup = createServerFn({ method: "POST" })
                 .returning();
 
             return { success: true, group: newGroup };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to create application group:", error);
             throw new Error("Failed to create application group");
         }
@@ -186,6 +184,7 @@ export const createApplicationGroup = createServerFn({ method: "POST" })
 // Update Application Group
 // ============================================================================
 export const updateApplicationGroup = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         UpdateApplicationGroupSchema.parse(data)
     )
@@ -206,7 +205,7 @@ export const updateApplicationGroup = createServerFn({ method: "POST" })
                 .returning();
 
             return { success: true, group: updated };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to update application group:", error);
             throw new Error("Failed to update application group");
         }
@@ -216,6 +215,7 @@ export const updateApplicationGroup = createServerFn({ method: "POST" })
 // Delete Application Group
 // ============================================================================
 export const deleteApplicationGroup = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         DeleteApplicationGroupSchema.parse(data)
     )
@@ -232,7 +232,7 @@ export const deleteApplicationGroup = createServerFn({ method: "POST" })
                 .where(eq(applicationGroups.id, data.groupId));
 
             return { success: true };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to delete application group:", error);
             throw new Error("Failed to delete application group");
         }
@@ -242,6 +242,7 @@ export const deleteApplicationGroup = createServerFn({ method: "POST" })
 // Add Applications to Group
 // ============================================================================
 export const addApplicationsToGroup = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         AddApplicationsToGroupSchema.parse(data)
     )
@@ -270,7 +271,7 @@ export const addApplicationsToGroup = createServerFn({ method: "POST" })
             await db.insert(applicationGroupMemberships).values(memberships);
 
             return { success: true };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to add applications to group:", error);
             throw new Error("Failed to add applications to group");
         }
@@ -280,6 +281,7 @@ export const addApplicationsToGroup = createServerFn({ method: "POST" })
 // Remove Application from Group
 // ============================================================================
 export const removeApplicationFromGroup = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         RemoveApplicationFromGroupSchema.parse(data)
     )
@@ -290,7 +292,7 @@ export const removeApplicationFromGroup = createServerFn({ method: "POST" })
                 .where(eq(applicationGroupMemberships.applicationId, data.applicationId));
 
             return { success: true };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to remove application from group:", error);
             throw new Error("Failed to remove application from group");
         }
@@ -300,6 +302,7 @@ export const removeApplicationFromGroup = createServerFn({ method: "POST" })
 // Reorder Groups
 // ============================================================================
 export const reorderGroups = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         ReorderGroupsSchema.parse(data)
     )
@@ -316,7 +319,7 @@ export const reorderGroups = createServerFn({ method: "POST" })
             );
 
             return { success: true };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to reorder groups:", error);
             throw new Error("Failed to reorder groups");
         }
@@ -326,6 +329,7 @@ export const reorderGroups = createServerFn({ method: "POST" })
 // Toggle Turnover Grouping
 // ============================================================================
 export const toggleTurnoverGrouping = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         ToggleTurnoverGroupingSchema.parse(data)
     )
@@ -337,7 +341,7 @@ export const toggleTurnoverGrouping = createServerFn({ method: "POST" })
                 .where(eq(teams.id, data.teamId));
 
             return { success: true, enabled: data.enabled };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to toggle turnover grouping:", error);
             throw new Error("Failed to toggle turnover grouping");
         }
@@ -347,14 +351,12 @@ export const toggleTurnoverGrouping = createServerFn({ method: "POST" })
 // Sync Group Structure (Drag and Drop Updates)
 // ============================================================================
 export const syncGroupStructure = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) =>
         SyncGroupStructureSchema.parse(data)
     )
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-        const userEmail = session.user.email;
-        if (!userEmail) throw new Error("User email is required for auditing");
+    .handler(async ({ data, context }) => {
+        const userEmail = context.userEmail;
 
         try {
             await db.transaction(async (tx) => {
@@ -419,8 +421,9 @@ export const syncGroupStructure = createServerFn({ method: "POST" })
             });
 
             return { success: true };
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Failed to sync group structure:", error);
-            throw new Error("Failed to sync group structure: " + (error.message || "Unknown error"));
+            const message = error instanceof Error ? error.message : "Unknown error";
+            throw new Error("Failed to sync group structure: " + message);
         }
     });

@@ -1,7 +1,7 @@
-import { HeadContent, Scripts, createRootRoute, useLocation } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRouteWithContext, useLocation } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 
 import appCss from '../styles.css?url'
 import { Toaster } from '@/components/ui/sonner'
@@ -9,9 +9,10 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Header } from '@/components/header'
 import { SessionGuard } from '@/components/session-guard'
 import { getSession } from '@/app/ssr/auth'
+import type { RouterContext } from '@/router'
 
-export const Route = createRootRoute({
-  loader: async () => {
+export const Route = createRootRouteWithContext<RouterContext>()({
+  beforeLoad: async () => {
     try {
       const session = await getSession()
       return { session }
@@ -44,10 +45,8 @@ export const Route = createRootRoute({
 })
 
 
-const queryClient = new QueryClient()
-
 function RootDocument({ children }: { children: React.ReactNode }) {
-  const { session } = Route.useLoaderData()
+  const { session, queryClient } = Route.useRouteContext()
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith('/admin')
 
@@ -87,4 +86,5 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     </html>
   )
 }
+
 

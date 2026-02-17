@@ -1,5 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { getSession } from '../app/ssr/auth'
+import { createFileRoute, Link, useRouteContext } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import {
@@ -14,16 +13,12 @@ import {
 } from 'lucide-react'
 import { HeroSection } from '../components/landing/hero-section'
 
-export const Route = createFileRoute('/')(({
+export const Route = createFileRoute('/')({
   component: RouteComponent,
-  loader: async () => {
-    const session = await getSession()
-    return { session }
-  },
-}))
+})
 
 function RouteComponent() {
-  const { session } = Route.useLoaderData()
+  const { session } = useRouteContext({ from: '__root__' })
   const [activeTeamId, setActiveTeamId] = useState<string | null>(null)
 
   const { scrollYProgress } = useScroll()

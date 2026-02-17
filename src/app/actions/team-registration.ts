@@ -1,28 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 import { TeamRegistrationSchema } from "@/lib/zod/team-registration.schema";
 import { db } from "@/db";
 import { teamRegistrationRequests, teams } from "@/db/schema/teams";
-import { getSession } from "@/app/ssr/auth";
-import { z } from "zod";
 import { sql } from "drizzle-orm";
+import { requireAuth } from "@/lib/middleware/auth.middleware";
 
 export const registerTeam = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => {
         if (data instanceof FormData) {
-            // If we ever support formData directly, parse it here
-            // For now, we expect JSON
             throw new Error("FormData not supported yet");
         }
         return TeamRegistrationSchema.parse(data);
     })
-    .handler(async ({ data }) => {
-        const session = await getSession();
-
-        // In a real app, you might ensure session exists. 
-        // For now, we'll assume if no session, we use a fallback or error.
-        // Given the prompt implies authenticated context ("requestedBy"), we should try to get email.
-
-        const requestedBy = session?.user?.email || "anonymous";
+    .handler(async ({ data, context }) => {
+        const requestedBy = context.userEmail;
 
         try {
             const [newRequest] = await db.insert(teamRegistrationRequests).values({
@@ -32,16 +25,15 @@ export const registerTeam = createServerFn({ method: "POST" })
                 contactName: data.contactName,
                 contactEmail: data.contactEmail,
                 comments: data.comments,
-                requestedBy: requestedBy,
+                requestedBy,
                 requestedAt: new Date(),
                 status: "pending",
             }).returning();
 
             return { success: true, requestId: newRequest.id };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to register team:", error);
-            // Check for generic database errors (like unique constraint violations)
-            if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
+            if (error && typeof error === 'object' && 'code' in error && (error as Record<string, unknown>).code === '23505') {
                 throw new Error("A request for this team name already exists or team name is taken.");
             }
             throw new Error("Failed to submit team registration request");
@@ -49,7 +41,7 @@ export const registerTeam = createServerFn({ method: "POST" })
     });
 
 export const checkTeamNameAvailability = createServerFn({ method: "GET" })
-    .inputValidator((data: { name: string }) => data)
+    .inputValidator((data: unknown) => z.object({ name: z.string().min(1) }).parse(data))
     .handler(async ({ data }) => {
         const { name } = data;
 
@@ -81,6 +73,7 @@ export const checkTeamNameAvailability = createServerFn({ method: "GET" })
     });
 
 export const getRegistrationRequests = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .handler(async () => {
         try {
             const requests = await db
@@ -89,17 +82,23 @@ export const getRegistrationRequests = createServerFn({ method: "GET" })
                 .orderBy(sql`${teamRegistrationRequests.requestedAt} DESC`);
 
             return requests;
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to fetch registration requests:", error);
             throw new Error("Failed to fetch registration requests");
         }
     });
 
+const UpdateRequestStatusSchema = z.object({
+    requestId: z.string().uuid(),
+    status: z.enum(["approved", "rejected", "pending"]),
+    comments: z.string().optional(),
+});
+
 export const updateRequestStatus = createServerFn({ method: "POST" })
-    .inputValidator((data: { requestId: string, status: "approved" | "rejected" | "pending", comments?: string }) => data)
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        const reviewedBy = session?.user?.email || "admin";
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => UpdateRequestStatusSchema.parse(data))
+    .handler(async ({ data, context }) => {
+        const reviewedBy = context.userEmail;
 
         try {
             const [request] = await db
@@ -113,12 +112,11 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
             }
 
             if (data.status === "approved") {
-                // If approved, create the team as well
                 await db.transaction(async (tx) => {
                     await tx.update(teamRegistrationRequests)
                         .set({
                             status: "approved",
-                            reviewedBy: reviewedBy,
+                            reviewedBy,
                             reviewedAt: new Date(),
                             comments: data.comments || request.comments,
                         })
@@ -137,7 +135,7 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
                 await db.update(teamRegistrationRequests)
                     .set({
                         status: data.status,
-                        reviewedBy: reviewedBy,
+                        reviewedBy,
                         reviewedAt: new Date(),
                         comments: data.comments || request.comments,
                     })
@@ -145,7 +143,7 @@ export const updateRequestStatus = createServerFn({ method: "POST" })
             }
 
             return { success: true };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to update request status:", error);
             throw new Error("Failed to update request status");
         }

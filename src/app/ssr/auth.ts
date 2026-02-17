@@ -1,17 +1,15 @@
-// app/ssr/auth.ts
-
 import { deleteCookie, getCookie, setCookie } from '@tanstack/react-start/server';
 import { sealData, unsealData } from "iron-session";
-import { SESSION_CONFIG, SessionSchema, SessionData } from "@/lib/auth/config";
+import { SESSION_CONFIG, SessionData } from "@/lib/auth/config";
 import { resolveUserPermissions } from "@/lib/auth/service";
-import { SSOUser } from "@/lib/zod/auth.schema";
+import { ssoUserSchema } from "@/lib/zod/auth.schema";
 import { createServerFn } from "@tanstack/react-start";
 
 /**
  * LOGIN: Receives SSO Data -> Calculates Roles -> Sets Encrypted Cookie
  */
 export const loginUser = createServerFn({ method: "POST" })
-    .inputValidator((data: SSOUser) => data) // Validate input matches SSOUser
+    .inputValidator((data: unknown) => ssoUserSchema.parse(data))
     .handler(async ({ data: ssoUser }) => {
 
         // 1. Resolve Permissions from DB

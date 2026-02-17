@@ -1,5 +1,4 @@
-import { createFileRoute, redirect, Link } from '@tanstack/react-router'
-import { getSession } from '../app/ssr/auth'
+import { createFileRoute, redirect, Link, useRouteContext } from '@tanstack/react-router'
 import {
     Card,
     CardContent,
@@ -25,21 +24,20 @@ import { loginUser } from '../app/ssr/auth'
 import { useAuthBlueSSO } from '../components/use-authblue-sso'
 
 export const Route = createFileRoute('/profile')({
-    loader: async () => {
-        const session = await getSession()
-        if (!session) {
+    beforeLoad: ({ context }) => {
+        if (!context.session) {
             throw redirect({
                 to: '/',
             })
         }
-        return { session }
     },
     component: ProfilePage,
 })
 
 function ProfilePage() {
-    const { session } = Route.useLoaderData()
-    const { user, permissions } = session
+    const { session } = useRouteContext({ from: '__root__' })
+    // Session is guaranteed to exist here due to beforeLoad redirect
+    const { user, permissions } = session!
     const ssoUser = useAuthBlueSSO()
     const router = useRouter()
     const [isRefreshing, setIsRefreshing] = useState(false)

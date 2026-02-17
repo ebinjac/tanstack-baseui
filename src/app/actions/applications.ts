@@ -1,22 +1,18 @@
 import { createServerFn } from "@tanstack/react-start";
-import { CreateApplicationSchema, UpdateApplicationSchema } from "@/lib/zod/application.schema";
+import { z } from "zod";
 import { db } from "@/db";
 import { applications } from "@/db/schema/teams";
-import { getSession } from "@/app/ssr/auth";
-
 import { sql } from "drizzle-orm";
+import { CreateApplicationSchema, UpdateApplicationSchema } from "@/lib/zod/application.schema";
+import { requireAuth, assertTeamAdmin } from "@/lib/middleware/auth.middleware";
 
 export const createApplication = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => CreateApplicationSchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
+    .handler(async ({ data, context }) => {
+        assertTeamAdmin(context.session, data.teamId);
 
-        const isAdmin = session.permissions.some(p => p.teamId === data.teamId && p.role === "ADMIN");
-        if (!isAdmin) throw new Error("Forbidden: You must be a team admin to create applications");
-
-        const userEmail = session.user.email;
-        if (!userEmail) throw new Error("User email is required for auditing");
+        const userEmail = context.userEmail;
 
         // cleaning logic: trim strings, convert empty/whitespace to null. Preserve numbers/booleans.
         const cleanedData = Object.fromEntries(
@@ -31,11 +27,8 @@ export const createApplication = createServerFn({ method: "POST" })
 
         // Explicitly check for Asset ID
         if (!cleanedData.assetId) {
-            console.error("Asset ID missing/invalid:", cleanedData.assetId);
             throw new Error("Invalid Asset ID");
         }
-
-        console.log("Creating application with data:", JSON.stringify(cleanedData, null, 2));
 
         try {
             const [newApp] = await db.insert(applications).values({
@@ -45,33 +38,30 @@ export const createApplication = createServerFn({ method: "POST" })
             }).returning();
 
             return { success: true, applicationId: newApp.id };
-        } catch (error: any) {
-            console.error("Failed to create application:", error);
-            // Rethrow the specific error message so the client can show it
-            throw new Error(error.message || "Failed to create application");
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to create application";
+            throw new Error(message);
         }
     });
 
 export const getTeamApplications = createServerFn({ method: "GET" })
-    .inputValidator((data: { teamId: string }) => data)
+    .inputValidator((data: unknown) => z.object({ teamId: z.string().uuid() }).parse(data))
     .handler(async ({ data }) => {
         try {
             const apps = await db.query.applications.findMany({
                 where: (applications, { eq }) => eq(applications.teamId, data.teamId)
             });
             return apps;
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to fetch applications:", error);
             throw new Error("Failed to fetch applications");
         }
     });
 
 export const updateApplication = createServerFn({ method: "POST" })
+    .middleware([requireAuth])
     .inputValidator((data: unknown) => UpdateApplicationSchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
+    .handler(async ({ data, context }) => {
         // Get application to find teamId
         const app = await db.query.applications.findFirst({
             where: (applications, { eq }) => eq(applications.id, data.id)
@@ -79,10 +69,9 @@ export const updateApplication = createServerFn({ method: "POST" })
 
         if (!app) throw new Error("Application not found");
 
-        const isAdmin = session.permissions.some(p => p.teamId === app.teamId && p.role === "ADMIN");
-        if (!isAdmin) throw new Error("Forbidden: You must be a team admin to update applications");
+        assertTeamAdmin(context.session, app.teamId);
 
-        const userEmail = session.user.email;
+        const userEmail = context.userEmail;
 
         try {
             await db.update(applications)
@@ -94,18 +83,16 @@ export const updateApplication = createServerFn({ method: "POST" })
                 .where(sql`${applications.id} = ${data.id}`);
 
             return { success: true };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to update application:", error);
             throw new Error("Failed to update application");
         }
     });
 
 export const deleteApplication = createServerFn({ method: "POST" })
-    .inputValidator((data: { applicationId: string }) => data)
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => z.object({ applicationId: z.string().uuid() }).parse(data))
+    .handler(async ({ data, context }) => {
         // Get application to find teamId
         const app = await db.query.applications.findFirst({
             where: (applications, { eq }) => eq(applications.id, data.applicationId)
@@ -113,22 +100,21 @@ export const deleteApplication = createServerFn({ method: "POST" })
 
         if (!app) throw new Error("Application not found");
 
-        const isAdmin = session.permissions.some(p => p.teamId === app.teamId && p.role === "ADMIN");
-        if (!isAdmin) throw new Error("Forbidden: You must be a team admin to delete applications");
+        assertTeamAdmin(context.session, app.teamId);
 
         try {
             await db.delete(applications)
                 .where(sql`${applications.id} = ${data.applicationId}`);
 
             return { success: true };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to delete application:", error);
             throw new Error("Failed to delete application");
         }
     });
 
 export const checkTeamTLA = createServerFn({ method: "GET" })
-    .inputValidator((data: { teamId: string, tla: string }) => data)
+    .inputValidator((data: unknown) => z.object({ teamId: z.string().uuid(), tla: z.string() }).parse(data))
     .handler(async ({ data }) => {
         try {
             const existing = await db.query.applications.findFirst({
@@ -138,7 +124,7 @@ export const checkTeamTLA = createServerFn({ method: "GET" })
                 )
             });
             return { exists: !!existing };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to check TLA:", error);
             throw new Error("Failed to check TLA");
         }

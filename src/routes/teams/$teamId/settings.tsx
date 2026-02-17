@@ -1,5 +1,4 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { Route as RootRoute } from '../../__root'
+import { createFileRoute, useRouter, useRouteContext } from '@tanstack/react-router'
 import { getTeamById, updateTeam } from '@/app/actions/teams'
 import { createApplication, getTeamApplications, updateApplication, deleteApplication, checkTeamTLA } from '@/app/actions/applications'
 import { useState, useEffect } from 'react'
@@ -113,9 +112,9 @@ function TeamSettingsPage() {
   const queryClient = useQueryClient()
   const router = useRouter()
 
-  // Get session from root route to check permissions
-  const { session } = (RootRoute as any).useLoaderData()
-  const isAdmin = session?.permissions?.some((p: any) => p.teamId === teamId && p.role === 'ADMIN')
+  // Get session from root route context to check permissions
+  const { session } = useRouteContext({ from: '__root__' })
+  const isAdmin = session?.permissions?.some((p: any) => p.teamId === teamId && p.role === 'ADMIN') ?? false
 
   // Action States
   const [viewingApp, setViewingApp] = useState<any>(null)

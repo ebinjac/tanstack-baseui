@@ -7,7 +7,7 @@ export interface HealthCheck {
     status: 'healthy' | 'degraded' | 'unhealthy'
     latency?: number
     message?: string
-    details?: Record<string, any>
+    details?: Record<string, string | number | boolean>
 }
 
 export interface SystemHealth {
@@ -44,14 +44,15 @@ async function checkDatabase(): Promise<HealthCheck> {
                 responseTime: `${latency}ms`
             }
         }
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Database connection failed'
         return {
             name: 'PostgreSQL Database',
             status: 'unhealthy',
             latency: Date.now() - start,
-            message: error.message || 'Database connection failed',
+            message,
             details: {
-                error: error.message
+                error: message
             }
         }
     }
@@ -71,7 +72,7 @@ function checkEnvironmentVariables(): HealthCheck {
     const missing = requiredVars.filter(v => !process.env[v])
     const configured = requiredVars.filter(v => process.env[v])
 
-    const details: Record<string, string> = {}
+    const details: Record<string, string | number | boolean> = {}
     requiredVars.forEach(v => {
         details[v] = process.env[v] ? '✓ Set' : '✗ Missing'
     })
@@ -130,7 +131,7 @@ function checkServer(): HealthCheck {
 
 // Main health check function
 export const getSystemHealth = createServerFn({ method: "GET" })
-    .handler(async (): Promise<SystemHealth> => {
+    .handler(async () => {
         const checks: HealthCheck[] = []
 
         // Run all health checks

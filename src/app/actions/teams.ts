@@ -1,27 +1,25 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getSession } from "@/app/ssr/auth";
+import { z } from "zod";
 import { db } from "@/db";
 import { teams } from "@/db/schema/teams";
-import { desc } from "drizzle-orm";
-
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { UpdateTeamSchema } from "@/lib/zod/team.schema";
+import { requireAuth, assertTeamAdmin } from "@/lib/middleware/auth.middleware";
 
 export const getTeams = createServerFn({ method: "GET" })
+    .middleware([requireAuth])
     .handler(async () => {
-        // Ideally check for admin privileges here
-
         try {
             const allTeams = await db.select().from(teams).orderBy(desc(teams.createdAt));
             return allTeams;
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to fetch teams:", error);
             throw new Error("Failed to fetch teams");
         }
     });
 
 export const getTeamById = createServerFn({ method: "GET" })
-    .inputValidator((data: { teamId: string }) => data)
+    .inputValidator((data: unknown) => z.object({ teamId: z.string().uuid() }).parse(data))
     .handler(async ({ data }) => {
         try {
             const team = await db.query.teams.findFirst({
@@ -31,20 +29,17 @@ export const getTeamById = createServerFn({ method: "GET" })
                 }
             });
             return team;
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to fetch team:", error);
             throw new Error("Failed to fetch team");
         }
     });
 
 export const updateTeam = createServerFn({ method: "POST" })
-    .inputValidator((data: any) => UpdateTeamSchema.parse(data))
-    .handler(async ({ data }) => {
-        const session = await getSession();
-        if (!session) throw new Error("Unauthorized");
-
-        const isAdmin = session.permissions.some(p => p.teamId === data.id && p.role === "ADMIN");
-        if (!isAdmin) throw new Error("Forbidden: You must be a team admin to update team details");
+    .middleware([requireAuth])
+    .inputValidator((data: unknown) => UpdateTeamSchema.parse(data))
+    .handler(async ({ data, context }) => {
+        assertTeamAdmin(context.session, data.id);
 
         try {
             const updatedTeam = await db.update(teams)
@@ -55,14 +50,14 @@ export const updateTeam = createServerFn({ method: "POST" })
                     contactName: data.contactName,
                     contactEmail: data.contactEmail,
                     isActive: data.isActive,
-                    updatedBy: session.user.adsId,
+                    updatedBy: context.session.user.adsId,
                     updatedAt: new Date()
                 })
                 .where(eq(teams.id, data.id))
                 .returning();
 
             return updatedTeam[0];
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Failed to update team:", error);
             throw new Error("Failed to update team");
         }

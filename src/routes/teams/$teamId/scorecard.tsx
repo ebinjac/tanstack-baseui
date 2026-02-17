@@ -1,5 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Route as RootRoute } from "../../__root";
+import { createFileRoute, Link, useRouteContext } from "@tanstack/react-router";
 import { getScorecardData, getPublishStatus, publishScorecard, unpublishScorecard } from "@/app/actions/scorecard";
 import { getTeamById } from "@/app/actions/teams";
 import { useState, useMemo } from "react";
@@ -89,12 +88,12 @@ export const Route = createFileRoute("/teams/$teamId/scorecard")({
 function ScorecardPage() {
   const { team } = Route.useLoaderData();
   const { teamId } = Route.useParams();
-  const { session } = (RootRoute as any).useLoaderData();
+  const { session } = useRouteContext({ from: '__root__' });
   const queryClient = useQueryClient();
 
   const isAdmin = session?.permissions?.some(
     (p: { teamId: string; role: string }) => p.teamId === teamId && p.role === "ADMIN"
-  );
+  ) ?? false;
 
   const [viewMode, setViewMode] = useState<ViewMode>("period");
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("ytd");

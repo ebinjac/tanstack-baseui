@@ -26,6 +26,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/shared/empty-state'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -165,13 +166,15 @@ function AdminTeams() {
                 ) : (filteredTeams?.length ?? 0) === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="h-64 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="rounded-full bg-muted p-4">
-                          <Search className="h-8 w-8 text-muted-foreground/50" />
-                        </div>
-                        <span className="text-muted-foreground font-medium">No teams found</span>
-                        <Button variant="link" onClick={() => { setSearchTerm(''); setStatusFilter('all'); }}>Clear filters</Button>
-                      </div>
+                      <EmptyState
+                        icon={Search}
+                        title="No teams found"
+                        description="No teams match your current filters."
+                        variant="search"
+                        size="md"
+                        actionText="Clear filters"
+                        onAction={() => { setSearchTerm(''); setStatusFilter('all'); }}
+                      />
                     </TableCell>
                   </TableRow>
                 ) : (

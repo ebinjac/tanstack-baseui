@@ -186,7 +186,7 @@ export function CreateLinkDialog({
             {(trigger || mode === 'create') && (
                 <DialogTrigger
                     render={(trigger as any) || (
-                        <Button className="h-11 px-5 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-bold text-xs rounded-xl shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:scale-95 duration-200">
+                        <Button>
                             <Plus className="w-4 h-4" /> Add Link
                         </Button>
                     )}
@@ -468,7 +468,7 @@ export function CreateLinkDialog({
                             {mode === 'view' ? 'Close' : 'Cancel'}
                         </Button>
                         {mode !== 'view' && (
-                            <Button type="submit" disabled={mutation.isPending || updateMutation.isPending} className="px-6 font-bold shadow-md">
+                            <Button type="submit" disabled={mutation.isPending || updateMutation.isPending}>
                                 {mutation.isPending || updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : (mode === 'edit' ? <Check className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />)}
                                 {mode === 'edit' ? 'Update Link' : 'Save Link'}
                             </Button>

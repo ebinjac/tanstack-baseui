@@ -344,11 +344,10 @@ export function MetricsChartSheet({
                                 <Tabs
                                     value={viewLevel}
                                     onValueChange={(v) => setViewLevel(v as ViewLevel)}
-                                    className="w-auto"
                                 >
-                                    <TabsList className="h-8">
-                                        <TabsTrigger value="applications" className="text-xs px-3">Applications</TabsTrigger>
-                                        <TabsTrigger value="entries" className="text-xs px-3">Sub-Apps</TabsTrigger>
+                                    <TabsList>
+                                        <TabsTrigger value="applications">Applications</TabsTrigger>
+                                        <TabsTrigger value="entries">Sub-Apps</TabsTrigger>
                                     </TabsList>
                                 </Tabs>
 
@@ -358,11 +357,10 @@ export function MetricsChartSheet({
                                 <Tabs
                                     value={chartMetric}
                                     onValueChange={(v) => setChartMetric(v as "availability" | "volume")}
-                                    className="w-auto"
                                 >
-                                    <TabsList className="h-8">
-                                        <TabsTrigger value="availability" className="text-xs px-3">Availability</TabsTrigger>
-                                        <TabsTrigger value="volume" className="text-xs px-3">Volume</TabsTrigger>
+                                    <TabsList>
+                                        <TabsTrigger value="availability">Availability</TabsTrigger>
+                                        <TabsTrigger value="volume">Volume</TabsTrigger>
                                     </TabsList>
                                 </Tabs>
                             </div>

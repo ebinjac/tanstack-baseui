@@ -12,6 +12,7 @@ import {
   Download,
   TrendingUp,
   PieChart,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ import { getTurnoverMetrics } from "@/app/actions/turnover";
 import { SECTION_CONFIG, type TurnoverSection } from "@/lib/zod/turnover.schema";
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Pie, PieChart as RechartsPieChart, Legend } from "recharts";
 import type { DateRange } from "react-day-picker";
+import { EmptyState } from "@/components/shared/empty-state";
 import { StatsSummaryItem } from "@/components/link-manager/shared";
 
 export const Route = createFileRoute(
@@ -277,9 +279,12 @@ function TurnoverMetricsPage() {
                 </AreaChart>
               </ChartContainer>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No activity data available for the selected period.
-              </div>
+              <EmptyState
+                icon={BarChart3}
+                title="No activity data"
+                description="No activity data available for the selected period."
+                size="sm"
+              />
             )}
           </CardContent>
         </Card>
@@ -321,9 +326,12 @@ function TurnoverMetricsPage() {
                 </RechartsPieChart>
               </ChartContainer>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No section data available.
-              </div>
+              <EmptyState
+                icon={PieChart}
+                title="No section data"
+                description="No section data available."
+                size="sm"
+              />
             )}
           </CardContent>
         </Card>

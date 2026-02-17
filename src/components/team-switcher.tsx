@@ -6,6 +6,7 @@ import {
     PlusCircle,
     Settings,
     Sparkles,
+    Search,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/popover"
 import { SessionData } from "@/lib/auth/config"
 import { useRouter, useRouterState, Link } from "@tanstack/react-router"
+import { EmptyState } from "@/components/shared/empty-state"
 
 type Team = SessionData["permissions"][number]
 
@@ -148,13 +150,14 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
                         className="h-11 border-none focus:ring-0 bg-transparent"
                     />
                     <CommandList className="max-h-[280px] scrollbar-thin">
-                        <CommandEmpty className="py-8 text-center">
-                            <div className="flex flex-col items-center gap-2">
-                                <div className="h-10 w-10 rounded-xl bg-muted/50 flex items-center justify-center">
-                                    <ChevronsUpDown className="h-5 w-5 text-muted-foreground/50" />
-                                </div>
-                                <span className="text-sm text-muted-foreground">No workspaces found</span>
-                            </div>
+                        <CommandEmpty className="py-4">
+                            <EmptyState
+                                icon={Search}
+                                title="No workspaces found"
+                                description="No workspaces match your search."
+                                variant="search"
+                                size="sm"
+                            />
                         </CommandEmpty>
                         <CommandGroup className="p-2">
                             {teams.map((team) => {

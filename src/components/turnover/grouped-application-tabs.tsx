@@ -1,9 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { Layers } from "lucide-react";
+import { Layers, Boxes } from "lucide-react";
 import type { Application } from "@/db/schema/teams";
 import type { ApplicationGroup } from "@/db/schema/application-groups";
+import { EmptyState } from "@/components/shared/empty-state";
 
 type GroupWithApplications = ApplicationGroup & { applications: Application[] };
 
@@ -81,9 +82,12 @@ export function GroupedApplicationTabs({
 
     if (tabItems.length === 0) {
         return (
-            <div className="text-sm text-muted-foreground italic py-4">
-                No applications available
-            </div>
+            <EmptyState
+                icon={Boxes}
+                title="No applications available"
+                description="No applications are configured for this team. Please add applications to team to manage turnover entries."
+                size="sm"
+            />
         );
     }
 
@@ -160,9 +164,12 @@ export function FlatApplicationTabs({
 }: FlatApplicationTabsProps) {
     if (!applications || applications.length === 0) {
         return (
-            <div className="text-sm text-muted-foreground italic py-4">
-                No applications available
-            </div>
+            <EmptyState
+                icon={Boxes}
+                title="No applications available"
+                description="No applications are configured for this team. Please add applications to team to manage turnover entries."
+                size="sm"
+            />
         );
     }
 

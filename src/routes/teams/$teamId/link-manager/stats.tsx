@@ -55,7 +55,7 @@ function LinkStatsPage() {
                                 <h1 className="text-3xl font-bold tracking-tight text-foreground">Resource Reports</h1>
                             </div>
                         </div>
-                        <Button variant="outline" className="h-12 px-6 gap-2 border-border hover:bg-muted/30 transition-all font-bold text-xs rounded-xl shadow-xl shadow-primary/5 bg-background">
+                        <Button variant="outline">
                             <ExternalLink className="h-4 w-4" /> Export Analytics
                         </Button>
                     </div>
@@ -236,10 +236,12 @@ function CategoryChart({ data }: { data: any[] }) {
                     <CardDescription className="text-xs text-muted-foreground/70">Engagement metrics by category</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <Layers className="h-10 w-10 text-muted-foreground/20 mb-3" />
-                        <p className="text-sm font-bold text-muted-foreground/60">No category data available</p>
-                    </div>
+                    <EmptyState
+                        icon={Layers}
+                        title="No category data"
+                        description="No category data available."
+                        size="sm"
+                    />
                 </CardContent>
             </Card>
         )
@@ -315,10 +317,12 @@ function ApplicationChart({ data }: { data: any[] }) {
                     <CardDescription className="text-xs text-muted-foreground/70">Resources per application</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <Box className="h-10 w-10 text-muted-foreground/20 mb-3" />
-                        <p className="text-sm font-bold text-muted-foreground/60">No application data available</p>
-                    </div>
+                    <EmptyState
+                        icon={Box}
+                        title="No application data"
+                        description="No application data available."
+                        size="sm"
+                    />
                 </CardContent>
             </Card>
         )

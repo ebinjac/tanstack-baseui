@@ -62,6 +62,7 @@ import { toast } from "sonner";
 import { SECTION_CONFIG, type TurnoverSection } from "@/lib/zod/turnover.schema";
 import type { TurnoverEntryWithDetails } from "@/db/schema/turnover";
 import type { Application } from "@/db/schema/teams";
+import { turnoverKeys } from "@/lib/query-keys";
 
 // SLA calculation
 type SlaStatus = "OVERDUE" | "AT_RISK" | "UNATTENDED" | "STALE" | "HEALTHY";
@@ -167,7 +168,7 @@ export function EntryCard({
             toast.success(
                 entry.isImportant ? "Removed from critical items" : "Marked as critical"
             );
-            queryClient.invalidateQueries({ queryKey: ["turnover-entries", teamId] });
+            queryClient.invalidateQueries({ queryKey: turnoverKeys.entries.all(teamId) });
         },
         onError: (error: Error) => {
             toast.error(error.message || "Failed to update");
@@ -178,7 +179,7 @@ export function EntryCard({
         mutationFn: () => deleteTurnoverEntry({ data: { id: entry.id, teamId } }),
         onSuccess: () => {
             toast.success("Entry deleted");
-            queryClient.invalidateQueries({ queryKey: ["turnover-entries", teamId] });
+            queryClient.invalidateQueries({ queryKey: turnoverKeys.entries.all(teamId) });
             setShowDeleteDialog(false);
         },
         onError: (error: Error) => {
@@ -190,7 +191,7 @@ export function EntryCard({
         mutationFn: () => resolveTurnoverEntry({ data: { id: entry.id } }),
         onSuccess: () => {
             toast.success("Entry resolved");
-            queryClient.invalidateQueries({ queryKey: ["turnover-entries", teamId] });
+            queryClient.invalidateQueries({ queryKey: turnoverKeys.entries.all(teamId) });
             setShowResolveDialog(false);
         },
         onError: (error: Error) => {

@@ -17,6 +17,8 @@ import { toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Label } from '@/components/ui/label'
 import { StatsSummaryItem } from '@/components/link-manager/shared'
+import { EmptyState } from '@/components/shared/empty-state'
+import { linkKeys } from '@/lib/query-keys'
 
 // Schema for search params
 const linkSearchSchema = z.object({
@@ -60,7 +62,12 @@ function LinkManagerPage() {
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['links', teamId, searchParams.search, searchParams.visibility, searchParams.applicationId, searchParams.categoryId],
+    queryKey: linkKeys.list(teamId, {
+      search: searchParams.search,
+      visibility: searchParams.visibility,
+      applicationId: searchParams.applicationId,
+      categoryId: searchParams.categoryId,
+    }),
     queryFn: ({ pageParam }) => getLinks({
       data: {
         teamId,
@@ -102,7 +109,7 @@ function LinkManagerPage() {
     mutationFn: (data: { teamId: string, linkIds: string[], updates: any }) => bulkUpdateLinks({ data }),
     onSuccess: (result) => {
       toast.success(`Successfully updated ${result.count} link${result.count !== 1 ? 's' : ''}`)
-      queryClient.invalidateQueries({ queryKey: ['links', teamId] })
+      queryClient.invalidateQueries({ queryKey: linkKeys.team(teamId) })
       setSelectedLinks(new Set())
     },
     onError: (error: Error) => toast.error(error.message || 'Failed to update links')
@@ -279,18 +286,18 @@ const PageHeader = memo(function PageHeader({ teamId }: { teamId: string }) {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <RouterLink to="/teams/$teamId/link-manager/stats" params={{ teamId }}>
-            <Button variant="outline" className="h-11 px-5 gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-bold text-xs rounded-xl shadow-sm bg-background/50 backdrop-blur-sm">
-              <BarChart3 className="h-4 w-4 text-primary" /> Reports
+            <Button variant="outline" size="sm">
+              <BarChart3 className="h-4 w-4" /> Reports
             </Button>
           </RouterLink>
           <RouterLink to="/teams/$teamId/link-manager/categories" params={{ teamId }}>
-            <Button variant="outline" className="h-11 px-5 gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-bold text-xs rounded-xl shadow-sm bg-background/50 backdrop-blur-sm">
-              <Layers className="h-4 w-4 text-purple-600" /> Categories
+            <Button variant="outline" size="sm">
+              <Layers className="h-4 w-4" /> Categories
             </Button>
           </RouterLink>
           <RouterLink to="/teams/$teamId/link-manager/import" params={{ teamId }}>
-            <Button variant="outline" className="h-11 px-5 gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-bold text-xs rounded-xl shadow-sm bg-background/50 backdrop-blur-sm">
-              <Upload className="h-4 w-4 text-indigo-600" /> Bulk Import
+            <Button variant="outline" size="sm">
+              <Upload className="h-4 w-4" /> Bulk Import
             </Button>
           </RouterLink>
           <CreateLinkDialog teamId={teamId} />
@@ -341,22 +348,22 @@ const BulkActionsBar = memo(function BulkActionsBar({ selectedCount, categories,
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center bg-white/10 backdrop-blur-md rounded-xl p-1 border border-white/10">
-              <Button onClick={() => onBulkVisibility('public')} variant="ghost" size="sm" className="h-9 rounded-lg hover:bg-white/20 text-white font-bold text-xs gap-2">
-                <Globe2 className="h-3.5 w-3.5" /> Public
+              <Button onClick={() => onBulkVisibility('public')} variant="ghost" size="sm">
+                <Globe2 className="h-4 w-4" /> Public
               </Button>
-              <Button onClick={() => onBulkVisibility('private')} variant="ghost" size="sm" className="h-9 rounded-lg hover:bg-white/20 text-white font-bold text-xs gap-2">
-                <Lock className="h-3.5 w-3.5" /> Private
+              <Button onClick={() => onBulkVisibility('private')} variant="ghost" size="sm">
+                <Lock className="h-4 w-4" /> Private
               </Button>
             </div>
 
             <Select onValueChange={(val) => onBulkCategory(val === 'none' ? null : (val as string))}>
-              <SelectTrigger className="h-11 w-[180px] bg-white/10 border-white/10 text-white text-xs font-bold rounded-xl">
+              <SelectTrigger className="w-[180px]">
                 <Layers className="h-4 w-4 mr-2" />
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="none" className="font-bold text-xs">Uncategorized</SelectItem>
-                {categories?.map(c => <SelectItem key={c.id} value={c.id} className="font-bold text-xs">{c.name}</SelectItem>)}
+              <SelectContent>
+                <SelectItem value="none">Uncategorized</SelectItem>
+                {categories?.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
               </SelectContent>
             </Select>
 
@@ -364,17 +371,17 @@ const BulkActionsBar = memo(function BulkActionsBar({ selectedCount, categories,
 
             <Popover>
               <PopoverTrigger>
-                <Button className="h-11 bg-white text-primary hover:bg-white/90 font-bold text-xs rounded-xl px-5 gap-2 shadow-xl shadow-white/10">
+                <Button variant="secondary">
                   <Tag className="h-4 w-4" /> Bulk Tags
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-80 p-6 rounded-3xl" align="end">
+              <PopoverContent className="w-80 p-6" align="end">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold text-muted-foreground mr-1">Comma Separated Tags</Label>
-                    <Input placeholder="operations, secure, docs..." value={bulkTagsInput} onChange={(e) => setBulkTagsInput(e.target.value)} className="h-11 rounded-xl bg-muted/50 border-transparent focus:bg-background" />
+                    <Label>Comma Separated Tags</Label>
+                    <Input placeholder="operations, secure, docs..." value={bulkTagsInput} onChange={(e) => setBulkTagsInput(e.target.value)} />
                   </div>
-                  <Button className="w-full h-11 rounded-xl font-bold text-xs" disabled={!bulkTagsInput.trim() || isPending}>
+                  <Button className="w-full" disabled={!bulkTagsInput.trim() || isPending}>
                     {isPending ? "Updating..." : "Add Tags"}
                   </Button>
                 </div>
@@ -567,17 +574,14 @@ const ActiveFiltersRow = memo(function ActiveFiltersRow({ searchParams, selected
 // ============================================================================
 const EmptyLinksState = memo(function EmptyLinksState({ onClearFilters }: { onClearFilters: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center py-32 bg-card/10 backdrop-blur-sm border border-dashed border-border/50 rounded-[2.5rem] text-center space-y-6">
-      <div className="h-24 w-24 rounded-full bg-muted/20 flex items-center justify-center text-muted-foreground animate-pulse">
-        <Search className="h-10 w-10 opacity-30" />
-      </div>
-      <div className="space-y-2">
-        <h3 className="text-2xl font-black tracking-tight italic">No resources found</h3>
-        <p className="text-muted-foreground max-w-sm font-medium">We couldn't find any links matching your current filters. Try adjusting your search criteria.</p>
-      </div>
-      <Button variant="outline" onClick={onClearFilters} className="h-11 px-8 rounded-2xl font-bold text-xs border-primary/20 hover:bg-primary/5">
-        Clear Filters
-      </Button>
-    </div>
+    <EmptyState
+      icon={Search}
+      title="No resources found"
+      description="We couldn't find any links matching your current filters. Try adjusting your search criteria."
+      variant="search"
+      size="lg"
+      actionText="Clear Filters"
+      onAction={onClearFilters}
+    />
   )
 })

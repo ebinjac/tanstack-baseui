@@ -133,10 +133,10 @@ function CategoriesPage() {
                     </div>
                   </div>
                   <div className="flex gap-3 justify-end">
-                    <Button type="button" variant="ghost" className="h-12 px-8 rounded-2xl font-bold text-xs hover:bg-muted/50 transition-colors" onClick={() => setIsCreating(false)}>
+                    <Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>
                       Cancel
                     </Button>
-                    <Button type="submit" className="h-12 px-8 rounded-2xl font-bold text-xs shadow-lg shadow-primary/20" disabled={createMutation.isPending || !newName.trim()}>
+                    <Button type="submit" disabled={createMutation.isPending || !newName.trim()}>
                       {createMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />}
                       Create Collection
                     </Button>
@@ -224,11 +224,11 @@ function CategoryCard({ category, isEditing, editName, onEditNameChange, onStart
               />
             </div>
             <div className="flex gap-2 justify-end">
-              <Button size="sm" className="h-8 px-4 rounded-lg font-bold text-[11px]" onClick={onSaveEdit}>
-                <Check className="h-3 w-3 mr-1.5" /> Save
+              <Button size="sm" onClick={onSaveEdit}>
+                <Check className="h-4 w-4" /> Save
               </Button>
-              <Button size="sm" variant="ghost" className="h-8 px-4 rounded-lg font-bold text-[11px]" onClick={onCancelEdit}>
-                <X className="h-3 w-3 mr-1.5" /> Cancel
+              <Button size="sm" variant="ghost" onClick={onCancelEdit}>
+                <X className="h-4 w-4" /> Cancel
               </Button>
             </div>
           </div>

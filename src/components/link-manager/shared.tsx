@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { ArrowLeft, Loader2, Search, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { EmptyState as SharedEmptyState } from '@/components/shared/empty-state'
 
 // ============================================================================
 // Page Header with Back Button
@@ -58,25 +59,24 @@ export function ContentLoading({ message = "Loading..." }: ContentLoadingProps) 
 }
 
 // ============================================================================
-// Empty State
+// Empty State - Re-export from shared with backwards compatibility
 // ============================================================================
 interface EmptyStateProps {
     icon: LucideIcon
     title: string
     description: string
     action?: ReactNode
+    size?: 'sm' | 'md' | 'lg'
 }
 
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, size = 'md' }: EmptyStateProps) {
     return (
-        <div className="flex flex-col items-center justify-center py-20 bg-muted/20 border border-dashed border-border rounded-2xl text-center space-y-4">
-            <Icon className="h-8 w-8 text-muted-foreground/20" />
-            <div className="space-y-1">
-                <h3 className="text-lg font-bold">{title}</h3>
-                <p className="text-xs text-muted-foreground max-w-xs mx-auto">{description}</p>
-            </div>
-            {action}
-        </div>
+        <SharedEmptyState
+            icon={icon}
+            title={title}
+            description={description}
+            size={size}
+        />
     )
 }
 

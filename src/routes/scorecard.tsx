@@ -28,6 +28,8 @@ import {
     RotateCcw,
 } from "lucide-react";
 import { getGlobalScorecardData } from "@/app/actions/scorecard";
+import { EmptyState } from "@/components/shared/empty-state";
+import { scorecardKeys } from "@/lib/query-keys";
 
 // Import enterprise scorecard components
 import {
@@ -95,7 +97,11 @@ function GlobalScorecardPage() {
 
     // Fetch global scorecard data
     const { data: scorecardData, isLoading } = useQuery({
-        queryKey: ["global-scorecard", selectedYear, leadershipType, leadershipSearch],
+        queryKey: scorecardKeys.global.filtered({
+            year: selectedYear,
+            leadershipType: leadershipType !== "all" ? leadershipType : undefined,
+            leadershipSearch: leadershipSearch || undefined,
+        }),
         queryFn: () => getGlobalScorecardData({
             data: {
                 year: selectedYear,
@@ -342,10 +348,13 @@ function GlobalScorecardPage() {
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
                     ) : teamsWithApps.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-16 text-center">
-                            <Activity className="h-10 w-10 text-muted-foreground/40 mb-3" />
-                            <p className="text-sm font-medium text-muted-foreground">No teams match your filters</p>
-                        </div>
+                        <EmptyState
+                            icon={Activity}
+                            title="No teams match your filters"
+                            description="Try adjusting your search criteria or clear filters."
+                            variant="search"
+                            size="md"
+                        />
                     ) : (
                         teamsWithApps.map((team: Team) => (
                             <TeamSection

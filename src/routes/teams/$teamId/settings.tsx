@@ -94,6 +94,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { EmptyState } from '@/components/shared/empty-state'
 
 export const Route = createFileRoute('/teams/$teamId/settings')({
   loader: async ({ params }) => {
@@ -237,8 +238,8 @@ function TeamSettingsPage() {
             </div>
           </div>
           {isAdmin && (
-            <Button variant="outline" size="sm" className="h-9 rounded-xl font-bold text-xs gap-2 border-muted-foreground/20 hover:bg-muted" onClick={() => setIsEditingTeam(true)}>
-              <Pencil className="h-3.5 w-3.5" /> Edit Details
+            <Button variant="outline" size="sm" onClick={() => setIsEditingTeam(true)}>
+              <Pencil className="h-4 w-4" /> Edit Details
             </Button>
           )}
         </div>
@@ -246,48 +247,31 @@ function TeamSettingsPage() {
 
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-        <div className="sticky top-0 z-30 -mx-4 px-4 py-3 bg-background/95 backdrop-blur-xl border-b border-border/40 mb-6">
-          <TabsList className="bg-muted/60 p-1.5 rounded-xl border border-border/40 w-auto inline-flex h-auto gap-1">
-            {[
-              { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-              { id: 'applications', label: 'Applications', icon: Boxes, count: stats.total },
-              { id: 'members', label: 'Members', icon: Users2 },
-              { id: 'resources', label: 'Resources', icon: Wrench },
-              { id: 'support', label: 'Support', icon: LifeBuoy },
-            ].map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className={cn(
-                  "relative z-10 flex flex-row items-center gap-2 px-5 py-2.5 h-10 rounded-[10px] transition-all duration-300 font-medium text-sm border-none shadow-none bg-transparent hover:text-foreground",
-                  activeTab === tab.id ? "text-primary" : "text-muted-foreground/60"
-                )}
-              >
-                <tab.icon className={cn("h-4 w-4", activeTab === tab.id ? "text-primary" : "text-current")} />
-
-
-                <span>{tab.label}</span>
-
-                {tab.count !== undefined && (
-                  <span className={cn(
-                    "ml-1.5 text-[10px] px-1.5 py-0.5 rounded-md font-bold border transition-colors",
-                    activeTab === tab.id ? "bg-primary/10 text-primary border-primary/20" : "bg-background/50 text-muted-foreground border-transparent"
-                  )}>
-                    {tab.count}
-                  </span>
-                )}
-
-                {activeTab === tab.id && (
-                  <motion.div
-                    layoutId="active-tab-background"
-                    className="absolute inset-0 bg-background shadow-sm border border-border/60 rounded-[10px] -z-10"
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                  />
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
+        <TabsList>
+          <TabsTrigger value="overview">
+            <LayoutDashboard className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="applications">
+            <Boxes className="h-4 w-4" />
+            Applications
+            {stats.total > 0 && (
+              <span className="ml-1 text-xs">{stats.total}</span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="members">
+            <Users2 className="h-4 w-4" />
+            Members
+          </TabsTrigger>
+          <TabsTrigger value="resources">
+            <Wrench className="h-4 w-4" />
+            Resources
+          </TabsTrigger>
+          <TabsTrigger value="support">
+            <LifeBuoy className="h-4 w-4" />
+            Support
+          </TabsTrigger>
+        </TabsList>
 
 
 
@@ -354,11 +338,11 @@ function TeamSettingsPage() {
                   <div className="space-y-3 pt-2">
                     <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground px-1">Quick Links</p>
                     <div className="grid gap-2">
-                      <Button variant="outline" size="sm" className="justify-start gap-2 h-9 text-xs font-semibold" render={<a href={`mailto:${team.contactEmail}`} />}>
-                        <Mail className="h-3.5 w-3.5" /> Email Direct
+                      <Button variant="outline" size="sm" className="justify-start" render={<a href={`mailto:${team.contactEmail}`} />}>
+                        <Mail className="h-4 w-4" /> Email Direct
                       </Button>
-                      <Button variant="outline" size="sm" className="justify-start gap-2 h-9 text-xs font-semibold">
-                        <MessageSquare className="h-3.5 w-3.5" /> Slack Message
+                      <Button variant="outline" size="sm" className="justify-start">
+                        <MessageSquare className="h-4 w-4" /> Slack Message
                       </Button>
                     </div>
                   </div>
@@ -416,8 +400,13 @@ function TeamSettingsPage() {
                     </TableRow>
                   ) : filteredApps?.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-32 text-center text-muted-foreground italic">
-                        No applications found matching your criteria.
+                      <TableCell colSpan={6} className="h-32">
+                        <EmptyState
+                          icon={Boxes}
+                          title="No applications found"
+                          description="No applications found matching your criteria."
+                          size="sm"
+                        />
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -540,8 +529,8 @@ function TeamSettingsPage() {
                   <ToolItem icon={<RefreshCw className="h-4 w-4" />} title="Turnover" desc="Shift handover and operational transition management." link="#" />
                 </div>
                 <div className="p-4 bg-muted/5 flex justify-center">
-                  <Button variant="ghost" size="sm" className="text-xs font-semibold gap-2">
-                    Request Access to More Tools <ArrowUpRight className="h-3 w-3" />
+                  <Button variant="ghost" size="sm">
+                    Request Access to More Tools <ArrowUpRight className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
@@ -565,7 +554,7 @@ function TeamSettingsPage() {
                   <h3 className="font-bold text-lg">Slack Communality</h3>
                   <p className="text-xs text-muted-foreground max-w-[200px]">Real-time chat and incident coordination for the whole team.</p>
                 </div>
-                <Button className="w-full gap-2 font-bold shadow-lg shadow-primary/20">
+                <Button className="w-full">
                   Open Slack Channel <ExternalLink className="h-4 w-4" />
                 </Button>
               </Card>
@@ -578,7 +567,7 @@ function TeamSettingsPage() {
                   <h3 className="font-bold text-lg">Official Reach Out</h3>
                   <p className="text-xs text-muted-foreground max-w-[200px]">Send a formal request or query to our technical leads.</p>
                 </div>
-                <Button variant="outline" className="w-full gap-2 font-bold" render={<a href={`mailto:${team.contactEmail}`} />}>
+                <Button variant="outline" className="w-full" render={<a href={`mailto:${team.contactEmail}`} />}>
                   Email Technical Lead <Mail className="h-4 w-4" />
                 </Button>
               </Card>
@@ -1143,18 +1132,18 @@ function AddApplicationDialog({ teamId, onSuccess }: { teamId: string, onSuccess
             <div className="mt-8 pt-6 border-t flex justify-between items-center px-4">
               <div className="flex gap-2">
                 {currentStep > 1 && (
-                  <Button type="button" variant="ghost" onClick={prevStep} disabled={createMutation.isPending} className="hover:bg-muted font-bold text-xs uppercase tracking-widest">
+                  <Button type="button" variant="ghost" onClick={prevStep} disabled={createMutation.isPending}>
                     <ChevronLeft className="mr-2 h-4 w-4" /> Back
                   </Button>
                 )}
               </div>
               <div className="flex gap-2">
                 {currentStep < 4 ? (
-                  <Button type="button" onClick={(e) => nextStep(e)} className="px-8 shadow-sm font-bold text-xs uppercase tracking-widest">
+                  <Button type="button" onClick={(e) => nextStep(e)}>
                     Continue <ChevronRight className="ml-2 h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button type="submit" disabled={createMutation.isPending || !!tlaError} className="px-10 shadow-md font-bold text-xs uppercase tracking-widest bg-primary hover:bg-primary/90">
+                  <Button type="submit" disabled={createMutation.isPending || !!tlaError}>
                     {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Complete Setup
                   </Button>
@@ -1589,10 +1578,12 @@ function MembersTab({ adminGroup, userGroup }: { adminGroup: string; userGroup: 
                 <p className="text-sm text-muted-foreground">Failed to load administrators</p>
               </div>
             ) : adminMembers.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-                <Users2 className="h-8 w-8 text-muted-foreground/40 mb-2" />
-                <p className="text-sm text-muted-foreground">No administrators found</p>
-              </div>
+              <EmptyState
+                icon={Users2}
+                title="No administrators found"
+                description="No administrators are configured for this team."
+                size="sm"
+              />
             ) : (
               <div className="divide-y max-h-[400px] overflow-y-auto">
                 {adminMembers.map((name, idx) => (
@@ -1643,10 +1634,12 @@ function MembersTab({ adminGroup, userGroup }: { adminGroup: string; userGroup: 
                 <p className="text-sm text-muted-foreground">Failed to load members</p>
               </div>
             ) : userMembers.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-                <Users2 className="h-8 w-8 text-muted-foreground/40 mb-2" />
-                <p className="text-sm text-muted-foreground">No members found</p>
-              </div>
+              <EmptyState
+                icon={Users2}
+                title="No members found"
+                description="No members are configured for this team."
+                size="sm"
+              />
             ) : (
               <div className="divide-y max-h-[400px] overflow-y-auto">
                 {userMembers.map((name, idx) => (

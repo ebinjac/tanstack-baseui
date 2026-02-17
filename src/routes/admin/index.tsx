@@ -24,6 +24,7 @@ import {
   ChartLegendContent
 } from '@/components/ui/chart'
 import { format, subDays, startOfDay, isSameDay } from 'date-fns'
+import { adminKeys, teamKeys } from '@/lib/query-keys'
 
 export const Route = createFileRoute('/admin/')({
   component: AdminDashboard,
@@ -31,12 +32,12 @@ export const Route = createFileRoute('/admin/')({
 
 function AdminDashboard() {
   const { data: requests } = useQuery({
-    queryKey: ['registration-requests'],
+    queryKey: adminKeys.registrationRequests(),
     queryFn: () => getRegistrationRequests(),
   })
 
   const { data: teams } = useQuery({
-    queryKey: ['teams'],
+    queryKey: teamKeys.list(),
     queryFn: () => getTeams(),
   })
 

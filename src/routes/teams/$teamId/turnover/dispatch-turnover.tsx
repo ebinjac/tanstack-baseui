@@ -51,6 +51,7 @@ import type { TurnoverEntryWithDetails } from "@/db/schema/turnover";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatsSummaryItem } from "@/components/link-manager/shared";
 import { motion, AnimatePresence } from "framer-motion";
+import { turnoverKeys } from "@/lib/query-keys";
 
 export const Route = createFileRoute(
     "/teams/$teamId/turnover/dispatch-turnover"
@@ -141,7 +142,7 @@ function DispatchTurnoverPage() {
 
     // Keep entries fresh
     const { data: entries } = useQuery({
-        queryKey: ["dispatch-entries", teamId],
+        queryKey: turnoverKeys.dispatch(teamId),
         queryFn: () => getDispatchEntries({ data: { teamId } }),
         initialData: initialEntries,
         staleTime: 30000,
@@ -149,7 +150,7 @@ function DispatchTurnoverPage() {
 
     // Check finalize cooldown
     const { data: canFinalizeData, isLoading: checkingCooldown } = useQuery({
-        queryKey: ["can-finalize", teamId],
+        queryKey: turnoverKeys.canFinalize(teamId),
         queryFn: () => canFinalizeTurnover({ data: { teamId } }),
     });
 
@@ -159,8 +160,8 @@ function DispatchTurnoverPage() {
             finalizeTurnover({ data: { teamId, notes: finalizeNotes } }),
         onSuccess: () => {
             toast.success("Turnover finalized successfully");
-            queryClient.invalidateQueries({ queryKey: ["can-finalize", teamId] });
-            queryClient.invalidateQueries({ queryKey: ["dispatch-entries", teamId] });
+            queryClient.invalidateQueries({ queryKey: turnoverKeys.canFinalize(teamId) });
+            queryClient.invalidateQueries({ queryKey: turnoverKeys.dispatch(teamId) });
             setFinalizeDialogOpen(false);
             setFinalizeNotes("");
         },

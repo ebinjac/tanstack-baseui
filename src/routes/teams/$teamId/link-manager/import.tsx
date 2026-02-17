@@ -396,19 +396,11 @@ function InputStep({ rawInput, setRawInput, selectedFormat, setSelectedFormat, d
           </div>
 
           <Tabs value={selectedFormat} onValueChange={(v) => setSelectedFormat(v as ImportFormat)} className="w-full space-y-12">
-            <TabsList className="bg-transparent h-auto p-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <TabsList>
               {(Object.keys(FORMAT_CONFIG) as ImportFormat[]).map((format) => (
-                <TabsTrigger key={format} value={format} className={cn(
-                  "group relative flex flex-col items-center justify-center gap-4 p-6 h-[140px] w-full border border-border/50 rounded-[2rem] transition-all duration-300 text-center bg-card hover:bg-muted/30 hover:shadow-2xl hover:shadow-primary/5 overflow-hidden",
-                  "data-[state=active]:bg-primary/[0.03] data-[state=active]:border-primary data-[state=active]:shadow-2xl data-[state=active]:shadow-primary/10"
-                )}>
-                  <div className={cn("w-14 h-14 shrink-0 rounded-2xl flex items-center justify-center transition-all duration-500", selectedFormat === format ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-105")}>
-                    {FORMAT_CONFIG[format].icon}
-                  </div>
-                  <span className={cn("text-base font-bold transition-colors leading-none", selectedFormat === format ? "text-primary" : "text-foreground")}>{FORMAT_CONFIG[format].label}</span>
-                  {selectedFormat === format && (
-                    <motion.div layoutId="active-format-check" className="absolute top-5 right-5"><div className="bg-primary text-primary-foreground rounded-full p-1 shadow-sm"><Check className="w-3.5 h-3.5" /></div></motion.div>
-                  )}
+                <TabsTrigger key={format} value={format}>
+                  {FORMAT_CONFIG[format].icon}
+                  {FORMAT_CONFIG[format].label}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -420,11 +412,13 @@ function InputStep({ rawInput, setRawInput, selectedFormat, setSelectedFormat, d
                     <h4 className="font-bold text-base flex items-center gap-2 mb-3"><AlertCircle className="w-4 h-4 text-primary" /> Setup Helper</h4>
                     <div className="space-y-4">
                       <p className="text-sm text-muted-foreground leading-relaxed">{FORMAT_CONFIG[format].description}</p>
-                      <Button variant="outline" size="sm" onClick={loadExample} className="rounded-xl font-bold text-xs gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all shadow-sm">Load Sample Data <ArrowRight className="w-4 h-4" /></Button>
+                      <Button variant="outline" size="sm" onClick={loadExample}>
+                        Load Sample Data <ArrowRight className="w-4 h-4" />
+                      </Button>
                     </div>
                   </Card>
-                  <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="lg:col-span-2 w-full h-full min-h-[160px] rounded-3xl border-2 border-dashed border-primary/20 hover:border-primary/40 hover:bg-primary/[0.02] transition-all flex flex-col gap-3 group shadow-inner">
-                    <div className="h-14 w-14 rounded-full bg-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform"><Upload className="w-6 h-6 text-primary" /></div>
+                  <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="lg:col-span-2 w-full h-full min-h-[160px] border-2 border-dashed flex flex-col gap-3">
+                    <div className="h-14 w-14 rounded-full bg-primary/5 flex items-center justify-center"><Upload className="w-6 h-6 text-primary" /></div>
                     <div className="space-y-1"><p className="font-bold text-lg">Drop your file here</p><p className="text-xs text-muted-foreground">Supports .CSV, .JSON, .HTML, and .MD exports</p></div>
                   </Button>
                 </div>
@@ -441,7 +435,7 @@ function InputStep({ rawInput, setRawInput, selectedFormat, setSelectedFormat, d
             </div>
             <div className="flex items-center gap-2">
               <Badge variant="secondary" className="px-3 h-8 rounded-lg bg-muted/50 border-border/50 font-mono text-[11px] font-bold">{rawInput.length.toLocaleString()} characters</Badge>
-              {rawInput && <Button variant="ghost" size="sm" onClick={() => setRawInput("")} className="h-8 text-xs font-bold text-destructive hover:bg-destructive/5">Clear editor</Button>}
+              {rawInput && <Button variant="ghost" size="sm" onClick={() => setRawInput("")}>Clear editor</Button>}
             </div>
           </div>
           <div className="relative group/textarea">
@@ -452,9 +446,8 @@ function InputStep({ rawInput, setRawInput, selectedFormat, setSelectedFormat, d
             </div>
           </div>
           <div className="flex items-center justify-center pt-6 pb-20">
-            <Button size="lg" onClick={parseLinks} disabled={!rawInput.trim()} className="h-14 px-10 gap-3 rounded-2xl shadow-xl shadow-primary/25 font-bold text-base transition-all active:scale-95 group overflow-hidden relative">
-              <span className="relative z-10 flex items-center gap-3">Proceed to Review <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
-              <div className="absolute inset-0 bg-gradient-to-r from-primary to-indigo-600 opacity-0 group-hover:opacity-10 transition-opacity" />
+            <Button size="lg" onClick={parseLinks} disabled={!rawInput.trim()}>
+              Proceed to Review <ArrowRight className="w-5 h-5" />
             </Button>
           </div>
         </div>
@@ -471,11 +464,11 @@ function VisibilityToggle({ value, onChange }: { value: 'private' | 'public'; on
     <div className="flex items-center gap-3 bg-muted/30 p-1.5 rounded-2xl border border-border/50">
       <span className="text-[10px] font-bold text-muted-foreground/60 px-3 py-1 uppercase tracking-wider">Default Visibility</span>
       <div className="flex gap-1">
-        <Button variant={value === 'private' ? 'secondary' : 'ghost'} size="sm" onClick={() => onChange('private')} className={cn("h-9 px-4 rounded-xl font-bold text-xs gap-2 transition-all", value === 'private' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}>
-          <Lock className="w-3.5 h-3.5" /> Private
+        <Button variant={value === 'private' ? 'secondary' : 'ghost'} size="sm" onClick={() => onChange('private')}>
+          <Lock className="w-4 w-4" /> Private
         </Button>
-        <Button variant={value === 'public' ? 'secondary' : 'ghost'} size="sm" onClick={() => onChange('public')} className={cn("h-9 px-4 rounded-xl font-bold text-xs gap-2 transition-all", value === 'public' ? "bg-background shadow-sm text-primary" : "text-muted-foreground")}>
-          <Globe2 className="w-3.5 h-3.5" /> Public
+        <Button variant={value === 'public' ? 'secondary' : 'ghost'} size="sm" onClick={() => onChange('public')}>
+          <Globe2 className="w-4 w-4" /> Public
         </Button>
       </div>
     </div>
@@ -547,11 +540,11 @@ function ReviewStep({ parsedLinks, expandedLinkId, setExpandedLinkId, validCount
           </div>
         </ScrollArea>
         <CardFooter className="flex justify-between border-t p-8 bg-muted/[0.02]">
-          <Button variant="ghost" onClick={() => setStep('input')} className="gap-2 font-bold rounded-2xl hover:bg-destructive/5 hover:text-destructive">
+          <Button variant="ghost" onClick={() => setStep('input')}>
             <RotateCcw className="w-4 h-4" /> Start Over
           </Button>
-          <Button onClick={handleImport} disabled={validCount === 0 || isPending} className="px-10 h-14 rounded-2xl gap-3 shadow-xl shadow-primary/20 font-black text-lg transition-all active:scale-95 group">
-            {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />}
+          <Button onClick={handleImport} disabled={validCount === 0 || isPending}>
+            {isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
             Import {validCount} Secure Links
           </Button>
         </CardFooter>
@@ -567,26 +560,26 @@ function BulkActionsBar({ parsedLinks, applications, categories, setAllVisibilit
   return (
     <div className="flex flex-wrap items-center gap-3 bg-muted/30 p-2 rounded-2xl border border-border/50 mt-6">
       <div className="flex items-center gap-1 bg-background rounded-xl p-1 shadow-sm border">
-        <Button variant="ghost" size="sm" onClick={() => setAllVisibility('public')} className={cn("gap-2 px-3 h-8 text-xs font-bold rounded-lg transition-all", parsedLinks.every(l => l.visibility === 'public') ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}><Globe2 className="w-3.5 h-3.5" /> All Public</Button>
-        <Button variant="ghost" size="sm" onClick={() => setAllVisibility('private')} className={cn("gap-2 px-3 h-8 text-xs font-bold rounded-lg transition-all", parsedLinks.every(l => l.visibility === 'private') ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}><Lock className="w-3.5 h-3.5" /> All Private</Button>
+        <Button variant="ghost" size="sm" onClick={() => setAllVisibility('public')}><Globe2 className="w-4 h-4" /> All Public</Button>
+        <Button variant="ghost" size="sm" onClick={() => setAllVisibility('private')}><Lock className="w-4 h-4" /> All Private</Button>
       </div>
       <div className="h-6 w-px bg-border/50 mx-1" />
       <div className="flex items-center gap-2">
         {applications && applications.length > 0 && (
           <Select onValueChange={(val: string | null) => setAllApplication(val === 'none' || val === null ? null : val)}>
-            <SelectTrigger className="w-[200px] h-10 text-xs font-bold bg-background border-border/50 rounded-xl focus:ring-primary/20"><Box className="w-3.5 h-3.5 mr-2 text-primary" /><SelectValue placeholder="All Applications" /></SelectTrigger>
-            <SelectContent className="rounded-xl min-w-[300px]">
-              <SelectItem value="none" className="text-xs font-semibold">No Application</SelectItem>
-              {applications.map((app) => (<SelectItem key={app.id} value={app.id} className="text-xs font-semibold">{app.applicationName}</SelectItem>))}
+            <SelectTrigger className="w-[200px]"><Box className="w-4 h-4 mr-2" /><SelectValue placeholder="All Applications" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Application</SelectItem>
+              {applications.map((app) => (<SelectItem key={app.id} value={app.id}>{app.applicationName}</SelectItem>))}
             </SelectContent>
           </Select>
         )}
         {categories && categories.length > 0 && (
           <Select onValueChange={(val: string | null) => setAllCategory(val === 'none' || val === null ? null : val)}>
-            <SelectTrigger className="w-[180px] h-10 text-xs font-bold bg-background border-border/50 rounded-xl focus:ring-primary/20"><Layers className="w-3.5 h-3.5 mr-2 text-primary" /><SelectValue placeholder="All Categories" /></SelectTrigger>
-            <SelectContent className="rounded-xl min-w-[200px]">
-              <SelectItem value="none" className="text-xs font-semibold">No Category</SelectItem>
-              {categories.map((cat) => (<SelectItem key={cat.id} value={cat.id} className="text-xs font-semibold">{cat.name}</SelectItem>))}
+            <SelectTrigger className="w-[180px]"><Layers className="w-4 h-4 mr-2" /><SelectValue placeholder="All Categories" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">No Category</SelectItem>
+              {categories.map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}
             </SelectContent>
           </Select>
         )}
@@ -642,11 +635,11 @@ function LinkReviewCard({ link, index, isExpanded, onToggleExpand, applications,
           </div>
           <div className={cn("flex flex-col gap-1.5 transition-all duration-300", !isExpanded && "opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0")}>
             <div className="bg-muted/50 p-1 rounded-2xl flex flex-col gap-1 border border-border/50">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-background hover:shadow-sm" onClick={(e) => { e.stopPropagation(); updateLink(link.id, { visibility: link.visibility === 'public' ? 'private' : 'public' }) }}>{link.visibility === 'public' ? <Globe2 className="w-4 h-4 text-blue-500" /> : <Lock className="w-4 h-4 text-amber-500" />}</Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-background hover:shadow-sm" onClick={(e) => { e.stopPropagation(); duplicateLink(link.id) }}><Copy className="w-4 h-4 text-muted-foreground" /></Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-destructive hover:bg-destructive/10 hover:shadow-sm" onClick={(e) => { e.stopPropagation(); removeLink(link.id) }}><Trash2 className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); updateLink(link.id, { visibility: link.visibility === 'public' ? 'private' : 'public' }) }}>{link.visibility === 'public' ? <Globe2 className="w-4 h-4" /> : <Lock className="w-4 h-4" />}</Button>
+              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); duplicateLink(link.id) }}><Copy className="w-4 h-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); removeLink(link.id) }}><Trash2 className="w-4 h-4" /></Button>
             </div>
-            <Button variant="ghost" size="icon" className={cn("h-9 w-9 rounded-xl transition-all", isExpanded ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 rotate-180" : "bg-muted/50 border border-border/50 hover:bg-background")} onClick={(e) => { e.stopPropagation(); onToggleExpand() }}><ChevronDown className="w-5 h-5" /></Button>
+            <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onToggleExpand() }}><ChevronDown className="w-5 h-5" /></Button>
           </div>
         </div>
       </div>

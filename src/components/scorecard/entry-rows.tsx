@@ -11,6 +11,7 @@ import { upsertAvailability, upsertVolume } from "@/app/actions/scorecard";
 import type { ScorecardEntry, AvailabilityRecord, VolumeRecord, MonthInfo } from "./types";
 import { DataCell } from "./data-cell";
 import { formatVolume, parseVolumeInput } from "./utils";
+import { scorecardKeys } from "@/lib/query-keys";
 
 interface EntryRowsProps {
     entry: ScorecardEntry;
@@ -41,7 +42,7 @@ export function EntryRows({
         mutationFn: upsertAvailability,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ["scorecard", teamId],
+                queryKey: scorecardKeys.team(teamId),
             });
         },
     });
@@ -50,7 +51,7 @@ export function EntryRows({
         mutationFn: upsertVolume,
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: ["scorecard", teamId],
+                queryKey: scorecardKeys.team(teamId),
             });
         },
     });

@@ -17,8 +17,8 @@ export function StatsSummary({ stats }: StatsSummaryProps) {
                     <Layers className="h-5 w-5" />
                 </div>
                 <div className="relative z-10 min-w-0 flex flex-col justify-center">
-                    <p className="text-2xl font-black tabular-nums tracking-tight leading-none">{stats.teams}</p>
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Teams</p>
+                    <p className="text-2xl font-bold tabular-nums tracking-tight leading-none">{stats.teams}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Teams</p>
                 </div>
             </div>
 
@@ -28,8 +28,8 @@ export function StatsSummary({ stats }: StatsSummaryProps) {
                     <Activity className="h-5 w-5" />
                 </div>
                 <div className="relative z-10 min-w-0 flex flex-col justify-center">
-                    <p className="text-2xl font-black tabular-nums tracking-tight leading-none">{stats.apps}</p>
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Applications</p>
+                    <p className="text-2xl font-bold tabular-nums tracking-tight leading-none">{stats.apps}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Applications</p>
                 </div>
             </div>
 
@@ -39,8 +39,8 @@ export function StatsSummary({ stats }: StatsSummaryProps) {
                     <Hash className="h-5 w-5" />
                 </div>
                 <div className="relative z-10 min-w-0 flex flex-col justify-center">
-                    <p className="text-2xl font-black tabular-nums tracking-tight leading-none">{stats.entries}</p>
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Metrics</p>
+                    <p className="text-2xl font-bold tabular-nums tracking-tight leading-none">{stats.entries}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Metrics</p>
                 </div>
             </div>
 
@@ -64,10 +64,10 @@ export function StatsSummary({ stats }: StatsSummaryProps) {
                 </div>
                 <div className="relative z-10 min-w-0 flex flex-col justify-center">
                     <p className={cn(
-                        "text-2xl font-black tabular-nums tracking-tight leading-none",
+                        "text-2xl font-bold tabular-nums tracking-tight leading-none",
                         stats.availBreaches > 0 && "text-red-600"
                     )}>{stats.availBreaches}</p>
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">Breaches</p>
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Breaches</p>
                 </div>
             </div>
         </div>

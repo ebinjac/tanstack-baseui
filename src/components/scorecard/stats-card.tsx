@@ -43,10 +43,10 @@ export function StatsCard({
                 </div>
                 <div className="min-w-0 flex flex-col justify-center">
                     <p className={cn(
-                        "text-2xl font-black tabular-nums tracking-tight leading-none",
+                        "text-2xl font-bold tabular-nums tracking-tight leading-none",
                         highlight && "text-red-600"
                     )}>{value}</p>
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1">
+                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
                         {label}
                     </p>
                     {sublabel && (

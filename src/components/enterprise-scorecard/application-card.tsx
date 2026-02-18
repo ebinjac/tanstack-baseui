@@ -11,7 +11,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, AlertTriangle, Lock } from "lucide-react";
+import { ChevronDown, AlertTriangle, Lock } from "lucide-react";
 import { EntryRows } from "./entry-rows";
 import { MONTHS, CURRENT_YEAR, CURRENT_MONTH } from "./constants";
 import type {
@@ -109,28 +109,34 @@ export function ApplicationCard({
             isExpanded ? "ring-1 ring-primary/20 shadow-md" : "hover:bg-muted/30"
         )}>
             <div
-                className="flex flex-col sm:flex-row sm:items-center justify-between py-4 px-5 cursor-pointer relative"
+                className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 px-4 cursor-pointer relative"
                 onClick={onToggle}
             >
                 {/* Identity Layer */}
                 <div className="flex items-center gap-4 min-w-0">
+                    {/* Circled arrow indicator */}
                     <div className={cn(
-                        "h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300",
-                        isExpanded ? "bg-primary text-primary-foreground shadow-lg scale-110" : "bg-primary/5 text-primary border border-primary/10"
+                        "w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300",
+                        isExpanded
+                            ? "bg-primary/10 border-primary/30 text-primary"
+                            : "bg-muted/30 border-border/50 text-muted-foreground"
                     )}>
-                        {isExpanded ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                        <ChevronDown className={cn(
+                            "h-3.5 w-3.5 transition-transform duration-300",
+                            isExpanded ? "rotate-0" : "-rotate-90"
+                        )} />
                     </div>
 
-                    <div className="flex flex-col gap-1.5 min-w-0">
+                    <div className="flex flex-col gap-0.5 min-w-0">
                         <div className="flex items-center flex-wrap gap-2">
-                            <span className="font-black text-lg tracking-tight group-hover:text-primary transition-colors truncate">
+                            <span className="font-bold text-sm tracking-tight group-hover:text-primary transition-colors truncate">
                                 {app.applicationName}
                             </span>
-                            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-background/50 border-primary/20 text-primary px-2 h-5">
+                            <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest bg-background/50 border-primary/20 text-primary px-2 h-5">
                                 {app.tla}
                             </Badge>
                             {app.tier && ["0", "1", "2"].includes(String(app.tier)) && (
-                                <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[9px] font-black uppercase tracking-widest h-5 px-1.5">
+                                <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[9px] font-bold uppercase tracking-widest h-5 px-1.5">
                                     T{app.tier}
                                 </Badge>
                             )}
@@ -138,7 +144,7 @@ export function ApplicationCard({
                         <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
                             {leadership.slice(0, 2).map((l, i) => (
                                 <div key={i} className="flex items-center gap-1.5">
-                                    <span className="text-[10px] font-black uppercase tracking-widest opacity-40">{l.role}</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">{l.role}</span>
                                     <span className="text-[10px] font-bold text-foreground/80">{l.name}</span>
                                 </div>
                             ))}
@@ -147,10 +153,10 @@ export function ApplicationCard({
                 </div>
 
                 {/* Status Layer */}
-                <div className="flex items-center gap-8 mt-4 sm:mt-0 bg-background/40 p-2 sm:p-0 rounded-xl border border-border/10 sm:border-none">
+                <div className="flex items-center gap-6 mt-3 sm:mt-0 shrink-0">
                     {avgAvailability !== null && (
                         <div className="flex flex-col items-end group/stat">
-                            <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest leading-none mb-1.5 opacity-60">
+                            <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest leading-none mb-1.5 opacity-60">
                                 Availability
                             </span>
                             <div className="flex items-center gap-2">
@@ -159,10 +165,10 @@ export function ApplicationCard({
                                     avgAvailability < 98 ? "bg-red-500 animate-pulse" : "bg-green-500"
                                 )} />
                                 <span className={cn(
-                                    "text-xl font-black tabular-nums tracking-tighter leading-none",
+                                    "text-base font-bold tabular-nums tracking-tight leading-none",
                                     avgAvailability < 98 ? "text-red-600" : "text-green-600"
                                 )}>
-                                    {avgAvailability.toFixed(1)}%
+                                    {avgAvailability.toFixed(2)}%
                                 </span>
                             </div>
                         </div>
@@ -170,74 +176,78 @@ export function ApplicationCard({
 
                     {totalVolume !== null && (
                         <div className="flex flex-col items-end group/stat">
-                            <span className="text-[9px] text-muted-foreground uppercase font-black tracking-widest leading-none mb-1.5 opacity-60">
+                            <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest leading-none mb-1.5 opacity-60">
                                 Annual Volume
                             </span>
-                            <span className="text-xl font-black tabular-nums tracking-tighter leading-none text-indigo-600">
+                            <span className="text-base font-bold tabular-nums tracking-tight leading-none text-indigo-600">
                                 {totalVolume > 1000000 ? `${(totalVolume / 1000000).toFixed(1)}M` : totalVolume.toLocaleString()}
                             </span>
                         </div>
                     )}
 
                     {breachCount > 0 && (
-                        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-red-500/10 border border-red-500/20 text-red-600">
-                            <AlertTriangle className="h-5 w-5" />
+                        <div className="flex items-center justify-center h-8 w-8 rounded-full bg-red-500/10 border border-red-500/20 text-red-600">
+                            <AlertTriangle className="h-4 w-4" />
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Expanded Content - Metrics Table */}
-            {isExpanded && entries.length > 0 && (
-                <div className="border-t px-3 pb-3 pt-2 overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="hover:bg-transparent">
-                                <TableHead className="text-xs font-bold uppercase w-[160px]">Entry</TableHead>
-                                <TableHead className="text-xs font-bold uppercase w-[50px]">Type</TableHead>
-                                {monthsToShow.map((vm) => {
-                                    const m = MONTHS[vm.month - 1];
-                                    const isFuture = vm.year === CURRENT_YEAR && vm.month > CURRENT_MONTH;
-                                    return (
-                                        <TableHead
-                                            key={`${vm.year}-${vm.month}`}
-                                            className={cn(
-                                                "text-xs font-bold uppercase text-center w-[55px]",
-                                                isFuture && "text-muted-foreground/40"
-                                            )}
-                                        >
-                                            <div className="flex flex-col leading-none">
-                                                <span>{m}</span>
-                                                {vm.year !== selectedYear && <span className="text-[7px] opacity-40 mt-0.5">{vm.year}</span>}
-                                            </div>
-                                            {isFuture && <Lock className="h-2 w-2 inline ml-0.5" />}
-                                        </TableHead>
-                                    );
-                                })}
-                                <TableHead className="text-xs font-bold uppercase text-center w-[60px] bg-muted/30">Avg</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {entries.map((entry) => (
-                                <EntryRows
-                                    key={entry.id}
-                                    entry={entry}
-                                    availability={availabilityByEntry[entry.id] || {}}
-                                    volume={volumeByEntry[entry.id] || {}}
-                                    selectedYear={selectedYear}
-                                    visibleMonths={monthsToShow}
-                                />
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-            )}
+            {
+                isExpanded && entries.length > 0 && (
+                    <div className="border-t px-3 pb-3 pt-2 overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead className="text-xs font-bold uppercase w-[160px]">Entry</TableHead>
+                                    <TableHead className="text-xs font-bold uppercase w-[50px]">Type</TableHead>
+                                    {monthsToShow.map((vm) => {
+                                        const m = MONTHS[vm.month - 1];
+                                        const isFuture = vm.year === CURRENT_YEAR && vm.month > CURRENT_MONTH;
+                                        return (
+                                            <TableHead
+                                                key={`${vm.year}-${vm.month}`}
+                                                className={cn(
+                                                    "text-xs font-bold uppercase text-center w-[55px]",
+                                                    isFuture && "text-muted-foreground/40"
+                                                )}
+                                            >
+                                                <div className="flex flex-col leading-none">
+                                                    <span>{m}</span>
+                                                    {vm.year !== selectedYear && <span className="text-[7px] opacity-40 mt-0.5">{vm.year}</span>}
+                                                </div>
+                                                {isFuture && <Lock className="h-2 w-2 inline ml-0.5" />}
+                                            </TableHead>
+                                        );
+                                    })}
+                                    <TableHead className="text-xs font-bold uppercase text-center w-[60px] bg-muted/30">Avg</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {entries.map((entry) => (
+                                    <EntryRows
+                                        key={entry.id}
+                                        entry={entry}
+                                        availability={availabilityByEntry[entry.id] || {}}
+                                        volume={volumeByEntry[entry.id] || {}}
+                                        selectedYear={selectedYear}
+                                        visibleMonths={monthsToShow}
+                                    />
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                )
+            }
 
-            {isExpanded && entries.length === 0 && (
-                <div className="border-t px-3 py-4 text-center text-muted-foreground text-sm">
-                    No scorecard entries for this application
-                </div>
-            )}
-        </Card>
+            {
+                isExpanded && entries.length === 0 && (
+                    <div className="border-t px-3 py-4 text-center text-muted-foreground text-sm">
+                        No scorecard entries for this application
+                    </div>
+                )
+            }
+        </Card >
     );
 }

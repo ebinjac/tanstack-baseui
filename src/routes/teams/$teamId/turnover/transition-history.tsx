@@ -159,7 +159,7 @@ function TransitionHistoryPage() {
 
     return (
         <div className="flex-1 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
-            <div className="max-w-7xl mx-auto space-y-8 p-8 pt-6">
+            <div className="space-y-8 p-8 pt-6">
                 {/* Header */}
                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                     <div className="flex flex-col">

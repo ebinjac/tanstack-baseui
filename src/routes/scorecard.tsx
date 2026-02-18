@@ -3,6 +3,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Drawer,
     DrawerContent,
@@ -288,11 +289,11 @@ function GlobalScorecardPage() {
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/50">
                 <div>
-                    <h1 className="text-4xl font-black tracking-tight text-foreground">
+                    <h1 className="text-3xl font-bold tracking-tight">
                         Enterprise Scorecard
                     </h1>
                     <p className="text-sm text-muted-foreground mt-2 font-medium">
-                        Global performance metrics and compliance across <span className="text-foreground font-black">{teamsWithApps.length}</span> active teams.
+                        Global performance metrics and compliance across <span className="text-foreground font-bold">{teamsWithApps.length}</span> active teams.
                     </p>
                 </div>
 
@@ -300,7 +301,7 @@ function GlobalScorecardPage() {
                     <Button
                         variant="outline"
                         size="sm"
-                        className="gap-2 h-10 px-4 font-black uppercase tracking-widest text-[10px] border-primary/20 hover:bg-primary/5 hover:text-primary transition-all active:scale-95 shadow-sm"
+                        className="gap-2"
                         onClick={handleClearAllFilters}
                         disabled={!isLoading && teamsWithApps.length === scorecardData?.teams?.length && leadershipType === 'all' && !leadershipSearch && !teamSearch && !appSearch}
                     >
@@ -314,7 +315,7 @@ function GlobalScorecardPage() {
             <StatsSummary stats={stats} />
 
             {/* Structured Search & Filters */}
-            <div className="bg-background/60 p-1.5 rounded-2xl border border-border/50 shadow-sm backdrop-blur-md">
+            <div>
                 <EnterpriseFilters
                     selectedYear={selectedYear}
                     leadershipType={leadershipType}
@@ -389,38 +390,25 @@ function GlobalScorecardPage() {
                                             <Building2 className="h-7 w-7" />
                                         </div>
                                         <div>
-                                            <DrawerTitle className="text-3xl font-black tracking-tight flex items-center gap-3">
+                                            <DrawerTitle className="text-2xl font-bold tracking-tight flex items-center gap-3">
                                                 {viewTeam.teamName}
                                             </DrawerTitle>
                                             <DrawerDescription className="text-sm font-medium text-muted-foreground mt-1">
-                                                Enterprise Performance Report • <span className="text-foreground font-black">{selectedYear}</span>
+                                                Enterprise Performance Report • <span className="text-foreground font-bold">{selectedYear}</span>
                                             </DrawerDescription>
                                         </div>
 
                                         <div className="h-10 w-px bg-border mx-2 hidden md:block" />
 
                                         {/* Range Selector */}
-                                        <div className="bg-background/60 p-1 rounded-xl border border-border/50 shadow-sm flex items-center gap-1">
-                                            {[
-                                                { id: 'full', label: 'Full Year' },
-                                                { id: 'ytd', label: 'YTD' },
-                                                { id: 'last3', label: 'Last 3M' },
-                                                { id: 'last6', label: 'Last 6M' }
-                                            ].map((r) => (
-                                                <button
-                                                    key={r.id}
-                                                    onClick={() => setDrawerRange(r.id)}
-                                                    className={cn(
-                                                        "px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
-                                                        drawerRange === r.id
-                                                            ? "bg-primary text-primary-foreground shadow-sm"
-                                                            : "text-muted-foreground hover:bg-muted"
-                                                    )}
-                                                >
-                                                    {r.label}
-                                                </button>
-                                            ))}
-                                        </div>
+                                        <Tabs value={drawerRange} onValueChange={setDrawerRange}>
+                                            <TabsList>
+                                                <TabsTrigger value="full">Full Year</TabsTrigger>
+                                                <TabsTrigger value="ytd">YTD</TabsTrigger>
+                                                <TabsTrigger value="last3">Last 3M</TabsTrigger>
+                                                <TabsTrigger value="last6">Last 6M</TabsTrigger>
+                                            </TabsList>
+                                        </Tabs>
                                     </div>
 
                                     <div className="flex items-center gap-3">
@@ -428,7 +416,7 @@ function GlobalScorecardPage() {
                                             variant="outline"
                                             size="sm"
                                             onClick={() => handleExportCSV(viewTeam)}
-                                            className="h-10 px-4 gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-all font-black uppercase tracking-widest text-[10px] rounded-xl shadow-sm"
+                                            className="gap-2"
                                         >
                                             <FileSpreadsheet className="h-4 w-4 text-green-600" />
                                             CSV Export
@@ -438,7 +426,6 @@ function GlobalScorecardPage() {
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => setViewTeam(null)}
-                                            className="rounded-full h-10 w-10 hover:bg-muted transition-colors border border-transparent hover:border-border"
                                         >
                                             <X className="h-5 w-5" />
                                         </Button>
@@ -456,14 +443,14 @@ function GlobalScorecardPage() {
                                                 </div>
                                                 <div>
                                                     <div className="flex items-center gap-3">
-                                                        <h3 className="text-2xl font-black tracking-tight">
+                                                        <h3 className="text-xl font-bold tracking-tight">
                                                             {app.applicationName}
                                                         </h3>
-                                                        <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-background/50 border-primary/20 text-primary px-2 h-5">
+                                                        <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest px-2 h-5">
                                                             {app.tla}
                                                         </Badge>
                                                         {app.tier && ["0", "1", "2"].includes(String(app.tier)) && (
-                                                            <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[10px] font-black uppercase tracking-widest h-5 px-2">
+                                                            <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[10px] font-bold h-5 px-2">
                                                                 Tier {app.tier}
                                                             </Badge>
                                                         )}
@@ -471,13 +458,13 @@ function GlobalScorecardPage() {
                                                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
                                                         {getLeadershipDisplay(app).map((l, i) => (
                                                             <div key={i} className="flex items-center gap-1.5 grayscale opacity-70">
-                                                                <span className="text-[10px] font-black uppercase tracking-widest">{l.role}:</span>
+                                                                <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">{l.role}:</span>
                                                                 <span className="text-[11px] font-bold text-foreground">{l.name}</span>
                                                             </div>
                                                         ))}
                                                         <span className="text-muted-foreground/30 hidden md:block">•</span>
                                                         <div className="flex items-center gap-1.5 opacity-60">
-                                                            <span className="text-[10px] font-black uppercase tracking-widest">Asset ID:</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">Asset ID:</span>
                                                             <span className="text-[11px] font-mono font-bold text-foreground">{app.assetId}</span>
                                                         </div>
                                                     </div>
@@ -489,17 +476,23 @@ function GlobalScorecardPage() {
                                             <Table>
                                                 <TableHeader className="bg-muted/50">
                                                     <TableRow className="hover:bg-transparent border-b-border/30">
-                                                        <TableHead className="w-[240px] font-black text-[10px] uppercase tracking-[0.2em] py-4 pl-6">Metric Configuration</TableHead>
-                                                        <TableHead className="w-[60px] font-black text-[10px] uppercase tracking-[0.2em] py-4">Core</TableHead>
-                                                        {visibleMonths.map(vm => (
-                                                            <TableHead key={`${vm.year}-${vm.month}`} className="text-center font-black text-[10px] uppercase tracking-[0.2em] py-4">
-                                                                <div className="flex flex-col leading-none">
-                                                                    <span>{MONTHS[vm.month - 1]}</span>
-                                                                    {vm.year !== selectedYear && <span className="text-[8px] opacity-60 mt-1">{vm.year}</span>}
-                                                                </div>
-                                                            </TableHead>
-                                                        ))}
-                                                        <TableHead className="text-center font-black text-[10px] uppercase tracking-[0.2em] py-4 bg-primary/5 text-primary pr-6">Performance</TableHead>
+                                                        <TableHead className="w-[240px] font-bold text-[10px] uppercase tracking-wider py-3 pl-6">Metric Configuration</TableHead>
+                                                        <TableHead className="w-[60px] font-bold text-[10px] uppercase tracking-wider py-3">Core</TableHead>
+                                                        {visibleMonths.map(vm => {
+                                                            const isFutureMonth = vm.year === CURRENT_YEAR && vm.month > CURRENT_MONTH;
+                                                            return (
+                                                                <TableHead key={`${vm.year}-${vm.month}`} className={cn(
+                                                                    "text-center font-bold text-[10px] uppercase tracking-wider py-3",
+                                                                    isFutureMonth && "text-muted-foreground/40"
+                                                                )}>
+                                                                    <div className="flex flex-col leading-none">
+                                                                        <span>{MONTHS[vm.month - 1]}</span>
+                                                                        {vm.year !== selectedYear && <span className="text-[8px] opacity-60 mt-1">{vm.year}</span>}
+                                                                    </div>
+                                                                </TableHead>
+                                                            );
+                                                        })}
+                                                        <TableHead className="text-center font-bold text-[10px] uppercase tracking-wider py-3 bg-primary/5 text-primary pr-6">Performance</TableHead>
                                                     </TableRow>
                                                 </TableHeader>
                                                 <TableBody>

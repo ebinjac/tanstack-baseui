@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Check, ChevronRight, User, Users, Shield, BookUser, Loader2, Activity } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
+import { StepTimeline } from '@/components/ui/step-timeline'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export const Route = createFileRoute('/teams/register')({
@@ -180,46 +181,7 @@ function TeamRegistrationPage() {
               </p>
             </div>
 
-            <nav className="relative space-y-2">
-              {/* Stepper Vertical Line */}
-              <div className="absolute left-5 top-2 bottom-2 w-px bg-border/60" />
-
-              {STEPS.map((step) => {
-                const isCurrent = currentStep === step.id
-                const isCompleted = currentStep > step.id
-                const Icon = step.icon
-
-                return (
-                  <div
-                    key={step.id}
-                    className={`
-                      relative flex items-start p-2 gap-3 transition-all duration-200
-                      ${isCurrent ? 'bg-primary/5 rounded-lg' : ''}
-                    `}
-                  >
-                    <div className={`
-                      relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-all duration-300
-                      ${isCurrent
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : isCompleted
-                          ? 'border-success bg-success text-success-foreground'
-                          : 'border-border bg-background text-muted-foreground'
-                      }
-                    `}>
-                      {isCompleted ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
-                    </div>
-                    <div className="min-w-0 pt-0.5">
-                      <p className={`text-xs font-semibold tracking-tight ${isCurrent ? 'text-foreground' : 'text-muted-foreground'}`}>
-                        {step.title}
-                      </p>
-                      <p className={`text-[11px] mt-0.5 transition-opacity duration-300 ${isCurrent ? 'opacity-100 text-muted-foreground' : 'opacity-60 text-muted-foreground'}`}>
-                        {step.description}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </nav>
+            <StepTimeline steps={STEPS} currentStep={currentStep} />
 
             <div className="hidden lg:block pt-4">
               <div className="p-5 rounded-xl bg-muted/30 border border-border/50 space-y-3 shadow-sm">

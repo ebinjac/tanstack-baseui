@@ -107,13 +107,25 @@ export function ApplicationSection({
                 aria-expanded={isExpanded}
             >
                 {/* Left Side: App Identity */}
-                <div className="flex items-center gap-5">
+                <div className="flex items-center gap-4">
+                    {/* Circled arrow indicator */}
+                    <div className={cn(
+                        "w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300",
+                        isExpanded
+                            ? "bg-primary/10 border-primary/30 text-primary"
+                            : "bg-muted/30 border-border/50 text-muted-foreground"
+                    )}>
+                        <ChevronDown className={cn(
+                            "h-4 w-4 transition-transform duration-300",
+                            isExpanded ? "rotate-0" : "-rotate-90"
+                        )} />
+                    </div>
                     <div className="flex flex-col gap-1.5 min-w-0">
                         <div className="flex items-center flex-wrap gap-2">
-                            <span className="font-black text-xl tracking-tight group-hover:text-primary transition-colors truncate">
+                            <span className="font-bold text-xl tracking-tight group-hover:text-primary transition-colors truncate">
                                 {app.applicationName}
                             </span>
-                            <Badge variant="outline" className="text-[10px] font-black uppercase tracking-widest bg-background/50 border-primary/20 text-primary px-2 h-5">
+                            <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest bg-background/50 border-primary/20 text-primary px-2 h-5">
                                 {app.tla}
                             </Badge>
                         </div>
@@ -136,7 +148,7 @@ export function ApplicationSection({
                     <div className="hidden lg:flex items-center gap-8 border-r border-border/50 pr-8">
                         {appStats.avgAvailability !== null && (
                             <div className="flex flex-col items-end group/stat">
-                                <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-none mb-2">
+                                <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-none mb-2">
                                     Availability
                                 </span>
                                 <div className="flex items-center gap-2.5">
@@ -145,7 +157,7 @@ export function ApplicationSection({
                                         appStats.avgAvailability < 98 ? "bg-red-500" : "bg-green-500"
                                     )} />
                                     <span className={cn(
-                                        "text-2xl font-black tabular-nums tracking-tighter leading-none",
+                                        "text-2xl font-bold tabular-nums tracking-tighter leading-none",
                                         appStats.avgAvailability < 98 ? "text-red-600" : "text-green-600"
                                     )}>
                                         {appStats.avgAvailability.toFixed(2)}%
@@ -155,12 +167,12 @@ export function ApplicationSection({
                         )}
 
                         <div className="flex flex-col items-end group/stat">
-                            <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest leading-none mb-2 text-right">
+                            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest leading-none mb-2 text-right">
                                 Annual Volume
                             </span>
                             <div className="flex items-center gap-2 text-indigo-600">
                                 <Hash className="h-3.5 w-3.5" />
-                                <span className="text-2xl font-black tabular-nums tracking-tighter leading-none">
+                                <span className="text-2xl font-bold tabular-nums tracking-tighter leading-none">
                                     {formatVolume(appStats.totalVolume)}
                                 </span>
                             </div>
@@ -172,7 +184,7 @@ export function ApplicationSection({
                             <Button
                                 size="sm"
                                 variant="outline"
-                                className="h-10 gap-2 border-primary/20 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all font-black uppercase tracking-widest text-[10px] px-5 shadow-sm active:scale-95"
+                                className="gap-2"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     onAddEntry();
@@ -182,12 +194,7 @@ export function ApplicationSection({
                                 Add Entry
                             </Button>
                         )}
-                        <div className={cn(
-                            "hidden sm:flex transition-transform duration-300",
-                            isExpanded ? "rotate-0 text-primary" : "-rotate-90 text-muted-foreground group-hover:translate-y-1"
-                        )}>
-                            <ChevronDown className="h-5 w-5" />
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -204,7 +211,7 @@ export function ApplicationSection({
                                 <Button
                                     size="sm"
                                     variant="outline"
-                                    className="mt-5 gap-2 font-bold uppercase tracking-widest text-[10px]"
+                                    className="mt-5 gap-2"
                                     onClick={onAddEntry}
                                 >
                                     <Plus className="h-3.5 w-3.5" />
@@ -218,17 +225,17 @@ export function ApplicationSection({
                                 <Table>
                                     <TableHeader className="bg-muted/30">
                                         <TableRow className="hover:bg-transparent border-b border-border/50">
-                                            <TableHead className="w-[150px] font-black text-[10px] uppercase tracking-widest sticky left-0 bg-muted/80 backdrop-blur-sm z-10 py-3">
-                                                Component Identity
+                                            <TableHead className="w-[120px] font-bold text-[10px] uppercase tracking-widest sticky left-0 bg-muted/80 backdrop-blur-sm z-10 py-2.5">
+                                                Component
                                             </TableHead>
-                                            <TableHead className="w-[50px] font-black text-[10px] uppercase tracking-widest py-3">
+                                            <TableHead className="w-[50px] font-bold text-[10px] uppercase tracking-widest py-2.5">
                                                 Type
                                             </TableHead>
                                             {displayMonths.map((m) => (
                                                 <TableHead
                                                     key={`${m.year}-${m.month}`}
                                                     className={cn(
-                                                        "w-[65px] text-center font-black text-[10px] uppercase tracking-widest py-3",
+                                                        "w-[65px] text-center font-bold text-[10px] uppercase tracking-widest py-2.5",
                                                         m.isFuture && "text-muted-foreground/30"
                                                     )}
                                                 >
@@ -236,11 +243,11 @@ export function ApplicationSection({
                                                 </TableHead>
                                             ))}
                                             {/* Avg/Total Column */}
-                                            <TableHead className="w-[95px] text-center font-black text-[10px] uppercase tracking-widest bg-primary/10 text-primary py-4">
+                                            <TableHead className="w-[95px] text-center font-bold text-[10px] uppercase tracking-widest bg-primary/10 text-primary py-2.5">
                                                 Performance
                                             </TableHead>
                                             {isAdmin && (
-                                                <TableHead className="w-[100px] text-right font-black text-[10px] uppercase tracking-widest py-4 pr-6">
+                                                <TableHead className="w-[100px] text-right font-bold text-[10px] uppercase tracking-widest py-2.5 pr-6">
                                                     Manage
                                                 </TableHead>
                                             )}

@@ -4,12 +4,12 @@ import { getLinkStats } from '@/app/actions/links'
 import { useQuery } from '@tanstack/react-query'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart'
-import { BarChart3, TrendingUp, MousePointer2, Link as LinkIcon, Layers, Box, Shield, ExternalLink, ArrowLeft } from 'lucide-react'
+import { BarChart3, TrendingUp, MousePointer2, Link as LinkIcon, Layers, Box, Shield, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Link } from '@tanstack/react-router'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { StatsSummaryItem, PageLoading, EmptyState } from '@/components/link-manager/shared'
+import { StatsSummaryItem, PageLoading, EmptyState, LinkManagerPage, SubPageHeader } from '@/components/link-manager/shared'
 
 export const Route = createFileRoute('/teams/$teamId/link-manager/stats')({
     component: LinkStatsPage,
@@ -31,42 +31,26 @@ function LinkStatsPage() {
     if (!stats) return <PageLoading message="Loading Analytics..." />
 
     return (
-        <div className="flex-1 min-h-screen bg-background pb-24">
-            <div className="max-w-7xl mx-auto space-y-12 p-8 pt-6">
-                {/* Header */}
-                <div className="flex flex-col gap-10">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-border/50">
-                        <div className="flex items-center gap-8">
-                            <Link
-                                to="/teams/$teamId/link-manager"
-                                params={{ teamId }}
-                                className="h-14 w-14 rounded-2xl bg-background border border-border flex items-center justify-center hover:bg-muted/50 transition-all group shadow-sm active:scale-95"
-                            >
-                                <ArrowLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                            </Link>
-                            <div>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                    <Badge variant="outline" className="text-[10px] font-black bg-primary/5 border-primary/20 text-primary px-2.5 h-5 uppercase tracking-wider">
-                                        Link Manager
-                                    </Badge>
-                                    <span className="text-muted-foreground/30">/</span>
-                                    <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Insight Analytics</span>
-                                </div>
-                                <h1 className="text-3xl font-bold tracking-tight text-foreground">Resource Reports</h1>
-                            </div>
-                        </div>
+        <LinkManagerPage>
+            <div className="space-y-12">
+                <SubPageHeader
+                    parentLabel="Link Manager"
+                    sectionLabel="Insight Analytics"
+                    title="Resource Reports"
+                    description="Comprehensive overview of resource usage and engagement metrics."
+                    actions={
                         <Button variant="outline">
-                            <ExternalLink className="h-4 w-4" /> Export Analytics
+                            <ExternalLink className="mr-2 h-4 w-4" /> Export Analytics
                         </Button>
-                    </div>
+                    }
+                />
 
-                    {/* Stats Summary Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <StatsSummaryItem label="Verified Resources" value={stats.totalLinks} icon={LinkIcon} color="primary" />
-                        <StatsSummaryItem label="Total Engagement" value={stats.totalClicks} icon={MousePointer2} color="blue" />
-                        <StatsSummaryItem label="Growth Trend" value={stats.totalLinks > 0 ? (stats.totalClicks / stats.totalLinks).toFixed(1) : "0.0"} icon={TrendingUp} color="amber" />
-                        <StatsSummaryItem label="Active Collections" value={stats.categoryStats.length} icon={Layers} color="indigo" />
-                    </div>
+                {/* Stats Summary Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <StatsSummaryItem label="Verified Resources" value={stats.totalLinks} icon={LinkIcon} color="primary" />
+                    <StatsSummaryItem label="Total Engagement" value={stats.totalClicks} icon={MousePointer2} color="blue" />
+                    <StatsSummaryItem label="Growth Trend" value={stats.totalLinks > 0 ? (stats.totalClicks / stats.totalLinks).toFixed(1) : "0.0"} icon={TrendingUp} color="amber" />
+                    <StatsSummaryItem label="Active Collections" value={stats.categoryStats.length} icon={Layers} color="indigo" />
                 </div>
 
                 {/* Main Content Grid */}
@@ -80,7 +64,7 @@ function LinkStatsPage() {
                     <ApplicationChart data={stats.applicationStats} />
                 </div>
             </div>
-        </div>
+        </LinkManagerPage>
     )
 }
 

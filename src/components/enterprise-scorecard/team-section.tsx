@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ChevronDown, ChevronRight, Eye } from "lucide-react";
+import { ChevronDown, Eye } from "lucide-react";
 import { ApplicationCard } from "./application-card";
 import type {
     Team,
@@ -75,43 +75,45 @@ export function TeamSection({
     }, [applications, entriesByApp, availabilityByEntry, monthsToShow]);
 
     return (
-        <div className="group">
-            {/* Premium Team Header */}
+        <div>
+            {/* Team Header */}
             <div
                 className={cn(
-                    "flex items-center justify-between py-3 px-4 transition-all cursor-pointer border-b border-transparent",
+                    "group flex items-center justify-between py-2.5 px-4 transition-all cursor-pointer border-b border-transparent",
                     isExpanded ? "bg-muted/30 border-border/50" : "hover:bg-muted/40"
                 )}
                 onClick={onToggle}
             >
                 <div className="flex items-center gap-4 min-w-0">
+                    {/* Circled arrow indicator */}
                     <div className={cn(
-                        "flex items-center justify-center h-8 w-8 rounded-xl border transition-all",
-                        isExpanded ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border shadow-sm text-muted-foreground"
+                        "w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300",
+                        isExpanded
+                            ? "bg-primary/10 border-primary/30 text-primary"
+                            : "bg-muted/30 border-border/50 text-muted-foreground"
                     )}>
-                        {isExpanded ? (
-                            <ChevronDown className="h-5 w-5" />
-                        ) : (
-                            <ChevronRight className="h-5 w-5" />
-                        )}
+                        <ChevronDown className={cn(
+                            "h-4 w-4 transition-transform duration-300",
+                            isExpanded ? "rotate-0" : "-rotate-90"
+                        )} />
                     </div>
 
                     <div className="flex flex-col">
-                        <span className="font-black text-lg tracking-tight group-hover:text-primary transition-colors">
+                        <span className="font-bold text-base tracking-tight group-hover:text-primary transition-colors">
                             {team.teamName}
                         </span>
                         <div className="flex items-center gap-3 text-muted-foreground">
-                            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
                                 {teamStats.apps} Applications
                             </span>
                             <span className="text-muted-foreground/30">•</span>
-                            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">
+                            <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
                                 {teamStats.entries} Metrics
                             </span>
                             {teamStats.breaches > 0 && (
                                 <>
                                     <span className="text-muted-foreground/30">•</span>
-                                    <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[9px] font-black uppercase tracking-widest h-4 px-1.5">
+                                    <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[9px] font-bold uppercase tracking-widest h-4 px-1.5">
                                         {teamStats.breaches} Breaches
                                     </Badge>
                                 </>
@@ -124,7 +126,7 @@ export function TeamSection({
                     <Button
                         size="sm"
                         variant="ghost"
-                        className="h-9 px-4 text-[10px] font-black uppercase tracking-widest gap-2 bg-background/50 border border-border/10 hover:border-primary/40 hover:text-primary transition-all opacity-0 group-hover:opacity-100"
+                        className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => {
                             e.stopPropagation();
                             onViewFull();
@@ -138,7 +140,7 @@ export function TeamSection({
 
             {/* Team Content */}
             {isExpanded && (
-                <div className="pl-6 pr-3 pb-3 space-y-1.5">
+                <div className="pl-6 pr-3 py-2 space-y-2">
                     {applications.map((app) => (
                         <ApplicationCard
                             key={app.id}

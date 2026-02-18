@@ -1,43 +1,56 @@
-import { Link as RouterLink } from '@tanstack/react-router'
 import { ReactNode } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { ArrowLeft, Loader2, Search, type LucideIcon } from 'lucide-react'
+import { Loader2, Search, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EmptyState as SharedEmptyState } from '@/components/shared/empty-state'
+import { Separator } from '@/components/ui/separator'
 
 // ============================================================================
-// Page Header with Back Button
+// Standard Page Wrapper
+// ============================================================================
+export function LinkManagerPage({ children, className }: React.HTMLAttributes<HTMLDivElement>) {
+    return (
+        <div className={cn("flex-1 space-y-6 p-8 pt-6 min-h-screen bg-background w-full max-w-[1600px] mx-auto", className)}>
+            {children}
+        </div>
+    )
+}
+
+// ============================================================================
+// Page Header
 // ============================================================================
 interface SubPageHeaderProps {
-    teamId: string
+    teamId?: string // Optional now since we don't use it for back link styling usually
     parentLabel: string
     sectionLabel: string
     title: string
+    description?: string
     actions?: ReactNode
 }
 
-export function SubPageHeader({ teamId, parentLabel, sectionLabel, title, actions }: SubPageHeaderProps) {
+export function SubPageHeader({ parentLabel, sectionLabel, title, description, actions }: SubPageHeaderProps) {
     return (
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 max-w-5xl mx-auto">
-            <div className="flex items-center gap-6">
-                <RouterLink to="/teams/$teamId/link-manager" params={{ teamId }}>
-                    <div className="h-14 w-14 rounded-2xl bg-background border border-border flex items-center justify-center hover:bg-muted/50 transition-all group shadow-sm">
-                        <ArrowLeft className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-all" />
-                    </div>
-                </RouterLink>
-                <div>
-                    <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline" className="text-[10px] font-bold bg-primary/5 border-primary/20 text-primary px-2 h-5">
+        <div className="space-y-4 pb-2">
+            <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 text-muted-foreground/60">
+                        <Badge variant="outline" className="text-[10px] font-bold bg-primary/5 border-primary/20 text-primary px-2 h-5 rounded-md">
                             {parentLabel}
                         </Badge>
-                        <span className="text-muted-foreground/30">/</span>
-                        <span className="text-xs font-bold text-muted-foreground/60 uppercase tracking-widest">{sectionLabel}</span>
+                        <span className="text-[10px] font-bold">/</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest">{sectionLabel}</span>
                     </div>
                     <h1 className="text-3xl font-black tracking-tight text-foreground">{title}</h1>
+                    {description && (
+                        <p className="text-sm font-medium text-muted-foreground max-w-4xl leading-relaxed">
+                            {description}
+                        </p>
+                    )}
                 </div>
+                {actions && <div className="flex items-center gap-3 pt-1">{actions}</div>}
             </div>
-            {actions && <div className="flex items-center gap-4">{actions}</div>}
+            <Separator className="bg-border/40" />
         </div>
     )
 }

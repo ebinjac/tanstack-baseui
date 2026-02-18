@@ -67,20 +67,20 @@ export function EnterpriseFilters({
                     value={selectedYear.toString()}
                     onValueChange={(val) => val && onYearChange(parseInt(val))}
                 >
-                    <SelectTrigger className="h-10 w-[120px] bg-background border border-border/50 font-bold text-xs rounded-xl focus:ring-primary/20 transition-all shrink-0">
-                        <Calendar className="h-4 w-4 mr-2 text-primary" />
+                    <SelectTrigger className="h-9 w-[120px] text-xs shrink-0">
+                        <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
                         <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-border/50">
+                    <SelectContent>
                         {AVAILABLE_YEARS.map((year) => (
-                            <SelectItem key={year} value={year.toString()} className="font-bold text-xs">
+                            <SelectItem key={year} value={year.toString()}>
                                 {year}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
 
-                <div className="h-6 w-px bg-border/50 hidden sm:block mx-1 shrink-0" />
+
 
                 {/* Team Search */}
                 <div className="flex-1 min-w-[200px]">
@@ -91,12 +91,12 @@ export function EnterpriseFilters({
                         <ComboboxInput
                             placeholder="Filter by Team"
                             showClear={!!teamSearch}
-                            className="h-10 bg-background border border-border/50 font-bold text-xs rounded-xl"
+                            className="h-9 text-xs"
                         />
-                        <ComboboxContent className="min-w-[260px] rounded-xl border-border/50">
+                        <ComboboxContent className="min-w-[260px]">
                             <ComboboxList>
                                 {teams.sort((a, b) => a.teamName.localeCompare(b.teamName)).map((team) => (
-                                    <ComboboxItem key={team.id} value={team.teamName} className="text-xs font-bold">
+                                    <ComboboxItem key={team.id} value={team.teamName} className="text-xs">
                                         {team.teamName}
                                     </ComboboxItem>
                                 ))}
@@ -114,18 +114,18 @@ export function EnterpriseFilters({
                         <ComboboxInput
                             placeholder="Filter by Application"
                             showClear={!!appSearch}
-                            className="h-10 bg-background border border-border/50 font-bold text-xs rounded-xl"
+                            className="h-9 text-xs"
                         />
-                        <ComboboxContent className="min-w-[300px] rounded-xl border-border/50">
+                        <ComboboxContent className="min-w-[300px]">
                             <ComboboxList>
                                 {applications
                                     .sort((a, b) => a.applicationName.localeCompare(b.applicationName))
                                     .slice(0, 100)
                                     .map((app) => (
-                                        <ComboboxItem key={app.id} value={app.applicationName} className="text-xs font-bold">
+                                        <ComboboxItem key={app.id} value={app.applicationName} className="text-xs">
                                             <div className="flex flex-col">
                                                 <span>{app.applicationName}</span>
-                                                <span className="text-[9px] text-muted-foreground font-black uppercase tracking-widest">{app.tla} • {app.assetId}</span>
+                                                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">{app.tla} • {app.assetId}</span>
                                             </div>
                                         </ComboboxItem>
                                     ))}
@@ -134,20 +134,20 @@ export function EnterpriseFilters({
                     </Combobox>
                 </div>
 
-                <div className="h-6 w-px bg-border/50 hidden lg:block mx-1 shrink-0" />
+
 
                 {/* Leadership Type */}
                 <Select
                     value={leadershipType}
                     onValueChange={(val) => val && onLeadershipTypeChange(val)}
                 >
-                    <SelectTrigger className="h-10 w-[130px] bg-background border border-border/50 font-bold text-xs rounded-xl shrink-0">
-                        <Users className="h-4 w-4 mr-2 text-primary" />
+                    <SelectTrigger className="h-9 w-[130px] text-xs shrink-0">
+                        <Users className="h-4 w-4 mr-2 text-muted-foreground" />
                         <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-border/50">
+                    <SelectContent>
                         {LEADERSHIP_TYPES.map((type) => (
-                            <SelectItem key={type.value} value={type.value} className="font-bold text-xs">
+                            <SelectItem key={type.value} value={type.value}>
                                 {type.label}
                             </SelectItem>
                         ))}
@@ -163,13 +163,13 @@ export function EnterpriseFilters({
                         <ComboboxInput
                             placeholder="Leadership Search"
                             showClear={!!leadershipSearch}
-                            className="h-10 bg-background border border-border/50 font-bold text-xs rounded-xl"
+                            className="h-9 text-xs"
                         />
-                        <ComboboxContent className="min-w-[260px] rounded-xl border-border/50">
+                        <ComboboxContent className="min-w-[260px]">
                             <ComboboxList>
                                 {leadershipOptions?.svp && (leadershipType === "all" || leadershipType === "svp") && (
                                     <ComboboxGroup>
-                                        <ComboboxLabel className="text-[9px] font-black uppercase tracking-widest px-2 py-1.5 opacity-60">SVP / Executive</ComboboxLabel>
+                                        <ComboboxLabel className="text-[9px] font-bold uppercase tracking-widest px-2 py-1.5 opacity-60">SVP / Executive</ComboboxLabel>
                                         {leadershipOptions.svp.filter((n): n is string => Boolean(n)).map((name) => (
                                             <ComboboxItem key={`svp-${name}`} value={name} className="text-xs font-bold">
                                                 {name}
@@ -179,7 +179,7 @@ export function EnterpriseFilters({
                                 )}
                                 {leadershipOptions?.vp && (leadershipType === "all" || leadershipType === "vp") && (
                                     <ComboboxGroup>
-                                        <ComboboxLabel className="text-[9px] font-black uppercase tracking-widest px-2 py-1.5 opacity-60">Vice Presidents</ComboboxLabel>
+                                        <ComboboxLabel className="text-[9px] font-bold uppercase tracking-widest px-2 py-1.5 opacity-60">Vice Presidents</ComboboxLabel>
                                         {leadershipOptions.vp.filter((n): n is string => Boolean(n)).map((name) => (
                                             <ComboboxItem key={`vp-${name}`} value={name} className="text-xs font-bold">
                                                 {name}
@@ -189,7 +189,7 @@ export function EnterpriseFilters({
                                 )}
                                 {leadershipOptions?.director && (leadershipType === "all" || leadershipType === "director") && (
                                     <ComboboxGroup>
-                                        <ComboboxLabel className="text-[9px] font-black uppercase tracking-widest px-2 py-1.5 opacity-60">Directors</ComboboxLabel>
+                                        <ComboboxLabel className="text-[9px] font-bold uppercase tracking-widest px-2 py-1.5 opacity-60">Directors</ComboboxLabel>
                                         {leadershipOptions.director.filter((n): n is string => Boolean(n)).map((name) => (
                                             <ComboboxItem key={`dir-${name}`} value={name} className="text-xs font-bold">
                                                 {name}
@@ -206,7 +206,7 @@ export function EnterpriseFilters({
             {/* Active Filters - Simple inline chips */}
             {hasActiveFilters && (
                 <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/30">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mr-1">Active:</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mr-1">Active:</span>
                     {teamSearch && (
                         <Badge variant="secondary" className="h-6 text-[10px] font-bold gap-1 pr-1 rounded-lg">
                             {teamSearch}

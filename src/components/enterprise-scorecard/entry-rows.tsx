@@ -15,9 +15,9 @@ interface EntryRowsProps {
 }
 
 export function formatVolume(value: number): string {
-    if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
-    if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
-    if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
+    if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
+    if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
+    if (value >= 1e3) return `${(value / 1e3).toFixed(2)}K`;
     return String(value);
 }
 
@@ -84,7 +84,7 @@ export function EntryRows({
                             isFuture && "text-muted-foreground/30",
                             isBreach && "text-red-600 font-semibold bg-red-500/5"
                         )}>
-                            {isFuture ? "—" : value ? parseFloat(value).toFixed(1) : "—"}
+                            {isFuture ? "—" : value ? parseFloat(value).toFixed(2) : "—"}
                         </TableCell>
                     );
                 })}
@@ -92,7 +92,7 @@ export function EntryRows({
                     "text-center py-1 text-xs font-semibold bg-muted/30",
                     avgBreach && "text-red-600"
                 )}>
-                    {avgAvail !== null ? avgAvail.toFixed(1) : "—"}
+                    {avgAvail !== null ? avgAvail.toFixed(2) : "—"}
                 </TableCell>
             </TableRow>
             {/* Volume Row */}

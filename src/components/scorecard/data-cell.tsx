@@ -78,7 +78,7 @@ export function DataCell({
         return (
             <div
                 className={cn(
-                    "text-[11px] font-black px-2 py-1 rounded-md tabular-nums transition-all border border-transparent",
+                    "text-[11px] font-bold px-2 py-1 rounded-md tabular-nums transition-all border border-transparent",
                     isBreach
                         ? "bg-red-500/10 text-red-600 border-red-500/20"
                         : "text-muted-foreground/80"
@@ -99,7 +99,7 @@ export function DataCell({
                 <Input
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
-                    className="h-8 text-[11px] text-center w-full font-black tabular-nums border-primary/20"
+                    className="h-8 text-[11px] text-center w-full font-bold tabular-nums border-primary/20"
                     placeholder={type === "availability" ? "99.5%" : "10000"}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") handleSave();
@@ -114,7 +114,7 @@ export function DataCell({
                     placeholder="Reason for breach..."
                 />
                 <div className="flex gap-1.5">
-                    <Button size="sm" className="h-7 text-[10px] flex-1 font-black uppercase tracking-widest" onClick={handleSave}>
+                    <Button size="sm" className="h-7 text-[10px] flex-1 font-bold uppercase tracking-widest" onClick={handleSave}>
                         Apply
                     </Button>
                     <Button
@@ -133,7 +133,7 @@ export function DataCell({
     return (
         <button
             className={cn(
-                "text-[11px] font-black px-2 py-1.5 rounded-md w-full transition-all tabular-nums border border-transparent",
+                "text-[11px] font-bold px-2 py-1.5 rounded-md w-full transition-all tabular-nums border border-transparent",
                 "hover:bg-primary/10 hover:border-primary/20 cursor-pointer hover:scale-105 active:scale-95 group/cell",
                 isBreach
                     ? "bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-500/20"
@@ -147,7 +147,7 @@ export function DataCell({
                 {type === "volume" && changeValue != null && (
                     <span
                         className={cn(
-                            "absolute -top-2 -right-3 text-[8px] font-black",
+                            "absolute -top-2 -right-3 text-[8px] font-bold",
                             changeValue > 0 ? "text-green-600" : "text-red-500"
                         )}
                     >

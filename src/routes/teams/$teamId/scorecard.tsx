@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -92,8 +93,8 @@ function ScorecardPage() {
   // Toggle all apps handler
   const toggleAllApps = () => {
     const allAppIds = scorecard.scorecardData.applications.map((app) => app.id);
-    if (scorecard.expandedApps.hasExpanded && 
-        scorecard.expandedApps.expandedCount === allAppIds.length) {
+    if (scorecard.expandedApps.hasExpanded &&
+      scorecard.expandedApps.expandedCount === allAppIds.length) {
       scorecard.expandedApps.collapseAll();
     } else {
       scorecard.expandedApps.expandAll(allAppIds);
@@ -106,7 +107,7 @@ function ScorecardPage() {
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="flex flex-col">
-            <h1 className="text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+            <h1 className="text-3xl font-bold tracking-tight">
               Performance Scorecard
             </h1>
             <div className="flex items-center gap-2 mt-1">
@@ -124,22 +125,14 @@ function ScorecardPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Link to="/scorecard">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-11 px-5 gap-2 rounded-xl bg-background/50 border-none hover:bg-accent/50 transition-all font-bold text-xs"
-              >
-                <Activity className="h-4 w-4 text-primary" />
+              <Button variant="outline" size="sm" className="gap-2">
+                <Activity className="h-4 w-4" />
                 Enterprise View
               </Button>
             </Link>
             {isAdmin && (
               <Link to="/teams/$teamId/settings" params={{ teamId }}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-11 px-4 rounded-xl hover:bg-muted/50 transition-all font-bold text-xs"
-                >
+                <Button variant="ghost" size="sm">
                   Manage Apps
                 </Button>
               </Link>
@@ -193,7 +186,7 @@ function ScorecardPage() {
                 <div className="flex items-center gap-3">
                   <AlertTriangle className="h-5 w-5 text-orange-600 animate-pulse" />
                   <div className="flex flex-col">
-                    <span className="text-xs font-black uppercase tracking-widest text-orange-700">
+                    <span className="text-xs font-bold uppercase tracking-wider text-orange-700">
                       Sync Required
                     </span>
                     <span className="text-[10px] font-bold text-orange-600/70">
@@ -204,7 +197,7 @@ function ScorecardPage() {
               ) : (
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span className="text-xs font-black uppercase tracking-widest text-green-700/70">
+                  <span className="text-xs font-bold uppercase tracking-wider text-green-700/70">
                     Fully Synchronized
                   </span>
                 </div>
@@ -226,11 +219,11 @@ function ScorecardPage() {
                   <button
                     key={key}
                     className={cn(
-                      "px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-tight transition-all border active:scale-95",
+                      "px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight transition-all border",
                       colorClass
                     )}
-                    onClick={() => (hasPending || isUnpublished) 
-                      ? scorecard.handlePublishClick(year, month) 
+                    onClick={() => (hasPending || isUnpublished)
+                      ? scorecard.handlePublishClick(year, month)
                       : scorecard.handleUnpublishClick(year, month)}
                   >
                     {label}
@@ -243,46 +236,29 @@ function ScorecardPage() {
 
         {/* Main Content */}
         <Card className="shadow-sm border-border/50 overflow-hidden rounded-3xl bg-card/30 backdrop-blur-sm">
-          <CardHeader className="py-5 px-6 border-b border-border/40 bg-muted/20">
+          <CardHeader className="py-4 px-6 border-b border-border/40">
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
               <div>
-                <CardTitle className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                  <BarChart3 className="h-6 w-6 text-primary" />
-                  Service Metrics
+                <CardTitle className="text-lg font-bold flex items-center gap-3">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  Application Health
                 </CardTitle>
                 <CardDescription className="text-sm font-medium mt-1">
-                  Performance tracking and reliability metrics for application services.
+                  Performance tracking and reliability metrics across your application portfolio.
                 </CardDescription>
               </div>
 
-              {/* Structured Toolbar */}
-              <div className="flex flex-wrap items-center gap-3 bg-background/60 p-1.5 rounded-2xl border border-border/50 shadow-sm backdrop-blur-md">
-                <div className="flex rounded-xl border border-border p-1 bg-muted/30">
-                  <button
-                    className={cn(
-                      "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg",
-                      scorecard.viewMode === "period"
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-muted"
-                    )}
-                    onClick={() => scorecard.setViewMode("period")}
-                  >
-                    Period
-                  </button>
-                  <button
-                    className={cn(
-                      "px-4 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all rounded-lg",
-                      scorecard.viewMode === "year"
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:bg-muted"
-                    )}
-                    onClick={() => scorecard.setViewMode("year")}
-                  >
-                    Year
-                  </button>
-                </div>
-
-                <div className="h-6 w-px bg-border/50 mx-1" />
+              {/* Toolbar */}
+              <div className="flex flex-wrap items-center gap-3">
+                <Tabs
+                  value={scorecard.viewMode}
+                  onValueChange={(val) => scorecard.setViewMode(val as ViewMode)}
+                >
+                  <TabsList>
+                    <TabsTrigger value="period">Period</TabsTrigger>
+                    <TabsTrigger value="year">Year</TabsTrigger>
+                  </TabsList>
+                </Tabs>
 
                 {/* Period/Year Selector */}
                 {scorecard.viewMode === "period" ? (
@@ -290,16 +266,16 @@ function ScorecardPage() {
                     value={scorecard.selectedPeriod}
                     onValueChange={(val) => scorecard.setSelectedPeriod(val as TimePeriod)}
                   >
-                    <SelectTrigger className="w-[160px] bg-background border border-border/50 h-9 font-bold text-xs rounded-xl focus:ring-primary/20 transition-all">
-                      <Calendar className="h-4 w-4 mr-2 text-primary" />
+                    <SelectTrigger className="w-[160px] h-9 text-xs">
+                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                    <SelectContent>
                       {TIME_PERIOD_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value} className="py-2 focus:bg-primary/10">
+                        <SelectItem key={option.value} value={option.value}>
                           <div className="flex flex-col">
-                            <span className="font-bold text-xs">{option.label}</span>
-                            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                            <span className="text-xs">{option.label}</span>
+                            <span className="text-[10px] text-muted-foreground">
                               {option.description}
                             </span>
                           </div>
@@ -312,13 +288,13 @@ function ScorecardPage() {
                     value={String(scorecard.selectedYear)}
                     onValueChange={(val) => scorecard.setSelectedYear(Number(val))}
                   >
-                    <SelectTrigger className="w-[120px] bg-background border border-border/50 h-9 font-bold text-xs rounded-xl focus:ring-primary/20 transition-all">
-                      <Calendar className="h-4 w-4 mr-2 text-primary" />
+                    <SelectTrigger className="w-[120px] h-9 text-xs">
+                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-xl border-border/50 shadow-xl">
+                    <SelectContent>
                       {AVAILABLE_YEARS.map((year) => (
-                        <SelectItem key={year} value={String(year)} className="focus:bg-primary/10 font-bold text-xs py-2">
+                        <SelectItem key={year} value={String(year)}>
                           Year {year}
                         </SelectItem>
                       ))}
@@ -326,13 +302,11 @@ function ScorecardPage() {
                   </Select>
                 )}
 
-                <div className="h-6 w-px bg-border/50 mx-1" />
-
                 <div className="flex items-center gap-1.5">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-9 px-3 text-[10px] font-black uppercase tracking-widest gap-2 bg-background hover:bg-primary/5 hover:text-primary hover:border-primary/40 border-border/50 transition-all rounded-xl active:scale-95"
+                    className="gap-2"
                     onClick={() => scorecard.setShowChart(true)}
                   >
                     <TrendingUp className="h-4 w-4" />
@@ -342,12 +316,12 @@ function ScorecardPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-9 px-3 text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-muted/50 transition-all rounded-xl border border-transparent hover:border-border/50"
+                    className="gap-2"
                     onClick={toggleAllApps}
                   >
-                    <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
-                    {scorecard.expandedApps.hasExpanded && 
-                     scorecard.expandedApps.expandedCount === (scorecard.scorecardData.applications.length || 0)
+                    <ChevronsUpDown className="h-4 w-4" />
+                    {scorecard.expandedApps.hasExpanded &&
+                      scorecard.expandedApps.expandedCount === (scorecard.scorecardData.applications.length || 0)
                       ? "Collapse All"
                       : "Expand All"}
                   </Button>

@@ -204,33 +204,18 @@ export function EntryDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl min-w-[750px] p-0 gap-0 overflow-hidden sm:rounded-2xl border-0 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] bg-background">
+            <DialogContent className="max-w-2xl min-w-[750px] p-0 gap-0 overflow-hidden">
 
-                {/* Premium Header */}
-                <div className={cn(
-                    "px-6 py-5 border-b flex items-center gap-4",
-                    section === "RFC" ? "bg-gradient-to-br from-blue-50/80 to-blue-100/30 dark:from-blue-950/30 dark:to-blue-900/10" :
-                        section === "INC" ? "bg-gradient-to-br from-red-50/80 to-red-100/30 dark:from-red-950/30 dark:to-red-900/10" :
-                            section === "ALERTS" ? "bg-gradient-to-br from-orange-50/80 to-amber-100/30 dark:from-orange-950/30 dark:to-orange-900/10" :
-                                section === "MIM" ? "bg-gradient-to-br from-purple-50/80 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/10" :
-                                    section === "COMMS" ? "bg-gradient-to-br from-green-50/80 to-emerald-100/30 dark:from-green-950/30 dark:to-green-900/10" : "bg-muted/20"
-                )}>
-
-                    <div className={cn(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white/50 dark:ring-white/10",
-                        section === "RFC" ? "bg-gradient-to-br from-blue-400 to-blue-600 shadow-blue-500/25" :
-                            section === "INC" ? "bg-gradient-to-br from-red-400 to-red-600 shadow-red-500/25" :
-                                section === "ALERTS" ? "bg-gradient-to-br from-orange-400 to-amber-500 shadow-orange-500/25" :
-                                    section === "MIM" ? "bg-gradient-to-br from-purple-400 to-purple-600 shadow-purple-500/25" :
-                                        section === "COMMS" ? "bg-gradient-to-br from-emerald-400 to-green-600 shadow-green-500/25" : "bg-gradient-to-br from-slate-400 to-slate-500 shadow-slate-500/25"
-                    )}>
-                        <SectionIcon className="w-6 h-6 text-white" />
+                {/* Header */}
+                <div className="px-6 py-5 border-b flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                        <SectionIcon className="w-5 h-5 text-muted-foreground" />
                     </div>
-                    <div className="relative z-10">
-                        <DialogTitle className="text-xl font-bold tracking-tight">
+                    <div>
+                        <DialogTitle className="text-lg font-semibold">
                             {isEditing ? "Modify Entry" : `New ${sectionConfig.name}`}
                         </DialogTitle>
-                        <p className="text-xs text-muted-foreground/80 font-medium mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                             {isEditing ? "Update details for this entry." : `Log a new ${sectionConfig.shortName.toLowerCase()} record.`}
                         </p>
                     </div>
@@ -546,20 +531,20 @@ export function EntryDialog({
                     </div>
 
                     {/* Footer */}
-                    <div className="px-6 py-4 border-t bg-gradient-to-r from-muted/20 via-muted/10 to-muted/20 flex items-center justify-end gap-3 shrink-0">
+                    <div className="px-6 py-4 border-t flex items-center justify-end gap-3 shrink-0">
                         <Button
                             type="button"
                             variant="ghost"
                             onClick={() => onOpenChange(false)}
                             disabled={isPending}
-                            className="h-9 px-4 font-medium text-muted-foreground hover:text-foreground"
+                            className="h-9 px-4"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={isPending}
-                            className="h-9 px-6 font-bold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/95 hover:to-primary/85 shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/25 transition-all"
+                            className="h-9 px-6"
                         >
                             {isPending && <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />}
                             {isEditing ? "Save Updates" : "Create Entry"}

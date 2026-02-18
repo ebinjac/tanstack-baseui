@@ -60,7 +60,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <QueryClientProvider client={queryClient}>
             <SessionGuard session={session}>
               <div className="relative flex min-h-screen flex-col">
-                {!isAdminRoute && <Header session={session} />}
+                {!isAdminRoute && !location.pathname.includes('/link-manager') && <Header session={session} />}
                 <main className="flex-1">
                   {children}
                 </main>

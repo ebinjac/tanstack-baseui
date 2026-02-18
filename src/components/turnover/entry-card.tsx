@@ -209,7 +209,7 @@ export function EntryCard({
             case "COMMS":
                 return entry.commsDetails?.emailSubject || entry.title;
             default:
-                return entry.title.substring(0, 50);
+                return entry.title;
         }
     };
 
@@ -246,14 +246,14 @@ export function EntryCard({
                 )}
             >
                 {/* Header Row */}
-                <div className="flex items-center justify-between gap-4 mb-3">
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
                         {/* Star */}
                         {!readOnly && (
                             <button
                                 onClick={() => toggleImportantMutation.mutate()}
                                 disabled={toggleImportantMutation.isPending}
-                                className="shrink-0"
+                                className="shrink-0 mt-0.5"
                             >
                                 <Star
                                     className={cn(
@@ -267,7 +267,7 @@ export function EntryCard({
                         )}
 
                         {/* Primary ID */}
-                        <span className="font-mono font-bold text-sm truncate">
+                        <span className="font-mono font-bold text-sm min-w-0 break-words" style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}>
                             {getPrimaryId()}
                         </span>
 
@@ -450,7 +450,7 @@ export function EntryCard({
                         )}
 
                         {entry.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-3">
+                            <p className="text-sm text-muted-foreground break-words" style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}>
                                 {entry.description}
                             </p>
                         )}
@@ -460,7 +460,8 @@ export function EntryCard({
                     {entry.comments && (
                         <div className="md:col-span-2">
                             <div
-                                className="text-sm prose prose-sm dark:prose-invert max-w-none line-clamp-4"
+                                className="text-sm prose prose-sm dark:prose-invert max-w-none break-words [&_*]:break-words"
+                                style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}
                                 dangerouslySetInnerHTML={{ __html: entry.comments }}
                             />
                         </div>

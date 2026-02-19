@@ -50,26 +50,28 @@ export function StepTimeline({ steps, currentStep, className }: StepTimelineProp
                             <div className="flex items-center justify-between">
                                 <p className={cn(
                                     "text-sm font-bold tracking-tight transition-colors duration-300",
-                                    isCurrent ? "text-foreground" : isCompleted ? "text-foreground/80" : "text-muted-foreground"
+                                    isCurrent ? "text-foreground" : isCompleted ? "opacity-90" : "opacity-50"
                                 )}>
                                     {step.title}
                                 </p>
                             </div>
                             <p className={cn(
                                 "text-xs mt-1 leading-relaxed transition-all duration-300",
-                                isCurrent ? "text-muted-foreground font-medium" : "text-muted-foreground/60"
+                                isCurrent ? "text-muted-foreground font-medium" : "opacity-40"
                             )}>
                                 {step.description}
                             </p>
                         </div>
 
                         {/* Current Indicator (Right Arrow) - Optional polish */}
-                        {isCurrent && (
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary/50" />
-                        )}
-                    </div>
+                        {
+                            isCurrent && (
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-primary/50" />
+                            )
+                        }
+                    </div >
                 )
             })}
-        </nav>
+        </nav >
     )
 }

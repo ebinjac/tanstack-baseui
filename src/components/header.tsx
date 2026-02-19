@@ -291,43 +291,70 @@ function DesktopNav({ tools }: { tools: Tool[] }) {
                         <span>Tools</span>
                     </NavigationMenuTrigger>
                     <NavigationMenuContent>
-                        <div className="w-[550px] p-4 bg-background/95 backdrop-blur-2xl rounded-2xl border border-border/50 shadow-2xl overflow-hidden">
-                            {/* Header */}
-                            <div className="flex items-center justify-between mb-4 px-1">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
-                                        <Command className="w-3 h-3 text-primary" />
+                        <div className="w-[550px] p-0 bg-background/95 backdrop-blur-2xl rounded-2xl border border-border/50 shadow-2xl overflow-hidden relative">
+                            {/* Texture Overlay - Increased Visibility */}
+                            <div
+                                className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                                style={{
+                                    backgroundImage: `url('/patterns/amex-1.png')`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
+                                }}
+                            />
+
+                            {/* Header Section */}
+                            <div className="relative bg-muted/30 border-b border-border/50 p-4">
+                                <div className="absolute inset-0 opacity-20 bg-[url('/patterns/amex-1.png')] bg-cover pointer-events-none" />
+                                <div className="flex items-center justify-between relative z-10">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+                                            <Command className="w-4 h-4 text-primary-foreground" />
+                                        </div>
+                                        <div>
+                                            <span className="block text-xs font-bold text-foreground uppercase tracking-widest">
+                                                Platform Suite
+                                            </span>
+                                            <span className="text-[10px] text-muted-foreground">
+                                                Select a tool to launch
+                                            </span>
+                                        </div>
                                     </div>
-                                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
-                                        Platform Suite
-                                    </span>
-                                </div>
-                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-medium">
-                                    <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[9px]">⌘</kbd>
-                                    <span>+</span>
-                                    <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[9px]">K</kbd>
+                                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 font-medium bg-background/50 px-2 py-1 rounded-md border border-border/20">
+                                        <kbd className="font-sans">⌘</kbd>
+                                        <span>+</span>
+                                        <kbd className="font-sans">K</kbd>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Tools Grid */}
-                            <ul className="grid grid-cols-2 gap-2">
-                                {tools.map((tool, index) => (
-                                    <ToolMenuItem key={tool.title} tool={tool} index={index} />
-                                ))}
-                            </ul>
+                            <div className="p-4 relative z-10">
+                                <ul className="grid grid-cols-2 gap-2">
+                                    {tools.map((tool, index) => (
+                                        <ToolMenuItem key={tool.title} tool={tool} index={index} />
+                                    ))}
+                                </ul>
 
-                            {/* Footer */}
-                            <div className="mt-4 pt-3 border-t border-border/50">
-                                <Link
-                                    to={"/teams/register" as any}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors group"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <Sparkles className="w-4 h-4 text-primary" />
-                                        <span className="text-sm font-medium text-foreground">Create a new workspace</span>
-                                    </div>
-                                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                                </Link>
+                                {/* Footer */}
+                                <div className="mt-4 pt-4 border-t border-border/50">
+                                    <Link
+                                        to={"/teams/register" as any}
+                                        className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 hover:to-primary/5 border border-primary/10 hover:border-primary/20 transition-all group relative overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-[url('/patterns/amex-1.png')] bg-cover transition-opacity duration-500" />
+
+                                        <div className="flex items-center gap-3 relative z-10">
+                                            <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center shadow-sm">
+                                                <Sparkles className="w-4 h-4 text-primary" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-semibold text-foreground">Create a new workspace</span>
+                                                <span className="text-[10px] text-muted-foreground">Launch a new team environment</span>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all relative z-10" />
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </NavigationMenuContent>
@@ -405,7 +432,7 @@ function UserDropdown({ userInitials, userName, userEmail, isAdmin, isRefreshing
         <DropdownMenu>
             <DropdownMenuTrigger
                 render={
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:ring-2 hover:ring-primary/20 transition-all">
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:ring-2 hover:ring-primary/20 transition-colors">
                         <Avatar className="h-9 w-9 border-2 border-transparent hover:border-primary/20 transition-colors">
                             <AvatarImage src="" alt={userName} />
                             <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
@@ -417,7 +444,7 @@ function UserDropdown({ userInitials, userName, userEmail, isAdmin, isRefreshing
                     </Button>
                 }
             />
-            <DropdownMenuContent className="w-64 p-2" align="end" sideOffset={8}>
+            <DropdownMenuContent className="w-64 p-2 data-closed:animate-none" align="end" sideOffset={8}>
                 {/* User Info Header */}
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mb-2">
                     <Avatar className="h-10 w-10">

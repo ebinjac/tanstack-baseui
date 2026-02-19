@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,13 +9,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { Check, ChevronRight, User, Users, Shield, BookUser, Loader2, Activity } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRouter } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { StepTimeline } from '@/components/ui/step-timeline'
 import { AnimatePresence, motion } from 'framer-motion'
+
+type TeamRegistrationInput = z.infer<typeof TeamRegistrationSchema>
 
 export const Route = createFileRoute('/teams/register')({
   component: TeamRegistrationPage,
@@ -33,7 +34,7 @@ function TeamRegistrationPage() {
   const [isCheckingName, setIsCheckingName] = useState(false)
   const router = useRouter()
 
-  const form = useForm<z.infer<typeof TeamRegistrationSchema>>({
+  const form = useForm<TeamRegistrationInput>({
     resolver: zodResolver(TeamRegistrationSchema),
     defaultValues: {
       teamName: '',
@@ -75,7 +76,7 @@ function TeamRegistrationPage() {
   const [isSuccess, setIsSuccess] = useState(false)
 
   const registerMutation = useMutation({
-    mutationFn: registerTeam,
+    mutationFn: (data: TeamRegistrationInput) => registerTeam({ data }),
     onSuccess: () => {
       setIsSuccess(true)
       toast.success('Team registration submitted successfully!', {
@@ -89,7 +90,7 @@ function TeamRegistrationPage() {
     },
   })
 
-  const handleNext = async () => {
+  const handleNext = useCallback(async () => {
     if (isCheckingName) return
 
     let valid = false
@@ -106,15 +107,15 @@ function TeamRegistrationPage() {
     if (valid) {
       setCurrentStep((prev) => Math.min(prev + 1, STEPS.length))
     }
-  }
+  }, [currentStep, isCheckingName, trigger])
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 1))
-  }
+  }, [])
 
-  const onSubmit = () => {
-    registerMutation.mutate({ data: getValues() })
-  }
+  const onSubmit = useCallback(() => {
+    registerMutation.mutate(getValues())
+  }, [registerMutation, getValues])
 
   if (isSuccess) {
     return (
@@ -125,7 +126,7 @@ function TeamRegistrationPage() {
           transition={{ duration: 0.4 }}
           className="w-full max-w-lg"
         >
-          <Card className="text-center p-10 space-y-6 shadow-xl rounded-2xl border-border/50 bg-card/50 backdrop-blur-xl relative overflow-hidden">
+          <div className="text-center p-10 space-y-6 relative overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-1 bg-success" />
             <div className="mx-auto w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mb-6">
               <Check className="h-10 w-10 text-success" />
@@ -152,7 +153,7 @@ function TeamRegistrationPage() {
                 Return to Dashboard
               </Button>
             </div>
-          </Card>
+          </div>
         </motion.div>
       </div>
     )
@@ -160,60 +161,76 @@ function TeamRegistrationPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground relative overflow-hidden selection:bg-primary/20">
-      {/* Background Ornaments */}
+      {/* Subtle Page Background */}
+      <div className="absolute inset-0 z-0 bg-muted/20" />
       <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="container mx-auto px-4 py-8 md:py-16 max-w-5xl relative z-10">
-        <div className="flex flex-col lg:flex-row gap-12">
+      <div className="container mx-auto px-4 py-8 md:py-16 max-w-6xl relative z-10 flex-1 flex flex-col">
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 flex-1">
 
-          {/* Sidebar Design */}
-          <div className="lg:w-[320px] space-y-10">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold uppercase tracking-wider">
-                Team Registration
-              </div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Create Workspace
-              </h1>
-              <p className="text-muted-foreground text-sm leading-relaxed max-w-xs">
-                Follow the steps to register your team and provision a new digital workspace on the Ensemble platform.
-              </p>
+          {/* Sidebar Design - Premium Section */}
+          <div className="lg:w-[380px] rounded-3xl relative overflow-hidden flex flex-col p-8 space-y-10 shadow-2xl bg-primary">
+            {/* Background for Sidebar */}
+            <div className="absolute inset-0 z-0">
+              {/* Pattern Overlay */}
+              <div
+                className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover bg-center opacity-20 mix-blend-overlay"
+              />
+              {/* Subtle Gradient for depth */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/20 mix-blend-multiply" />
             </div>
 
-            <StepTimeline steps={STEPS} currentStep={currentStep} />
-
-            <div className="hidden lg:block pt-4">
-              <div className="p-5 rounded-xl bg-muted/30 border border-border/50 space-y-3 shadow-sm">
-                <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-                  <Shield className="w-3.5 h-3.5 text-primary" />
-                  Security Note
+            <div className="relative z-10 space-y-8 h-full flex flex-col">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-white/10 text-white border border-white/20 text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                  Team Registration
                 </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Access is managed via Active Directory groups. Ensure the groups are active before submitting.
+                <h1 className="text-4xl font-black tracking-tight text-white drop-shadow-md">
+                  Create <br />Workspace
+                </h1>
+                <p className="text-white/80 text-sm leading-relaxed font-light">
+                  Follow the steps to register your team and provision a new digital workspace on the Ensemble platform.
                 </p>
+              </div>
+
+              {/* Timeline adapted for dark sidebar */}
+              <div className="bg-white/5 rounded-2xl p-6 border border-white/10 flex-1">
+                <StepTimeline steps={STEPS} currentStep={currentStep} className="text-white" />
+              </div>
+
+              <div className="pt-4 mt-auto">
+                <div className="p-4 rounded-xl bg-white/10 border border-white/20 space-y-3 shadow-lg">
+                  <div className="flex items-center gap-2 text-xs font-bold text-white">
+                    <Shield className="w-3.5 h-3.5" />
+                    Security Note
+                  </div>
+                  <p className="text-[11px] text-white/70 leading-relaxed">
+                    Access is managed via Active Directory groups. Ensure the groups are active before submitting.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Main Form Area */}
-          <div className="flex-1">
-            <Card className="rounded-xl border-border/50 shadow-lg bg-card/60 backdrop-blur-xl flex flex-col min-h-[500px]">
+          {/* Main Form Area - Seamless Layout */}
+          <div className="flex-1 py-4 pl-4 lg:pl-12">
+            <div className="flex flex-col min-h-[600px] h-full">
               {/* Card Header with Progress Bar */}
-              <div className="px-6 pt-6 space-y-4">
+              <div className="pt-8 space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-xl font-bold tracking-tight">{STEPS[currentStep - 1].title}</h3>
-                    <p className="text-sm text-muted-foreground">{STEPS[currentStep - 1].description}</p>
+                    <h3 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">{STEPS[currentStep - 1].title}</h3>
+                    <p className="text-base font-medium text-slate-600">{STEPS[currentStep - 1].description}</p>
                   </div>
-                  <div className="text-right flex items-center gap-2">
-                    <span className="text-sm font-medium text-muted-foreground">Step</span>
-                    <span className="text-xl font-bold text-primary">{currentStep}</span>
+                  <div className="text-right flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border/50">
+                    <span className="text-xs font-bold text-muted-foreground uppercase opacity-70">Step</span>
+                    <span className="text-lg font-black text-primary">{currentStep}</span>
                     <span className="text-xs text-muted-foreground/50">/ {STEPS.length}</span>
                   </div>
                 </div>
                 {/* Progress Bar */}
-                <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
                   <motion.div
                     className="h-full bg-primary"
                     initial={{ width: "0%" }}
@@ -223,61 +240,61 @@ function TeamRegistrationPage() {
                 </div>
               </div>
 
-              <CardContent className="flex-1 px-6 py-6 mt-2">
+              <div className="flex-1 px-0 py-8">
                 <form className="h-full">
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={currentStep}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.25 }}
+                      initial={{ opacity: 0, x: 10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.3, ease: "circOut" }}
                       className="space-y-6 h-full"
                     >
 
                       {/* Step 1: Team Identity */}
                       {currentStep === 1 && (
-                        <div className="space-y-6">
-                          <div className="space-y-1.5">
-                            <Label htmlFor="teamName" className="text-sm font-semibold">
+                        <div className="space-y-8">
+                          <div className="space-y-2">
+                            <Label htmlFor="teamName" className="text-base font-semibold">
                               Team Name <span className="text-primary">*</span>
                             </Label>
-                            <div className="relative">
+                            <div className="relative group">
                               <Input
                                 id="teamName"
                                 placeholder="e.g. Platform Operations"
-                                className={`h-10 bg-background/50 transition-all ${errors.teamName ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                                className={`h-12 text-base px-4 bg-background transition-all border-input/60 shadow-sm group-hover:border-primary/50 focus:border-primary ${errors.teamName ? 'border-destructive focus-visible:ring-destructive' : ''}`}
                                 {...form.register('teamName')}
                               />
                               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                                 {isCheckingName ? (
-                                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                                 ) : teamName?.length >= 3 && !errors.teamName ? (
-                                  <Check className="h-4 w-4 text-success" />
+                                  <Check className="h-5 w-5 text-success" />
                                 ) : null}
                               </div>
                             </div>
                             {errors.teamName && (
-                              <p className="text-[11px] text-destructive font-medium flex items-center gap-1 mt-1">
+                              <p className="text-xs text-destructive font-medium flex items-center gap-1">
                                 {errors.teamName.message}
                               </p>
                             )}
-                            <p className="text-[11px] text-muted-foreground pl-0.5">
+                            <p className="text-xs text-muted-foreground pl-0.5">
                               This name will identify your team workspace across the platform.
                             </p>
                           </div>
 
-                          <div className="space-y-1.5">
-                            <Label htmlFor="comments" className="text-sm font-semibold">
+                          <div className="space-y-2">
+                            <Label htmlFor="comments" className="text-base font-semibold">
                               Description & Notes
                             </Label>
                             <Textarea
                               id="comments"
                               placeholder="Describe the team's primary function and scope..."
-                              className="min-h-[120px] bg-background/50 resize-none text-sm"
+                              className="min-h-[160px] text-sm p-4 bg-background resize-none border-input/60 shadow-sm focus:border-primary"
                               {...form.register('comments')}
                             />
-                            <p className="text-[11px] text-muted-foreground">
+                            <p className="text-xs text-muted-foreground">
                               Provide context to help administrators process your request efficiently.
                             </p>
                           </div>
@@ -286,47 +303,51 @@ function TeamRegistrationPage() {
 
                       {/* Step 2: Access & Groups */}
                       {currentStep === 2 && (
-                        <div className="space-y-6">
-                          <div className="grid gap-6">
-                            <div className="space-y-1.5">
-                              <Label htmlFor="userGroup" className="text-sm font-semibold">
+                        <div className="space-y-8">
+                          <div className="grid gap-8">
+                            <div className="space-y-2">
+                              <Label htmlFor="userGroup" className="text-base font-semibold">
                                 User Active Directory Group <span className="text-primary">*</span>
                               </Label>
-                              <div className="relative">
-                                <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <div className="relative group">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md bg-muted/50 text-muted-foreground">
+                                  <Users className="w-4 h-4" />
+                                </div>
                                 <Input
                                   id="userGroup"
                                   placeholder="e.g. ENSEMBLE-PE-USERS"
-                                  className="pl-10 h-10 bg-background/50"
+                                  className="pl-14 h-12 text-base bg-background border-input/60 shadow-sm group-hover:border-primary/50 focus:border-primary"
                                   {...form.register('userGroup')}
                                 />
                               </div>
-                              {errors.userGroup && <p className="text-[11px] text-destructive font-medium mt-1">{errors.userGroup.message}</p>}
+                              {errors.userGroup && <p className="text-xs text-destructive font-medium">{errors.userGroup.message}</p>}
                             </div>
 
-                            <div className="space-y-1.5">
-                              <Label htmlFor="adminGroup" className="text-sm font-semibold">
+                            <div className="space-y-2">
+                              <Label htmlFor="adminGroup" className="text-base font-semibold">
                                 Admin Active Directory Group <span className="text-primary">*</span>
                               </Label>
-                              <div className="relative">
-                                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <div className="relative group">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md bg-muted/50 text-muted-foreground">
+                                  <Shield className="w-4 h-4" />
+                                </div>
                                 <Input
                                   id="adminGroup"
                                   placeholder="e.g. ENSEMBLE-PE-ADMINS"
-                                  className="pl-10 h-10 bg-background/50"
+                                  className="pl-14 h-12 text-base bg-background border-input/60 shadow-sm group-hover:border-primary/50 focus:border-primary"
                                   {...form.register('adminGroup')}
                                 />
                               </div>
-                              {errors.adminGroup && <p className="text-[11px] text-destructive font-medium mt-1">{errors.adminGroup.message}</p>}
+                              {errors.adminGroup && <p className="text-xs text-destructive font-medium">{errors.adminGroup.message}</p>}
                             </div>
                           </div>
 
-                          <div className="bg-muted/40 p-4 rounded-lg border border-border/50 space-y-2">
-                            <div className="flex items-center gap-2 text-xs font-bold">
-                              <Activity className="w-3.5 h-3.5 text-primary" />
+                          <div className="bg-primary/5 p-5 rounded-xl border border-primary/10 space-y-2">
+                            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                              <Activity className="w-4 h-4 text-primary" />
                               Group Verification
                             </div>
-                            <p className="text-[11px] text-muted-foreground leading-relaxed">
+                            <p className="text-xs text-muted-foreground leading-relaxed">
                               Access permissions are derived from these groups. Ensure the group names are exact and currently active in the corporate directory.
                             </p>
                           </div>
@@ -335,39 +356,43 @@ function TeamRegistrationPage() {
 
                       {/* Step 3: Contact Info */}
                       {currentStep === 3 && (
-                        <div className="space-y-6">
-                          <div className="grid gap-6">
-                            <div className="space-y-1.5">
-                              <Label htmlFor="contactName" className="text-sm font-semibold">
+                        <div className="space-y-8">
+                          <div className="grid gap-8">
+                            <div className="space-y-2">
+                              <Label htmlFor="contactName" className="text-base font-semibold">
                                 Primary Point of Contact <span className="text-primary">*</span>
                               </Label>
-                              <div className="relative">
-                                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <div className="relative group">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md bg-muted/50 text-muted-foreground">
+                                  <User className="w-4 h-4" />
+                                </div>
                                 <Input
                                   id="contactName"
                                   placeholder="Full Name"
-                                  className="pl-10 h-10 bg-background/50"
+                                  className="pl-14 h-12 text-base bg-background border-input/60 shadow-sm group-hover:border-primary/50 focus:border-primary"
                                   {...form.register('contactName')}
                                 />
                               </div>
-                              {errors.contactName && <p className="text-[11px] text-destructive font-medium mt-1">{errors.contactName.message}</p>}
+                              {errors.contactName && <p className="text-xs text-destructive font-medium">{errors.contactName.message}</p>}
                             </div>
 
-                            <div className="space-y-1.5">
-                              <Label htmlFor="contactEmail" className="text-sm font-semibold">
+                            <div className="space-y-2">
+                              <Label htmlFor="contactEmail" className="text-base font-semibold">
                                 Contact Email Address <span className="text-primary">*</span>
                               </Label>
-                              <div className="relative">
-                                <BookUser className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                              <div className="relative group">
+                                <div className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-md bg-muted/50 text-muted-foreground">
+                                  <BookUser className="w-4 h-4" />
+                                </div>
                                 <Input
                                   id="contactEmail"
                                   type="email"
                                   placeholder="email@company.com"
-                                  className="pl-10 h-10 bg-background/50"
+                                  className="pl-14 h-12 text-base bg-background border-input/60 shadow-sm group-hover:border-primary/50 focus:border-primary"
                                   {...form.register('contactEmail')}
                                 />
                               </div>
-                              {errors.contactEmail && <p className="text-[11px] text-destructive font-medium mt-1">{errors.contactEmail.message}</p>}
+                              {errors.contactEmail && <p className="text-xs text-destructive font-medium">{errors.contactEmail.message}</p>}
                             </div>
                           </div>
                         </div>
@@ -375,8 +400,8 @@ function TeamRegistrationPage() {
 
                       {/* Step 4: Review */}
                       {currentStep === 4 && (
-                        <div className="space-y-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-8">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {[
                               { label: "Team Name", value: getValues('teamName'), icon: Users },
                               { label: "User Access", value: getValues('userGroup'), icon: Users },
@@ -387,25 +412,25 @@ function TeamRegistrationPage() {
                             ].map((item, i) => (
                               <div
                                 key={i}
-                                className={`p-4 rounded-xl bg-muted/30 border border-border/50 space-y-1 transition-colors ${item.full ? 'md:col-span-2' : ''}`}
+                                className={`p-5 rounded-xl bg-muted/30 border border-border/50 space-y-1.5 transition-colors hover:bg-muted/50 ${item.full ? 'md:col-span-2' : ''}`}
                               >
                                 <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                                  <item.icon className="w-3 h-3" />
+                                  <item.icon className="w-3.5 h-3.5 text-primary" />
                                   {item.label}
                                 </div>
-                                <div className="text-sm font-medium text-foreground truncate">
+                                <div className="text-sm font-semibold text-foreground truncate">
                                   {item.value}
                                 </div>
                               </div>
                             ))}
                           </div>
 
-                          <div className="bg-warning/10 p-4 rounded-lg border border-warning/20 text-warning-foreground">
-                            <div className="flex items-center gap-2 mb-1.5 text-xs font-bold">
-                              <Shield className="w-3.5 h-3.5" />
+                          <div className="bg-primary/5 p-5 rounded-xl border border-primary/10">
+                            <div className="flex items-center gap-2 mb-2 text-sm font-bold text-foreground">
+                              <Shield className="w-4 h-4 text-primary" />
                               Final Validation
                             </div>
-                            <p className="text-[11px] leading-relaxed">
+                            <p className="text-xs text-muted-foreground leading-relaxed">
                               Please review the information above. By clicking submit, you confirm the details are correct and authorized.
                             </p>
                           </div>
@@ -414,12 +439,11 @@ function TeamRegistrationPage() {
                     </motion.div>
                   </AnimatePresence>
                 </form>
-              </CardContent>
-
-              <CardFooter className="px-6 py-6 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 border-t border-border/40 mt-auto">
+              </div>
+              <div className="py-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 mt-auto">
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="lg"
                   onClick={handleBack}
                   disabled={currentStep === 1 || registerMutation.isPending || isCheckingName}
                   className="text-muted-foreground hover:text-foreground font-medium"
@@ -432,7 +456,8 @@ function TeamRegistrationPage() {
                     <Button
                       onClick={handleNext}
                       disabled={isCheckingName}
-                      className="w-full sm:w-auto"
+                      size="lg"
+                      className="w-full sm:w-auto font-bold shadow-lg shadow-primary/20"
                     >
                       {isCheckingName ? (
                         <>
@@ -449,7 +474,8 @@ function TeamRegistrationPage() {
                     <Button
                       onClick={onSubmit}
                       disabled={registerMutation.isPending}
-                      className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                      size="lg"
+                      className="w-full sm:w-auto bg-primary hover:bg-primary/90 font-bold shadow-xl shadow-primary/25"
                     >
                       {registerMutation.isPending ? (
                         <>
@@ -462,8 +488,8 @@ function TeamRegistrationPage() {
                     </Button>
                   )}
                 </div>
-              </CardFooter>
-            </Card>
+              </div>
+            </div>
           </div>
         </div>
       </div>

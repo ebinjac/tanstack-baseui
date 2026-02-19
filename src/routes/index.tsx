@@ -366,6 +366,37 @@ function RouteComponent() {
 
       </main>
 
+      {/* === CTA SECTION === */}
+      <section className="relative w-full py-32 bg-primary overflow-hidden">
+        {/* Pattern Background */}
+        <div
+          className="absolute inset-0 opacity-40 mix-blend-overlay"
+          style={{
+            backgroundImage: `url('/patterns/amex-1.png')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+
+        <div className="container mx-auto px-4 relative z-10 text-center space-y-8">
+          <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-white mb-6 drop-shadow-md">
+            Ready to modernize your operations?
+          </h2>
+          <p className="text-xl md:text-2xl text-white/90 font-light max-w-2xl mx-auto mb-8 drop-shadow-sm">
+            Join the high-performance teams already using Ensemble to streamline their workflow.
+          </p>
+
+          <div className="flex justify-center">
+            <Link to="/teams/register">
+              <div className="h-16 px-12 rounded-full bg-white text-primary text-lg font-bold flex items-center gap-3 hover:scale-105 transition-transform shadow-2xl hover:shadow-white/20">
+                Enroll Today <ArrowRight className="w-5 h-5" />
+              </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Deep Dive Tool Showcase */}
       <section className="bg-muted/10 py-32 border-t border-border/50">
         <div className="container mx-auto px-4 max-w-7xl space-y-32">
@@ -382,8 +413,9 @@ function RouteComponent() {
           {/* Tool 1: Scorecard - High Fidelity Dashboard UI */}
           <div className="flex flex-col md:flex-row items-center gap-16 md:gap-24">
             <div className="md:w-1/2 space-y-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20">
-                <LayoutDashboard className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/20 ring-1 ring-white/10 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-30 mix-blend-overlay group-hover:opacity-40 transition-opacity" />
+                <LayoutDashboard className="w-8 h-8 relative z-10" />
               </div>
               <div className="space-y-4">
                 <h3 className="text-4xl font-bold tracking-tight">Scorecard. <span className="text-muted-foreground font-medium">Know your health.</span></h3>
@@ -416,10 +448,13 @@ function RouteComponent() {
                 initial={{ transform: "rotateY(-5deg) rotateX(5deg)", opacity: 0 }}
                 whileInView={{ transform: "rotateY(0deg) rotateX(0deg)", opacity: 1 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="rounded-xl bg-card border border-border shadow-2xl overflow-hidden"
+                className="rounded-xl bg-card border border-border shadow-2xl relative overflow-hidden group"
               >
+                {/* Subtle Pattern Background */}
+                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03] pointer-events-none" />
+
                 {/* Mock Browser Header */}
-                <div className="bg-muted/50 border-b border-border p-3 flex items-center gap-2">
+                <div className="bg-muted/50 border-b border-border p-3 flex items-center gap-2 relative z-10">
                   <div className="flex gap-1.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-destructive/80" />
                     <div className="w-2.5 h-2.5 rounded-full bg-warning/80" />
@@ -429,7 +464,7 @@ function RouteComponent() {
                 </div>
 
                 {/* Dashboard Content */}
-                <div className="p-6 space-y-6 bg-background/50 backdrop-blur-xl">
+                <div className="p-6 space-y-6 relative z-10">
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-lg">Platform Health</h4>
@@ -477,8 +512,9 @@ function RouteComponent() {
           {/* Tool 2: Turnover - High Fidelity UI */}
           <div className="flex flex-col md:flex-row-reverse items-center gap-16 md:gap-24">
             <div className="md:w-1/2 space-y-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20">
-                <RefreshCcw className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/20 ring-1 ring-white/10 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-30 mix-blend-overlay group-hover:opacity-40 transition-opacity" />
+                <RefreshCcw className="w-8 h-8 relative z-10" />
               </div>
               <div className="space-y-4">
                 <h3 className="text-4xl font-bold tracking-tight">Turnover. <span className="text-muted-foreground font-medium">Zero dropped balls.</span></h3>
@@ -511,9 +547,12 @@ function RouteComponent() {
                 initial={{ transform: "rotateY(5deg) rotateX(5deg)", opacity: 0 }}
                 whileInView={{ transform: "rotateY(0deg) rotateX(0deg)", opacity: 1 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="rounded-xl bg-card border border-border shadow-2xl overflow-hidden"
+                className="rounded-xl bg-card border border-border shadow-2xl relative overflow-hidden group"
               >
-                <div className="p-6 border-b border-border bg-muted/10 flex items-center justify-between">
+                {/* Subtle Pattern Background */}
+                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03] pointer-events-none" />
+
+                <div className="p-6 border-b border-border bg-muted/10 flex items-center justify-between relative z-10">
                   <div className="flex items-center gap-3">
                     <div className="px-2.5 py-1 rounded bg-primary text-primary-foreground text-xs font-bold">SHIFT #4029</div>
                     <span className="text-sm text-muted-foreground">Oct 24, 14:00 - 22:00</span>
@@ -523,7 +562,7 @@ function RouteComponent() {
                     <div className="w-8 h-8 rounded-full border-2 border-background bg-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground">AS</div>
                   </div>
                 </div>
-                <div className="p-0 bg-background">
+                <div className="p-0 relative z-10 text-foreground">
                   {[
                     { type: "CRITICAL", title: "Database Locking Incident", id: "INC-9921", time: "14:30", status: "Open" },
                     { type: "Maintenance", title: "API Gateway Patching", id: "CHG-221", time: "16:00", status: "Complete" },
@@ -556,8 +595,9 @@ function RouteComponent() {
           {/* Tool 3: Link Manager - High Fidelity UI */}
           <div className="flex flex-col md:flex-row items-center gap-16 md:gap-24">
             <div className="md:w-1/2 space-y-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20">
-                <Link2 className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/20 ring-1 ring-white/10 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-30 mix-blend-overlay group-hover:opacity-40 transition-opacity" />
+                <Link2 className="w-8 h-8 relative z-10" />
               </div>
               <div className="space-y-4">
                 <h3 className="text-4xl font-bold tracking-tight">Link Manager. <span className="text-muted-foreground font-medium">The team brain.</span></h3>
@@ -589,10 +629,13 @@ function RouteComponent() {
                 initial={{ transform: "rotateY(-5deg) rotateX(5deg)", opacity: 0 }}
                 whileInView={{ transform: "rotateY(0deg) rotateX(0deg)", opacity: 1 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="rounded-xl bg-card border border-border shadow-2xl overflow-hidden p-6 space-y-6"
+                className="rounded-xl bg-card border border-border shadow-2xl relative overflow-hidden p-6 space-y-6 group"
               >
+                {/* Subtle Pattern Background */}
+                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03] pointer-events-none" />
+
                 {/* Search Bar Mockup */}
-                <div className="relative">
+                <div className="relative z-10">
                   <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     <Link2 className="w-4 h-4" />
                   </div>
@@ -602,7 +645,7 @@ function RouteComponent() {
                 </div>
 
                 {/* Links Grid */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4 relative z-10">
                   {[
                     { name: "Production Logs", tool: "Splunk", color: "bg-success" },
                     { name: "API Documentation", tool: "Confluence", color: "bg-primary" },
@@ -629,8 +672,9 @@ function RouteComponent() {
           {/* Tool 4: EnvMatrix - High Fidelity UI */}
           <div className="flex flex-col md:flex-row-reverse items-center gap-16 md:gap-24">
             <div className="md:w-1/2 space-y-8">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-lg shadow-primary/10 ring-1 ring-primary/20">
-                <Layers className="w-8 h-8" />
+              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground shadow-xl shadow-primary/20 ring-1 ring-white/10 relative overflow-hidden group">
+                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-30 mix-blend-overlay group-hover:opacity-40 transition-opacity" />
+                <Layers className="w-8 h-8 relative z-10" />
               </div>
               <div className="space-y-4">
                 <h3 className="text-4xl font-bold tracking-tight">EnvMatrix. <span className="text-muted-foreground font-medium">Total Inventory.</span></h3>
@@ -663,43 +707,48 @@ function RouteComponent() {
                 initial={{ transform: "rotateY(5deg) rotateX(5deg)", opacity: 0 }}
                 whileInView={{ transform: "rotateY(0deg) rotateX(0deg)", opacity: 1 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
-                className="rounded-xl bg-card border border-border shadow-2xl overflow-hidden"
+                className="rounded-xl bg-card border border-border shadow-2xl relative overflow-hidden group"
               >
-                <div className="bg-muted/10 border-b border-border p-3 grid grid-cols-4 gap-4 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                {/* Subtle Pattern Background */}
+                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03] pointer-events-none" />
+
+                <div className="bg-muted/10 border-b border-border p-3 grid grid-cols-4 gap-4 text-[10px] font-bold uppercase tracking-wider text-muted-foreground relative z-10">
                   <div className="col-span-2">Service Name</div>
                   <div className="text-center">Env</div>
                   <div className="text-right pr-2">Status</div>
                 </div>
-                {[
-                  { name: "Auth Service API", type: "Microservice", env: "PROD", status: "Healthy" },
-                  { name: "Payment Gateway", type: "External API", env: "PROD", status: "Healthy" },
-                  { name: "Redis Cache Primary", type: "Database", env: "PROD", status: "Degraded" },
-                  { name: "User Profile DB", type: "Postgres", env: "UAT", status: "Healthy" },
-                  { name: "Notification Svc", type: "Lambda", env: "DEV", status: "Offline" },
-                  { name: "Promo Engine", type: "Microservice", env: "DEV", status: "Deploying" },
-                ].map((svc, i) => (
-                  <div key={i} className="p-3 border-b border-border/50 last:border-0 grid grid-cols-4 gap-4 items-center bg-background/50 hover:bg-muted/20 transition-colors">
-                    <div className="col-span-2">
-                      <div className="font-semibold text-sm">{svc.name}</div>
-                      <div className="text-[10px] text-muted-foreground">{svc.type}</div>
-                    </div>
-                    <div className="flex justify-center">
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted border border-border/50">{svc.env}</span>
-                    </div>
-                    <div className="flex justify-end pr-2">
-                      <div className={`flex items-center gap-1.5 text-[10px] font-bold ${svc.status === 'Healthy' ? 'text-success' :
-                        svc.status === 'Degraded' ? 'text-warning' :
-                          svc.status === 'Offline' ? 'text-destructive' : 'text-primary'
-                        }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${svc.status === 'Healthy' ? 'bg-success' :
-                          svc.status === 'Degraded' ? 'bg-warning' :
-                            svc.status === 'Offline' ? 'bg-destructive' : 'bg-primary animate-pulse'
-                          }`} />
-                        {svc.status.toUpperCase()}
+                <div className="relative z-10">
+                  {[
+                    { name: "Auth Service API", type: "Microservice", env: "PROD", status: "Healthy" },
+                    { name: "Payment Gateway", type: "External API", env: "PROD", status: "Healthy" },
+                    { name: "Redis Cache Primary", type: "Database", env: "PROD", status: "Degraded" },
+                    { name: "User Profile DB", type: "Postgres", env: "UAT", status: "Healthy" },
+                    { name: "Notification Svc", type: "Lambda", env: "DEV", status: "Offline" },
+                    { name: "Promo Engine", type: "Microservice", env: "DEV", status: "Deploying" },
+                  ].map((svc, i) => (
+                    <div key={i} className="p-3 border-b border-border/50 last:border-0 grid grid-cols-4 gap-4 items-center bg-background text-foreground hover:bg-muted/20 transition-colors">
+                      <div className="col-span-2">
+                        <div className="font-semibold text-sm">{svc.name}</div>
+                        <div className="text-[10px] text-muted-foreground">{svc.type}</div>
+                      </div>
+                      <div className="flex justify-center">
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-muted border border-border/50">{svc.env}</span>
+                      </div>
+                      <div className="flex justify-end pr-2">
+                        <div className={`flex items-center gap-1.5 text-[10px] font-bold ${svc.status === 'Healthy' ? 'text-success' :
+                          svc.status === 'Degraded' ? 'text-warning' :
+                            svc.status === 'Offline' ? 'text-destructive' : 'text-primary'
+                          }`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${svc.status === 'Healthy' ? 'bg-success' :
+                            svc.status === 'Degraded' ? 'bg-warning' :
+                              svc.status === 'Offline' ? 'bg-destructive' : 'bg-primary animate-pulse'
+                            }`} />
+                          {svc.status.toUpperCase()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </motion.div>
             </div>
           </div>

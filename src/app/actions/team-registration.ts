@@ -7,6 +7,7 @@ import { sql } from "drizzle-orm";
 import { requireAuth } from "@/lib/middleware/auth.middleware";
 import { sendTeamRegistrationEmail, sendTeamApprovalEmail, sendTeamRejectionEmail } from "@/lib/email/email.service";
 
+// Server functions for team registration workflow
 export const registerTeam = createServerFn({ method: "POST" })
     .middleware([requireAuth])
     .inputValidator((data: unknown) => {

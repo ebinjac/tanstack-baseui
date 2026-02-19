@@ -226,15 +226,7 @@ export function EntryCard({
         return `${diffDays} days ago`;
     };
 
-    // Get creator initials
-    const getInitials = (name: string) => {
-        return name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .toUpperCase()
-            .substring(0, 2);
-    };
+
 
     return (
         <>
@@ -245,19 +237,19 @@ export function EntryCard({
                     entry.status === "RESOLVED" && "bg-muted/10 opacity-70 border-l-4 border-l-green-500/50"
                 )}
             >
-                {/* Header Row */}
-                <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                {/* Header: Primary ID row */}
+                <div className="flex items-center justify-between gap-3 mb-1">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
                         {/* Star */}
                         {!readOnly && (
                             <button
                                 onClick={() => toggleImportantMutation.mutate()}
                                 disabled={toggleImportantMutation.isPending}
-                                className="shrink-0 mt-0.5"
+                                className="shrink-0"
                             >
                                 <Star
                                     className={cn(
-                                        "w-5 h-5 transition-colors",
+                                        "w-4 h-4 transition-colors",
                                         entry.isImportant
                                             ? "fill-orange-500 text-orange-500"
                                             : "text-muted-foreground hover:text-orange-400"
@@ -266,141 +258,149 @@ export function EntryCard({
                             </button>
                         )}
 
-                        {/* Primary ID */}
-                        <span className="font-mono font-bold text-sm min-w-0 break-words" style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}>
+                        {/* Primary ID — wraps naturally, no truncation */}
+                        <span className="font-mono font-bold text-sm break-words" style={{ overflowWrap: 'anywhere' }}>
                             {getPrimaryId()}
                         </span>
-
-                        {/* Application Badge (for grouped entries) */}
-                        {showApplicationBadge && entry.application && (
-                            <Badge
-                                variant="outline"
-                                className="shrink-0 text-[10px] font-bold px-2 py-0 h-5 bg-primary/5 border-primary/20"
-                            >
-                                {entry.application.tla}
-                            </Badge>
-                        )}
-
-                        {/* Status Badge */}
-                        {entry.status === "RESOLVED" && (
-                            <Badge
-                                variant="secondary"
-                                className="gap-1 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 shrink-0"
-                            >
-                                <CheckCircle className="w-3 h-3" />
-                                Resolved
-                            </Badge>
-                        )}
-
-                        {/* SLA Badge */}
-                        {entry.status !== "RESOLVED" && slaStatus !== "HEALTHY" && (
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <Badge
-                                            variant="secondary"
-                                            className={cn(
-                                                "gap-1 shrink-0",
-                                                slaConfig.bgClass,
-                                                slaConfig.colorClass
-                                            )}
-                                        >
-                                            <SlaIcon className="w-3 h-3" />
-                                            {slaConfig.label}
-                                        </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>
-                                            Created {formatDistanceToNow(new Date(entry.createdAt))} ago
-                                        </p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        )}
-
-                        {/* RFC Status Badge */}
-                        {entry.section === "RFC" && entry.rfcDetails && (
-                            <Badge variant="outline" className="shrink-0 text-[10px] gap-1.5 px-2 py-0 h-5">
-                                <div className={cn(
-                                    "w-1.5 h-1.5 rounded-full",
-                                    entry.rfcDetails.rfcStatus === "Approved" || entry.rfcDetails.rfcStatus === "Implemented" ? "bg-green-500" :
-                                        entry.rfcDetails.rfcStatus === "Rejected" || entry.rfcDetails.rfcStatus === "Cancelled" ? "bg-red-500" :
-                                            entry.rfcDetails.rfcStatus === "In Progress" || entry.rfcDetails.rfcStatus === "Pending Approval" ? "bg-blue-500" :
-                                                "bg-slate-400"
-                                )} />
-                                {entry.rfcDetails.rfcStatus}
-                            </Badge>
-                        )}
-
-                        {/* Validated By (RFC) */}
-                        {entry.section === "RFC" && entry.rfcDetails?.validatedBy && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
-                                <CheckCircle className="w-3 h-3" />
-                                {entry.rfcDetails.validatedBy}
-                            </span>
-                        )}
                     </div>
 
-                    {/* Right Side: Meta & Actions */}
-                    <div className="flex items-center gap-3 shrink-0">
-                        {/* Creator */}
-                        <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                                {getInitials(entry.createdBy)}
-                            </div>
-                            <span className="text-sm text-muted-foreground hidden sm:block">
-                                {entry.createdBy.split(" ")[0]}
-                            </span>
-                        </div>
+                    {/* Actions — always visible on the right */}
+                    {!readOnly && (
+                        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7"
+                                onClick={() => setShowInfoDialog(true)}
+                            >
+                                <Info className="w-3.5 h-3.5" />
+                            </Button>
 
-                        {/* Time */}
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {getRelativeTime()}
-                        </span>
-
-                        {/* Actions */}
-                        {!readOnly && (
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => setShowInfoDialog(true)}
-                                >
-                                    <Info className="w-4 h-4" />
-                                </Button>
-
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8")}>
-                                        <MoreHorizontal className="w-4 h-4" />
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => onEdit?.(entry)}>
-                                            <Edit className="w-4 h-4 mr-2" />
-                                            Edit
-                                        </DropdownMenuItem>
-                                        {entry.status === "OPEN" && (
-                                            <DropdownMenuItem
-                                                onClick={() => setShowResolveDialog(true)}
-                                            >
-                                                <CheckCircle className="w-4 h-4 mr-2" />
-                                                Resolve
-                                            </DropdownMenuItem>
-                                        )}
-                                        <DropdownMenuSeparator />
+                            <DropdownMenu>
+                                <DropdownMenuTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-7 w-7")}>
+                                    <MoreHorizontal className="w-3.5 h-3.5" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => onEdit?.(entry)}>
+                                        <Edit className="w-4 h-4 mr-2" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    {entry.status === "OPEN" && (
                                         <DropdownMenuItem
-                                            onClick={() => setShowDeleteDialog(true)}
-                                            className="text-destructive focus:text-destructive"
+                                            onClick={() => setShowResolveDialog(true)}
                                         >
-                                            <Trash2 className="w-4 h-4 mr-2" />
-                                            Delete
+                                            <CheckCircle className="w-4 h-4 mr-2" />
+                                            Resolve
                                         </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                        )}
-                    </div>
+                                    )}
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                        onClick={() => setShowDeleteDialog(true)}
+                                        className="text-destructive focus:text-destructive"
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-2" />
+                                        Delete
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    )}
+                </div>
+
+                {/* Metadata row — compact, wraps gracefully */}
+                <div className="flex items-center gap-2 flex-wrap mb-3">
+                    {/* Application Badge (for grouped entries) */}
+                    {showApplicationBadge && entry.application && (
+                        <Badge
+                            variant="outline"
+                            className="text-[10px] font-bold px-1.5 py-0 h-[18px] bg-primary/5 border-primary/20"
+                        >
+                            {entry.application.tla}
+                        </Badge>
+                    )}
+
+                    {/* SLA Badge */}
+                    {entry.status !== "RESOLVED" && slaStatus !== "HEALTHY" && (
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger>
+                                    <Badge
+                                        variant="secondary"
+                                        className={cn(
+                                            "gap-1 text-[10px] px-1.5 py-0 h-[18px]",
+                                            slaConfig.bgClass,
+                                            slaConfig.colorClass
+                                        )}
+                                    >
+                                        <SlaIcon className="w-2.5 h-2.5" />
+                                        {slaConfig.label}
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>
+                                        Created {formatDistanceToNow(new Date(entry.createdAt))} ago
+                                    </p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+
+                    {/* Status Badge */}
+                    {entry.status === "RESOLVED" && (
+                        <Badge
+                            variant="secondary"
+                            className="gap-1 text-[10px] px-1.5 py-0 h-[18px] bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        >
+                            <CheckCircle className="w-2.5 h-2.5" />
+                            Resolved
+                        </Badge>
+                    )}
+
+                    {/* RFC Status Badge */}
+                    {entry.section === "RFC" && entry.rfcDetails && (
+                        <Badge variant="outline" className="text-[10px] gap-1 px-1.5 py-0 h-[18px]">
+                            <div className={cn(
+                                "w-1.5 h-1.5 rounded-full",
+                                entry.rfcDetails.rfcStatus === "Approved" || entry.rfcDetails.rfcStatus === "Implemented" ? "bg-green-500" :
+                                    entry.rfcDetails.rfcStatus === "Rejected" || entry.rfcDetails.rfcStatus === "Cancelled" ? "bg-red-500" :
+                                        entry.rfcDetails.rfcStatus === "In Progress" || entry.rfcDetails.rfcStatus === "Pending Approval" ? "bg-blue-500" :
+                                            "bg-slate-400"
+                            )} />
+                            {entry.rfcDetails.rfcStatus}
+                        </Badge>
+                    )}
+
+                    {/* Validated By (RFC) */}
+                    {entry.section === "RFC" && entry.rfcDetails?.validatedBy && (
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                            <CheckCircle className="w-2.5 h-2.5" />
+                            {entry.rfcDetails.validatedBy}
+                        </span>
+                    )}
+
+                    {/* Separator dot */}
+                    <span className="text-muted-foreground/30 text-[10px]">·</span>
+
+                    {/* Creator — compact text */}
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger>
+                                <span className="text-[10px] text-muted-foreground font-medium">
+                                    {entry.createdBy}
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Created by {entry.createdBy}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
+
+                    <span className="text-muted-foreground/30 text-[10px]">·</span>
+
+                    {/* Time — compact */}
+                    <span className="text-[10px] text-muted-foreground">
+                        {getRelativeTime()}
+                    </span>
                 </div>
 
                 {/* Content Section */}

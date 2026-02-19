@@ -37,13 +37,22 @@ interface TeamSwitcherProps {
 
 const STORAGE_KEY = "ensemble-last-team-id"
 
+// Extracted outside component to avoid re-creation on every render
+const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+}
+
 export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
     const router = useRouter()
     const [open, setOpen] = React.useState(false)
 
-    // Get active team from URL
-    const matches = useRouterState({ select: (s) => s.matches })
-    const activeTeamIdFromUrl = (matches.find((d) => (d.params as any).teamId)?.params as any)?.teamId
+    // Optimized: extract only the teamId (primitive) to avoid re-renders on unrelated router changes
+    const activeTeamIdFromUrl = useRouterState({
+        select: (s) => {
+            const match = s.matches.find((d) => (d.params as any).teamId)
+            return (match?.params as any)?.teamId as string | undefined
+        },
+    })
 
     const [selectedTeamId, setSelectedTeamId] = React.useState<string | null>(null)
 
@@ -62,7 +71,10 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
         }
     }, [activeTeamIdFromUrl, teams])
 
-    const activeTeam = teams.find((team) => team.teamId === selectedTeamId)
+    const activeTeam = React.useMemo(
+        () => teams.find((team) => team.teamId === selectedTeamId),
+        [teams, selectedTeamId]
+    )
 
     if (teams.length === 0) {
         return (
@@ -85,10 +97,6 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
         )
     }
 
-    const getInitials = (name: string) => {
-        return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-    }
-
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger
@@ -97,7 +105,7 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
                     "w-full md:w-[260px] justify-between px-3 h-11",
                     "border-border/40 bg-background/80 backdrop-blur-md",
                     "hover:bg-accent/50 hover:border-border/60",
-                    "transition-all duration-200 active:scale-[0.98]",
+                    "transition-colors duration-200",
                     "shadow-sm hover:shadow-md",
                     className
                 )}
@@ -130,36 +138,46 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
             </PopoverTrigger>
             <PopoverContent
                 className={cn(
-                    "w-[320px] p-0 overflow-hidden",
-                    "border-border/50 shadow-2xl",
-                    "bg-popover/95 backdrop-blur-xl"
+                    "w-[320px] p-0 overflow-hidden relative",
+                    "border-border/50 shadow-lg",
+                    "bg-popover/95 backdrop-blur-xl rounded-2xl",
+                    "data-closed:animate-none"
                 )}
                 align="end"
             >
-                <Command className="bg-transparent">
+                {/* Texture Overlay */}
+                <div
+                    className="absolute inset-0 opacity-[0.03] pointer-events-none"
+                    style={{
+                        backgroundImage: `url('/patterns/amex-1.png')`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}
+                />
+
+                <Command className="bg-transparent relative z-10 p-0">
                     {/* Header */}
-                    <div className="px-4 py-3 border-b border-border/50">
-                        <div className="flex items-center gap-2">
-                            <Sparkles className="h-3.5 w-3.5 text-primary" />
-                            <span className="text-xs font-bold text-foreground">Switch Workspace</span>
+                    <div className="relative bg-muted/30 border-b border-border/50 p-3">
+                        <div className="absolute inset-0 opacity-10 bg-[url('/patterns/amex-1.png')] bg-cover pointer-events-none mix-blend-overlay" />
+                        <div className="flex items-center gap-2 relative z-10 px-1">
+                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                                Select Organization
+                            </span>
                         </div>
                     </div>
 
-                    <CommandInput
-                        placeholder="Search workspaces..."
-                        className="h-11 border-none focus:ring-0 bg-transparent"
-                    />
-                    <CommandList className="max-h-[280px] scrollbar-thin">
-                        <CommandEmpty className="py-4">
-                            <EmptyState
-                                icon={Search}
-                                title="No workspaces found"
-                                description="No workspaces match your search."
-                                variant="search"
-                                size="sm"
-                            />
+                    <div className="p-2">
+                        <CommandInput
+                            placeholder="Search workspaces..."
+                            className="h-9 border border-border/50 rounded-lg bg-background/50 focus:ring-0 focus:border-primary/50 transition-all text-xs"
+                        />
+                    </div>
+
+                    <CommandList className="max-h-[280px] scrollbar-thin px-2 pb-2">
+                        <CommandEmpty className="py-6 text-center text-xs text-muted-foreground">
+                            No workspaces found.
                         </CommandEmpty>
-                        <CommandGroup className="p-2">
+                        <CommandGroup>
                             {teams.map((team) => {
                                 const isActive = selectedTeamId === team.teamId
 
@@ -171,34 +189,33 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
                                             localStorage.setItem(STORAGE_KEY, team.teamId)
                                             setSelectedTeamId(team.teamId)
 
-                                            // Detect if we are in a team context by looking for teamId param in any match
-                                            const teamMatch = [...matches].reverse().find(m => (m.params as any).teamId)
-                                            const leafMatch = matches[matches.length - 1]
+                                            // Read matches fresh at selection time instead of subscribing to it
+                                            const currentMatches = router.state.matches
+                                            const teamMatch = [...currentMatches].reverse().find((m: any) => (m.params as any).teamId)
+                                            const leafMatch = currentMatches[currentMatches.length - 1]
 
                                             if (teamMatch && leafMatch) {
                                                 router.navigate({
                                                     to: leafMatch.routeId as any,
                                                     params: { ...(leafMatch.params as any), teamId: team.teamId },
-                                                    // Keep search params if any
                                                     search: (prev: any) => prev,
                                                 } as any)
                                             }
                                         }}
                                         className={cn(
-                                            "flex items-center justify-between py-2.5 px-3 my-0.5 rounded-xl cursor-pointer group transition-all duration-200",
+                                            "flex items-center justify-between py-3 px-3 mb-1 rounded-xl cursor-pointer group transition-all duration-200",
                                             isActive
-                                                ? "bg-primary/8 border border-primary/20"
-                                                : "hover:bg-accent/60 border border-transparent"
+                                                ? "bg-primary/5 border border-primary/10 shadow-sm"
+                                                : "hover:bg-muted/50 border border-transparent hover:border-border/30"
                                         )}
                                     >
                                         <div className="flex items-center gap-3 flex-1 overflow-hidden">
                                             <div className={cn(
-                                                "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
-                                                "text-[11px] font-bold transition-all duration-200",
-                                                "border",
+                                                "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm transition-all duration-200",
+                                                "text-[10px] font-bold border",
                                                 isActive
-                                                    ? "bg-primary/10 text-primary border-primary/30"
-                                                    : "bg-muted/40 border-border/50 text-muted-foreground group-hover:bg-muted/60"
+                                                    ? "bg-primary text-primary-foreground border-primary"
+                                                    : "bg-background text-muted-foreground border-border/50 group-hover:border-primary/30 group-hover:text-foreground"
                                             )}>
                                                 {getInitials(team.teamName)}
                                             </div>
@@ -210,33 +227,32 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
                                                     )}>
                                                         {team.teamName}
                                                     </span>
-                                                    {isActive && (
-                                                        <div className="flex items-center gap-1 shrink-0">
-                                                            <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                                                            <span className="text-[9px] font-bold text-primary uppercase">Active</span>
-                                                        </div>
-                                                    )}
                                                 </div>
-                                                <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
+                                                <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wider truncate">
                                                     {team.role}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-1 ml-2">
+
+                                        <div className="flex items-center gap-1">
+                                            {isActive && (
+                                                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse mr-2" />
+                                            )}
+
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 className={cn(
-                                                    "h-8 w-8 rounded-lg transition-all",
+                                                    "h-7 w-7 rounded-md transition-all",
                                                     "opacity-0 group-hover:opacity-100",
-                                                    "hover:bg-primary/10 hover:text-primary"
+                                                    "hover:bg-background hover:shadow-sm hover:text-primary",
+                                                    "text-muted-foreground"
                                                 )}
                                                 onClick={(e) => {
                                                     e.stopPropagation()
                                                     setOpen(false)
                                                     router.navigate({
-                                                        to: '/teams/$teamId/settings' as any,
-                                                        params: { teamId: team.teamId }
+                                                        to: `/teams/${team.teamId}/settings`,
                                                     } as any)
                                                 }}
                                             >
@@ -248,24 +264,24 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
                             })}
                         </CommandGroup>
                     </CommandList>
-                    <CommandSeparator className="opacity-30" />
-                    <div className="p-2 bg-muted/10">
+
+                    <div className="p-3 bg-muted/20 border-t border-border/50">
                         <CommandItem
                             onSelect={() => {
                                 setOpen(false)
                                 router.navigate({ to: '/teams/register' as any })
                             }}
                             className={cn(
-                                "flex items-center justify-center gap-2 py-2.5 rounded-xl cursor-pointer group transition-all",
-                                "border border-dashed border-border/50",
-                                "bg-background/50 hover:bg-primary/5",
-                                "hover:border-primary/40 hover:text-primary"
+                                "flex items-center justify-center gap-2 py-2.5 rounded-xl cursor-pointer group transition-all relative overflow-hidden",
+                                "bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 hover:to-primary/5",
+                                "border border-primary/10 hover:border-primary/20 hover:shadow-sm"
                             )}
                         >
-                            <div className="h-6 w-6 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <PlusCircle className="h-3.5 w-3.5 text-primary" />
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-[url('/patterns/amex-1.png')] bg-cover transition-opacity duration-500 pointer-events-none" />
+                            <div className="h-5 w-5 rounded-md bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
+                                <PlusCircle className="h-3 w-3 text-primary" />
                             </div>
-                            <span className="text-xs font-bold uppercase tracking-wider">Create New Workspace</span>
+                            <span className="text-xs font-bold text-foreground group-hover:text-primary transition-colors relative z-10">Create New Workspace</span>
                         </CommandItem>
                     </div>
                 </Command>

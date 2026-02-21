@@ -1,11 +1,24 @@
 import * as React from 'react'
-import { createFileRoute } from "@tanstack/react-router";
-import { PageHeader } from "@/components/shared";
+import { createFileRoute } from '@tanstack/react-router'
+import { PageHeader } from '@/components/shared'
 import { getRegistrationRequests } from '@/app/actions/team-registration'
 import { getTeams } from '@/app/actions/teams'
 import { useQuery } from '@tanstack/react-query'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { ClipboardList, Clock, CheckCircle2, XCircle, TrendingUp, Users } from 'lucide-react'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
+import {
+  ClipboardList,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  TrendingUp,
+  Users,
+} from 'lucide-react'
 import {
   Area,
   AreaChart,
@@ -14,7 +27,7 @@ import {
   YAxis,
   Pie,
   PieChart,
-  Cell
+  Cell,
 } from 'recharts'
 import {
   ChartConfig,
@@ -22,7 +35,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   ChartLegend,
-  ChartLegendContent
+  ChartLegendContent,
 } from '@/components/ui/chart'
 import { format, subDays, startOfDay, isSameDay } from 'date-fns'
 import { adminKeys, teamKeys } from '@/lib/query-keys'
@@ -45,9 +58,10 @@ function AdminDashboard() {
   // Calculate stats from requests
   const stats = {
     totalRequests: requests?.length || 0,
-    pending: requests?.filter(r => r.status === 'pending').length || 0,
-    approvedRequests: requests?.filter(r => r.status === 'approved').length || 0,
-    rejected: requests?.filter(r => r.status === 'rejected').length || 0,
+    pending: requests?.filter((r) => r.status === 'pending').length || 0,
+    approvedRequests:
+      requests?.filter((r) => r.status === 'approved').length || 0,
+    rejected: requests?.filter((r) => r.status === 'rejected').length || 0,
     activeTeams: teams?.length || 0,
   }
 
@@ -56,7 +70,9 @@ function AdminDashboard() {
     const data = []
     for (let i = 13; i >= 0; i--) {
       const date = subDays(startOfDay(new Date()), i)
-      const count = requests?.filter(r => isSameDay(new Date(r.requestedAt), date)).length || 0
+      const count =
+        requests?.filter((r) => isSameDay(new Date(r.requestedAt), date))
+          .length || 0
       data.push({
         date: format(date, 'MMM dd'),
         requests: count,
@@ -66,11 +82,22 @@ function AdminDashboard() {
   }, [requests])
 
   // Process status distribution data
-  const statusData = React.useMemo(() => [
-    { status: 'pending', count: stats.pending, fill: 'var(--color-pending)' },
-    { status: 'approved', count: stats.approvedRequests, fill: 'var(--color-approved)' },
-    { status: 'rejected', count: stats.rejected, fill: 'var(--color-rejected)' },
-  ], [stats])
+  const statusData = React.useMemo(
+    () => [
+      { status: 'pending', count: stats.pending, fill: 'var(--color-pending)' },
+      {
+        status: 'approved',
+        count: stats.approvedRequests,
+        fill: 'var(--color-approved)',
+      },
+      {
+        status: 'rejected',
+        count: stats.rejected,
+        fill: 'var(--color-rejected)',
+      },
+    ],
+    [stats],
+  )
 
   const chartConfig = {
     requests: {
@@ -100,10 +127,34 @@ function AdminDashboard() {
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard title="Total Requests" value={stats.totalRequests} icon={ClipboardList} color="blue" description="Total lifetime requests" />
-        <StatCard title="Pending Review" value={stats.pending} icon={Clock} color="amber" description="Awaiting admin action" />
-        <StatCard title="Active Teams" value={stats.activeTeams} icon={CheckCircle2} color="emerald" description="Currently active in system" />
-        <StatCard title="Rejected" value={stats.rejected} icon={XCircle} color="red" description="Requests denied" />
+        <StatCard
+          title="Total Requests"
+          value={stats.totalRequests}
+          icon={ClipboardList}
+          color="blue"
+          description="Total lifetime requests"
+        />
+        <StatCard
+          title="Pending Review"
+          value={stats.pending}
+          icon={Clock}
+          color="amber"
+          description="Awaiting admin action"
+        />
+        <StatCard
+          title="Active Teams"
+          value={stats.activeTeams}
+          icon={CheckCircle2}
+          color="emerald"
+          description="Currently active in system"
+        />
+        <StatCard
+          title="Rejected"
+          value={stats.rejected}
+          icon={XCircle}
+          color="red"
+          description="Requests denied"
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -115,19 +166,36 @@ function AdminDashboard() {
                 <TrendingUp className="h-5 w-5 text-primary" />
                 Registration Trends
               </CardTitle>
-              <CardDescription>Daily team registration requests over the last 14 days.</CardDescription>
+              <CardDescription>
+                Daily team registration requests over the last 14 days.
+              </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="pt-4">
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <AreaChart data={trendData} margin={{ left: -20, right: 10, top: 10, bottom: 0 }}>
+              <AreaChart
+                data={trendData}
+                margin={{ left: -20, right: 10, top: 10, bottom: 0 }}
+              >
                 <defs>
                   <linearGradient id="fillRequests" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-requests)" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="var(--color-requests)" stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-requests)"
+                      stopOpacity={0.3}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-requests)"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" className="stroke-muted" />
+                <CartesianGrid
+                  vertical={false}
+                  strokeDasharray="3 3"
+                  className="stroke-muted"
+                />
                 <XAxis
                   dataKey="date"
                   tickLine={false}
@@ -157,10 +225,15 @@ function AdminDashboard() {
               <Users className="h-5 w-5 text-primary" />
               Request Status
             </CardTitle>
-            <CardDescription>Distribution of application statuses.</CardDescription>
+            <CardDescription>
+              Distribution of application statuses.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center pt-4">
-            <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
+            <ChartContainer
+              config={chartConfig}
+              className="mx-auto aspect-square h-[250px]"
+            >
               <PieChart>
                 <ChartTooltip
                   cursor={false}
@@ -178,18 +251,30 @@ function AdminDashboard() {
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
                 </Pie>
-                <ChartLegend content={<ChartLegendContent nameKey="status" />} className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center" />
+                <ChartLegend
+                  content={<ChartLegendContent nameKey="status" />}
+                  className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
+                />
               </PieChart>
             </ChartContainer>
             <div className="mt-4 w-full space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Approval Rate</span>
-                <span className="font-semibold">{stats.totalRequests ? Math.round((stats.approvedRequests / stats.totalRequests) * 100) : 0}%</span>
+                <span className="font-semibold">
+                  {stats.totalRequests
+                    ? Math.round(
+                        (stats.approvedRequests / stats.totalRequests) * 100,
+                      )
+                    : 0}
+                  %
+                </span>
               </div>
               <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
                 <div
                   className="h-full bg-emerald-500"
-                  style={{ width: `${stats.totalRequests ? (stats.approvedRequests / stats.totalRequests) * 100 : 0}%` }}
+                  style={{
+                    width: `${stats.totalRequests ? (stats.approvedRequests / stats.totalRequests) * 100 : 0}%`,
+                  }}
                 />
               </div>
             </div>
@@ -200,7 +285,19 @@ function AdminDashboard() {
   )
 }
 
-function StatCard({ title, value, icon: Icon, color, description }: { title: string, value: number, icon: any, color: 'blue' | 'amber' | 'emerald' | 'red', description?: string }) {
+function StatCard({
+  title,
+  value,
+  icon: Icon,
+  color,
+  description,
+}: {
+  title: string
+  value: number
+  icon: any
+  color: 'blue' | 'amber' | 'emerald' | 'red'
+  description?: string
+}) {
   const colors = {
     blue: 'text-blue-600 bg-blue-100 dark:bg-blue-900/20',
     amber: 'text-amber-600 bg-amber-100 dark:bg-amber-900/20',
@@ -213,11 +310,17 @@ function StatCard({ title, value, icon: Icon, color, description }: { title: str
       <CardContent className="p-6 relative">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              {title}
+            </p>
             <p className="text-3xl font-bold tracking-tight">{value}</p>
-            {description && <p className="text-xs text-muted-foreground">{description}</p>}
+            {description && (
+              <p className="text-xs text-muted-foreground">{description}</p>
+            )}
           </div>
-          <div className={`p-3 rounded-xl transition-transform group-hover:scale-110 duration-300 ${colors[color]}`}>
+          <div
+            className={`p-3 rounded-xl transition-transform group-hover:scale-110 duration-300 ${colors[color]}`}
+          >
             <Icon className="h-6 w-6" />
           </div>
         </div>

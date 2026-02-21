@@ -52,28 +52,28 @@ const { data: scorecardEntries } = useQuery(...)
 
 ## Naming Cheat Sheet
 
-| Type | Convention | Examples |
-|------|-----------|----------|
-| **Booleans** | `is`/`has`/`can`/`should` prefix | `isLoading`, `hasPermission`, `canEdit`, `shouldAutoSave` |
-| **Arrays** | Plural nouns | `teamMembers`, `scorecardEntries`, `activeLinks` |
-| **Functions** | Verb + noun | `createTeam`, `deleteEntry`, `validateScore`, `fetchMembers` |
-| **Event handlers** | `handle` + event | `handleSubmit`, `handleFilterChange`, `handleRowClick` |
-| **Callbacks (props)** | `on` + event | `onSubmit`, `onChange`, `onRowClick`, `onDelete` |
-| **Hooks** | `use` + purpose | `useTeamMembers`, `useScorecardFilters`, `useDebounce` |
-| **Components** | Noun (PascalCase) | `TeamMemberCard`, `ScorecardFilterBar`, `LinkImportDialog` |
-| **Constants** | UPPER_SNAKE or descriptive | `MAX_FILE_SIZE`, `DEFAULT_PAGE_SIZE`, `COOLDOWN_MINUTES` |
-| **Types/Interfaces** | Noun (PascalCase) | `TeamMember`, `ScorecardEntry`, `LinkCategory` |
+| Type                  | Convention                       | Examples                                                     |
+| --------------------- | -------------------------------- | ------------------------------------------------------------ |
+| **Booleans**          | `is`/`has`/`can`/`should` prefix | `isLoading`, `hasPermission`, `canEdit`, `shouldAutoSave`    |
+| **Arrays**            | Plural nouns                     | `teamMembers`, `scorecardEntries`, `activeLinks`             |
+| **Functions**         | Verb + noun                      | `createTeam`, `deleteEntry`, `validateScore`, `fetchMembers` |
+| **Event handlers**    | `handle` + event                 | `handleSubmit`, `handleFilterChange`, `handleRowClick`       |
+| **Callbacks (props)** | `on` + event                     | `onSubmit`, `onChange`, `onRowClick`, `onDelete`             |
+| **Hooks**             | `use` + purpose                  | `useTeamMembers`, `useScorecardFilters`, `useDebounce`       |
+| **Components**        | Noun (PascalCase)                | `TeamMemberCard`, `ScorecardFilterBar`, `LinkImportDialog`   |
+| **Constants**         | UPPER_SNAKE or descriptive       | `MAX_FILE_SIZE`, `DEFAULT_PAGE_SIZE`, `COOLDOWN_MINUTES`     |
+| **Types/Interfaces**  | Noun (PascalCase)                | `TeamMember`, `ScorecardEntry`, `LinkCategory`               |
 
 ## Anti-Pattern Names to Avoid
 
-| ❌ Avoid | ✅ Prefer |
-|----------|----------|
-| `data`, `info`, `item` | `teamData`, `memberInfo`, `scorecardEntry` |
-| `temp`, `tmp`, `val` | Named by what it holds |
-| `flag`, `status` | `isActive`, `registrationStatus` |
-| `list`, `arr` | `teamMembers`, `pendingRequests` |
-| `handle`, `process` | `handleMemberInvite`, `calculateScore` |
-| `util`, `helper` | Name by what it does |
+| ❌ Avoid               | ✅ Prefer                                       |
+| ---------------------- | ----------------------------------------------- |
+| `data`, `info`, `item` | `teamData`, `memberInfo`, `scorecardEntry`      |
+| `temp`, `tmp`, `val`   | Named by what it holds                          |
+| `flag`, `status`       | `isActive`, `registrationStatus`                |
+| `list`, `arr`          | `teamMembers`, `pendingRequests`                |
+| `handle`, `process`    | `handleMemberInvite`, `calculateScore`          |
+| `util`, `helper`       | Name by what it does                            |
 | `Manager`, `Processor` | More specific: `TeamService`, `ScoreCalculator` |
 
 ## Context

@@ -1,44 +1,44 @@
-import nodemailer from "nodemailer";
-import { render } from "@react-email/components";
-import { TeamRegistrationEmail } from "./templates/team-registration";
-import { TeamApprovalEmail } from "./templates/team-approval";
-import { TeamRejectionEmail } from "./templates/team-rejection";
-import React from "react";
+import nodemailer from 'nodemailer'
+import { render } from '@react-email/components'
+import { TeamRegistrationEmail } from './templates/team-registration'
+import { TeamApprovalEmail } from './templates/team-approval'
+import { TeamRejectionEmail } from './templates/team-rejection'
+import React from 'react'
 
 // SMTP Configuration from environment variables
-const SMTP_HOST = process.env.SMTP_HOST || "smtp.freesmtpservers.com";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "25", 10);
-const SMTP_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || "ensemble@gmail.com";
-const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || "Ensemble";
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp.freesmtpservers.com'
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '25', 10)
+const SMTP_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || 'ensemble@gmail.com'
+const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || 'Ensemble'
 
 // Create nodemailer transporter
 const transporter = nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: false, // Port 25 typically doesn't use TLS
-    tls: {
-        rejectUnauthorized: false, // Allow self-signed certificates on free SMTP
-    },
-});
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: false, // Port 25 typically doesn't use TLS
+  tls: {
+    rejectUnauthorized: false, // Allow self-signed certificates on free SMTP
+  },
+})
 
 export async function sendTeamRegistrationEmail(options: {
-    to: string;
-    teamName: string;
-    contactName: string;
+  to: string
+  teamName: string
+  contactName: string
 }): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    const { to, teamName, contactName } = options;
+  const { to, teamName, contactName } = options
 
-    const subject = `Team Registration Request Received - ${teamName}`;
+  const subject = `Team Registration Request Received - ${teamName}`
 
-    try {
-        const htmlContent = await render(
-            React.createElement(TeamRegistrationEmail, {
-                contactName: contactName,
-                teamName: teamName
-            })
-        );
+  try {
+    const htmlContent = await render(
+      React.createElement(TeamRegistrationEmail, {
+        contactName: contactName,
+        teamName: teamName,
+      }),
+    )
 
-        const textContent = `
+    const textContent = `
 Team Registration Request Received
 
 Dear ${contactName},
@@ -53,88 +53,99 @@ You will receive another email once your team registration has been approved. If
 
 Best regards,
 The Ensemble Team
-    `;
+    `
 
-        const info = await transporter.sendMail({
-            from: `"${SMTP_FROM_NAME}" <${SMTP_FROM_EMAIL}>`,
-            to,
-            subject,
-            text: textContent,
-            html: htmlContent,
-        });
+    const info = await transporter.sendMail({
+      from: `"${SMTP_FROM_NAME}" <${SMTP_FROM_EMAIL}>`,
+      to,
+      subject,
+      text: textContent,
+      html: htmlContent,
+    })
 
-        console.log(`[Email] Team registration confirmation sent to ${to}, MessageID: ${info.messageId}`);
+    console.log(
+      `[Email] Team registration confirmation sent to ${to}, MessageID: ${info.messageId}`,
+    )
 
-        return {
-            success: true,
-            messageId: info.messageId,
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        console.error(`[Email] Failed to send team registration email to ${to}:`, error);
-
-        return {
-            success: false,
-            error: errorMessage,
-        };
+    return {
+      success: true,
+      messageId: info.messageId,
     }
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error'
+    console.error(
+      `[Email] Failed to send team registration email to ${to}:`,
+      error,
+    )
+
+    return {
+      success: false,
+      error: errorMessage,
+    }
+  }
 }
 
 /**
  * Send a simple test email (can be used for debugging)
  */
-export async function sendTestEmail(to: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    try {
-        const info = await transporter.sendMail({
-            from: `"${SMTP_FROM_NAME}" <${SMTP_FROM_EMAIL}>`,
-            to,
-            subject: "SMTP Test - Ensemble",
-            text: "This is a test email to verify SMTP configuration is working correctly.",
-            html: "<p>This is a test email to verify SMTP configuration is working correctly.</p>",
-        });
+export async function sendTestEmail(
+  to: string,
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  try {
+    const info = await transporter.sendMail({
+      from: `"${SMTP_FROM_NAME}" <${SMTP_FROM_EMAIL}>`,
+      to,
+      subject: 'SMTP Test - Ensemble',
+      text: 'This is a test email to verify SMTP configuration is working correctly.',
+      html: '<p>This is a test email to verify SMTP configuration is working correctly.</p>',
+    })
 
-        console.log(`[Email] Test email sent to ${to}, MessageID: ${info.messageId}`);
+    console.log(
+      `[Email] Test email sent to ${to}, MessageID: ${info.messageId}`,
+    )
 
-        return {
-            success: true,
-            messageId: info.messageId,
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        console.error(`[Email] Failed to send test email to ${to}:`, error);
-
-        return {
-            success: false,
-            error: errorMessage,
-        };
+    return {
+      success: true,
+      messageId: info.messageId,
     }
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error'
+    console.error(`[Email] Failed to send test email to ${to}:`, error)
+
+    return {
+      success: false,
+      error: errorMessage,
+    }
+  }
 }
 
 /**
  * Send an email when a team registration request is approved
  */
 export async function sendTeamApprovalEmail(options: {
-    to: string;
-    teamName: string;
-    contactName: string;
-    reviewedBy: string;
-    comments?: string;
+  to: string
+  teamName: string
+  contactName: string
+  reviewedBy: string
+  comments?: string
 }): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    const { to, teamName, contactName, reviewedBy, comments } = options;
+  const { to, teamName, contactName, reviewedBy, comments } = options
 
-    const subject = `✅ Team Registration Approved - ${teamName}`;
+  const subject = `✅ Team Registration Approved - ${teamName}`
 
-    try {
-        const htmlContent = await render(
-            React.createElement(TeamApprovalEmail, {
-                contactName: contactName,
-                teamName: teamName,
-                reviewedBy: reviewedBy,
-                comments: comments
-            })
-        );
+  try {
+    const htmlContent = await render(
+      React.createElement(TeamApprovalEmail, {
+        contactName: contactName,
+        teamName: teamName,
+        reviewedBy: reviewedBy,
+        comments: comments,
+      }),
+    )
 
-        const textContent = `
+    const textContent = `
 Team Registration Approved - ${teamName}
 
 Dear ${contactName},
@@ -151,58 +162,61 @@ You can now start using the Ensemble platform with your team.
 
 Best regards,
 The Ensemble Team
-    `;
+    `
 
-        const info = await transporter.sendMail({
-            from: `"${SMTP_FROM_NAME}" <${SMTP_FROM_EMAIL}>`,
-            to,
-            subject,
-            text: textContent,
-            html: htmlContent,
-        });
+    const info = await transporter.sendMail({
+      from: `"${SMTP_FROM_NAME}" <${SMTP_FROM_EMAIL}>`,
+      to,
+      subject,
+      text: textContent,
+      html: htmlContent,
+    })
 
-        console.log(`[Email] Team approval email sent to ${to}, MessageID: ${info.messageId}`);
+    console.log(
+      `[Email] Team approval email sent to ${to}, MessageID: ${info.messageId}`,
+    )
 
-        return {
-            success: true,
-            messageId: info.messageId,
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        console.error(`[Email] Failed to send approval email to ${to}:`, error);
-
-        return {
-            success: false,
-            error: errorMessage,
-        };
+    return {
+      success: true,
+      messageId: info.messageId,
     }
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error'
+    console.error(`[Email] Failed to send approval email to ${to}:`, error)
+
+    return {
+      success: false,
+      error: errorMessage,
+    }
+  }
 }
 
 /**
  * Send an email when a team registration request is rejected
  */
 export async function sendTeamRejectionEmail(options: {
-    to: string;
-    teamName: string;
-    contactName: string;
-    reviewedBy: string;
-    comments?: string;
+  to: string
+  teamName: string
+  contactName: string
+  reviewedBy: string
+  comments?: string
 }): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    const { to, teamName, contactName, reviewedBy, comments } = options;
+  const { to, teamName, contactName, reviewedBy, comments } = options
 
-    const subject = `❌ Team Registration Not Approved - ${teamName}`;
+  const subject = `❌ Team Registration Not Approved - ${teamName}`
 
-    try {
-        const htmlContent = await render(
-            React.createElement(TeamRejectionEmail, {
-                contactName: contactName,
-                teamName: teamName,
-                reviewedBy: reviewedBy,
-                comments: comments
-            })
-        );
+  try {
+    const htmlContent = await render(
+      React.createElement(TeamRejectionEmail, {
+        contactName: contactName,
+        teamName: teamName,
+        reviewedBy: reviewedBy,
+        comments: comments,
+      }),
+    )
 
-        const textContent = `
+    const textContent = `
 Team Registration Not Approved - ${teamName}
 
 Dear ${contactName},
@@ -219,29 +233,32 @@ If you have any questions, please reach out to the administrators.
 
 Best regards,
 The Ensemble Team
-    `;
+    `
 
-        const info = await transporter.sendMail({
-            from: `"${SMTP_FROM_NAME}" <${SMTP_FROM_EMAIL}>`,
-            to,
-            subject,
-            text: textContent,
-            html: htmlContent,
-        });
+    const info = await transporter.sendMail({
+      from: `"${SMTP_FROM_NAME}" <${SMTP_FROM_EMAIL}>`,
+      to,
+      subject,
+      text: textContent,
+      html: htmlContent,
+    })
 
-        console.log(`[Email] Team rejection email sent to ${to}, MessageID: ${info.messageId}`);
+    console.log(
+      `[Email] Team rejection email sent to ${to}, MessageID: ${info.messageId}`,
+    )
 
-        return {
-            success: true,
-            messageId: info.messageId,
-        };
-    } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        console.error(`[Email] Failed to send rejection email to ${to}:`, error);
-
-        return {
-            success: false,
-            error: errorMessage,
-        };
+    return {
+      success: true,
+      messageId: info.messageId,
     }
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Unknown error'
+    console.error(`[Email] Failed to send rejection email to ${to}:`, error)
+
+    return {
+      success: false,
+      error: errorMessage,
+    }
+  }
 }

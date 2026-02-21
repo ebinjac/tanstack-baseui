@@ -13,9 +13,11 @@ Long functions are hard to read, test, and modify. A function should operate at 
 async function processScorecard(teamId: string, entries: ScorecardEntry[]) {
   // 1. Validate all entries (15 lines of validation logic)
   for (const entry of entries) {
-    if (!entry.metricId) throw new Error("Missing metric")
-    if (entry.score < 0 || entry.score > 100) throw new Error("Score out of range")
-    if (entry.notes && entry.notes.length > 500) throw new Error("Notes too long")
+    if (!entry.metricId) throw new Error('Missing metric')
+    if (entry.score < 0 || entry.score > 100)
+      throw new Error('Score out of range')
+    if (entry.notes && entry.notes.length > 500)
+      throw new Error('Notes too long')
     // ... more validation
   }
 
@@ -24,7 +26,9 @@ async function processScorecard(teamId: string, entries: ScorecardEntry[]) {
   let weightedSum = 0
   let totalWeight = 0
   for (const entry of entries) {
-    const metric = await db.query.metrics.findFirst({ where: eq(metrics.id, entry.metricId) })
+    const metric = await db.query.metrics.findFirst({
+      where: eq(metrics.id, entry.metricId),
+    })
     if (!metric) continue
     const weight = metric.weight ?? 1
     weightedSum += entry.score * weight
@@ -66,7 +70,7 @@ async function processScorecard(teamId: string, entries: ScorecardEntry[]) {
 // ✅ Each step is focused and independently testable
 function validateEntries(entries: ScorecardEntry[]) {
   for (const entry of entries) {
-    if (!entry.metricId) throw new Error("Missing metric ID")
+    if (!entry.metricId) throw new Error('Missing metric ID')
     if (entry.score < 0 || entry.score > 100) {
       throw new Error(`Score ${entry.score} out of range [0, 100]`)
     }
@@ -74,13 +78,13 @@ function validateEntries(entries: ScorecardEntry[]) {
 }
 
 async function calculateAggregates(entries: ScorecardEntry[]) {
-  const metrics = await fetchMetrics(entries.map(e => e.metricId))
+  const metrics = await fetchMetrics(entries.map((e) => e.metricId))
   return computeWeightedAverage(entries, metrics)
 }
 
 function computeWeightedAverage(
   entries: ScorecardEntry[],
-  metrics: Map<string, Metric>
+  metrics: Map<string, Metric>,
 ): ScorecardAggregates {
   let weightedSum = 0
   let totalWeight = 0
@@ -102,6 +106,7 @@ function computeWeightedAverage(
 ## The "Newspaper" Rule
 
 Read the code like a newspaper article:
+
 1. **Headline** = function name (tells you what it does)
 2. **Lead paragraph** = function body (high-level steps)
 3. **Details** = helper functions (implementation details)
@@ -110,13 +115,13 @@ A reader should understand the **intent** from the top-level function without re
 
 ## Extraction Signals
 
-| Signal | Action |
-|--------|--------|
-| Comment like `// Step 1: ...` | Extract into a named function |
-| Blank line separating "sections" | Each section → own function |
-| Deeply nested `if`/`for` blocks | Extract the inner block |
-| Same operation on different data | Extract a generic utility |
-| Function name needs "And" | Split into two functions |
+| Signal                           | Action                        |
+| -------------------------------- | ----------------------------- |
+| Comment like `// Step 1: ...`    | Extract into a named function |
+| Blank line separating "sections" | Each section → own function   |
+| Deeply nested `if`/`for` blocks  | Extract the inner block       |
+| Same operation on different data | Extract a generic utility     |
+| Function name needs "And"        | Split into two functions      |
 
 ## Context
 

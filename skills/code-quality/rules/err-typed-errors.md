@@ -13,17 +13,18 @@ TypeScript's `catch` clause variable is `unknown` by default (with `useUnknownIn
 try {
   await createTeam({ data: formData })
 } catch (error: any) {
-  setErrorMessage(error.message)       // 💥 Crash if error is a string
-  console.error(error.stack)           // 💥 Crash if error is a number
-  sendToSentry(error.code)             // 💥 .code doesn't exist on Error
+  setErrorMessage(error.message) // 💥 Crash if error is a string
+  console.error(error.stack) // 💥 Crash if error is a number
+  sendToSentry(error.code) // 💥 .code doesn't exist on Error
 }
 
 // 🛑 Assuming error shape without checking
 try {
-  const response = await fetch("/api/data")
+  const response = await fetch('/api/data')
   const json = await response.json()
 } catch (err: any) {
-  if (err.status === 404) {            // 💥 fetch errors don't have .status
+  if (err.status === 404) {
+    // 💥 fetch errors don't have .status
     showNotFound()
   }
 }
@@ -36,12 +37,11 @@ try {
 try {
   await createTeam({ data: formData })
 } catch (error: unknown) {
-  const message = error instanceof Error
-    ? error.message
-    : "An unexpected error occurred"
+  const message =
+    error instanceof Error ? error.message : 'An unexpected error occurred'
 
   setErrorMessage(message)
-  console.error("Team creation failed:", error)
+  console.error('Team creation failed:', error)
 }
 
 // ✅ Multiple error type checks
@@ -53,13 +53,13 @@ try {
     setFieldErrors(error.flatten().fieldErrors)
   } else if (error instanceof AuthError) {
     // Auth errors — redirect to login
-    navigate({ to: "/login" })
+    navigate({ to: '/login' })
   } else if (error instanceof Error) {
     // Generic errors — show message
     toast.error(error.message)
   } else {
     // Unknown shape — safe fallback
-    toast.error("Something went wrong. Please try again.")
+    toast.error('Something went wrong. Please try again.')
   }
 }
 ```
@@ -70,16 +70,16 @@ try {
 // ✅ Reusable error message extractor
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message
-  if (typeof error === "string") return error
+  if (typeof error === 'string') return error
   if (
     error !== null &&
-    typeof error === "object" &&
-    "message" in error &&
-    typeof (error as Record<string, unknown>).message === "string"
+    typeof error === 'object' &&
+    'message' in error &&
+    typeof (error as Record<string, unknown>).message === 'string'
   ) {
     return (error as Record<string, unknown>).message as string
   }
-  return "An unexpected error occurred"
+  return 'An unexpected error occurred'
 }
 
 // Usage
@@ -94,19 +94,20 @@ try {
 
 ```tsx
 // ✅ In server functions — log details, throw clean errors
-export const updateTeam = createServerFn({ method: "POST" })
+export const updateTeam = createServerFn({ method: 'POST' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => UpdateTeamSchema.parse(data))
   .handler(async ({ data, context }) => {
     try {
-      const [updated] = await db.update(teams)
+      const [updated] = await db
+        .update(teams)
         .set({ name: data.name })
         .where(eq(teams.id, data.teamId))
         .returning()
       return { success: true, team: updated }
     } catch (error: unknown) {
-      console.error("Failed to update team:", error)
-      const message = error instanceof Error ? error.message : "Unknown error"
+      console.error('Failed to update team:', error)
+      const message = error instanceof Error ? error.message : 'Unknown error'
       throw new Error(`Failed to update team: ${message}`)
     }
   })

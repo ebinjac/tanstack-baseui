@@ -49,44 +49,45 @@ if (entries.length > PAGINATION_THRESHOLD) {
 const cooldownStart = Date.now() - COOLDOWN_MS
 
 if (score >= SCORE_THRESHOLDS.GOLD) {
-  setBadge("gold")
+  setBadge('gold')
 } else if (score >= SCORE_THRESHOLDS.SILVER) {
-  setBadge("silver")
+  setBadge('silver')
 }
 
 // ✅ String constants as typed objects
 const ROLES = {
-  ADMIN: "ADMIN",
-  MEMBER: "MEMBER",
+  ADMIN: 'ADMIN',
+  MEMBER: 'MEMBER',
 } as const
 
-type Role = typeof ROLES[keyof typeof ROLES]
+type Role = (typeof ROLES)[keyof typeof ROLES]
 
 const STATUS = {
-  PENDING: "PENDING_REVIEW",
-  APPROVED: "APPROVED",
-  REJECTED: "REJECTED",
+  PENDING: 'PENDING_REVIEW',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
 } as const
 
 const ERROR_MESSAGES = {
-  SAVE_FAILED: "Failed to save changes. Please try again.",
+  SAVE_FAILED: 'Failed to save changes. Please try again.',
   UNAUTHORIZED: "You don't have permission to perform this action.",
-  NOT_FOUND: "The requested resource was not found.",
+  NOT_FOUND: 'The requested resource was not found.',
 } as const
 ```
 
 ## Where to Define Constants
 
-| Scope | Location |
-|-------|----------|
-| Used in one file | Top of the file, before component |
-| Used across a feature | Feature-level `constants.ts` |
-| Used project-wide | `src/lib/constants.ts` |
-| Configuration values | `src/lib/config.ts` or environment variables |
+| Scope                 | Location                                     |
+| --------------------- | -------------------------------------------- |
+| Used in one file      | Top of the file, before component            |
+| Used across a feature | Feature-level `constants.ts`                 |
+| Used project-wide     | `src/lib/constants.ts`                       |
+| Configuration values  | `src/lib/config.ts` or environment variables |
 
 ## Values That Are NOT Magic
 
 These are fine inline:
+
 - `0`, `1`, `-1` in array operations (`.slice(0, 1)`, `index + 1`)
 - Empty strings `""` for initialization
 - Boolean literals `true`/`false`

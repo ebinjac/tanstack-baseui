@@ -10,38 +10,44 @@ Deeply nested code is hard to follow. **Guard clauses** (early returns) eliminat
 
 ```tsx
 // 🛑 Arrow code — nested conditionals create "pyramid of doom"
-async function handleTeamAction(session: SessionData | null, teamId: string, action: string) {
+async function handleTeamAction(
+  session: SessionData | null,
+  teamId: string,
+  action: string,
+) {
   if (session) {
     if (session.user.email) {
-      const permission = session.user.permissions.find(p => p.teamId === teamId)
+      const permission = session.user.permissions.find(
+        (p) => p.teamId === teamId,
+      )
       if (permission) {
-        if (permission.role === "ADMIN") {
-          if (action === "delete") {
+        if (permission.role === 'ADMIN') {
+          if (action === 'delete') {
             const team = await getTeam(teamId)
             if (team) {
               if (team.memberCount === 0) {
                 await deleteTeam(teamId)
                 return { success: true }
               } else {
-                throw new Error("Team has members")
+                throw new Error('Team has members')
               }
             } else {
-              throw new Error("Team not found")
+              throw new Error('Team not found')
             }
           } else {
-            throw new Error("Unknown action")
+            throw new Error('Unknown action')
           }
         } else {
-          throw new Error("Not an admin")
+          throw new Error('Not an admin')
         }
       } else {
-        throw new Error("No permission for team")
+        throw new Error('No permission for team')
       }
     } else {
-      throw new Error("No email")
+      throw new Error('No email')
     }
   } else {
-    throw new Error("Not authenticated")
+    throw new Error('Not authenticated')
   }
 }
 ```
@@ -50,18 +56,22 @@ async function handleTeamAction(session: SessionData | null, teamId: string, act
 
 ```tsx
 // ✅ Guard clauses — flat, readable, each check is obvious
-async function handleTeamAction(session: SessionData | null, teamId: string, action: string) {
-  if (!session) throw new Error("Not authenticated")
-  if (!session.user.email) throw new Error("No email")
+async function handleTeamAction(
+  session: SessionData | null,
+  teamId: string,
+  action: string,
+) {
+  if (!session) throw new Error('Not authenticated')
+  if (!session.user.email) throw new Error('No email')
 
-  const permission = session.user.permissions.find(p => p.teamId === teamId)
-  if (!permission) throw new Error("No permission for team")
-  if (permission.role !== "ADMIN") throw new Error("Not an admin")
-  if (action !== "delete") throw new Error("Unknown action")
+  const permission = session.user.permissions.find((p) => p.teamId === teamId)
+  if (!permission) throw new Error('No permission for team')
+  if (permission.role !== 'ADMIN') throw new Error('Not an admin')
+  if (action !== 'delete') throw new Error('Unknown action')
 
   const team = await getTeam(teamId)
-  if (!team) throw new Error("Team not found")
-  if (team.memberCount > 0) throw new Error("Team has members")
+  if (!team) throw new Error('Team not found')
+  if (team.memberCount > 0) throw new Error('Team has members')
 
   await deleteTeam(teamId)
   return { success: true }

@@ -18,18 +18,18 @@ Professional-grade quality standards enforced across the entire codebase. These 
 
 ## Rule Categories by Priority
 
-| Priority | Category | Rules | Impact |
-|----------|----------|-------|--------|
-| CRITICAL | DRY & Abstraction | 4 rules | Eliminates duplication, reduces maintenance |
-| CRITICAL | Error Handling | 4 rules | Robust, debuggable, user-friendly |
-| CRITICAL | Type Safety | 4 rules | Prevents bugs at compile time |
-| HIGH | Naming & Readability | 5 rules | Self-documenting code |
-| HIGH | Function Design | 4 rules | Small, focused, testable functions |
-| HIGH | Code Smells | 5 rules | Identifies and prevents anti-patterns |
-| MEDIUM | File Organization | 4 rules | Navigable, scalable codebase |
-| MEDIUM | Constants & Config | 3 rules | No magic values, central config |
-| LOW | Comments & Docs | 3 rules | Meaningful comments, not noise |
-| LOW | Git Hygiene | 2 rules | Clean commits, traceable changes |
+| Priority | Category             | Rules   | Impact                                      |
+| -------- | -------------------- | ------- | ------------------------------------------- |
+| CRITICAL | DRY & Abstraction    | 4 rules | Eliminates duplication, reduces maintenance |
+| CRITICAL | Error Handling       | 4 rules | Robust, debuggable, user-friendly           |
+| CRITICAL | Type Safety          | 4 rules | Prevents bugs at compile time               |
+| HIGH     | Naming & Readability | 5 rules | Self-documenting code                       |
+| HIGH     | Function Design      | 4 rules | Small, focused, testable functions          |
+| HIGH     | Code Smells          | 5 rules | Identifies and prevents anti-patterns       |
+| MEDIUM   | File Organization    | 4 rules | Navigable, scalable codebase                |
+| MEDIUM   | Constants & Config   | 3 rules | No magic values, central config             |
+| LOW      | Comments & Docs      | 3 rules | Meaningful comments, not noise              |
+| LOW      | Git Hygiene          | 2 rules | Clean commits, traceable changes            |
 
 ## Quick Reference
 
@@ -104,6 +104,7 @@ Professional-grade quality standards enforced across the entire codebase. These 
 ## How to Use
 
 Each rule file in the `rules/` directory contains:
+
 1. **Explanation** — Why this pattern matters
 2. **Bad Example** — Anti-pattern to avoid
 3. **Good Example** — Recommended implementation

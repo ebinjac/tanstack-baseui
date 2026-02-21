@@ -4,16 +4,16 @@ The Ensemble Scorecard application is built on TanStack Start, a full-stack Reac
 
 ## Technology Stack
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| Framework | TanStack Start | Full-stack React framework |
-| Routing | TanStack Router | Type-safe routing with file-based routes |
-| Data Fetching | TanStack Query | Server state management |
-| Database | PostgreSQL + Drizzle ORM | Data persistence |
-| UI | shadcn/ui + Base UI | Component library |
-| Styling | Tailwind CSS | Utility-first CSS |
-| Validation | Zod | Schema validation |
-| Auth | iron-session | Session-based authentication |
+| Layer         | Technology               | Purpose                                  |
+| ------------- | ------------------------ | ---------------------------------------- |
+| Framework     | TanStack Start           | Full-stack React framework               |
+| Routing       | TanStack Router          | Type-safe routing with file-based routes |
+| Data Fetching | TanStack Query           | Server state management                  |
+| Database      | PostgreSQL + Drizzle ORM | Data persistence                         |
+| UI            | shadcn/ui + Base UI      | Component library                        |
+| Styling       | Tailwind CSS             | Utility-first CSS                        |
+| Validation    | Zod                      | Schema validation                        |
+| Auth          | iron-session             | Session-based authentication             |
 
 ## Application Architecture
 
@@ -51,18 +51,19 @@ Server functions are defined using `createServerFn` and serve as the API layer:
 
 ```typescript
 // src/app/actions/scorecard.ts
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn } from '@tanstack/react-start'
 
-export const getScorecardData = createServerFn({ method: "GET" })
+export const getScorecardData = createServerFn({ method: 'GET' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => GetScorecardDataSchema.parse(data))
   .handler(async ({ data, context }) => {
     // Server-side logic
-    return result;
-  });
+    return result
+  })
 ```
 
 **Key patterns:**
+
 - Use `.middleware()` for authentication and authorization
 - Use `.inputValidator()` for Zod schema validation
 - Return typed results from handlers
@@ -77,13 +78,13 @@ export const getRouter = () => {
     defaultOptions: {
       queries: { staleTime: 1000 * 60 },
     },
-  });
+  })
 
   return createRouter({
     routeTree,
     context: { queryClient, session: null },
-  });
-};
+  })
+}
 ```
 
 ### File-Based Routing

@@ -7,6 +7,7 @@
 `any` disables TypeScript's entire type system for that value and everything it touches. It silently propagates, creating a web of untyped code. In a React codebase this leads to prop mismatches, runtime crashes, and impossible-to-refactor components.
 
 Every `any` should be replaced with:
+
 - **`unknown`** — when the type is truly opaque (then narrow with type guards)
 - **Specific types** — when you know the shape
 - **Generics** — when the type varies by caller
@@ -15,7 +16,11 @@ Every `any` should be replaced with:
 
 ```tsx
 // 🛑 any everywhere
-function DataTable({ data, columns, onRowClick }: {
+function DataTable({
+  data,
+  columns,
+  onRowClick,
+}: {
   data: any[]
   columns: any[]
   onRowClick: (row: any) => void
@@ -37,7 +42,7 @@ function DataTable({ data, columns, onRowClick }: {
 try {
   await submitForm(data)
 } catch (error: any) {
-  setError(error.message)    // Runtime crash if error is not an Error
+  setError(error.message) // Runtime crash if error is not an Error
 }
 
 // 🛑 any in event handlers
@@ -63,15 +68,19 @@ interface DataTableProps<T extends Record<string, unknown>> {
 }
 
 function DataTable<T extends Record<string, unknown>>({
-  data, columns, onRowClick,
+  data,
+  columns,
+  onRowClick,
 }: DataTableProps<T>) {
   return (
     <table>
       {data.map((row, i) => (
         <tr key={i} onClick={() => onRowClick(row)}>
-          {columns.map(col => (
+          {columns.map((col) => (
             <td key={col.key}>
-              {col.render ? col.render(row[col.key], row) : String(row[col.key])}
+              {col.render
+                ? col.render(row[col.key], row)
+                : String(row[col.key])}
             </td>
           ))}
         </tr>
@@ -81,11 +90,11 @@ function DataTable<T extends Record<string, unknown>>({
 }
 
 // Usage — types inferred from data
-<DataTable
-  data={teamMembers}           // TeamMember[]
+;<DataTable
+  data={teamMembers} // TeamMember[]
   columns={[
-    { key: "name", header: "Name" },
-    { key: "role", header: "Role" },
+    { key: 'name', header: 'Name' },
+    { key: 'role', header: 'Role' },
   ]}
   onRowClick={(member) => navigate(`/members/${member.id}`)}
 />
@@ -94,27 +103,28 @@ function DataTable<T extends Record<string, unknown>>({
 try {
   await submitForm(data)
 } catch (error: unknown) {
-  const message = error instanceof Error ? error.message : "Something went wrong"
+  const message =
+    error instanceof Error ? error.message : 'Something went wrong'
   setError(message)
 }
 
 // ✅ Typed event handlers
 const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
 }
 ```
 
 ## Common Replacements
 
-| Instead of `any` | Use |
-|---|---|
-| `error: any` | `error: unknown` + `instanceof Error` check |
-| `data: any` | Define an interface or use a Zod schema's inferred type |
-| `event: any` | `React.ChangeEvent<HTMLInputElement>`, `React.MouseEvent<HTMLButtonElement>` |
-| `props: any` | Define a `Props` interface |
-| `record: any` | `Record<string, unknown>` or a specific record type |
-| `callback: any` | `(...args: unknown[]) => void` or specific signature |
-| `ref: any` | `React.RefObject<HTMLDivElement>` |
+| Instead of `any` | Use                                                                          |
+| ---------------- | ---------------------------------------------------------------------------- |
+| `error: any`     | `error: unknown` + `instanceof Error` check                                  |
+| `data: any`      | Define an interface or use a Zod schema's inferred type                      |
+| `event: any`     | `React.ChangeEvent<HTMLInputElement>`, `React.MouseEvent<HTMLButtonElement>` |
+| `props: any`     | Define a `Props` interface                                                   |
+| `record: any`    | `Record<string, unknown>` or a specific record type                          |
+| `callback: any`  | `(...args: unknown[]) => void` or specific signature                         |
+| `ref: any`       | `React.RefObject<HTMLDivElement>`                                            |
 
 ## Context
 

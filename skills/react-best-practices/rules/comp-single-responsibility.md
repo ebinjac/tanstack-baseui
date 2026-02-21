@@ -13,8 +13,8 @@ A component should do **one thing well**. When a component handles data fetching
 function TeamDashboard({ teamId }: { teamId: string }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState("")
-  const [sortBy, setSortBy] = useState("name")
+  const [filter, setFilter] = useState('')
+  const [sortBy, setSortBy] = useState('name')
   const [page, setPage] = useState(1)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editItem, setEditItem] = useState(null)
@@ -22,7 +22,7 @@ function TeamDashboard({ teamId }: { teamId: string }) {
 
   useEffect(() => {
     fetch(`/api/teams/${teamId}`)
-      .then(r => r.json())
+      .then((r) => r.json())
       .then(setData)
       .catch(setError)
       .finally(() => setLoading(false))
@@ -40,7 +40,7 @@ function TeamDashboard({ teamId }: { teamId: string }) {
 // ✅ Data layer — custom hook
 function useTeamDashboard(teamId: string) {
   const query = useQuery({
-    queryKey: ["team", teamId],
+    queryKey: ['team', teamId],
     queryFn: () => getTeamData({ data: { teamId } }),
   })
 
@@ -50,13 +50,13 @@ function useTeamDashboard(teamId: string) {
 // ✅ Feature component — orchestrates
 function TeamDashboard({ teamId }: { teamId: string }) {
   const { data, isLoading, error } = useTeamDashboard(teamId)
-  const [filter, setFilter] = useState("")
+  const [filter, setFilter] = useState('')
 
   if (isLoading) return <DashboardSkeleton />
   if (error) return <ErrorFallback error={error} />
 
-  const filtered = data.items.filter(item =>
-    item.name.toLowerCase().includes(filter.toLowerCase())
+  const filtered = data.items.filter((item) =>
+    item.name.toLowerCase().includes(filter.toLowerCase()),
   )
 
   return (
@@ -71,7 +71,7 @@ function TeamDashboard({ teamId }: { teamId: string }) {
 function TeamList({ items }: { items: TeamItem[] }) {
   return (
     <ul className="team-list">
-      {items.map(item => (
+      {items.map((item) => (
         <TeamCard key={item.id} item={item} />
       ))}
     </ul>

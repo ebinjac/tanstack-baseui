@@ -1,6 +1,15 @@
-import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useLocation,
+} from '@tanstack/react-router'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,7 +18,7 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator
+  BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { ArrowLeft } from 'lucide-react'
 
@@ -41,7 +50,9 @@ function AdminLayout() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink render={<Link to="/admin" />}>Admin</BreadcrumbLink>
+                  <BreadcrumbLink render={<Link to="/admin" />}>
+                    Admin
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>

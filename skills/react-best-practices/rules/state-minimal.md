@@ -11,14 +11,14 @@ Redundant state causes **sync bugs** — when you store a value that could be co
 ```tsx
 // 🛑 Redundant state — `filteredItems` and `itemCount` can be derived
 function ItemList({ items }: { items: Item[] }) {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const [filteredItems, setFilteredItems] = useState(items)
   const [itemCount, setItemCount] = useState(items.length)
   const [isEmpty, setIsEmpty] = useState(items.length === 0)
 
   useEffect(() => {
-    const result = items.filter(i =>
-      i.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const result = items.filter((i) =>
+      i.name.toLowerCase().includes(searchTerm.toLowerCase()),
     )
     setFilteredItems(result)
     setItemCount(result.length)
@@ -27,7 +27,10 @@ function ItemList({ items }: { items: Item[] }) {
 
   return (
     <>
-      <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+      <input
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
       <p>{itemCount} items</p>
       {isEmpty ? <EmptyState /> : <List items={filteredItems} />}
     </>
@@ -40,20 +43,28 @@ function ItemList({ items }: { items: Item[] }) {
 ```tsx
 // ✅ Only store the input — derive everything else
 function ItemList({ items }: { items: Item[] }) {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
 
   const filteredItems = useMemo(
-    () => items.filter(i =>
-      i.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ),
-    [items, searchTerm]
+    () =>
+      items.filter((i) =>
+        i.name.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+    [items, searchTerm],
   )
 
   return (
     <>
-      <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+      <input
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
       <p>{filteredItems.length} items</p>
-      {filteredItems.length === 0 ? <EmptyState /> : <List items={filteredItems} />}
+      {filteredItems.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <List items={filteredItems} />
+      )}
     </>
   )
 }
@@ -64,10 +75,11 @@ function ItemList({ items }: { items: Item[] }) {
 Ask: **"Can I calculate this from other state or props?"**
 
 | If yes | Derive it (inline or `useMemo`) |
-|--------|------|
-| If no | Store it in `useState` |
+| ------ | ------------------------------- |
+| If no  | Store it in `useState`          |
 
 Examples of derived values:
+
 - `filteredList` → derive from `list` + `filter`
 - `totalPrice` → derive from `cartItems`
 - `isValid` → derive from `formFields`

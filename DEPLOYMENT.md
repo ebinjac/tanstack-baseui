@@ -31,11 +31,11 @@ NODE_ENV="production"
 
 ### Environment Variable Details
 
-| Variable | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `DATABASE_URL` | ✅ Yes | PostgreSQL connection string | `postgresql://user:pass@localhost:5432/ensemble` |
+| Variable           | Required      | Description                               | Example                                            |
+| ------------------ | ------------- | ----------------------------------------- | -------------------------------------------------- |
+| `DATABASE_URL`     | ✅ Yes        | PostgreSQL connection string              | `postgresql://user:pass@localhost:5432/ensemble`   |
 | `SESSION_PASSWORD` | ⚠️ Production | Secure session encryption key (32+ chars) | `a-very-long-and-secure-password-32-chars-minimum` |
-| `NODE_ENV` | Recommended | Environment mode | `production` or `development` |
+| `NODE_ENV`         | Recommended   | Environment mode                          | `production` or `development`                      |
 
 ---
 
@@ -72,12 +72,14 @@ pnpm run build
 ```
 
 This command:
+
 - Compiles TypeScript to JavaScript
 - Bundles client-side code with Vite
 - Creates optimized production assets in `.output/` directory
 - Generates server entry point at `.output/server/index.mjs`
 
 **Build output:**
+
 ```
 .output/
 ├── public/        # Static assets and client bundles
@@ -135,7 +137,7 @@ Before deploying to production, verify:
 
 ## SSO Authentication Setup
 
-The Ensemble Platform uses **SSO (Single Sign-On)** for authentication. 
+The Ensemble Platform uses **SSO (Single Sign-On)** for authentication.
 
 ### Development Mode
 
@@ -165,6 +167,7 @@ In production, ensure:
 If SSO users are not registering:
 
 1. **Check Environment Variables:**
+
    ```bash
    echo $SESSION_PASSWORD
    echo $DATABASE_URL
@@ -172,13 +175,15 @@ If SSO users are not registering:
    ```
 
 2. **Verify Database Connection:**
+
    ```bash
    psql $DATABASE_URL -c "SELECT 1;"
    ```
 
 3. **Enable Debug Logging:**
-   
+
    Modify `.output/server/index.mjs` or set environment variable:
+
    ```bash
    DEBUG=* node .output/server/index.mjs
    ```
@@ -254,6 +259,7 @@ Use this for load balancer health checks.
 **Cause:** Missing or invalid `DATABASE_URL`
 
 **Solution:**
+
 1. Verify `.env` file exists in project root
 2. Check `DATABASE_URL` format: `postgresql://user:pass@host:port/db`
 3. Test database connection manually
@@ -263,6 +269,7 @@ Use this for load balancer health checks.
 **Cause:** Session encryption not configured or database connection failed
 
 **Solution:**
+
 1. Set `SESSION_PASSWORD` (32+ chars) in `.env`
 2. Verify database migrations are applied
 3. Check database permissions for write access
@@ -272,6 +279,7 @@ Use this for load balancer health checks.
 **Cause:** Build artifacts not generated correctly
 
 **Solution:**
+
 ```bash
 rm -rf .output
 pnpm run build
@@ -312,6 +320,7 @@ echo "✅ Deployment complete!"
 ```
 
 Make it executable:
+
 ```bash
 chmod +x deploy.sh
 ./deploy.sh
@@ -322,6 +331,7 @@ chmod +x deploy.sh
 ## Support
 
 For additional help:
+
 - Check application logs: `pm2 logs ensemble-platform`
 - Review database connection: Ensure PostgreSQL is running and accessible
 - Verify environment variables: Double-check `.env` file configuration

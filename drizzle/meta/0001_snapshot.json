@@ -540,12 +540,8 @@
           "tableFrom": "applications",
           "tableTo": "teams",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -896,9 +892,7 @@
         "teams_team_name_unique": {
           "name": "teams_team_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "team_name"
-          ]
+          "columns": ["team_name"]
         }
       },
       "policies": {},
@@ -997,12 +991,8 @@
           "tableFrom": "link_categories",
           "tableTo": "teams",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1196,12 +1186,8 @@
           "tableFrom": "links",
           "tableTo": "teams",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1210,12 +1196,8 @@
           "tableFrom": "links",
           "tableTo": "applications",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "application_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["application_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1224,12 +1206,8 @@
           "tableFrom": "links",
           "tableTo": "link_categories",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1250,40 +1228,22 @@
     "ensemble.application_status": {
       "name": "application_status",
       "schema": "ensemble",
-      "values": [
-        "active",
-        "inactive",
-        "deprecated",
-        "archived"
-      ]
+      "values": ["active", "inactive", "deprecated", "archived"]
     },
     "ensemble.approval_status": {
       "name": "approval_status",
       "schema": "ensemble",
-      "values": [
-        "pending",
-        "approved",
-        "rejected",
-        "processed"
-      ]
+      "values": ["pending", "approved", "rejected", "processed"]
     },
     "ensemble.sync_status": {
       "name": "sync_status",
       "schema": "ensemble",
-      "values": [
-        "pending",
-        "syncing",
-        "success",
-        "failed"
-      ]
+      "values": ["pending", "syncing", "success", "failed"]
     },
     "ensemble.link_visibility": {
       "name": "link_visibility",
       "schema": "ensemble",
-      "values": [
-        "private",
-        "public"
-      ]
+      "values": ["private", "public"]
     }
   },
   "schemas": {

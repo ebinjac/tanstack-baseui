@@ -1,16 +1,13 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { getTeamById } from "@/app/actions/teams"
-import { PageHeader } from "@/components/shared";
-import { getTeamApplications, updateApplication } from '@/app/actions/applications'
+import { getTeamById } from '@/app/actions/teams'
+import { PageHeader } from '@/components/shared'
+import {
+  getTeamApplications,
+  updateApplication,
+} from '@/app/actions/applications'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import {
-  LayoutDashboard,
-  Boxes,
-  LifeBuoy,
-  Wrench,
-  Users2
-} from 'lucide-react'
+import { LayoutDashboard, Boxes, LifeBuoy, Wrench, Users2 } from 'lucide-react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
@@ -25,18 +22,18 @@ import {
   AddApplicationDialog,
   ViewApplicationDialog,
   EditApplicationDialog,
-  DeleteConfirmationDialog
+  DeleteConfirmationDialog,
 } from '@/components/settings'
 
 export const Route = createFileRoute('/teams/$teamId/settings')({
   loader: async ({ params }) => {
     const team = await getTeamById({ data: { teamId: params.teamId } })
     if (!team) {
-      throw new Error("Team not found")
+      throw new Error('Team not found')
     }
     return { team }
   },
-  component: TeamSettingsPage
+  component: TeamSettingsPage,
 })
 
 function TeamSettingsPage() {
@@ -70,25 +67,39 @@ function TeamSettingsPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['applications', teamId] })
-      toast.success("Application synced with Central Registry")
+      toast.success('Application synced with Central Registry')
     },
     onError: (err: any) => {
-      toast.error(err.message || "Failed to sync application")
-    }
+      toast.error(err.message || 'Failed to sync application')
+    },
   })
 
   const stats = {
     total: applications?.length || 0,
-    active: applications?.filter(a => a.lifeCycleStatus?.toLowerCase() === 'production' || a.lifeCycleStatus?.toLowerCase() === 'active').length || 0,
+    active:
+      applications?.filter(
+        (a) =>
+          a.lifeCycleStatus?.toLowerCase() === 'production' ||
+          a.lifeCycleStatus?.toLowerCase() === 'active',
+      ).length || 0,
     tiers: {
-      critical: applications?.filter(a => ['0', '1', '2'].includes(String(a.tier))).length || 0,
-      other: applications?.filter(a => !['0', '1', '2'].includes(String(a.tier))).length || 0,
-    }
+      critical:
+        applications?.filter((a) => ['0', '1', '2'].includes(String(a.tier)))
+          .length || 0,
+      other:
+        applications?.filter((a) => !['0', '1', '2'].includes(String(a.tier)))
+          .length || 0,
+    },
   }
 
   const navItems: NavItem[] = [
     { value: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { value: 'applications', label: 'Applications', icon: Boxes, count: stats.total },
+    {
+      value: 'applications',
+      label: 'Applications',
+      icon: Boxes,
+      count: stats.total,
+    },
     { value: 'members', label: 'Members', icon: Users2 },
     { value: 'resources', label: 'Resources', icon: Wrench },
     { value: 'support', label: 'Support', icon: LifeBuoy },
@@ -103,7 +114,11 @@ function TeamSettingsPage() {
         title="Settings"
         description={
           <>
-            Manage your operational configurations, members, and preferences for <span className="font-bold text-white drop-shadow-sm">{team.teamName}</span>.
+            Manage your operational configurations, members, and preferences for{' '}
+            <span className="font-bold text-white drop-shadow-sm">
+              {team.teamName}
+            </span>
+            .
           </>
         }
       />
@@ -135,7 +150,11 @@ function TeamSettingsPage() {
               onViewApp={setViewingApp}
               onEditApp={setEditingApp}
               onDeleteApp={setDeletingApp}
-              onAddSuccess={() => queryClient.invalidateQueries({ queryKey: ['applications', teamId] })}
+              onAddSuccess={() =>
+                queryClient.invalidateQueries({
+                  queryKey: ['applications', teamId],
+                })
+              }
               teamId={teamId}
               AddApplicationDialog={AddApplicationDialog}
             />
@@ -148,17 +167,9 @@ function TeamSettingsPage() {
             />
           )}
 
-          {activeTab === 'resources' && (
-            <ResourcesTab
-              stats={stats}
-            />
-          )}
+          {activeTab === 'resources' && <ResourcesTab stats={stats} />}
 
-          {activeTab === 'support' && (
-            <SupportTab
-              team={team}
-            />
-          )}
+          {activeTab === 'support' && <SupportTab team={team} />}
         </div>
       </div>
 
@@ -176,7 +187,9 @@ function TeamSettingsPage() {
           open={!!editingApp}
           onOpenChange={(open) => !open && setEditingApp(null)}
           onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['applications', teamId] })
+            queryClient.invalidateQueries({
+              queryKey: ['applications', teamId],
+            })
             setEditingApp(null)
           }}
         />
@@ -188,7 +201,9 @@ function TeamSettingsPage() {
           open={!!deletingApp}
           onOpenChange={(open) => !open && setDeletingApp(null)}
           onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['applications', teamId] })
+            queryClient.invalidateQueries({
+              queryKey: ['applications', teamId],
+            })
             setDeletingApp(null)
           }}
         />

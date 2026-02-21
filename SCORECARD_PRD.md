@@ -1,6 +1,7 @@
 Product Requirements Document (PRD) – Ensemble Scorecard
+
 1. Objective
-Provide a scorecard within the Ensemble application that:
+   Provide a scorecard within the Ensemble application that:
 
 Tracks application and sub-application performance on a monthly basis.
 
@@ -13,7 +14,7 @@ Volume (e.g., hits/transactions).
 Highlights issues based on configurable thresholds and requires reasons for significant deviations.
 
 2. Scope
-The scorecard applies to all applications in Ensemble.
+   The scorecard applies to all applications in Ensemble.
 
 Each application can have multiple sub-applications (sub-apps).
 
@@ -22,7 +23,7 @@ Data entry is manual for now (availability and volume).
 The scorecard is maintained on a yearly and monthly basis.
 
 3. Key Concepts
-Application: A main system or service within Ensemble (e.g., KMS).
+   Application: A main system or service within Ensemble (e.g., KMS).
 
 Sub-application (Sub-app): Logical subdivisions of an application (e.g., KMS-IDEAL, KMS-V1, KMS-V2).
 
@@ -35,8 +36,8 @@ Threshold: Configurable limit for availability and acceptable volume change.
 Deviation Reason: A mandatory explanation when thresholds are breached.
 
 4. Functional Requirements
-4.1 Application and Sub-application Management
-The scorecard must list all applications configured in Ensemble.
+   4.1 Application and Sub-application Management
+   The scorecard must list all applications configured in Ensemble.
 
 For each application, the user must be able to:
 
@@ -64,15 +65,15 @@ Select a specific year.
 View or enter data for each month of the selected year (January to December).
 
 5. Data Entry Requirements
-5.1 Availability Table
-There must be a dedicated Availability table for each application/sub-app.
+   5.1 Availability Table
+   There must be a dedicated Availability table for each application/sub-app.
 
 For each month of the selected year, users must be able to:
 
-Enter availability as a percentage (e.g., 
+Enter availability as a percentage (e.g.,
 100
 %
-100%, 
+100%,
 99.5
 %
 99.5%).
@@ -113,11 +114,11 @@ Volume value.
 Users must be able to update or correct volume entries for previous months within the same year.
 
 6. Thresholds and Rules
-6.1 Availability Threshold
-The scorecard must allow configuration of a threshold for availability (e.g., 
-98
-%
-98%).
+   6.1 Availability Threshold
+   The scorecard must allow configuration of a threshold for availability (e.g.,
+   98
+   %
+   98%).
 
 The threshold value must be configurable per:
 
@@ -142,10 +143,10 @@ The scorecard must support a threshold for volume change percentage between:
 
 Current month and previous month.
 
-The volume change threshold must be configurable (e.g., 
+The volume change threshold must be configurable (e.g.,
 10
 %
-10%, 
+10%,
 20
 %
 20%).
@@ -163,7 +164,7 @@ Flag the month as having a significant change.
 Require the user to enter a reason.
 
 7. Deviation Explanation Requirements
-When availability falls below its threshold:
+   When availability falls below its threshold:
 
 The user must be prompted to enter a reason/explanation.
 
@@ -184,7 +185,7 @@ The threshold breach indicator.
 The associated reason text (if entered) in a way that is easy to see for reviewers.
 
 8. Display and Layout Requirements
-The scorecard must show data at the sub-app level when sub-apps are defined under an application.
+   The scorecard must show data at the sub-app level when sub-apps are defined under an application.
 
 If there are no sub-apps, the scorecard must show data at the main application level using the application name.
 
@@ -205,7 +206,7 @@ Threshold breaches clearly highlighted.
 Reasons associated with any breaches.
 
 9. User Actions and Flows
-9.1 General Interaction
+   9.1 General Interaction
 
 Users must see a single consolidated table/grid that lists:
 
@@ -292,7 +293,7 @@ Quick navigation across months.
 Efficient bulk updates for multiple applications/sub-apps in one editing session.
 
 10. Non-Functional / General Constraints (Business-Level Only)
-The solution should support manual entry initially, with the possibility of automation in the future (no technical design required here).
+    The solution should support manual entry initially, with the possibility of automation in the future (no technical design required here).
 
 The interface and terminology should be consistent with existing Ensemble application naming conventions.
 

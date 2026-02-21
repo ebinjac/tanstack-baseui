@@ -1,11 +1,25 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getLinkCategories, createLinkCategory, updateLinkCategory, deleteLinkCategory } from '@/app/actions/links'
+import {
+  getLinkCategories,
+  createLinkCategory,
+  updateLinkCategory,
+  deleteLinkCategory,
+} from '@/app/actions/links'
 import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Plus, Trash2, Edit2, Check, X, Loader2, Layers, Search } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  Edit2,
+  Check,
+  X,
+  Loader2,
+  Layers,
+  Search,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
@@ -18,8 +32,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { SubPageHeader, ContentLoading, EmptyState, LinkManagerPage } from '@/components/link-manager/shared'
+} from '@/components/ui/alert-dialog'
+import {
+  ContentLoading,
+  EmptyState,
+  LinkManagerPage,
+} from '@/components/link-manager/shared'
+import { PageHeader } from '@/components/shared'
 
 export const Route = createFileRoute('/teams/$teamId/link-manager/categories')({
   component: CategoriesPage,
@@ -28,11 +47,11 @@ export const Route = createFileRoute('/teams/$teamId/link-manager/categories')({
 function CategoriesPage() {
   const { teamId } = Route.useParams()
   const queryClient = useQueryClient()
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState('')
   const [isCreating, setIsCreating] = useState(false)
-  const [newName, setNewName] = useState("")
+  const [newName, setNewName] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [editName, setEditName] = useState("")
+  const [editName, setEditName] = useState('')
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ['linkCategories', teamId],
@@ -40,38 +59,42 @@ function CategoriesPage() {
   })
 
   const createMutation = useMutation({
-    mutationFn: (name: string) => createLinkCategory({ data: { teamId, name } }),
+    mutationFn: (name: string) =>
+      createLinkCategory({ data: { teamId, name } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['linkCategories', teamId] })
-      toast.success("Category created")
-      setNewName("")
+      toast.success('Category created')
+      setNewName('')
       setIsCreating(false)
     },
-    onError: (err: any) => toast.error("Failed to create category: " + err.message)
+    onError: (err: any) =>
+      toast.error('Failed to create category: ' + err.message),
   })
 
   const updateMutation = useMutation({
-    mutationFn: (variables: { id: string, name: string }) => updateLinkCategory({ data: variables }),
+    mutationFn: (variables: { id: string; name: string }) =>
+      updateLinkCategory({ data: variables }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['linkCategories', teamId] })
-      toast.success("Category updated")
+      toast.success('Category updated')
       setEditingId(null)
     },
-    onError: (err: any) => toast.error("Update failed: " + err.message)
+    onError: (err: any) => toast.error('Update failed: ' + err.message),
   })
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteLinkCategory({ data: { id } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['linkCategories', teamId] })
-      toast.success("Category deleted")
+      toast.success('Category deleted')
     },
-    onError: (err: any) => toast.error("Deletion failed: " + err.message)
+    onError: (err: any) => toast.error('Deletion failed: ' + err.message),
   })
 
-  const filteredCategories = categories?.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || []
+  const filteredCategories =
+    categories?.filter((c) =>
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    ) || []
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
@@ -91,10 +114,7 @@ function CategoriesPage() {
 
   return (
     <LinkManagerPage>
-      <SubPageHeader
-        teamId={teamId}
-        parentLabel="Link Manager"
-        sectionLabel="Collections"
+      <PageHeader
         title="Categories"
         description="Organize your resources into logical collections for better discoverability."
       />
@@ -121,7 +141,10 @@ function CategoriesPage() {
             <CardTitle className="text-lg">Create New Category</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleCreate} className="flex flex-col sm:flex-row gap-4">
+            <form
+              onSubmit={handleCreate}
+              className="flex flex-col sm:flex-row gap-4"
+            >
               <Input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
@@ -130,11 +153,20 @@ function CategoriesPage() {
                 autoFocus
               />
               <div className="flex gap-2">
-                <Button type="submit" disabled={createMutation.isPending || !newName.trim()}>
-                  {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Button
+                  type="submit"
+                  disabled={createMutation.isPending || !newName.trim()}
+                >
+                  {createMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
                   Create
                 </Button>
-                <Button type="button" variant="ghost" onClick={() => setIsCreating(false)}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsCreating(false)}
+                >
                   Cancel
                 </Button>
               </div>
@@ -149,17 +181,29 @@ function CategoriesPage() {
         <EmptyState
           icon={Layers}
           title="No categories found"
-          description={searchTerm ? `No results for "${searchTerm}".` : "Start organizing your links by creating your first category."}
-          action={!searchTerm ? (
-            <Button variant="outline" onClick={() => setIsCreating(true)}>
-              Add Category
-            </Button>
-          ) : undefined}
+          description={
+            searchTerm
+              ? `No results for "${searchTerm}".`
+              : 'Start organizing your links by creating your first category.'
+          }
+          action={
+            !searchTerm ? (
+              <Button variant="outline" onClick={() => setIsCreating(true)}>
+                Add Category
+              </Button>
+            ) : undefined
+          }
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredCategories.map((category) => (
-            <Card key={category.id} className={cn("transition-colors hover:bg-muted/50", editingId === category.id && "border-primary")}>
+            <Card
+              key={category.id}
+              className={cn(
+                'transition-colors hover:bg-muted/50',
+                editingId === category.id && 'border-primary',
+              )}
+            >
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
@@ -170,25 +214,42 @@ function CategoriesPage() {
                   </div>
                   {!editingId && (
                     <div className="flex items-center gap-1">
-                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => startEditing(category.id, category.name)}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-8 w-8"
+                        onClick={() => startEditing(category.id, category.name)}
+                      >
                         <Edit2 className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
-                        <AlertDialogTrigger render={
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        } />
+                        <AlertDialogTrigger
+                          render={
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          }
+                        />
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Category?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              Delete Category?
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              This action cannot be undone. Links in this category will be uncategorized.
+                              This action cannot be undone. Links in this
+                              category will be uncategorized.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteMutation.mutate(category.id)} className="bg-destructive hover:bg-destructive/90">
+                            <AlertDialogAction
+                              onClick={() => deleteMutation.mutate(category.id)}
+                              className="bg-destructive hover:bg-destructive/90"
+                            >
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -206,10 +267,19 @@ function CategoriesPage() {
                       onChange={(e) => setEditName(e.target.value)}
                       className="h-8"
                     />
-                    <Button size="icon" className="h-8 w-8" onClick={() => handleUpdate(category.id)}>
+                    <Button
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleUpdate(category.id)}
+                    >
                       <Check className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditingId(null)}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8"
+                      onClick={() => setEditingId(null)}
+                    >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>

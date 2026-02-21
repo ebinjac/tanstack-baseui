@@ -8,14 +8,14 @@ This plan outlines a systematic approach to refactor the Ensemble Platform codeb
 
 ## Skills Applied
 
-| Skill | Priority | Focus Areas |
-|-------|----------|-------------|
-| `code-quality` | CRITICAL | DRY, file size, naming, function design |
+| Skill                  | Priority | Focus Areas                                               |
+| ---------------------- | -------- | --------------------------------------------------------- |
+| `code-quality`         | CRITICAL | DRY, file size, naming, function design                   |
 | `react-best-practices` | CRITICAL | Hook extraction, component architecture, state management |
-| `tanstack-query` | CRITICAL | Query key factory, caching, mutations |
-| `tanstack-router` | HIGH | Type safety, loaders, search params |
-| `tanstack-start` | HIGH | Server functions, middleware, validation |
-| `tanstack-integration` | HIGH | Data flow, SSR coordination |
+| `tanstack-query`       | CRITICAL | Query key factory, caching, mutations                     |
+| `tanstack-router`      | HIGH     | Type safety, loaders, search params                       |
+| `tanstack-start`       | HIGH     | Server functions, middleware, validation                  |
+| `tanstack-integration` | HIGH     | Data flow, SSR coordination                               |
 
 ---
 
@@ -31,11 +31,9 @@ Query keys are scattered across 58+ locations with inconsistent naming:
 
 ```typescript
 // Inconsistent patterns found:
-['teams']                          // Missing context
-['scorecard', teamId]              // No hierarchical structure
-['turnover-entries', teamId]       // Different naming convention
-['links', teamId, search, visibility]  // Inline dependencies
-['ldap-members', adminGroup]       // Not namespaced
+;['teams'][('scorecard', teamId)][('turnover-entries', teamId)][ // Missing context // No hierarchical structure // Different naming convention
+  ('links', teamId, search, visibility)
+][('ldap-members', adminGroup)] // Inline dependencies // Not namespaced
 ```
 
 ### Target Structure
@@ -47,8 +45,9 @@ Create [`src/lib/query-keys.ts`](src/lib/query-keys.ts) with factory pattern:
 export const scorecardKeys = {
   all: ['scorecard'] as const,
   team: (teamId: string) => [...scorecardKeys.all, teamId] as const,
-  year: (teamId: string, year: number) => [...scorecardKeys.team(teamId), year] as const,
-  publishStatus: (teamId: string, year: number) => 
+  year: (teamId: string, year: number) =>
+    [...scorecardKeys.team(teamId), year] as const,
+  publishStatus: (teamId: string, year: number) =>
     [...scorecardKeys.team(teamId), 'publish-status', year] as const,
 }
 
@@ -56,12 +55,13 @@ export const scorecardKeys = {
 export const turnoverKeys = {
   all: ['turnover'] as const,
   team: (teamId: string) => [...turnoverKeys.all, teamId] as const,
-  entries: (teamId: string, filters?: TurnoverFilters) => 
+  entries: (teamId: string, filters?: TurnoverFilters) =>
     [...turnoverKeys.team(teamId), 'entries', filters] as const,
-  dispatch: (teamId: string) => [...turnoverKeys.team(teamId), 'dispatch'] as const,
-  finalized: (teamId: string, dateRange?: DateRange) => 
+  dispatch: (teamId: string) =>
+    [...turnoverKeys.team(teamId), 'dispatch'] as const,
+  finalized: (teamId: string, dateRange?: DateRange) =>
     [...turnoverKeys.team(teamId), 'finalized', dateRange] as const,
-  metrics: (teamId: string, dateRange?: DateRange) => 
+  metrics: (teamId: string, dateRange?: DateRange) =>
     [...turnoverKeys.team(teamId), 'metrics', dateRange] as const,
   groups: (teamId: string) => [...turnoverKeys.team(teamId), 'groups'] as const,
 }
@@ -70,9 +70,10 @@ export const turnoverKeys = {
 export const linkKeys = {
   all: ['links'] as const,
   team: (teamId: string) => [...linkKeys.all, teamId] as const,
-  list: (teamId: string, filters: LinkFilters) => 
+  list: (teamId: string, filters: LinkFilters) =>
     [...linkKeys.team(teamId), 'list', filters] as const,
-  categories: (teamId: string) => [...linkKeys.team(teamId), 'categories'] as const,
+  categories: (teamId: string) =>
+    [...linkKeys.team(teamId), 'categories'] as const,
   stats: (teamId: string) => [...linkKeys.team(teamId), 'stats'] as const,
 }
 
@@ -81,29 +82,31 @@ export const teamKeys = {
   all: ['teams'] as const,
   list: () => [...teamKeys.all, 'list'] as const,
   detail: (teamId: string) => [...teamKeys.all, teamId] as const,
-  applications: (teamId: string) => [...teamKeys.detail(teamId), 'applications'] as const,
+  applications: (teamId: string) =>
+    [...teamKeys.detail(teamId), 'applications'] as const,
   ldap: (group: string) => [...teamKeys.all, 'ldap', group] as const,
 }
 
 // Admin keys
 export const adminKeys = {
   all: ['admin'] as const,
-  registrationRequests: () => [...adminKeys.all, 'registration-requests'] as const,
+  registrationRequests: () =>
+    [...adminKeys.all, 'registration-requests'] as const,
   health: () => [...adminKeys.all, 'health'] as const,
 }
 ```
 
 ### Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/routes/teams/$teamId/scorecard.tsx` | Replace 8 query key usages |
-| `src/routes/teams/$teamId/turnover/*.tsx` | Replace 12 query key usages |
+| File                                          | Changes                     |
+| --------------------------------------------- | --------------------------- |
+| `src/routes/teams/$teamId/scorecard.tsx`      | Replace 8 query key usages  |
+| `src/routes/teams/$teamId/turnover/*.tsx`     | Replace 12 query key usages |
 | `src/routes/teams/$teamId/link-manager/*.tsx` | Replace 10 query key usages |
-| `src/routes/admin/*.tsx` | Replace 5 query key usages |
-| `src/components/scorecard/*.tsx` | Replace 4 query key usages |
-| `src/components/turnover/*.tsx` | Replace 8 query key usages |
-| `src/components/link-manager/*.tsx` | Replace 6 query key usages |
+| `src/routes/admin/*.tsx`                      | Replace 5 query key usages  |
+| `src/components/scorecard/*.tsx`              | Replace 4 query key usages  |
+| `src/components/turnover/*.tsx`               | Replace 8 query key usages  |
+| `src/components/link-manager/*.tsx`           | Replace 6 query key usages  |
 
 ---
 
@@ -143,6 +146,7 @@ export function usePagination<T>({
 ```
 
 **Used in**:
+
 - `src/routes/teams/$teamId/turnover/transition-history.tsx`
 - `src/routes/admin/requests.tsx`
 - `src/routes/admin/teams.tsx`
@@ -173,6 +177,7 @@ export function useSearchFilter<T>({
 ```
 
 **Used in**:
+
 - `src/routes/teams/$teamId/link-manager/index.tsx`
 - `src/routes/teams/$teamId/turnover/dispatch-turnover.tsx`
 - `src/routes/teams/$teamId/turnover/transition-history.tsx`
@@ -199,10 +204,13 @@ interface UseExpandStateReturn {
   allExpanded: boolean
 }
 
-export function useExpandState(options?: UseExpandStateOptions): UseExpandStateReturn
+export function useExpandState(
+  options?: UseExpandStateOptions,
+): UseExpandStateReturn
 ```
 
 **Used in**:
+
 - `src/routes/teams/$teamId/scorecard.tsx` (expandedApps)
 - `src/routes/scorecard.tsx` (expandedTeams, expandedApps)
 - `src/routes/teams/$teamId/turnover/dispatch-turnover.tsx` (expandedApps)
@@ -228,6 +236,7 @@ export function useDateRange(options?: UseDateRangeOptions): UseDateRangeReturn
 ```
 
 **Used in**:
+
 - `src/routes/teams/$teamId/turnover/turnover-metrics.tsx`
 - `src/routes/teams/$teamId/turnover/transition-history.tsx`
 
@@ -246,6 +255,7 @@ export function useDateRange(options?: UseDateRangeOptions): UseDateRangeReturn
 **Target**: ~200 lines (orchestrator)
 
 **Extract to**:
+
 - [`src/components/scorecard/scorecard-header.tsx`](src/components/scorecard/scorecard-header.tsx) - Header with year/period selectors
 - [`src/components/scorecard/scorecard-filters.tsx`](src/components/scorecard/scorecard-filters.tsx) - View mode and period filters
 - [`src/components/scorecard/publish-dialog.tsx`](src/components/scorecard/publish-dialog.tsx) - Publish/unpublish dialog
@@ -257,6 +267,7 @@ export function useDateRange(options?: UseDateRangeOptions): UseDateRangeReturn
 **Target**: ~300 lines
 
 **Extract to**:
+
 - [`src/components/scorecard/chart-controls.tsx`](src/components/scorecard/chart-controls.tsx) - Chart type/metric selectors
 - [`src/components/scorecard/chart-legend.tsx`](src/components/scorecard/chart-legend.tsx) - Legend component
 - [`src/components/scorecard/chart-renderer.tsx`](src/components/scorecard/chart-renderer.tsx) - Chart rendering logic
@@ -272,16 +283,18 @@ import { scorecardKeys } from '@/lib/query-keys'
 import { getScorecardData, getPublishStatus } from '@/app/actions/scorecard'
 
 export const scorecardQueries = {
-  data: (teamId: string, year: number) => queryOptions({
-    queryKey: scorecardKeys.year(teamId, year),
-    queryFn: () => getScorecardData({ data: { teamId, year } }),
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  }),
-  publishStatus: (teamId: string, year: number) => queryOptions({
-    queryKey: scorecardKeys.publishStatus(teamId, year),
-    queryFn: () => getPublishStatus({ data: { teamId, year } }),
-    staleTime: 1000 * 60 * 10, // 10 minutes
-  }),
+  data: (teamId: string, year: number) =>
+    queryOptions({
+      queryKey: scorecardKeys.year(teamId, year),
+      queryFn: () => getScorecardData({ data: { teamId, year } }),
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    }),
+  publishStatus: (teamId: string, year: number) =>
+    queryOptions({
+      queryKey: scorecardKeys.publishStatus(teamId, year),
+      queryFn: () => getPublishStatus({ data: { teamId, year } }),
+      staleTime: 1000 * 60 * 10, // 10 minutes
+    }),
 }
 ```
 
@@ -297,6 +310,7 @@ export const scorecardQueries = {
 **Target**: ~300 lines
 
 **Extract to**:
+
 - [`src/components/settings/team-overview.tsx`](src/components/settings/team-overview.tsx) - Team info section
 - [`src/components/settings/applications-list.tsx`](src/components/settings/applications-list.tsx) - Applications management
 - [`src/components/settings/application-dialog.tsx`](src/components/settings/application-dialog.tsx) - Add/edit application dialog
@@ -309,6 +323,7 @@ export const scorecardQueries = {
 **Target**: ~200 lines
 
 **Extract to**:
+
 - [`src/components/turnover/rfc-form.tsx`](src/components/turnover/rfc-form.tsx) - RFC-specific fields
 - [`src/components/turnover/inc-form.tsx`](src/components/turnover/inc-form.tsx) - Incident-specific fields
 - [`src/components/turnover/mim-form.tsx`](src/components/turnover/mim-form.tsx) - MIM-specific fields
@@ -321,6 +336,7 @@ export const scorecardQueries = {
 **Target**: ~150 lines
 
 **Extract to**:
+
 - [`src/components/turnover/entry-header.tsx`](src/components/turnover/entry-header.tsx) - Card header with actions
 - [`src/components/turnover/entry-content.tsx`](src/components/turnover/entry-content.tsx) - Main content display
 - [`src/components/turnover/entry-actions.tsx`](src/components/turnover/entry-actions.tsx) - Action buttons
@@ -335,21 +351,24 @@ import { queryOptions, infiniteQueryOptions } from '@tanstack/react-query'
 import { turnoverKeys } from '@/lib/query-keys'
 
 export const turnoverQueries = {
-  entries: (teamId: string, filters?: TurnoverFilters) => queryOptions({
-    queryKey: turnoverKeys.entries(teamId, filters),
-    queryFn: () => getTurnoverEntries({ data: { teamId, ...filters } }),
-    staleTime: 1000 * 30, // 30 seconds (frequently changing)
-  }),
-  dispatch: (teamId: string) => queryOptions({
-    queryKey: turnoverKeys.dispatch(teamId),
-    queryFn: () => getDispatchEntries({ data: { teamId } }),
-    staleTime: 0, // Always fresh
-  }),
-  groups: (teamId: string) => queryOptions({
-    queryKey: turnoverKeys.groups(teamId),
-    queryFn: () => getApplicationGroups({ data: { teamId } }),
-    staleTime: 1000 * 60 * 60, // 1 hour (rarely changes)
-  }),
+  entries: (teamId: string, filters?: TurnoverFilters) =>
+    queryOptions({
+      queryKey: turnoverKeys.entries(teamId, filters),
+      queryFn: () => getTurnoverEntries({ data: { teamId, ...filters } }),
+      staleTime: 1000 * 30, // 30 seconds (frequently changing)
+    }),
+  dispatch: (teamId: string) =>
+    queryOptions({
+      queryKey: turnoverKeys.dispatch(teamId),
+      queryFn: () => getDispatchEntries({ data: { teamId } }),
+      staleTime: 0, // Always fresh
+    }),
+  groups: (teamId: string) =>
+    queryOptions({
+      queryKey: turnoverKeys.groups(teamId),
+      queryFn: () => getApplicationGroups({ data: { teamId } }),
+      staleTime: 1000 * 60 * 60, // 1 hour (rarely changes)
+    }),
 }
 ```
 
@@ -365,6 +384,7 @@ export const turnoverQueries = {
 **Target**: ~200 lines
 
 **Extract to**:
+
 - [`src/components/link-manager/import-input-step.tsx`](src/components/link-manager/import-input-step.tsx) - Input parsing step
 - [`src/components/link-manager/import-review-step.tsx`](src/components/link-manager/import-review-step.tsx) - Review/edit step
 - [`src/components/link-manager/import-format-selector.tsx`](src/components/link-manager/import-format-selector.tsx) - Format selection
@@ -376,6 +396,7 @@ export const turnoverQueries = {
 **Target**: ~100 lines (router only)
 
 **Extract to**:
+
 - [`src/components/link-manager/link-grid-view.tsx`](src/components/link-manager/link-grid-view.tsx) - Grid view
 - [`src/components/link-manager/link-table-view.tsx`](src/components/link-manager/link-table-view.tsx) - Table view
 - [`src/components/link-manager/link-compact-view.tsx`](src/components/link-manager/link-compact-view.tsx) - Compact view
@@ -389,20 +410,23 @@ import { infiniteQueryOptions } from '@tanstack/react-query'
 import { linkKeys } from '@/lib/query-keys'
 
 export const linkQueries = {
-  list: (teamId: string, filters: LinkFilters) => infiniteQueryOptions({
-    queryKey: linkKeys.list(teamId, filters),
-    queryFn: ({ pageParam }) => getLinks({ 
-      data: { teamId, ...filters, cursor: pageParam } 
+  list: (teamId: string, filters: LinkFilters) =>
+    infiniteQueryOptions({
+      queryKey: linkKeys.list(teamId, filters),
+      queryFn: ({ pageParam }) =>
+        getLinks({
+          data: { teamId, ...filters, cursor: pageParam },
+        }),
+      initialPageParam: undefined as string | undefined,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+      staleTime: 1000 * 60 * 2, // 2 minutes
     }),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-    staleTime: 1000 * 60 * 2, // 2 minutes
-  }),
-  categories: (teamId: string) => queryOptions({
-    queryKey: linkKeys.categories(teamId),
-    queryFn: () => getLinkCategories({ data: { teamId } }),
-    staleTime: 1000 * 60 * 30, // 30 minutes
-  }),
+  categories: (teamId: string) =>
+    queryOptions({
+      queryKey: linkKeys.categories(teamId),
+      queryFn: () => getLinkCategories({ data: { teamId } }),
+      staleTime: 1000 * 60 * 30, // 30 minutes
+    }),
 }
 ```
 
@@ -429,10 +453,18 @@ interface StatsCardProps {
   className?: string
 }
 
-export function StatsCard({ title, value, description, icon, trend, className }: StatsCardProps)
+export function StatsCard({
+  title,
+  value,
+  description,
+  icon,
+  trend,
+  className,
+}: StatsCardProps)
 ```
 
 **Used in**:
+
 - `src/components/scorecard/stats-card.tsx`
 - `src/components/enterprise-scorecard/stats-summary.tsx`
 - `src/routes/admin/index.tsx`
@@ -452,10 +484,16 @@ interface EmptyStateProps {
   }
 }
 
-export function EmptyState({ icon, title, description, action }: EmptyStateProps)
+export function EmptyState({
+  icon,
+  title,
+  description,
+  action,
+}: EmptyStateProps)
 ```
 
 **Used in**:
+
 - All three tools have similar empty states
 
 ### 4.3 Shared Loading Skeleton Component
@@ -484,48 +522,63 @@ export function LoadingSkeleton({ variant, count = 3 }: LoadingSkeletonProps)
 
 ```typescript
 import { queryClient } from '@/lib/query-client'
-import { scorecardKeys, turnoverKeys, linkKeys, teamKeys } from '@/lib/query-keys'
+import {
+  scorecardKeys,
+  turnoverKeys,
+  linkKeys,
+  teamKeys,
+} from '@/lib/query-keys'
 
 // Standard invalidation patterns
 export const invalidateAfterMutation = {
   scorecard: {
-    all: (teamId: string) => queryClient.invalidateQueries({ 
-      queryKey: scorecardKeys.team(teamId) 
-    }),
-    year: (teamId: string, year: number) => queryClient.invalidateQueries({ 
-      queryKey: scorecardKeys.year(teamId, year) 
-    }),
-    publishStatus: (teamId: string, year: number) => queryClient.invalidateQueries({ 
-      queryKey: scorecardKeys.publishStatus(teamId, year) 
-    }),
+    all: (teamId: string) =>
+      queryClient.invalidateQueries({
+        queryKey: scorecardKeys.team(teamId),
+      }),
+    year: (teamId: string, year: number) =>
+      queryClient.invalidateQueries({
+        queryKey: scorecardKeys.year(teamId, year),
+      }),
+    publishStatus: (teamId: string, year: number) =>
+      queryClient.invalidateQueries({
+        queryKey: scorecardKeys.publishStatus(teamId, year),
+      }),
   },
   turnover: {
-    all: (teamId: string) => queryClient.invalidateQueries({ 
-      queryKey: turnoverKeys.team(teamId) 
-    }),
-    entries: (teamId: string) => queryClient.invalidateQueries({ 
-      queryKey: turnoverKeys.entries(teamId) 
-    }),
-    groups: (teamId: string) => queryClient.invalidateQueries({ 
-      queryKey: turnoverKeys.groups(teamId) 
-    }),
+    all: (teamId: string) =>
+      queryClient.invalidateQueries({
+        queryKey: turnoverKeys.team(teamId),
+      }),
+    entries: (teamId: string) =>
+      queryClient.invalidateQueries({
+        queryKey: turnoverKeys.entries(teamId),
+      }),
+    groups: (teamId: string) =>
+      queryClient.invalidateQueries({
+        queryKey: turnoverKeys.groups(teamId),
+      }),
   },
   links: {
-    all: (teamId: string) => queryClient.invalidateQueries({ 
-      queryKey: linkKeys.team(teamId) 
-    }),
-    list: (teamId: string) => queryClient.invalidateQueries({ 
-      queryKey: linkKeys.team(teamId) 
-    }),
-    categories: (teamId: string) => queryClient.invalidateQueries({ 
-      queryKey: linkKeys.categories(teamId) 
-    }),
+    all: (teamId: string) =>
+      queryClient.invalidateQueries({
+        queryKey: linkKeys.team(teamId),
+      }),
+    list: (teamId: string) =>
+      queryClient.invalidateQueries({
+        queryKey: linkKeys.team(teamId),
+      }),
+    categories: (teamId: string) =>
+      queryClient.invalidateQueries({
+        queryKey: linkKeys.categories(teamId),
+      }),
   },
   teams: {
     all: () => queryClient.invalidateQueries({ queryKey: teamKeys.all }),
-    applications: (teamId: string) => queryClient.invalidateQueries({ 
-      queryKey: teamKeys.applications(teamId) 
-    }),
+    applications: (teamId: string) =>
+      queryClient.invalidateQueries({
+        queryKey: teamKeys.applications(teamId),
+      }),
   },
 }
 ```
@@ -537,8 +590,8 @@ Replace all inline `queryClient.invalidateQueries` calls with helper functions:
 ```typescript
 // Before (found 30+ times):
 onSuccess: () => {
-  queryClient.invalidateQueries({ queryKey: ["scorecard", teamId] })
-  toast.success("Entry saved")
+  queryClient.invalidateQueries({ queryKey: ['scorecard', teamId] })
+  toast.success('Entry saved')
 }
 
 // After:
@@ -546,7 +599,7 @@ import { invalidateAfterMutation } from '@/lib/mutation-helpers'
 
 onSuccess: () => {
   invalidateAfterMutation.scorecard.all(teamId)
-  toast.success("Entry saved")
+  toast.success('Entry saved')
 }
 ```
 
@@ -566,25 +619,29 @@ Currently many routes use `useQuery` in components. Convert to loaders with `ens
 ```typescript
 // Before: useQuery in component
 const { data: currentYearData } = useQuery({
-  queryKey: ["scorecard", teamId, currentYear],
+  queryKey: ['scorecard', teamId, currentYear],
   queryFn: () => getScorecardData({ data: { teamId, year: currentYear } }),
 })
 
 // After: loader with ensureQueryData
 import { scorecardQueries } from '@/lib/query-options/scorecard'
 
-export const Route = createFileRoute("/teams/$teamId/scorecard")({
+export const Route = createFileRoute('/teams/$teamId/scorecard')({
   loader: async ({ context, params }) => {
     const { queryClient } = context
     const currentYear = new Date().getFullYear()
-    
+
     // Parallel loading
     const [team, scorecardData, publishStatus] = await Promise.all([
       getTeamById({ data: { teamId: params.teamId } }),
-      queryClient.ensureQueryData(scorecardQueries.data(params.teamId, currentYear)),
-      queryClient.ensureQueryData(scorecardQueries.publishStatus(params.teamId, currentYear)),
+      queryClient.ensureQueryData(
+        scorecardQueries.data(params.teamId, currentYear),
+      ),
+      queryClient.ensureQueryData(
+        scorecardQueries.publishStatus(params.teamId, currentYear),
+      ),
     ])
-    
+
     return { team, scorecardData, publishStatus }
   },
   component: ScorecardPage,
@@ -613,13 +670,13 @@ interface ToolErrorBoundaryProps {
 
 export function ToolErrorBoundary({ children, toolName }: ToolErrorBoundaryProps) {
   const { reset } = useQueryErrorResetBoundary()
-  
+
   return (
     <ErrorBoundary
       onReset={reset}
       fallbackRender={({ error, resetErrorBoundary }) => (
-        <ToolErrorFallback 
-          error={error} 
+        <ToolErrorFallback
+          error={error}
           onRetry={resetErrorBoundary}
           toolName={toolName}
         />
@@ -656,9 +713,9 @@ graph TD
     D --> E[Phase 5: Mutation Standardization]
     E --> F[Phase 6: Route Loader Optimization]
     F --> G[Phase 7: Error Boundaries]
-    
+
     subgraph "Phase 3 Details"
-        C1[3.1 Scorecard] 
+        C1[3.1 Scorecard]
         C2[3.2 Turnover]
         C3[3.3 Link Manager]
     end
@@ -666,17 +723,17 @@ graph TD
 
 ### Recommended Execution Order
 
-| Phase | Duration | Dependencies |
-|-------|----------|--------------|
-| 1. Query Key Factory | 1 session | None |
-| 2. Shared Hooks | 1 session | Phase 1 |
-| 3.1 Scorecard Refactoring | 2 sessions | Phase 1, 2 |
-| 3.2 Turnover Refactoring | 2 sessions | Phase 1, 2 |
-| 3.3 Link Manager Refactoring | 1 session | Phase 1, 2 |
-| 4. Shared Components | 1 session | Phase 3 |
-| 5. Mutation Standardization | 1 session | Phase 1, 3 |
-| 6. Route Loader Optimization | 1 session | Phase 1, 3, 5 |
-| 7. Error Boundaries | 1 session | Phase 3 |
+| Phase                        | Duration   | Dependencies  |
+| ---------------------------- | ---------- | ------------- |
+| 1. Query Key Factory         | 1 session  | None          |
+| 2. Shared Hooks              | 1 session  | Phase 1       |
+| 3.1 Scorecard Refactoring    | 2 sessions | Phase 1, 2    |
+| 3.2 Turnover Refactoring     | 2 sessions | Phase 1, 2    |
+| 3.3 Link Manager Refactoring | 1 session  | Phase 1, 2    |
+| 4. Shared Components         | 1 session  | Phase 3       |
+| 5. Mutation Standardization  | 1 session  | Phase 1, 3    |
+| 6. Route Loader Optimization | 1 session  | Phase 1, 3, 5 |
+| 7. Error Boundaries          | 1 session  | Phase 3       |
 
 ---
 
@@ -684,13 +741,13 @@ graph TD
 
 After refactoring, all files should meet these targets:
 
-| File Type | Max Lines | Action if Exceeded |
-|-----------|-----------|-------------------|
-| Route components | 200 | Extract to sub-components |
-| UI components | 150 | Split by responsibility |
-| Hooks | 100 | Compose from smaller hooks |
-| Server actions | 200 per domain | Split by entity |
-| Query options | 100 | Split by domain |
+| File Type        | Max Lines      | Action if Exceeded         |
+| ---------------- | -------------- | -------------------------- |
+| Route components | 200            | Extract to sub-components  |
+| UI components    | 150            | Split by responsibility    |
+| Hooks            | 100            | Compose from smaller hooks |
+| Server actions   | 200 per domain | Split by entity            |
+| Query options    | 100            | Split by domain            |
 
 ---
 

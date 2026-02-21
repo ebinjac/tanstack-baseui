@@ -76,15 +76,15 @@ The application will start at `http://localhost:3000`.
 
 ## Development Commands
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
-| `pnpm db:generate` | Generate database migrations |
-| `pnpm db:push` | Push schema changes to database |
-| `pnpm lint` | Run ESLint |
-| `pnpm format` | Format code with Prettier |
+| Command            | Description                     |
+| ------------------ | ------------------------------- |
+| `pnpm dev`         | Start development server        |
+| `pnpm build`       | Build for production            |
+| `pnpm start`       | Start production server         |
+| `pnpm db:generate` | Generate database migrations    |
+| `pnpm db:push`     | Push schema changes to database |
+| `pnpm lint`        | Run ESLint                      |
+| `pnpm format`      | Format code with Prettier       |
 
 ## Project Structure Overview
 

@@ -19,14 +19,14 @@ The Turnover tool provides:
 
 The turnover tracker supports multiple section types:
 
-| Section | Description | Specific Fields |
-|---------|-------------|----------------|
-| RFC | Request for Change | RFC Number, Status, Validated By |
-| INC | Incident | Incident Number |
-| ALERTS | System Alerts | (General tracking) |
-| MIM | Major Incident Management | MIM Link, Slack Link |
-| COMMS | Communications | Email Subject, Slack Link |
-| FYI | For Your Information | Description |
+| Section | Description               | Specific Fields                  |
+| ------- | ------------------------- | -------------------------------- |
+| RFC     | Request for Change        | RFC Number, Status, Validated By |
+| INC     | Incident                  | Incident Number                  |
+| ALERTS  | System Alerts             | (General tracking)               |
+| MIM     | Major Incident Management | MIM Link, Slack Link             |
+| COMMS   | Communications            | Email Subject, Slack Link        |
+| FYI     | For Your Information      | Description                      |
 
 ### Status
 
@@ -36,6 +36,7 @@ The turnover tracker supports multiple section types:
 ### Finalization
 
 Turnover finalization creates a snapshot of the current state:
+
 - Locks in entries for a specific time period
 - Creates historical record
 - 5-hour cooldown between finalizations
@@ -60,6 +61,7 @@ Turnover finalization creates a snapshot of the current state:
 ### 3. Dispatch View
 
 Special view for dispatching turnover:
+
 - Shows OPEN entries
 - Shows entries resolved today
 - Sorted by importance and date
@@ -84,19 +86,19 @@ Special view for dispatching turnover:
 
 All turnover operations are handled by server functions in [`src/app/actions/turnover.ts`](src/app/actions/turnover.ts):
 
-| Function | Description |
-|----------|-------------|
-| `createTurnoverEntry` | Create new turnover entry |
-| `updateTurnoverEntry` | Update entry details |
-| `deleteTurnoverEntry` | Remove an entry |
-| `toggleImportantEntry` | Mark/unmark as important |
-| `resolveTurnoverEntry` | Mark entry as resolved |
-| `getTurnoverEntries` | Fetch entries with filters |
-| `getDispatchEntries` | Get entries for dispatch view |
-| `canFinalizeTurnover` | Check if can finalize (cooldown) |
-| `finalizeTurnover` | Create turnover snapshot |
-| `getFinalizedTurnovers` | Get historical turnovers |
-| `getTurnoverMetrics` | Get metrics data |
+| Function                | Description                      |
+| ----------------------- | -------------------------------- |
+| `createTurnoverEntry`   | Create new turnover entry        |
+| `updateTurnoverEntry`   | Update entry details             |
+| `deleteTurnoverEntry`   | Remove an entry                  |
+| `toggleImportantEntry`  | Mark/unmark as important         |
+| `resolveTurnoverEntry`  | Mark entry as resolved           |
+| `getTurnoverEntries`    | Fetch entries with filters       |
+| `getDispatchEntries`    | Get entries for dispatch view    |
+| `canFinalizeTurnover`   | Check if can finalize (cooldown) |
+| `finalizeTurnover`      | Create turnover snapshot         |
+| `getFinalizedTurnovers` | Get historical turnovers         |
+| `getTurnoverMetrics`    | Get metrics data                 |
 
 ## Database Schema
 
@@ -113,21 +115,21 @@ All turnover operations are handled by server functions in [`src/app/actions/tur
 
 ```typescript
 interface TurnoverEntry {
-  id: string;
-  teamId: string;
-  applicationId?: string;
-  section: 'RFC' | 'INC' | 'ALERTS' | 'MIM' | 'COMMS' | 'FYI';
-  title: string;
-  description?: string;
-  comments?: string;
-  status: 'OPEN' | 'RESOLVED';
-  isImportant: boolean;
-  resolvedBy?: string;
-  resolvedAt?: Date;
-  createdAt: Date;
-  createdBy: string;
-  updatedAt?: Date;
-  updatedBy?: string;
+  id: string
+  teamId: string
+  applicationId?: string
+  section: 'RFC' | 'INC' | 'ALERTS' | 'MIM' | 'COMMS' | 'FYI'
+  title: string
+  description?: string
+  comments?: string
+  status: 'OPEN' | 'RESOLVED'
+  isImportant: boolean
+  resolvedBy?: string
+  resolvedAt?: Date
+  createdAt: Date
+  createdBy: string
+  updatedAt?: Date
+  updatedBy?: string
 }
 ```
 
@@ -135,11 +137,11 @@ interface TurnoverEntry {
 
 ### Turnover Components
 
-| Component | Description |
-|-----------|-------------|
-| `TurnoverApp` | Main turnover container |
-| `EntryCard` | Individual entry display |
-| `EntryDialog` | Create/edit entry form |
+| Component     | Description              |
+| ------------- | ------------------------ |
+| `TurnoverApp` | Main turnover container  |
+| `EntryCard`   | Individual entry display |
+| `EntryDialog` | Create/edit entry form   |
 
 ### Sub-pages
 

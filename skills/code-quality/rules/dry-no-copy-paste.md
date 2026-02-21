@@ -10,43 +10,51 @@ Copy-pasted code is the **#1 source of maintenance bugs**. When logic exists in 
 
 ```tsx
 // 🛑 Same auth + permission check copy-pasted across 10 server functions
-export const getTeamData = createServerFn({ method: "GET" })
-  .handler(async ({ data }) => {
+export const getTeamData = createServerFn({ method: 'GET' }).handler(
+  async ({ data }) => {
     const session = await getSession()
-    if (!session) throw new Error("Unauthorized")
+    if (!session) throw new Error('Unauthorized')
     const userEmail = session.user.email
-    if (!userEmail) throw new Error("Email required")
-    const permission = session.user.permissions.find(p => p.teamId === data.teamId)
-    if (!permission || permission.role !== "ADMIN") throw new Error("Not authorized")
+    if (!userEmail) throw new Error('Email required')
+    const permission = session.user.permissions.find(
+      (p) => p.teamId === data.teamId,
+    )
+    if (!permission || permission.role !== 'ADMIN')
+      throw new Error('Not authorized')
     // ... actual logic
-  })
+  },
+)
 
-export const updateTeamSettings = createServerFn({ method: "POST" })
-  .handler(async ({ data }) => {
+export const updateTeamSettings = createServerFn({ method: 'POST' }).handler(
+  async ({ data }) => {
     const session = await getSession()
-    if (!session) throw new Error("Unauthorized")
+    if (!session) throw new Error('Unauthorized')
     const userEmail = session.user.email
-    if (!userEmail) throw new Error("Email required")
-    const permission = session.user.permissions.find(p => p.teamId === data.teamId)
-    if (!permission || permission.role !== "ADMIN") throw new Error("Not authorized")
+    if (!userEmail) throw new Error('Email required')
+    const permission = session.user.permissions.find(
+      (p) => p.teamId === data.teamId,
+    )
+    if (!permission || permission.role !== 'ADMIN')
+      throw new Error('Not authorized')
     // ... actual logic (same 7 lines of auth copied!)
-  })
+  },
+)
 ```
 
 ## Good Example
 
 ```tsx
 // ✅ Auth logic extracted into reusable middleware
-import { requireAuth, assertTeamAdmin } from "@/lib/middleware/auth.middleware"
+import { requireAuth, assertTeamAdmin } from '@/lib/middleware/auth.middleware'
 
-export const getTeamData = createServerFn({ method: "GET" })
+export const getTeamData = createServerFn({ method: 'GET' })
   .middleware([requireAuth])
   .handler(async ({ data, context }) => {
     assertTeamAdmin(context.session, data.teamId)
     // ... actual logic uses context.userEmail
   })
 
-export const updateTeamSettings = createServerFn({ method: "POST" })
+export const updateTeamSettings = createServerFn({ method: 'POST' })
   .middleware([requireAuth])
   .handler(async ({ data, context }) => {
     assertTeamAdmin(context.session, data.teamId)
@@ -58,7 +66,7 @@ export const updateTeamSettings = createServerFn({ method: "POST" })
 
 ```tsx
 // 🛑 Same card layout repeated 5 times with slight variations
-<div className="rounded-lg border p-4 shadow">
+;<div className="rounded-lg border p-4 shadow">
   <h3 className="text-lg font-semibold">{title}</h3>
   <p className="text-muted-foreground">{description}</p>
   {children}
@@ -80,14 +88,14 @@ function FeatureCard({ title, description, children }: FeatureCardProps) {
 
 ## What to Extract
 
-| Duplication Type | Extract Into |
-|---|---|
-| Auth/permission checks | Middleware functions |
-| Data fetching + state | Custom hooks (`useXxx`) |
-| UI layout patterns | Shared components |
-| Validation logic | Zod schemas + utility functions |
+| Duplication Type        | Extract Into                          |
+| ----------------------- | ------------------------------------- |
+| Auth/permission checks  | Middleware functions                  |
+| Data fetching + state   | Custom hooks (`useXxx`)               |
+| UI layout patterns      | Shared components                     |
+| Validation logic        | Zod schemas + utility functions       |
 | Error handling patterns | Utility functions or error boundaries |
-| API call patterns | Typed helper functions |
+| API call patterns       | Typed helper functions                |
 
 ## Context
 

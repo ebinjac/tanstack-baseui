@@ -17,10 +17,10 @@ The Link Manager provides:
 
 ### Visibility
 
-| Type | Description | Permissions |
-|------|-------------|-------------|
-| Public | Visible to all team members | Admin only can create |
-| Private | Visible only to creator | Anyone can create own |
+| Type    | Description                 | Permissions           |
+| ------- | --------------------------- | --------------------- |
+| Public  | Visible to all team members | Admin only can create |
+| Private | Visible only to creator     | Anyone can create own |
 
 ### Categories
 
@@ -80,20 +80,20 @@ The Link Manager provides:
 
 All link operations are handled by server functions in [`src/app/actions/links.ts`](src/app/actions/links.ts):
 
-| Function | Description |
-|----------|-------------|
-| `getLinks` | Fetch links with filters and pagination |
-| `createLink` | Create a new link |
-| `updateLink` | Update link details |
-| `deleteLink` | Remove a link |
-| `trackLinkUsage` | Increment click count |
-| `bulkCreateLinks` | Create multiple links |
-| `bulkUpdateLinks` | Update multiple links |
-| `getLinkCategories` | Fetch categories |
-| `createLinkCategory` | Create new category |
-| `updateLinkCategory` | Update category |
-| `deleteLinkCategory` | Remove category |
-| `getLinkStats` | Get usage statistics |
+| Function             | Description                             |
+| -------------------- | --------------------------------------- |
+| `getLinks`           | Fetch links with filters and pagination |
+| `createLink`         | Create a new link                       |
+| `updateLink`         | Update link details                     |
+| `deleteLink`         | Remove a link                           |
+| `trackLinkUsage`     | Increment click count                   |
+| `bulkCreateLinks`    | Create multiple links                   |
+| `bulkUpdateLinks`    | Update multiple links                   |
+| `getLinkCategories`  | Fetch categories                        |
+| `createLinkCategory` | Create new category                     |
+| `updateLinkCategory` | Update category                         |
+| `deleteLinkCategory` | Remove category                         |
+| `getLinkStats`       | Get usage statistics                    |
 
 ## Database Schema
 
@@ -106,21 +106,21 @@ All link operations are handled by server functions in [`src/app/actions/links.t
 
 ```typescript
 interface Link {
-  id: string;
-  teamId: string;
-  userEmail: string;        // Creator's email
-  title: string;
-  url: string;
-  description?: string;
-  visibility: 'public' | 'private';
-  categoryId?: string;
-  applicationId?: string;
-  tags: string[];
-  usageCount: number;
-  createdAt: Date;
-  createdBy: string;
-  updatedAt?: Date;
-  updatedBy?: string;
+  id: string
+  teamId: string
+  userEmail: string // Creator's email
+  title: string
+  url: string
+  description?: string
+  visibility: 'public' | 'private'
+  categoryId?: string
+  applicationId?: string
+  tags: string[]
+  usageCount: number
+  createdAt: Date
+  createdBy: string
+  updatedAt?: Date
+  updatedBy?: string
 }
 ```
 
@@ -128,12 +128,12 @@ interface Link {
 
 ```typescript
 interface LinkCategory {
-  id: string;
-  teamId: string;
-  name: string;
-  description?: string;
-  createdAt: Date;
-  createdBy: string;
+  id: string
+  teamId: string
+  name: string
+  description?: string
+  createdAt: Date
+  createdBy: string
 }
 ```
 
@@ -141,13 +141,13 @@ interface LinkCategory {
 
 ### Link Manager Components
 
-| Component | Description |
-|-----------|-------------|
-| `LinkManagerApp` | Main container |
-| `LinkCard` | Individual link display |
-| `CreateLinkDialog` | Create new link form |
-| `LinkViews` | List/grid view toggle |
-| `UniversalImporterDialog` | Bulk import |
+| Component                 | Description             |
+| ------------------------- | ----------------------- |
+| `LinkManagerApp`          | Main container          |
+| `LinkCard`                | Individual link display |
+| `CreateLinkDialog`        | Create new link form    |
+| `LinkViews`               | List/grid view toggle   |
+| `UniversalImporterDialog` | Bulk import             |
 
 ### Sub-pages
 
@@ -180,12 +180,12 @@ interface LinkCategory {
 
 ### Public vs Private
 
-| Action | Public Links | Private Links |
-|--------|--------------|---------------|
-| Create | Admin only | Any team member |
-| Edit | Admin only | Owner only |
-| Delete | Admin only | Owner only |
-| View | All team members | Owner only |
+| Action | Public Links     | Private Links   |
+| ------ | ---------------- | --------------- |
+| Create | Admin only       | Any team member |
+| Edit   | Admin only       | Owner only      |
+| Delete | Admin only       | Owner only      |
+| View   | All team members | Owner only      |
 
 ### Bulk Operations
 
@@ -223,16 +223,19 @@ The stats page provides:
 ## Filtering Strategies
 
 ### For Team Admins
+
 - View all public links
 - Monitor private link count
 - Review category structure
 
 ### For Team Members
+
 - Filter by your private links
 - Search across all accessible links
 - Filter by category of interest
 
 ### For Finding Resources
+
 - Use search for specific terms
 - Filter by category to browse
 - Check popular links for team favorites

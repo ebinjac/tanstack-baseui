@@ -8,4 +8,8 @@ export { ApplicationActions } from './application-actions'
 export { StatsCard, InfoItem, ToolItem } from './shared'
 export { EditTeamDialog } from './team-dialogs'
 export { AddApplicationDialog } from './add-application-dialog'
-export { ViewApplicationDialog, EditApplicationDialog, DeleteConfirmationDialog } from './application-details-dialogs'
+export {
+  ViewApplicationDialog,
+  EditApplicationDialog,
+  DeleteConfirmationDialog,
+} from './application-details-dialogs'

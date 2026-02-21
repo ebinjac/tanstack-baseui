@@ -15,7 +15,7 @@ function App() {
     <ErrorBoundary>
       <Header />
       <Sidebar />
-      <MainContent />    {/* Error here kills sidebar + header too */}
+      <MainContent /> {/* Error here kills sidebar + header too */}
       <Footer />
     </ErrorBoundary>
   )
@@ -64,9 +64,7 @@ function WidgetError({ title }: { title: string }) {
     <div className="widget-error" role="alert">
       <AlertCircle className="icon" />
       <p>Failed to load {title}</p>
-      <button onClick={() => window.location.reload()}>
-        Retry
-      </button>
+      <button onClick={() => window.location.reload()}>Retry</button>
     </div>
   )
 }
@@ -76,7 +74,7 @@ function WidgetError({ title }: { title: string }) {
 
 ```tsx
 // ✅ Error boundary that can retry
-import { ErrorBoundary } from "react-error-boundary"
+import { ErrorBoundary } from 'react-error-boundary'
 
 function FeatureSection({ children }: { children: React.ReactNode }) {
   return (
@@ -101,12 +99,12 @@ function FeatureSection({ children }: { children: React.ReactNode }) {
 
 ## Placement Strategy
 
-| Level | What to Wrap | Why |
-|-------|-------------|-----|
-| Root | Entire `<App />` | Last resort — shows "app crashed" UI |
-| Route | Each route's content | One route failing doesn't affect navigation |
-| Feature | Widgets, panels, cards | One widget failing doesn't affect others |
-| Dynamic | User-generated content | Malformed data doesn't crash the page |
+| Level   | What to Wrap           | Why                                         |
+| ------- | ---------------------- | ------------------------------------------- |
+| Root    | Entire `<App />`       | Last resort — shows "app crashed" UI        |
+| Route   | Each route's content   | One route failing doesn't affect navigation |
+| Feature | Widgets, panels, cards | One widget failing doesn't affect others    |
+| Dynamic | User-generated content | Malformed data doesn't crash the page       |
 
 ## What Error Boundaries DON'T Catch
 

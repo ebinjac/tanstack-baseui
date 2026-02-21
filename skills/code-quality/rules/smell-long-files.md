@@ -10,13 +10,13 @@ Long files are a **smell indicating too many responsibilities**. They're hard to
 
 ### When to Split
 
-| File Type | Split When | Split Into |
-|-----------|-----------|------------|
-| Component | >200 lines JSX, or >3 sections | Sub-components + hook |
-| Server actions | >10 server functions | Domain-specific files |
-| Hook | >100 lines, or multiple `useEffect`s | Composed smaller hooks |
-| Utility file | >15 exported functions | Domain-grouped util files |
-| Type file | >100 lines | Domain-specific type files |
+| File Type      | Split When                           | Split Into                 |
+| -------------- | ------------------------------------ | -------------------------- |
+| Component      | >200 lines JSX, or >3 sections       | Sub-components + hook      |
+| Server actions | >10 server functions                 | Domain-specific files      |
+| Hook           | >100 lines, or multiple `useEffect`s | Composed smaller hooks     |
+| Utility file   | >15 exported functions               | Domain-grouped util files  |
+| Type file      | >100 lines                           | Domain-specific type files |
 
 ### Where to Split
 
@@ -87,12 +87,12 @@ function ScorecardPage() {
 
 ## File Size Guidelines
 
-| Lines | Status | Action |
-|-------|--------|--------|
-| <150 | ✅ Healthy | No action needed |
-| 150-300 | ⚠️ Watch | Consider splitting if adding more |
-| 300-500 | 🟡 Split soon | Actively plan extraction |
-| 500+ | 🔴 Split now | This is an active maintenance risk |
+| Lines   | Status        | Action                             |
+| ------- | ------------- | ---------------------------------- |
+| <150    | ✅ Healthy    | No action needed                   |
+| 150-300 | ⚠️ Watch      | Consider splitting if adding more  |
+| 300-500 | 🟡 Split soon | Actively plan extraction           |
+| 500+    | 🔴 Split now  | This is an active maintenance risk |
 
 ## What NOT to Split
 

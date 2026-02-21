@@ -540,12 +540,8 @@
           "tableFrom": "applications",
           "tableTo": "teams",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "cascade"
         }
@@ -896,9 +892,7 @@
         "teams_team_name_unique": {
           "name": "teams_team_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "team_name"
-          ]
+          "columns": ["team_name"]
         }
       },
       "policies": {},
@@ -997,12 +991,8 @@
           "tableFrom": "link_categories",
           "tableTo": "teams",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1196,12 +1186,8 @@
           "tableFrom": "links",
           "tableTo": "teams",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1210,12 +1196,8 @@
           "tableFrom": "links",
           "tableTo": "applications",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "application_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["application_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         },
@@ -1224,12 +1206,8 @@
           "tableFrom": "links",
           "tableTo": "link_categories",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1365,12 +1343,8 @@
           "tableFrom": "finalized_turnovers",
           "tableTo": "teams",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1434,12 +1408,8 @@
           "tableFrom": "turnover_comms_details",
           "tableTo": "turnover_entries",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "entry_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entry_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1449,9 +1419,7 @@
         "turnover_comms_details_entry_id_unique": {
           "name": "turnover_comms_details_entry_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "entry_id"
-          ]
+          "columns": ["entry_id"]
         }
       },
       "policies": {},
@@ -1678,12 +1646,8 @@
           "tableFrom": "turnover_entries",
           "tableTo": "teams",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "team_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["team_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1692,12 +1656,8 @@
           "tableFrom": "turnover_entries",
           "tableTo": "applications",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "application_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["application_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1770,12 +1730,8 @@
           "tableFrom": "turnover_inc_details",
           "tableTo": "turnover_entries",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "entry_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entry_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1785,9 +1741,7 @@
         "turnover_inc_details_entry_id_unique": {
           "name": "turnover_inc_details_entry_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "entry_id"
-          ]
+          "columns": ["entry_id"]
         }
       },
       "policies": {},
@@ -1847,12 +1801,8 @@
           "tableFrom": "turnover_mim_details",
           "tableTo": "turnover_entries",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "entry_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entry_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1862,9 +1812,7 @@
         "turnover_mim_details_entry_id_unique": {
           "name": "turnover_mim_details_entry_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "entry_id"
-          ]
+          "columns": ["entry_id"]
         }
       },
       "policies": {},
@@ -1945,12 +1893,8 @@
           "tableFrom": "turnover_rfc_details",
           "tableTo": "turnover_entries",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "entry_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["entry_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1960,9 +1904,7 @@
         "turnover_rfc_details_entry_id_unique": {
           "name": "turnover_rfc_details_entry_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "entry_id"
-          ]
+          "columns": ["entry_id"]
         }
       },
       "policies": {},
@@ -2101,12 +2043,8 @@
           "tableFrom": "scorecard_availability",
           "tableTo": "scorecard_entries",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "scorecard_entry_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scorecard_entry_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -2239,12 +2177,8 @@
           "tableFrom": "scorecard_entries",
           "tableTo": "applications",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "application_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["application_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -2254,9 +2188,7 @@
         "scorecard_entries_scorecard_identifier_unique": {
           "name": "scorecard_entries_scorecard_identifier_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "scorecard_identifier"
-          ]
+          "columns": ["scorecard_identifier"]
         }
       },
       "policies": {},
@@ -2395,12 +2327,8 @@
           "tableFrom": "scorecard_volume",
           "tableTo": "scorecard_entries",
           "schemaTo": "ensemble",
-          "columnsFrom": [
-            "scorecard_entry_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["scorecard_entry_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "cascade"
         }
@@ -2416,60 +2344,32 @@
     "ensemble.application_status": {
       "name": "application_status",
       "schema": "ensemble",
-      "values": [
-        "active",
-        "inactive",
-        "deprecated",
-        "archived"
-      ]
+      "values": ["active", "inactive", "deprecated", "archived"]
     },
     "ensemble.approval_status": {
       "name": "approval_status",
       "schema": "ensemble",
-      "values": [
-        "pending",
-        "approved",
-        "rejected",
-        "processed"
-      ]
+      "values": ["pending", "approved", "rejected", "processed"]
     },
     "ensemble.sync_status": {
       "name": "sync_status",
       "schema": "ensemble",
-      "values": [
-        "pending",
-        "syncing",
-        "success",
-        "failed"
-      ]
+      "values": ["pending", "syncing", "success", "failed"]
     },
     "ensemble.link_visibility": {
       "name": "link_visibility",
       "schema": "ensemble",
-      "values": [
-        "private",
-        "public"
-      ]
+      "values": ["private", "public"]
     },
     "ensemble.turnover_section": {
       "name": "turnover_section",
       "schema": "ensemble",
-      "values": [
-        "RFC",
-        "INC",
-        "ALERTS",
-        "MIM",
-        "COMMS",
-        "FYI"
-      ]
+      "values": ["RFC", "INC", "ALERTS", "MIM", "COMMS", "FYI"]
     },
     "ensemble.turnover_status": {
       "name": "turnover_status",
       "schema": "ensemble",
-      "values": [
-        "OPEN",
-        "RESOLVED"
-      ]
+      "values": ["OPEN", "RESOLVED"]
     }
   },
   "schemas": {

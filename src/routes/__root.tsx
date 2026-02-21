@@ -1,4 +1,9 @@
-import { HeadContent, Scripts, createRootRouteWithContext, useLocation } from '@tanstack/react-router'
+import {
+  HeadContent,
+  Scripts,
+  createRootRouteWithContext,
+  useLocation,
+} from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { QueryClientProvider } from '@tanstack/react-query'
@@ -44,7 +49,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   shellComponent: RootDocument,
 })
 
-
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { session, queryClient } = Route.useRouteContext()
   const location = useLocation()
@@ -60,10 +64,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <QueryClientProvider client={queryClient}>
             <SessionGuard session={session}>
               <div className="relative flex min-h-screen flex-col">
-                {!isAdminRoute && !location.pathname.includes('/link-manager') && <Header session={session} />}
-                <main className="flex-1">
-                  {children}
-                </main>
+                {!isAdminRoute &&
+                  !location.pathname.includes('/link-manager') &&
+                  !location.pathname.includes('/turnover') && (
+                    <Header session={session} />
+                  )}
+                <main className="flex-1">{children}</main>
               </div>
               <Toaster />
             </SessionGuard>
@@ -86,5 +92,3 @@ function RootDocument({ children }: { children: React.ReactNode }) {
     </html>
   )
 }
-
-

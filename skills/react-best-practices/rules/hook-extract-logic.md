@@ -16,20 +16,20 @@ function ScorecardPage({ teamId }: { teamId: string }) {
   const [entries, setEntries] = useState<ScorecardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<string>("all")
-  const [sortBy, setSortBy] = useState<"date" | "score">("date")
-  const [searchTerm, setSearchTerm] = useState("")
+  const [filter, setFilter] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'date' | 'score'>('date')
+  const [searchTerm, setSearchTerm] = useState('')
   const [page, setPage] = useState(1)
   const pageSize = 20
 
   useEffect(() => {
     setLoading(true)
     getScorecardEntries({ data: { teamId } })
-      .then(data => {
+      .then((data) => {
         setEntries(data.entries)
         setLoading(false)
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err.message)
         setLoading(false)
       })
@@ -37,14 +37,15 @@ function ScorecardPage({ teamId }: { teamId: string }) {
 
   const filtered = useMemo(() => {
     let result = entries
-    if (filter !== "all") result = result.filter(e => e.category === filter)
-    if (searchTerm) result = result.filter(e =>
-      e.title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    if (filter !== 'all') result = result.filter((e) => e.category === filter)
+    if (searchTerm)
+      result = result.filter((e) =>
+        e.title.toLowerCase().includes(searchTerm.toLowerCase()),
+      )
     return result.sort((a, b) =>
-      sortBy === "date"
+      sortBy === 'date'
         ? b.createdAt.localeCompare(a.createdAt)
-        : b.score - a.score
+        : b.score - a.score,
     )
   }, [entries, filter, sortBy, searchTerm])
 
@@ -61,7 +62,7 @@ function ScorecardPage({ teamId }: { teamId: string }) {
 // ✅ Hook: data fetching and state
 function useScorecardEntries(teamId: string) {
   return useQuery({
-    queryKey: ["scorecard", teamId],
+    queryKey: ['scorecard', teamId],
     queryFn: () => getScorecardEntries({ data: { teamId } }),
     select: (data) => data.entries,
   })
@@ -69,25 +70,33 @@ function useScorecardEntries(teamId: string) {
 
 // ✅ Hook: filtering and sorting logic
 function useScorecardFilters(entries: ScorecardEntry[]) {
-  const [filter, setFilter] = useState<string>("all")
-  const [sortBy, setSortBy] = useState<"date" | "score">("date")
-  const [searchTerm, setSearchTerm] = useState("")
+  const [filter, setFilter] = useState<string>('all')
+  const [sortBy, setSortBy] = useState<'date' | 'score'>('date')
+  const [searchTerm, setSearchTerm] = useState('')
 
   const filtered = useMemo(() => {
     let result = entries
-    if (filter !== "all") result = result.filter(e => e.category === filter)
+    if (filter !== 'all') result = result.filter((e) => e.category === filter)
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
-      result = result.filter(e => e.title.toLowerCase().includes(term))
+      result = result.filter((e) => e.title.toLowerCase().includes(term))
     }
     return result.sort((a, b) =>
-      sortBy === "date"
+      sortBy === 'date'
         ? b.createdAt.localeCompare(a.createdAt)
-        : b.score - a.score
+        : b.score - a.score,
     )
   }, [entries, filter, sortBy, searchTerm])
 
-  return { filtered, filter, setFilter, sortBy, setSortBy, searchTerm, setSearchTerm }
+  return {
+    filtered,
+    filter,
+    setFilter,
+    sortBy,
+    setSortBy,
+    searchTerm,
+    setSearchTerm,
+  }
 }
 
 // ✅ Hook: pagination
@@ -120,13 +129,13 @@ function ScorecardPage({ teamId }: { teamId: string }) {
 
 ## When to Extract a Hook
 
-| Signal | Action |
-|--------|--------|
+| Signal                                     | Action                                             |
+| ------------------------------------------ | -------------------------------------------------- |
 | `useState` + `useEffect` for data fetching | Extract `useXxxQuery` hook (prefer TanStack Query) |
-| Multiple `useState` managing related state | Extract `useXxxState` or use `useReducer` |
-| `useMemo`/`useCallback` with complex logic | Extract `useXxxComputed` hook |
-| Same logic appears in 2+ components | Extract shared hook immediately |
-| Component has 5+ `useState` declarations | Extract into focused hooks |
+| Multiple `useState` managing related state | Extract `useXxxState` or use `useReducer`          |
+| `useMemo`/`useCallback` with complex logic | Extract `useXxxComputed` hook                      |
+| Same logic appears in 2+ components        | Extract shared hook immediately                    |
+| Component has 5+ `useState` declarations   | Extract into focused hooks                         |
 
 ## Naming Convention
 

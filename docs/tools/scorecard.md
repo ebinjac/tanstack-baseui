@@ -22,10 +22,10 @@ The Scorecard tool provides:
 
 ### Metrics
 
-| Metric | Description |
-|--------|-------------|
+| Metric       | Description                                  |
+| ------------ | -------------------------------------------- |
 | Availability | Monthly performance as a percentage (0-100%) |
-| Volume | Monthly hits/transactions count |
+| Volume       | Monthly hits/transactions count              |
 
 ### Thresholds
 
@@ -72,18 +72,18 @@ Team admins can:
 
 All scorecard operations are handled by server functions in [`src/app/actions/scorecard.ts`](src/app/actions/scorecard.ts):
 
-| Function | Description |
-|----------|-------------|
-| `getScorecardData` | Fetch scorecard data for a team and year |
-| `createScorecardEntry` | Create a new sub-application entry |
-| `updateScorecardEntry` | Update entry details and thresholds |
-| `deleteScorecardEntry` | Remove an entry |
-| `upsertAvailability` | Create/update availability for a month |
-| `upsertVolume` | Create/update volume for a month |
-| `checkScorecardIdentifier` | Validate unique identifier |
-| `getGlobalScorecardData` | Get scorecard for all teams (leadership view) |
-| `publishScorecard` | Publish team's monthly data |
-| `unpublishScorecard` | Unpublish team's data |
+| Function                   | Description                                   |
+| -------------------------- | --------------------------------------------- |
+| `getScorecardData`         | Fetch scorecard data for a team and year      |
+| `createScorecardEntry`     | Create a new sub-application entry            |
+| `updateScorecardEntry`     | Update entry details and thresholds           |
+| `deleteScorecardEntry`     | Remove an entry                               |
+| `upsertAvailability`       | Create/update availability for a month        |
+| `upsertVolume`             | Create/update volume for a month              |
+| `checkScorecardIdentifier` | Validate unique identifier                    |
+| `getGlobalScorecardData`   | Get scorecard for all teams (leadership view) |
+| `publishScorecard`         | Publish team's monthly data                   |
+| `unpublishScorecard`       | Unpublish team's data                         |
 
 ## Database Schema
 
@@ -99,16 +99,16 @@ All scorecard operations are handled by server functions in [`src/app/actions/sc
 
 ```typescript
 interface ScorecardEntry {
-  id: string;              // UUID
-  applicationId: string;   // Foreign key to applications
-  scorecardIdentifier: string;  // Unique slug
-  name: string;           // Display name
-  availabilityThreshold: string;  // e.g., "98"
-  volumeChangeThreshold: string;  // e.g., "20"
-  createdAt: Date;
-  createdBy: string;
-  updatedAt?: Date;
-  updatedBy?: string;
+  id: string // UUID
+  applicationId: string // Foreign key to applications
+  scorecardIdentifier: string // Unique slug
+  name: string // Display name
+  availabilityThreshold: string // e.g., "98"
+  volumeChangeThreshold: string // e.g., "20"
+  createdAt: Date
+  createdBy: string
+  updatedAt?: Date
+  updatedBy?: string
 }
 ```
 
@@ -116,16 +116,16 @@ interface ScorecardEntry {
 
 ```typescript
 interface ScorecardAvailability {
-  id: string;
-  scorecardEntryId: string;
-  year: number;
-  month: number;          // 1-12
-  availability: string;   // Percentage as string
-  reason?: string;        // Required if below threshold
-  createdAt: Date;
-  createdBy: string;
-  updatedAt?: Date;
-  updatedBy?: string;
+  id: string
+  scorecardEntryId: string
+  year: number
+  month: number // 1-12
+  availability: string // Percentage as string
+  reason?: string // Required if below threshold
+  createdAt: Date
+  createdBy: string
+  updatedAt?: Date
+  updatedBy?: string
 }
 ```
 
@@ -133,13 +133,13 @@ interface ScorecardAvailability {
 
 ### Scorecard Components
 
-| Component | Description |
-|-----------|-------------|
-| `ScorecardApp` | Main scorecard container |
+| Component            | Description                  |
+| -------------------- | ---------------------------- |
+| `ScorecardApp`       | Main scorecard container     |
 | `ApplicationSection` | Section for each application |
-| `EntryRows` | Data entry rows |
-| `DataCell` | Editable cell for metrics |
-| `StatsCard` | Summary statistics |
+| `EntryRows`          | Data entry rows              |
+| `DataCell`           | Editable cell for metrics    |
+| `StatsCard`          | Summary statistics           |
 
 ### Dialogs
 

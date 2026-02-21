@@ -1,147 +1,148 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 
-import {
-  AlertTriangle,
-  FolderOpen,
-  Settings2,
-  Layers,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { getTeamApplications } from "@/app/actions/applications";
-import { getApplicationGroups } from "@/app/actions/application-groups";
-import { getTurnoverEntries } from "@/app/actions/turnover";
-import { SectionTable } from "@/components/turnover/section-table";
-import { GroupManagementDialog } from "@/components/turnover/group-management-sheet";
+import { AlertTriangle, FolderOpen, Settings2, Layers } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { getTeamApplications } from '@/app/actions/applications'
+import { getApplicationGroups } from '@/app/actions/application-groups'
+import { getTurnoverEntries } from '@/app/actions/turnover'
+import { SectionTable } from '@/components/turnover/section-table'
+import { GroupManagementDialog } from '@/components/turnover/group-management-sheet'
 import {
   GroupedApplicationTabs,
   FlatApplicationTabs,
   type TabItem,
-} from "@/components/turnover/grouped-application-tabs";
-import { type TurnoverSection } from "@/lib/zod/turnover.schema";
-import type { Application } from "@/db/schema/teams";
-import type { ApplicationGroup } from "@/db/schema/application-groups";
+} from '@/components/turnover/grouped-application-tabs'
+import { type TurnoverSection } from '@/lib/zod/turnover.schema'
+import type { Application } from '@/db/schema/teams'
+import type { ApplicationGroup } from '@/db/schema/application-groups'
 
-export const Route = createFileRoute(
-  "/teams/$teamId/turnover/pass-the-baton"
-)({
+export const Route = createFileRoute('/teams/$teamId/turnover/pass-the-baton')({
   component: PassTheBatonPage,
   loader: async ({ params: { teamId } }) => {
     const [applications, groupsData] = await Promise.all([
       getTeamApplications({ data: { teamId } }),
       getApplicationGroups({ data: { teamId } }),
-    ]);
-    return { applications, groupsData };
+    ])
+    return { applications, groupsData }
   },
-});
+})
 
-const SECTIONS: TurnoverSection[] = ["RFC", "INC", "ALERTS", "MIM", "COMMS", "FYI"];
+const SECTIONS: TurnoverSection[] = [
+  'RFC',
+  'INC',
+  'ALERTS',
+  'MIM',
+  'COMMS',
+  'FYI',
+]
 
 function PassTheBatonPage() {
-  const { teamId } = Route.useParams();
-  const { applications, groupsData: initialGroupsData } = Route.useLoaderData();
+  const { teamId } = Route.useParams()
+  const { applications, groupsData: initialGroupsData } = Route.useLoaderData()
 
   // Fetch groups data with react-query for live updates
   const { data: groupsData } = useQuery({
-    queryKey: ["application-groups", teamId],
+    queryKey: ['application-groups', teamId],
     queryFn: () => getApplicationGroups({ data: { teamId } }),
     initialData: initialGroupsData,
-  });
+  })
 
   // Track active tab and its applications
-  const [activeTab, setActiveTab] = useState<TabItem | null>(null);
+  const [activeTab, setActiveTab] = useState<TabItem | null>(null)
 
   // Build initial tab on mount or when groupsData changes
   useEffect(() => {
     if (!activeTab && applications?.length > 0) {
-      const groupingEnabled = groupsData?.groupingEnabled ?? false;
-      const groups = groupsData?.groups || [];
-      const ungroupedApps = groupsData?.ungroupedApplications || [];
+      const groupingEnabled = groupsData?.groupingEnabled ?? false
+      const groups = groupsData?.groups || []
+      const ungroupedApps = groupsData?.ungroupedApplications || []
 
       if (groupingEnabled && groups.length > 0) {
         // Find first valid group (2+ apps) or first ungrouped app
         const firstGroup = groups.find(
-          (g: ApplicationGroup & { applications: Application[] }) => g.applications.length >= 2
-        );
+          (g: ApplicationGroup & { applications: Application[] }) =>
+            g.applications.length >= 2,
+        )
         if (firstGroup) {
           setActiveTab({
             id: `group-${firstGroup.id}`,
             label: firstGroup.name,
-            type: "group",
+            type: 'group',
             color: firstGroup.color || undefined,
             applications: firstGroup.applications,
-          });
+          })
         } else if (ungroupedApps.length > 0) {
           setActiveTab({
             id: ungroupedApps[0].id,
             label: ungroupedApps[0].tla,
-            type: "application",
+            type: 'application',
             applications: [ungroupedApps[0]],
-          });
+          })
         }
       } else if (applications.length > 0) {
         setActiveTab({
           id: applications[0].id,
           label: applications[0].tla,
-          type: "application",
+          type: 'application',
           applications: [applications[0]],
-        });
+        })
       }
     }
-  }, [groupsData, applications, activeTab]);
+  }, [groupsData, applications, activeTab])
 
   // Get all application IDs for the active tab (for fetching entries)
-  const activeAppIds = activeTab?.applications.map((a) => a.id) || [];
-  const primaryAppId = activeAppIds[0] || null;
+  const activeAppIds = activeTab?.applications.map((a) => a.id) || []
+  const primaryAppId = activeAppIds[0] || null
 
   // Fetch entries for all applications in the active tab
   const { data: allEntriesData } = useQuery({
-    queryKey: ["turnover-entries", teamId, activeAppIds, "all"],
+    queryKey: ['turnover-entries', teamId, activeAppIds, 'all'],
     queryFn: async () => {
-      if (activeAppIds.length === 0) return { entries: [], total: 0 };
+      if (activeAppIds.length === 0) return { entries: [], total: 0 }
 
       // Fetch entries for all applications in the tab
       const entriesPromises = activeAppIds.map((appId) =>
         getTurnoverEntries({
           data: { teamId, applicationId: appId, includeRecentlyResolved: true },
-        })
-      );
-      const results = await Promise.all(entriesPromises);
+        }),
+      )
+      const results = await Promise.all(entriesPromises)
 
       // Combine all entries
-      const allEntries = results.flatMap((r) => r.entries);
-      return { entries: allEntries, total: allEntries.length };
+      const allEntries = results.flatMap((r) => r.entries)
+      return { entries: allEntries, total: allEntries.length }
     },
     enabled: activeAppIds.length > 0,
-  });
+  })
 
   const importantEntries =
-    allEntriesData?.entries?.filter((e: any) => e.isImportant) || [];
+    allEntriesData?.entries?.filter((e: any) => e.isImportant) || []
 
-  const groupingEnabled = groupsData?.groupingEnabled ?? false;
-  const hasGroups = (groupsData?.groups?.length ?? 0) > 0;
+  const groupingEnabled = groupsData?.groupingEnabled ?? false
+  const hasGroups = (groupsData?.groups?.length ?? 0) > 0
 
   // Handler for tab selection
   const handleSelectTab = (_tabId: string, tabItem: TabItem) => {
-    setActiveTab(tabItem);
-  };
+    setActiveTab(tabItem)
+  }
 
   // Handler for flat view tab selection
   const handleSelectApplication = (appId: string) => {
-    const app = applications?.find((a: Application) => a.id === appId);
+    const app = applications?.find((a: Application) => a.id === appId)
     if (app) {
       setActiveTab({
         id: app.id,
         label: app.tla,
-        type: "application",
+        type: 'application',
         applications: [app],
-      });
+      })
     }
-  };
+  }
 
   return (
     <div className="p-8 mx-auto space-y-8">
@@ -210,7 +211,11 @@ function PassTheBatonPage() {
                 <GroupManagementDialog
                   teamId={teamId}
                   trigger={
-                    <Button variant="ghost" size="sm" className="gap-2 text-xs text-muted-foreground shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-2 text-xs text-muted-foreground shrink-0"
+                    >
                       <Layers className="h-3.5 w-3.5" />
                       Create Groups
                     </Button>
@@ -256,7 +261,8 @@ function PassTheBatonPage() {
                   </span>
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  Action required: These items have been flagged for immediate attention.
+                  Action required: These items have been flagged for immediate
+                  attention.
                 </p>
               </div>
             </div>
@@ -270,18 +276,21 @@ function PassTheBatonPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-bold flex items-center gap-3">
-                {activeTab.type === "group" && (
-                  <Layers className="h-5 w-5" style={{ color: activeTab.color }} />
+                {activeTab.type === 'group' && (
+                  <Layers
+                    className="h-5 w-5"
+                    style={{ color: activeTab.color }}
+                  />
                 )}
                 {activeTab.label}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {activeTab.type === "group"
+                {activeTab.type === 'group'
                   ? `Manage turnover entries for ${activeTab.applications.length} grouped applications`
-                  : "Manage turnover entries for this application"}
+                  : 'Manage turnover entries for this application'}
               </p>
             </div>
-            {activeTab.type === "group" && (
+            {activeTab.type === 'group' && (
               <div className="flex items-center gap-2">
                 {activeTab.applications.map((app) => (
                   <Badge key={app.id} variant="outline" className="text-xs">
@@ -300,7 +309,7 @@ function PassTheBatonPage() {
                   applicationId={primaryAppId}
                   section={section}
                   // Pass group info for application selector in entry dialog
-                  isGrouped={activeTab.type === "group"}
+                  isGrouped={activeTab.type === 'group'}
                   groupApplications={activeTab.applications}
                 />
               </div>
@@ -309,5 +318,5 @@ function PassTheBatonPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

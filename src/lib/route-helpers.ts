@@ -1,9 +1,9 @@
 /**
  * Route Loader Helpers
- * 
+ *
  * Utilities for using TanStack Router loaders with TanStack Query.
  * Implements the ensureQueryData pattern for optimal data loading.
- * 
+ *
  * @see skills/tanstack-router/rules/load-ensure-query-data.md
  */
 
@@ -12,7 +12,7 @@ import type { QueryClient } from '@tanstack/react-query'
 /**
  * Helper to ensure query data is loaded in a route loader.
  * This pattern prevents redundant fetches when the same query is used in the component.
- * 
+ *
  * @example
  * ```tsx
  * export const Route = createFileRoute('/teams/$teamId/scorecard')({
@@ -26,15 +26,15 @@ import type { QueryClient } from '@tanstack/react-query'
  * ```
  */
 export async function ensureQueryDataInLoader<T>(
-    queryClient: QueryClient,
-    options: { queryKey: readonly unknown[]; queryFn: () => Promise<T> }
+  queryClient: QueryClient,
+  options: { queryKey: readonly unknown[]; queryFn: () => Promise<T> },
 ): Promise<T> {
-    return queryClient.ensureQueryData(options)
+  return queryClient.ensureQueryData(options)
 }
 
 /**
  * Helper to ensure multiple queries are loaded in parallel.
- * 
+ *
  * @example
  * ```tsx
  * export const Route = createFileRoute('/teams/$teamId/scorecard')({
@@ -48,24 +48,27 @@ export async function ensureQueryDataInLoader<T>(
  * ```
  */
 export async function ensureMultipleQueries(
-    queryClient: QueryClient,
-    optionsList: Array<{ queryKey: readonly unknown[]; queryFn: () => Promise<any> }>
+  queryClient: QueryClient,
+  optionsList: Array<{
+    queryKey: readonly unknown[]
+    queryFn: () => Promise<any>
+  }>,
 ): Promise<any[]> {
-    return Promise.all(
-        optionsList.map(options => queryClient.ensureQueryData(options))
-    )
+  return Promise.all(
+    optionsList.map((options) => queryClient.ensureQueryData(options)),
+  )
 }
 
 /**
  * Type for route context with query client
  */
 export interface RouteContextWithQueryClient {
-    queryClient: QueryClient
+  queryClient: QueryClient
 }
 
 /**
  * Helper to invalidate queries in a route action.
- * 
+ *
  * @example
  * ```tsx
  * const action = createRouteAction({
@@ -80,10 +83,12 @@ export interface RouteContextWithQueryClient {
  * ```
  */
 export async function invalidateInAction(
-    queryClient: QueryClient,
-    keys: Array<readonly unknown[]>
+  queryClient: QueryClient,
+  keys: Array<readonly unknown[]>,
 ): Promise<void> {
-    await Promise.all(
-        keys.map(key => queryClient.invalidateQueries({ queryKey: key as unknown[] }))
-    )
+  await Promise.all(
+    keys.map((key) =>
+      queryClient.invalidateQueries({ queryKey: key as unknown[] }),
+    ),
+  )
 }

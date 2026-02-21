@@ -13,6 +13,7 @@ Ensemble is an enterprise application management platform that helps teams:
 ## Key Features
 
 ### Scorecard Tool
+
 The Scorecard module enables teams to track application and sub-application performance on a monthly basis:
 
 - Track availability percentages and volume metrics
@@ -21,6 +22,7 @@ The Scorecard module enables teams to track application and sub-application perf
 - Publish scorecards for leadership visibility
 
 ### Turnover Tracker
+
 The Turnover module manages team handoffs and operational events:
 
 - Track RFCs (Request for Changes)
@@ -30,6 +32,7 @@ The Turnover module manages team handoffs and operational events:
 - Finalize daily turnover reports
 
 ### Link Manager
+
 The Link Manager provides centralized resource organization:
 
 - Create and organize links by category

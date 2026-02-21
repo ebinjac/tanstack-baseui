@@ -20,19 +20,19 @@ Comprehensive guidelines for writing production-quality React code. These rules 
 
 ## Rule Categories by Priority
 
-| Priority | Category | Rules | Impact |
-|----------|----------|-------|--------|
-| CRITICAL | Component Architecture | 6 rules | Maintainable, reusable component design |
-| CRITICAL | Custom Hooks | 5 rules | Encapsulated, testable logic |
-| CRITICAL | TypeScript | 5 rules | Type-safe props, state, and events |
-| HIGH | State Management | 5 rules | Predictable, minimal state |
-| HIGH | Performance | 6 rules | Fast renders, small bundles |
-| HIGH | Effects & Side Effects | 4 rules | Correct data sync and cleanup |
-| MEDIUM | Error Handling | 3 rules | Graceful failures, user trust |
-| MEDIUM | Forms & User Input | 3 rules | Validated, accessible forms |
-| MEDIUM | Accessibility | 3 rules | Inclusive, standards-compliant UI |
-| LOW | Testing Patterns | 3 rules | Confidence in refactoring |
-| LOW | File & Naming Conventions | 3 rules | Navigable codebase |
+| Priority | Category                  | Rules   | Impact                                  |
+| -------- | ------------------------- | ------- | --------------------------------------- |
+| CRITICAL | Component Architecture    | 6 rules | Maintainable, reusable component design |
+| CRITICAL | Custom Hooks              | 5 rules | Encapsulated, testable logic            |
+| CRITICAL | TypeScript                | 5 rules | Type-safe props, state, and events      |
+| HIGH     | State Management          | 5 rules | Predictable, minimal state              |
+| HIGH     | Performance               | 6 rules | Fast renders, small bundles             |
+| HIGH     | Effects & Side Effects    | 4 rules | Correct data sync and cleanup           |
+| MEDIUM   | Error Handling            | 3 rules | Graceful failures, user trust           |
+| MEDIUM   | Forms & User Input        | 3 rules | Validated, accessible forms             |
+| MEDIUM   | Accessibility             | 3 rules | Inclusive, standards-compliant UI       |
+| LOW      | Testing Patterns          | 3 rules | Confidence in refactoring               |
+| LOW      | File & Naming Conventions | 3 rules | Navigable codebase                      |
 
 ## Quick Reference
 
@@ -118,6 +118,7 @@ Comprehensive guidelines for writing production-quality React code. These rules 
 ## How to Use
 
 Each rule file in the `rules/` directory contains:
+
 1. **Explanation** — Why this pattern matters
 2. **Bad Example** — Anti-pattern to avoid
 3. **Good Example** — Recommended implementation

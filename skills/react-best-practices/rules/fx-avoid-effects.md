@@ -13,7 +13,7 @@
 ```tsx
 // 🛑 useEffect responding to user action via state change
 function CreateTeamForm() {
-  const [teamName, setTeamName] = useState("")
+  const [teamName, setTeamName] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [result, setResult] = useState(null)
 
@@ -28,8 +28,13 @@ function CreateTeamForm() {
   }, [submitted, teamName])
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true) }}>
-      <input value={teamName} onChange={e => setTeamName(e.target.value)} />
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        setSubmitted(true)
+      }}
+    >
+      <input value={teamName} onChange={(e) => setTeamName(e.target.value)} />
       <button type="submit">Create</button>
     </form>
   )
@@ -37,7 +42,7 @@ function CreateTeamForm() {
 
 // 🛑 useEffect to "sync" a value that changes on user input
 function SearchPage() {
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
 
   useEffect(() => {
@@ -46,9 +51,7 @@ function SearchPage() {
     }
   }, [query])
 
-  return (
-    <input value={query} onChange={e => setQuery(e.target.value)} />
-  )
+  return <input value={query} onChange={(e) => setQuery(e.target.value)} />
 }
 ```
 
@@ -57,7 +60,7 @@ function SearchPage() {
 ```tsx
 // ✅ Direct event handler — no intermediate state
 function CreateTeamForm() {
-  const [teamName, setTeamName] = useState("")
+  const [teamName, setTeamName] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,7 +71,7 @@ function CreateTeamForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <input value={teamName} onChange={e => setTeamName(e.target.value)} />
+      <input value={teamName} onChange={(e) => setTeamName(e.target.value)} />
       <button type="submit">Create</button>
     </form>
   )
@@ -76,30 +79,28 @@ function CreateTeamForm() {
 
 // ✅ TanStack Query for search — handles caching, deduplication, loading
 function SearchPage() {
-  const [query, setQuery] = useState("")
+  const [query, setQuery] = useState('')
   const debouncedQuery = useDebounce(query, 300)
 
   const { data: results = [] } = useQuery({
-    queryKey: ["search", debouncedQuery],
+    queryKey: ['search', debouncedQuery],
     queryFn: () => searchItems({ data: { query: debouncedQuery } }),
     enabled: debouncedQuery.length > 0,
   })
 
-  return (
-    <input value={query} onChange={e => setQuery(e.target.value)} />
-  )
+  return <input value={query} onChange={(e) => setQuery(e.target.value)} />
 }
 ```
 
 ## When useEffect IS Appropriate
 
-| ✅ Use `useEffect` for | ❌ Don't use `useEffect` for |
-|---|---|
-| WebSocket subscriptions | Responding to button clicks |
-| `document.title` sync | Transforming data for rendering |
-| `IntersectionObserver` | Resetting state when props change (use key instead) |
-| Third-party library init | Calling APIs triggered by user |
-| Event listener cleanup | "Chaining" state updates |
+| ✅ Use `useEffect` for   | ❌ Don't use `useEffect` for                        |
+| ------------------------ | --------------------------------------------------- |
+| WebSocket subscriptions  | Responding to button clicks                         |
+| `document.title` sync    | Transforming data for rendering                     |
+| `IntersectionObserver`   | Resetting state when props change (use key instead) |
+| Third-party library init | Calling APIs triggered by user                      |
+| Event listener cleanup   | "Chaining" state updates                            |
 
 ## The "Key" Reset Pattern
 

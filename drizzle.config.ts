@@ -1,5 +1,5 @@
-import 'dotenv/config';
-import { defineConfig } from 'drizzle-kit';
+import 'dotenv/config'
+import { defineConfig } from 'drizzle-kit'
 
 export default defineConfig({
   out: './drizzle',
@@ -8,5 +8,5 @@ export default defineConfig({
   dbCredentials: {
     url: process.env.DATABASE_URL!,
   },
-   schemaFilter: ['ensemble'],
-});
+  schemaFilter: ['ensemble'],
+})

@@ -1,13 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import { motion, useMotionValue, useTransform, animate, AnimatePresence } from 'framer-motion'
-import { LayoutDashboard } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowRight, BookOpen, LayoutDashboard, Link2, RefreshCcw } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import {
-    RefreshCcw,
-    Link2,
-    ArrowRight,
-    Shield
-} from 'lucide-react'
 
 interface HeroSectionProps {
     session: { user: any } | null;
@@ -16,239 +10,298 @@ interface HeroSectionProps {
     linkManagerHref: string;
 }
 
-
-
-// Floating geometric shapes for background
-function FloatingShape({ delay, duration, className }: { delay: number; duration: number; className: string }) {
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 100, rotate: 0 }}
-            animate={{
-                opacity: [0, 0.7, 0.7, 0],
-                y: [100, -100],
-                rotate: [0, 180],
-            }}
-            transition={{
-                duration,
-                delay,
-                repeat: Infinity,
-                ease: "linear"
-            }}
-            className={className}
-        />
-    )
-}
-
 export function HeroSection({ session: _session, scorecardHref, turnoverHref, linkManagerHref }: HeroSectionProps) {
-    const words = ["Orchestrate.", "Unify.", "Simplify.", "Scale."]
-    const [currentWord, setCurrentWord] = useState(0)
+    const activeTabList = [
+        { name: 'Turnover', icon: RefreshCcw, color: 'text-primary' },
+        { name: 'Scorecard', icon: LayoutDashboard, color: 'text-primary' },
+        { name: 'Link Manager', icon: Link2, color: 'text-primary' }
+    ];
+    const [activeTab, setActiveTab] = useState(0);
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setCurrentWord((prev) => (prev + 1) % words.length)
-        }, 3000)
-        return () => clearInterval(interval)
-    }, [])
+            setActiveTab((prev) => (prev + 1) % activeTabList.length);
+        }, 4000); // 4 seconds interval to comfortably read content
+        return () => clearInterval(interval);
+    }, [activeTabList.length]);
+
+    const toolContents = [
+        { // TURNOVER
+            title: "Manage Shift Operations",
+            subtitle: "Live Turnover Integration",
+            badge: "Connected",
+            badgeColor: "text-success",
+            badgeBg: "bg-success/20",
+            badgeRing: "ring-success/30",
+            badgeDot: "bg-success",
+            ui: (
+                <div className="mt-8 space-y-4">
+                    <div className="w-full flex gap-4">
+                        <div className="flex-1 h-20 rounded-2xl bg-muted/50 border border-border p-4 flex flex-col justify-between">
+                            <div className="w-1/2 h-2 rounded bg-muted-foreground/30" />
+                            <div className="w-3/4 h-2 rounded bg-muted-foreground/20" />
+                        </div>
+                        <div className="flex-1 h-20 rounded-2xl bg-muted/50 border border-border p-4 flex flex-col justify-between">
+                            <div className="w-1/3 h-2 rounded bg-muted-foreground/30" />
+                            <div className="w-5/6 h-2 rounded bg-muted-foreground/20" />
+                        </div>
+                    </div>
+                    <div className="w-[80%] h-24 rounded-2xl bg-primary/5 border border-primary/20 p-4 border-l-4 border-l-primary flex flex-col justify-between">
+                        <div className="w-1/4 h-3 rounded bg-primary/40" />
+                        <div className="w-full h-2 rounded bg-muted-foreground/20" />
+                        <div className="w-4/5 h-2 rounded bg-muted-foreground/20" />
+                    </div>
+                </div>
+            ),
+            circleValue: "0",
+            circleLabel: "Dropped\nIncidents"
+        },
+        { // SCORECARD
+            title: "Real-time Telemetry & Health",
+            subtitle: "System Reliability",
+            badge: "Live Metrics",
+            badgeColor: "text-primary",
+            badgeBg: "bg-primary/20",
+            badgeRing: "ring-primary/30",
+            badgeDot: "bg-primary",
+            ui: (
+                <div className="mt-8 h-[180px] w-full relative">
+                    <div className="absolute inset-0 border-b border-l border-border/50" />
+                    <div className="absolute bottom-0 left-[10%] w-[15%] h-[40%] bg-primary/20 rounded-t-lg" />
+                    <div className="absolute bottom-0 left-[35%] w-[15%] h-[70%] bg-primary/40 rounded-t-lg" />
+                    <div className="absolute bottom-0 left-[60%] w-[15%] h-[50%] bg-primary/30 rounded-t-lg" />
+                    <div className="absolute bottom-0 left-[85%] w-[15%] h-[90%] bg-primary/60 rounded-t-lg border-t-2 border-primary" />
+
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 500 200" preserveAspectRatio="none">
+                        <path
+                            d="M0,150 C100,150 150,80 250,90 C350,100 400,20 500,30"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            className="text-primary drop-shadow-md"
+                        />
+                        <circle cx="500" cy="30" r="6" className="fill-primary" />
+                    </svg>
+                </div>
+            ),
+            circleValue: "99.9",
+            circleSymbol: "%",
+            circleLabel: "Overall\nUptime"
+        },
+        { // LINK MANAGER
+            title: "Centralize Team Knowledge",
+            subtitle: "Quick Access Links",
+            badge: "Synced",
+            badgeColor: "text-blue-500",
+            badgeBg: "bg-blue-500/20",
+            badgeRing: "ring-blue-500/30",
+            badgeDot: "bg-blue-500",
+            ui: (
+                <div className="mt-8 grid grid-cols-2 gap-4">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="h-16 rounded-2xl bg-muted/30 border border-border p-3 flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                <Link2 className="w-5 h-5 text-primary" />
+                            </div>
+                            <div className="flex-1 space-y-2">
+                                <div className="w-3/4 h-2 rounded bg-muted-foreground/40" />
+                                <div className="w-1/2 h-2 rounded bg-muted-foreground/20" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            ),
+            circleValue: "2K",
+            circleSymbol: "+",
+            circleLabel: "Managed\nLinks"
+        }
+    ];
+
+    const currentTool = toolContents[activeTab];
 
     return (
-        <>
-            {/* === BACKGROUND === */}
-            <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden bg-background">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background" />
+        <div className="relative bg-background font-sans overflow-hidden">
+            {/* Absolute background amex-1 pattern for overall container */}
+            <div
+                className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none"
+                style={{
+                    backgroundImage: `url('/patterns/amex-1.png')`,
+                    backgroundSize: '1000px',
+                    backgroundPosition: 'center',
+                    maskImage: 'linear-gradient(to bottom, black 20%, transparent 80%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 80%)'
+                }}
+            />
 
-                {/* Subtle Grid Pattern for Main Page */}
-                <div className="absolute inset-0 opacity-[0.3]"
-                    style={{
-                        backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--primary) / 0.1) 1px, transparent 0)`,
-                        backgroundSize: '40px 40px',
-                        maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)'
-                    }}
-                />
-            </div>
+            {/* Main Container - Two column split layout */}
+            <main className="container mx-auto px-4 py-6 md:py-8 max-w-[1400px] pt-12 md:pt-16 lg:pt-20 relative z-10 w-full">
 
-            <main className="container mx-auto px-4 py-8 max-w-7xl pt-20 md:pt-32">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full h-full min-h-[600px]">
 
-                {/* === HERO HEADER === */}
-                <section className="relative flex flex-col items-center justify-center text-center min-h-[60vh] pb-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="space-y-8 max-w-4xl relative z-10"
-                    >
-                        {/* Status Badge */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.2 }}
-                            className="flex justify-center"
-                        >
-                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary text-secondary-foreground border border-border shadow-sm">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                    {/* LEFT COLUMN: Visual/App Mockup uses shadcn/theme colors + AmEx Pattern */}
+                    <div className="relative bg-primary rounded-[2.5rem] overflow-hidden shadow-sm flex flex-col h-full ring-1 ring-border">
+
+                        {/* Amex Pattern embedded on the left card (Matches overlay of the 100% efficiency card) */}
+                        <div
+                            className="absolute inset-0 opacity-20 pointer-events-none"
+                            style={{
+                                backgroundImage: `url('/patterns/amex-1.png')`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                                mixBlendMode: 'color-dodge'
+                            }}
+                        />
+
+                        <div className="p-8 md:p-12 relative z-10 flex flex-col h-full">
+                            {/* Dynamic Tabs - App Tools */}
+                            <div className="flex gap-3 mb-6 relative z-20">
+                                {activeTabList.map((tab, idx) => {
+                                    const Icon = tab.icon;
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-500 shadow-sm cursor-pointer flex items-center gap-2 relative ${activeTab === idx
+                                                ? 'bg-background text-primary scale-105 shadow-md'
+                                                : 'bg-primary-foreground/10 text-primary-foreground/80 hover:bg-primary-foreground/20 hover:text-primary-foreground border-transparent'
+                                                }`}
+                                            onClick={() => setActiveTab(idx)}
+                                        >
+                                            <Icon className="w-4 h-4" />
+                                            {tab.name}
+                                        </div>
+                                    )
+                                })}
+                            </div>
+
+                            {/* Massive overlapping App UI mockups */}
+                            <div className="relative flex-1 mt-auto w-full pt-4">
+                                {/* Back Mockup Frame */}
+                                <div className="absolute bottom-0 left-0 w-[115%] h-[450px] bg-background rounded-t-[2.5rem] shadow-2xl border-t border-l border-r border-border p-10 transform origin-bottom-left overflow-hidden">
+                                    <AnimatePresence mode='wait'>
+                                        <motion.div
+                                            key={activeTab}
+                                            initial={{ y: 20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            exit={{ y: -20, opacity: 0 }}
+                                            transition={{ duration: 0.5 }}
+                                            className="w-full h-full"
+                                        >
+                                            <div className="flex justify-between items-start w-full">
+                                                <div>
+                                                    <p className="text-primary text-sm font-bold mb-1 tracking-wider uppercase">{currentTool.subtitle}</p>
+                                                    <h3 className="text-3xl font-black text-foreground max-w-sm leading-tight">{currentTool.title}</h3>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <div className={`px-4 py-1.5 rounded-full ${currentTool.badgeBg} ${currentTool.badgeColor} text-xs font-bold ring-1 ${currentTool.badgeRing} flex items-center gap-1.5`}>
+                                                        <span className={`w-1.5 h-1.5 rounded-full ${currentTool.badgeDot} animate-pulse`} /> {currentTool.badge}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {currentTool.ui}
+                                        </motion.div>
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* Floating Progress Chart Card */}
+                                <AnimatePresence mode='wait'>
+                                    <motion.div
+                                        key={activeTab}
+                                        initial={{ x: -20, y: 20, opacity: 0, scale: 0.9 }}
+                                        animate={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                                        transition={{ duration: 0.5, delay: 0.2 }}
+                                        className="absolute -left-6 bottom-16 w-44 h-44 bg-card rounded-[2rem] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.2)] dark:shadow-black/60 p-6 flex flex-col items-center justify-center border border-border z-30"
+                                    >
+                                        <div className="relative w-24 h-24">
+                                            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                                                <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="12" className="text-muted" />
+                                                <motion.circle
+                                                    cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="12"
+                                                    className="text-primary"
+                                                    strokeLinecap="round"
+                                                    strokeDasharray="251.2"
+                                                    initial={{ strokeDashoffset: 251.2 }}
+                                                    animate={{ strokeDashoffset: 25.12 }} // ~90% filled roughly for effect across all
+                                                    transition={{ duration: 1.5, delay: 0.4, ease: "easeOut" }}
+                                                />
+                                            </svg>
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                <div className="flex items-baseline gap-[1px]">
+                                                    <span className="text-2xl font-black text-primary">{currentTool.circleValue}</span>
+                                                    {currentTool.circleSymbol && <span className="text-sm font-bold text-primary">{currentTool.circleSymbol}</span>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <span className="text-[10px] font-bold text-muted-foreground text-center mt-3 leading-tight uppercase whitespace-pre-line">{currentTool.circleLabel}</span>
+                                    </motion.div>
+                                </AnimatePresence>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT COLUMN: Content & Call to Action */}
+                    <div className="relative bg-card rounded-[2.5rem] p-8 md:p-14 flex flex-col shadow-sm ring-1 ring-border overflow-hidden">
+                        {/* Wavy thin line decorative background - subtle stroke using pure theme colors */}
+                        <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-[0.03] dark:opacity-[0.05]" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+                            <path d="M-100,800 C300,700 400,200 1100,100" fill="none" stroke="currentColor" strokeWidth="6" className="text-foreground" />
+                            <path d="M-100,900 C150,850 600,600 800,-100" fill="none" stroke="currentColor" strokeWidth="6" className="text-foreground" />
+                        </svg>
+
+                        <div className="relative z-10 flex-1 flex flex-col">
+                            {/* Headline */}
+                            <h1 className="text-5xl md:text-7xl font-medium tracking-tight text-foreground leading-[1.05] mt-4 mb-8">
+                                Unlock a world of <br />
+                                <span className="font-bold relative">
+                                    seamless operations
+                                    <div className="absolute -bottom-2 left-0 w-full h-2 bg-primary/20 rounded-full" />
                                 </span>
-                                <span className="text-xs font-semibold tracking-wide uppercase">
-                                    System v2.0
-                                </span>
+                            </h1>
+
+                            <p className="text-lg text-muted-foreground font-medium max-w-md mb-10 leading-relaxed">
+                                Streamline incidents and experience the future of shift turnovers. Centralize metrics, eliminate handoff errors, and embrace reliability like never before.
+                            </p>
+
+                            {/* Actions */}
+                            <div className="flex flex-wrap gap-4 mb-auto">
+                                <Link to="/teams/register" className="px-8 py-3.5 bg-primary text-primary-foreground rounded-full font-bold text-lg hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/30 flex items-center gap-2 group">
+                                    Join Now
+                                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                                <a href="https://ensemble-docs.com" target="_blank" rel="noreferrer" className="px-8 py-3.5 bg-secondary text-secondary-foreground rounded-full font-bold text-lg hover:bg-secondary/80 transition-all cursor-pointer flex items-center gap-2 border border-border">
+                                    <BookOpen className="w-5 h-5" />
+                                    Documentation
+                                </a>
                             </div>
-                        </motion.div>
 
-                        {/* Headline */}
-                        <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] select-none text-foreground">
-                            Ensemble.
-                            <br />
-                            <span className="text-primary opacity-90">{words[currentWord]}</span>
-                        </h1>
+                            {/* Bottom right metrics square (Tied to Ensemble Tools) */}
+                            <div className="self-end mt-12 w-full max-w-[280px] aspect-square rounded-[2rem] bg-primary p-8 shadow-[0_10px_30px_rgba(0,111,207,0.3)] flex flex-col justify-between text-primary-foreground relative overflow-hidden group">
+                                <div className="absolute inset-0 bg-white/5 group-hover:bg-transparent transition-colors duration-500" />
 
-                        {/* Description */}
-                        <p className="text-xl text-muted-foreground font-light max-w-2xl mx-auto">
-                            The operating system for high-velocity engineering teams.
-                            <br className="hidden md:block" />
-                            <span className="text-foreground font-medium">Unified Visibility. Zero Friction.</span>
-                        </p>
-                    </motion.div>
-                </section>
-
-                {/* === BENTO GRID WITH PATTERN CARDS === */}
-                <motion.div
-                    initial={{ opacity: 0, y: 40 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                    className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 relative z-20 pb-20"
-                >
-                    {/* Scorecard Card */}
-                    <Link to={scorecardHref as any} className="col-span-1 md:col-span-7 group">
-                        <div className="relative h-full min-h-[400px] rounded-[2rem] overflow-hidden bg-primary shadow-2xl transition-transform duration-500 hover:scale-[1.01]">
-                            {/* Pattern Background Image */}
-                            <div
-                                className="absolute inset-0 mix-blend-overlay opacity-40 group-hover:opacity-50 transition-opacity duration-700"
-                                style={{
-                                    backgroundImage: `url('/patterns/amex-1.png')`,
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'center',
-                                    filter: 'contrast(1.2) brightness(0.8)'
-                                }}
-                            />
-
-                            {/* Content Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                            <div className="relative z-10 p-10 flex flex-col h-full justify-between text-white">
-                                <div className="flex justify-between items-start">
-                                    <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
-                                        <LayoutDashboard className="w-8 h-8 text-white" />
-                                    </div>
-                                    <ArrowRight className="w-6 h-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all" />
-                                </div>
-
-                                <div className="space-y-2">
-                                    <div className="inline-block px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/10 text-xs font-bold uppercase tracking-wider mb-2">
-                                        Live Telemetry
-                                    </div>
-                                    <h3 className="text-4xl md:text-5xl font-bold tracking-tight text-white drop-shadow-md">
-                                        Scorecard
-                                    </h3>
-                                    <p className="text-lg text-white/80 font-light max-w-md">
-                                        Real-time operational health. Visualize your engineering velocity and reliability.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </Link>
-
-                    {/* Turnover Card */}
-                    <Link to={turnoverHref as any} className="col-span-1 md:col-span-5 group">
-                        <div className="relative h-full min-h-[400px] rounded-[2rem] overflow-hidden bg-primary/90 shadow-2xl transition-transform duration-500 hover:scale-[1.01]">
-                            {/* Pattern Background Image (Different Alignment) */}
-                            <div
-                                className="absolute inset-0 mix-blend-overlay opacity-30 group-hover:opacity-40 transition-opacity duration-700"
-                                style={{
-                                    backgroundImage: `url('/patterns/amex-1.png')`,
-                                    backgroundSize: 'cover',
-                                    backgroundPosition: 'top right',
-                                    filter: 'contrast(1.2) brightness(0.8)'
-                                }}
-                            />
-
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                            <div className="relative z-10 p-10 flex flex-col h-full justify-between text-white">
-                                <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 w-fit">
-                                    <RefreshCcw className="w-8 h-8 text-white" />
-                                </div>
-
-                                <div className="space-y-2 mt-auto">
-                                    <h3 className="text-4xl font-bold tracking-tight text-white drop-shadow-md">
-                                        Turnover
-                                    </h3>
-                                    <p className="text-lg text-white/80 font-light">
-                                        Seamless shift handoffs. <br />Zero information loss.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </Link>
-
-                    {/* Link Manager Card */}
-                    <Link to={linkManagerHref as any} className="col-span-1 md:col-span-4 group">
-                        <div className="relative h-full min-h-[280px] rounded-[2rem] overflow-hidden bg-[#2C2C2C] shadow-xl transition-transform duration-500 hover:scale-[1.02]">
-                            {/* Pattern Background Image (Zoomed) */}
-                            <div
-                                className="absolute inset-0 mix-blend-overlay opacity-20 group-hover:opacity-30 transition-opacity duration-700"
-                                style={{
-                                    backgroundImage: `url('/patterns/amex-1.png')`,
-                                    backgroundSize: '200%',
-                                    backgroundPosition: 'center',
-                                    filter: 'grayscale(1)'
-                                }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent" />
-
-                            <div className="relative z-10 p-8 flex flex-col h-full justify-between text-white">
-                                <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/10">
-                                    <Link2 className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h3 className="text-2xl font-bold mb-1">Link Manager</h3>
-                                    <p className="text-sm text-white/60">The central nervous system for knowledge.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </Link>
-
-                    {/* CTA / Quick Actions */}
-                    <div className="col-span-1 md:col-span-8">
-                        <Link to="/teams/register" className="block h-full group">
-                            <div className="relative h-full min-h-[280px] rounded-[2rem] overflow-hidden bg-foreground text-background shadow-xl transition-transform duration-500 hover:scale-[1.01]">
+                                {/* Overlay pattern */}
                                 <div
-                                    className="absolute inset-0 opacity-10 mix-blend-overlay group-hover:opacity-20 transition-opacity"
+                                    className="absolute inset-0 opacity-20 pointer-events-none"
                                     style={{
                                         backgroundImage: `url('/patterns/amex-1.png')`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'bottom',
+                                        backgroundSize: '400px',
+                                        backgroundPosition: 'bottom right',
+                                        mixBlendMode: 'color-dodge'
                                     }}
                                 />
 
-                                <div className="relative z-10 p-10 flex flex-col md:flex-row items-center justify-between gap-8 h-full">
-                                    <div className="space-y-4 max-w-lg">
-                                        <div className="flex items-center gap-2 text-background/60 text-sm font-bold uppercase tracking-wider">
-                                            <Shield className="w-4 h-4" /> Enterprise Grade
-                                        </div>
-                                        <h3 className="text-3xl md:text-4xl font-bold text-background">Ready to synchronize?</h3>
-                                        <p className="text-background/70 text-lg">Initialize your workspace in seconds.</p>
-                                    </div>
-
-                                    <div className="h-16 px-10 rounded-full bg-background text-foreground text-lg font-bold flex items-center gap-3 shadow-2xl group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                        Get Started <ArrowRight className="w-5 h-5" />
-                                    </div>
+                                <div className="relative z-10">
+                                    <p className="text-lg font-bold leading-tight opacity-90 max-w-[180px]">Automated Turnover Efficiency</p>
+                                </div>
+                                <div className="relative z-10 flex items-baseline gap-1 mt-auto">
+                                    <span className="text-7xl font-black tracking-tighter">100</span>
+                                    <span className="text-2xl font-bold opacity-80">%</span>
                                 </div>
                             </div>
-                        </Link>
+                        </div>
                     </div>
+                </div>
 
-                </motion.div>
             </main>
-        </>
+        </div>
     )
 }

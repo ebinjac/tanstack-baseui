@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PageHeader } from "@/components/shared";
 import { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -286,30 +287,26 @@ function GlobalScorecardPage() {
 
     return (
         <div className="container mx-auto py-8 px-6 max-w-7xl space-y-8 animate-in fade-in duration-500">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/50">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">
-                        Enterprise Scorecard
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-2 font-medium">
-                        Global performance metrics and compliance across <span className="text-foreground font-bold">{teamsWithApps.length}</span> active teams.
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                        onClick={handleClearAllFilters}
-                        disabled={!isLoading && teamsWithApps.length === scorecardData?.teams?.length && leadershipType === 'all' && !leadershipSearch && !teamSearch && !appSearch}
-                    >
-                        <RotateCcw className="h-4 w-4" />
-                        Reset All
-                    </Button>
-                </div>
-            </div>
+            {/* Premium Admin Header Banner */}
+            <PageHeader
+                title="Enterprise Scorecard"
+                description={
+                    <>
+                        Global performance metrics and compliance across <span className="text-white font-bold">{teamsWithApps.length}</span> active teams.
+                    </>
+                }
+            >
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white"
+                    onClick={handleClearAllFilters}
+                    disabled={!isLoading && teamsWithApps.length === scorecardData?.teams?.length && leadershipType === 'all' && !leadershipSearch && !teamSearch && !appSearch}
+                >
+                    <RotateCcw className="h-4 w-4" />
+                    Reset All
+                </Button>
+            </PageHeader>
 
             {/* Stats Overview */}
             <StatsSummary stats={stats} />

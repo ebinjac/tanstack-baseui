@@ -1,5 +1,6 @@
 import * as React from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from "@tanstack/react-router";
+import { PageHeader } from "@/components/shared";
 import { getRegistrationRequests } from '@/app/actions/team-registration'
 import { getTeams } from '@/app/actions/teams'
 import { useQuery } from '@tanstack/react-query'
@@ -92,10 +93,11 @@ function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Monitor system health, team registrations, and activity.</p>
-      </div>
+      {/* Premium Admin Header Banner */}
+      <PageHeader
+        title="Admin Dashboard"
+        description="Monitor system health, team registrations, and activity."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="Total Requests" value={stats.totalRequests} icon={ClipboardList} color="blue" description="Total lifetime requests" />

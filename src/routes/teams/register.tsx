@@ -1,20 +1,19 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect, useCallback } from 'react'
+import { createFileRoute, useRouter  } from '@tanstack/react-router'
+import { useCallback, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { Activity, BookUser, Check, ChevronRight, Loader2, Shield, User, Users } from 'lucide-react'
+import { toast } from 'sonner'
+import { useMutation } from '@tanstack/react-query'
+import { AnimatePresence, motion } from 'framer-motion'
+import type { z } from 'zod'
 import { TeamRegistrationSchema } from '@/lib/zod/team-registration.schema'
-import { registerTeam, checkTeamNameAvailability } from '@/app/actions/team-registration'
+import { checkTeamNameAvailability, registerTeam } from '@/app/actions/team-registration'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Check, ChevronRight, User, Users, Shield, BookUser, Loader2, Activity } from 'lucide-react'
-import { toast } from 'sonner'
-import { useRouter } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import { StepTimeline } from '@/components/ui/step-timeline'
-import { AnimatePresence, motion } from 'framer-motion'
 
 type TeamRegistrationInput = z.infer<typeof TeamRegistrationSchema>
 
@@ -220,8 +219,8 @@ function TeamRegistrationPage() {
               <div className="pt-8 space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">{STEPS[currentStep - 1].title}</h3>
-                    <p className="text-base font-medium text-slate-600">{STEPS[currentStep - 1].description}</p>
+                    <h3 className="text-3xl font-bold tracking-tight text-foreground mb-2">{STEPS[currentStep - 1].title}</h3>
+                    <p className="text-base font-medium text-muted-foreground">{STEPS[currentStep - 1].description}</p>
                   </div>
                   <div className="text-right flex items-center gap-2 bg-muted/50 px-3 py-1.5 rounded-lg border border-border/50">
                     <span className="text-xs font-bold text-muted-foreground uppercase opacity-70">Step</span>

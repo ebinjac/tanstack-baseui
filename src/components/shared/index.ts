@@ -13,6 +13,7 @@ export type { StatsCardProps, StatsGridProps } from './stats-card'
 
 // Empty State
 export { EmptyState, EmptyStateCard, EmptyStateInline } from './empty-state'
+export * from './page-header';
 export type { EmptyStateProps, EmptyStateVariant } from './empty-state'
 
 // Loading Skeletons

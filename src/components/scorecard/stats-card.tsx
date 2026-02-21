@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { cn } from "@/lib/utils";
 
 interface StatsCardProps {
@@ -18,45 +18,46 @@ export function StatsCard({
     sublabel,
 }: StatsCardProps) {
     return (
-        <Card
-            className={cn(
-                "relative overflow-hidden transition-all duration-300 border-border/50",
-                highlight ? "bg-red-500/[0.03] border-red-500/20" : "bg-card/50 backdrop-blur-sm"
-            )}
-        >
-            {/* Background Accent */}
-            <div className={cn(
-                "absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 opacity-[0.03] rounded-full",
-                highlight ? "bg-red-500" : "bg-primary"
-            )} />
-
-            <CardContent className="p-4 flex items-center gap-4 relative z-10">
+        <div className="flex flex-col justify-center py-2 px-1">
+            <div className="flex items-center gap-2.5 mb-3">
                 <div
                     className={cn(
-                        "h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110",
+                        "h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0",
                         highlight
-                            ? "bg-red-500/10 text-red-600 border border-red-500/20"
-                            : "bg-primary/10 text-primary border border-primary/20"
+                            ? "bg-red-500/10 text-red-600 dark:text-red-500"
+                            : "bg-primary/10 text-primary"
                     )}
                 >
-                    {icon}
+                    {/* The icon itself should inherit text color from parent unless overridden */}
+                    {React.isValidElement(icon)
+                        ? React.cloneElement(icon as React.ReactElement<any>, {
+                            className: cn((icon as React.ReactElement<any>).props.className, "h-4 w-4")
+                        })
+                        : icon
+                    }
                 </div>
-                <div className="min-w-0 flex flex-col justify-center">
-                    <p className={cn(
-                        "text-2xl font-bold tabular-nums tracking-tight leading-none",
-                        highlight && "text-red-600"
-                    )}>{value}</p>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
-                        {label}
-                    </p>
-                    {sublabel && (
-                        <div className="flex items-center gap-1.5 mt-1 opacity-70">
-                            <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
-                            <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">{sublabel}</p>
-                        </div>
-                    )}
-                </div>
-            </CardContent>
-        </Card>
+                <p className={cn(
+                    "text-[11px] font-bold uppercase tracking-widest truncate",
+                    highlight ? "text-red-500/80" : "text-muted-foreground"
+                )}>
+                    {label}
+                </p>
+            </div>
+            <div className="flex items-baseline gap-3">
+                <p className={cn(
+                    "text-4xl md:text-5xl font-black tabular-nums tracking-tighter leading-none",
+                    highlight ? "text-red-600 dark:text-red-500" : "text-foreground"
+                )}>{value}</p>
+                {sublabel && (
+                    <div className="flex items-center gap-1.5 opacity-80">
+                        <div className={cn("h-1.5 w-1.5 rounded-full", highlight ? "bg-red-500/50" : "bg-primary/40")} />
+                        <p className={cn(
+                            "text-[10px] font-medium uppercase tracking-wider",
+                            highlight ? "text-red-600/70" : "text-muted-foreground"
+                        )}>{sublabel}</p>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }

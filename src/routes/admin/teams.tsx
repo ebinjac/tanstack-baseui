@@ -22,8 +22,9 @@ import {
   UserCheck,
   Building2,
 } from 'lucide-react'
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from "@tanstack/react-query";
+import { useState } from 'react';
+import { PageHeader } from "@/components/shared";
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -84,10 +85,11 @@ function AdminTeams() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Active Teams</h1>
-        <p className="text-muted-foreground">Manage and overview all registered engineering teams in the system.</p>
-      </div>
+      {/* Premium Admin Header Banner */}
+      <PageHeader
+        title="Active Teams"
+        description="Manage and overview all registered engineering teams in the system."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <MiniStatCard title="Total Teams" value={stats.total} icon={Building2} color="blue" />

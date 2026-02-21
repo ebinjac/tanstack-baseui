@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input'
 import { Loader2, Search, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EmptyState as SharedEmptyState } from '@/components/shared/empty-state'
-import { Separator } from '@/components/ui/separator'
 
 // ============================================================================
 // Standard Page Wrapper
@@ -32,25 +31,40 @@ interface SubPageHeaderProps {
 export function SubPageHeader({ parentLabel, sectionLabel, title, description, actions }: SubPageHeaderProps) {
     return (
         <div className="space-y-4 pb-2">
-            <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                <div className="space-y-1.5">
-                    <div className="flex items-center gap-2 text-muted-foreground/60">
-                        <Badge variant="outline" className="text-[10px] font-bold bg-primary/5 border-primary/20 text-primary px-2 h-5 rounded-md">
+            <div className="relative rounded-3xl overflow-hidden bg-primary p-6 md:p-8 shadow-2xl flex flex-col md:flex-row md:items-start lg:items-center justify-between gap-6">
+                {/* Background Base & Pattern */}
+                <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#00175a] via-primary to-[#004e9a]" />
+
+                <div
+                    className="absolute inset-0 z-0 opacity-40 mix-blend-overlay rotate-[1deg] scale-105"
+                    style={{
+                        backgroundImage: `url('/patterns/amex-1.png')`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                    }}
+                />
+                <div className="absolute inset-0 z-0 bg-gradient-to-t from-black/40 via-transparent to-transparent mix-blend-multiply" />
+
+                {/* Decorative Glow */}
+                <div className="absolute -top-1/2 -right-1/4 w-[500px] h-[500px] bg-white/10 blur-[100px] rounded-full mix-blend-screen pointer-events-none" />
+
+                <div className="relative z-10 space-y-2 flex-1">
+                    <div className="flex items-center gap-2 text-white/80">
+                        <Badge variant="outline" className="text-[10px] font-bold bg-white/10 border-white/20 text-white px-2 h-5 rounded-md">
                             {parentLabel}
                         </Badge>
-                        <span className="text-[10px] font-bold">/</span>
-                        <span className="text-[10px] font-bold uppercase tracking-widest">{sectionLabel}</span>
+                        <span className="text-[10px] font-bold text-white/50">/</span>
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">{sectionLabel}</span>
                     </div>
-                    <h1 className="text-3xl font-black tracking-tight text-foreground">{title}</h1>
+                    <h1 className="text-3xl md:text-4xl font-black tracking-tight text-white drop-shadow-md">{title}</h1>
                     {description && (
-                        <p className="text-sm font-medium text-muted-foreground max-w-4xl leading-relaxed">
+                        <p className="text-sm font-medium text-white/80 max-w-4xl leading-relaxed mt-1">
                             {description}
                         </p>
                     )}
                 </div>
-                {actions && <div className="flex items-center gap-3 pt-1">{actions}</div>}
+                {actions && <div className="relative z-10 flex items-center gap-3 pt-2 md:pt-0 shrink-0">{actions}</div>}
             </div>
-            <Separator className="bg-border/40" />
         </div>
     )
 }
@@ -128,33 +142,31 @@ interface StatsSummaryItemProps {
 }
 
 const colorVariants = {
-    primary: { bg: "bg-primary/10", text: "text-primary", border: "border-primary/20", glow: "bg-primary", hover: "hover:border-primary/30" },
-    blue: { bg: "bg-blue-500/10", text: "text-blue-600", border: "border-blue-500/20", glow: "bg-blue-500", hover: "hover:border-blue-500/30" },
-    amber: { bg: "bg-amber-500/10", text: "text-amber-600", border: "border-amber-500/20", glow: "bg-amber-500", hover: "hover:border-amber-500/30" },
-    indigo: { bg: "bg-indigo-500/10", text: "text-indigo-600", border: "border-indigo-500/20", glow: "bg-indigo-500", hover: "hover:border-indigo-500/30" },
+    primary: { icon: "text-primary bg-primary/10" },
+    blue: { icon: "text-blue-600 bg-blue-500/10 dark:text-blue-400 dark:bg-blue-500/20" },
+    amber: { icon: "text-amber-600 bg-amber-500/10 dark:text-amber-400 dark:bg-amber-500/20" },
+    indigo: { icon: "text-indigo-600 bg-indigo-500/10 dark:text-indigo-400 dark:bg-indigo-500/20" },
 }
 
 export function StatsSummaryItem({ label, value, icon: Icon, color = 'primary' }: StatsSummaryItemProps) {
     const style = colorVariants[color]
 
     return (
-        <div
-            className={cn(
-                "relative overflow-hidden transition-all duration-300 border border-border/50 bg-card/40 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 group",
-                style.hover
-            )}
-        >
-            <div className={cn("absolute top-0 right-0 w-24 h-24 -mr-8 -mt-8 opacity-[0.03] rounded-full", style.glow)} />
-            <div className={cn(
-                "h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 border transition-transform relative z-10 group-hover:scale-110",
-                style.bg, style.text, style.border
-            )}>
-                <Icon className="h-5 w-5" />
+        <div className="flex flex-col justify-center py-2 px-1">
+            <div className="flex items-center gap-2.5 mb-3">
+                <div className={cn(
+                    "h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0",
+                    style.icon
+                )}>
+                    <Icon className="h-4 w-4" />
+                </div>
+                <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">
+                    {label}
+                </p>
             </div>
-            <div className="relative z-10 min-w-0 flex flex-col justify-center">
-                <p className={cn("text-2xl font-bold tabular-nums tracking-tighter leading-none", style.text)}>{value}</p>
-                <p className="text-[10px] text-muted-foreground font-bold mt-1.5 opacity-60">{label}</p>
-            </div>
+            <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">
+                {value}
+            </p>
         </div>
     )
 }

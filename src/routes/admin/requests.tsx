@@ -22,6 +22,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { PageHeader } from "@/components/shared";
 import { toast } from 'sonner'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -128,10 +129,11 @@ function AdminRequests() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight">Team Requests</h1>
-        <p className="text-muted-foreground">Manage and review incoming team registration applications.</p>
-      </div>
+      {/* Premium Admin Header Banner */}
+      <PageHeader
+        title="Team Requests"
+        description="Manage and review incoming team registration applications."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <MiniStatCard title="Total" value={stats.total} icon={ClipboardList} color="blue" />

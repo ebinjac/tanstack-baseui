@@ -1,4 +1,5 @@
-import { createFileRoute, Link, useRouteContext } from "@tanstack/react-router";
+import { useRouteContext, Link, createFileRoute } from "@tanstack/react-router";
+import { PageHeader } from "@/components/shared";
 import { getTeamById } from "@/app/actions/teams";
 import {
   Card,
@@ -52,11 +53,9 @@ import {
   // Constants
   TIME_PERIOD_OPTIONS,
   AVAILABLE_YEARS,
-  currentYear,
   MONTH_NAMES,
 
   // Components
-  StatsCard,
   ApplicationSection,
   AddEntryDialog,
   EditEntryDialog,
@@ -104,73 +103,100 @@ function ScorecardPage() {
   return (
     <div className="flex-1 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
       <div className="max-w-7xl mx-auto space-y-8 p-8 pt-6">
-        {/* Header Section */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex flex-col">
-            <h1 className="text-3xl font-bold tracking-tight">
-              Performance Scorecard
-            </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-primary/10 border border-primary/20 text-primary px-2 py-0.5 rounded-md uppercase tracking-wider">
-                <BarChart3 className="h-3 w-3" />
-                Metrics
-              </span>
-              <span className="text-muted-foreground/30">·</span>
-              <p className="text-sm font-medium text-muted-foreground">
-                Tracking for{" "}
-                <span className="text-foreground font-bold">{team.teamName}</span>
-              </p>
+        {/* Premium Admin Header Banner */}
+        <PageHeader
+          title="Performance Scorecard"
+          description={
+            <>
+              Tracking for{" "}
+              <span className="text-white font-bold">{team.teamName}</span>
+            </>
+          }
+        >
+          <Link to="/scorecard">
+            <Button variant="outline" size="sm" className="gap-2 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white">
+              <Activity className="h-4 w-4" />
+              Enterprise View
+            </Button>
+          </Link>
+          {isAdmin && (
+            <Link to="/teams/$teamId/settings" params={{ teamId }}>
+              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white">
+                Manage Apps
+              </Button>
+            </Link>
+          )}
+        </PageHeader>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 py-4">
+          <div className="flex flex-col justify-center py-2 relative z-10">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-primary/10 text-primary">
+                <Activity className="h-4 w-4 text-blue-500" />
+              </div>
+              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">Applications</p>
+            </div>
+            <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">{scorecard.stats.apps}</p>
+          </div>
+
+          <div className="flex flex-col justify-center py-2 relative z-10">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 dark:bg-indigo-500/20">
+                <Hash className="h-4 w-4" />
+              </div>
+              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">Tracked Tech</p>
+            </div>
+            <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">{scorecard.stats.entries}</p>
+          </div>
+
+          <div className="flex flex-col justify-center py-2 relative z-10 md:mt-0">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-green-500/10 text-green-600 dark:text-green-400 dark:bg-green-500/20">
+                <Percent className="h-4 w-4" />
+              </div>
+              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">Availability</p>
+            </div>
+            <div className="flex items-baseline gap-3">
+              <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">{scorecard.stats.availRecords}</p>
+              <div className="flex items-center gap-1.5 opacity-80">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{scorecard.filterLabel}</p>
+              </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Link to="/scorecard">
-              <Button variant="outline" size="sm" className="gap-2">
-                <Activity className="h-4 w-4" />
-                Enterprise View
-              </Button>
-            </Link>
-            {isAdmin && (
-              <Link to="/teams/$teamId/settings" params={{ teamId }}>
-                <Button variant="ghost" size="sm">
-                  Manage Apps
-                </Button>
-              </Link>
-            )}
+          <div className="flex flex-col justify-center py-2 relative z-10 md:mt-0">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-500/10 text-purple-600 dark:text-purple-400 dark:bg-purple-500/20">
+                <TrendingUp className="h-4 w-4" />
+              </div>
+              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">Volume Log</p>
+            </div>
+            <div className="flex items-baseline gap-3">
+              <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">{scorecard.stats.volRecords}</p>
+              <div className="flex items-center gap-1.5 opacity-80">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{scorecard.filterLabel}</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          <StatsCard
-            icon={<Activity className="text-blue-500" />}
-            label="Applications"
-            value={scorecard.stats.apps}
-          />
-          <StatsCard
-            icon={<Hash className="text-indigo-500" />}
-            label="Tracked Tech"
-            value={scorecard.stats.entries}
-          />
-          <StatsCard
-            icon={<Percent className="text-green-500" />}
-            label="Availability"
-            value={scorecard.stats.availRecords}
-            sublabel={scorecard.filterLabel}
-          />
-          <StatsCard
-            icon={<TrendingUp className="text-purple-500" />}
-            label="Volume Log"
-            value={scorecard.stats.volRecords}
-            sublabel={scorecard.filterLabel}
-          />
-          <StatsCard
-            icon={<AlertTriangle className="text-red-500" />}
-            label="SLA Breaches"
-            value={scorecard.stats.availBreaches}
-            highlight={scorecard.stats.availBreaches > 0}
-            sublabel={scorecard.filterLabel}
-          />
+          <div className="flex flex-col justify-center py-2 relative z-10 md:mt-0">
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0", scorecard.stats.availBreaches > 0 ? "bg-red-500/10 text-red-600 dark:text-red-500" : "bg-primary/10 text-primary")}>
+                <AlertTriangle className="h-4 w-4" />
+              </div>
+              <p className={cn("text-[11px] font-bold uppercase tracking-widest truncate", scorecard.stats.availBreaches > 0 ? "text-red-500/80 dark:text-red-400" : "text-muted-foreground")}>SLA Breaches</p>
+            </div>
+            <div className="flex items-baseline gap-3">
+              <p className={cn("text-4xl md:text-5xl font-black tabular-nums tracking-tighter leading-none", scorecard.stats.availBreaches > 0 ? "text-red-600 dark:text-red-500" : "text-foreground")}>{scorecard.stats.availBreaches}</p>
+              <div className="flex items-center gap-1.5 opacity-80">
+                <div className={cn("h-1.5 w-1.5 rounded-full", scorecard.stats.availBreaches > 0 ? "bg-red-500/50" : "bg-primary/40")} />
+                <p className={cn("text-[10px] font-medium uppercase tracking-wider", scorecard.stats.availBreaches > 0 ? "text-red-600/70 dark:text-red-500/80" : "text-muted-foreground")}>{scorecard.filterLabel}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Sync Status Bar */}

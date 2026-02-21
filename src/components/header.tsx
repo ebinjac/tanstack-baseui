@@ -1,27 +1,32 @@
-import { Link, useRouterState } from "@tanstack/react-router"
+import { Link, useRouter, useRouterState } from "@tanstack/react-router"
 import { useEffect, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { AnimatePresence, motion } from "framer-motion"
 import {
-    LayoutDashboard,
-    RefreshCcw,
-    Link2,
-    Layers,
-    HelpCircle,
-    Info,
     BookOpen,
-    User,
-    LogOut,
-    Menu,
-    X,
     ChevronRight,
     Command,
-    ShieldCheck,
-    LifeBuoy,
-    Sparkles,
     ExternalLink,
-    type LucideIcon,
-} from "lucide-react"
+    HelpCircle,
+    Info,
+    Layers,
+    LayoutDashboard,
+    LifeBuoy,
+    Link2,
+    LogOut,
 
+    Menu,
+    RefreshCcw,
+    ShieldCheck,
+    Sparkles,
+    User,
+    X
+} from "lucide-react"
+import { toast } from "sonner"
+import { useAuthBlueSSO } from "./use-authblue-sso"
+import { TeamSwitcher } from "./team-switcher"
+import type { LucideIcon } from "lucide-react";
+
+import type { SessionData } from "@/lib/auth/config"
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -41,14 +46,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { useAuthBlueSSO } from "./use-authblue-sso"
-import { SessionData } from "@/lib/auth/config"
-import { TeamSwitcher } from "./team-switcher"
 import { loginUser } from "@/app/ssr/auth"
-import { useRouter } from "@tanstack/react-router"
-import { toast } from "sonner"
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
+
 
 // ============================================================================
 // Types & Config
@@ -66,7 +67,7 @@ interface NavLink {
     label: string
 }
 
-const getTools = (teamId: string | null): Tool[] => [
+const getTools = (teamId: string | null): Array<Tool> => [
     {
         title: "Scorecard",
         href: teamId ? `/teams/${teamId}/scorecard` : "/scorecard",
@@ -93,7 +94,7 @@ const getTools = (teamId: string | null): Tool[] => [
     },
 ]
 
-const NAV_LINKS: NavLink[] = [
+const NAV_LINKS: Array<NavLink> = [
     { href: "/support", icon: HelpCircle, label: "Support" },
     { href: "/about", icon: Info, label: "About" },
     { href: "/know-more", icon: BookOpen, label: "Docs" },
@@ -237,42 +238,38 @@ export function Header({ session }: { session: SessionData | null }) {
 // ============================================================================
 // Logo Component
 // ============================================================================
-function LogoLink() {
+export function LogoLink() {
     return (
         <Link to="/" className="flex items-center gap-3 group">
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative">
-                <div className="relative h-10 w-10 rounded-xl bg-gradient-to-br from-primary via-primary to-primary p-[1px] shadow-lg shadow-primary/25 overflow-hidden">
-                    <div className="h-full w-full rounded-[11px] bg-primary flex items-center justify-center">
-                        <svg
-                            viewBox="0 0 32 32"
-                            className="w-6 h-6 text-primary-foreground"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <circle cx="16" cy="16" r="3" fill="currentColor" stroke="none" />
-                            <circle cx="16" cy="6" r="2" fill="currentColor" stroke="none" />
-                            <circle cx="24.5" cy="11" r="2" fill="currentColor" stroke="none" />
-                            <circle cx="24.5" cy="21" r="2" fill="currentColor" stroke="none" />
-                            <circle cx="16" cy="26" r="2" fill="currentColor" stroke="none" />
-                            <circle cx="7.5" cy="21" r="2" fill="currentColor" stroke="none" />
-                            <circle cx="7.5" cy="11" r="2" fill="currentColor" stroke="none" />
-                            <line x1="16" y1="13" x2="16" y2="8" />
-                            <line x1="18.5" y1="14" x2="22.5" y2="12" />
-                            <line x1="18.5" y1="18" x2="22.5" y2="20" />
-                            <line x1="16" y1="19" x2="16" y2="24" />
-                            <line x1="13.5" y1="18" x2="9.5" y2="20" />
-                            <line x1="13.5" y1="14" x2="9.5" y2="12" />
-                        </svg>
-                    </div>
-                </div>
-                <div className="absolute inset-0 rounded-xl bg-primary/30 blur-lg opacity-0 group-hover:opacity-60 transition-opacity duration-300" />
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative flex items-center justify-center w-10 h-10">
+                {/* Subtle ambient glow on hover */}
+                <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-0" />
+
+                {/* Asymmetrical Matrix Logo */}
+                <svg
+                    viewBox="0 0 40 40"
+                    className="w-10 h-10 relative z-10 drop-shadow-sm"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <g className="origin-center transition-transform duration-700 ease-in-out group-hover:rotate-[90deg] group-hover:scale-110">
+                        {/* Top Left (Large, Solid) */}
+                        <rect x="4" y="4" width="18" height="18" rx="5" className="fill-primary" />
+
+                        {/* Bottom Right (Large, Translucent, Overlapping center) */}
+                        <rect x="18" y="18" width="18" height="18" rx="5" className="fill-primary/60" />
+
+                        {/* Bottom Left (Small, Light) */}
+                        <rect x="4" y="24" width="12" height="12" rx="4" className="fill-primary/30" />
+
+                        {/* Top Right (Small, Medium) */}
+                        <rect x="24" y="4" width="12" height="12" rx="4" className="fill-primary/80" />
+                    </g>
+                </svg>
             </motion.div>
             <div className="hidden sm:flex flex-col">
-                <span className="text-lg font-bold tracking-tight text-foreground leading-none">Ensemble</span>
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Platform</span>
+                <span className="text-[22px] font-black tracking-tight text-foreground leading-[1.1]">Ensemble</span>
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">Platform</span>
             </div>
         </Link>
     )
@@ -281,7 +278,7 @@ function LogoLink() {
 // ============================================================================
 // Desktop Navigation Component
 // ============================================================================
-function DesktopNav({ tools }: { tools: Tool[] }) {
+function DesktopNav({ tools }: { tools: Array<Tool> }) {
     return (
         <NavigationMenu className="hidden lg:flex">
             <NavigationMenuList className="gap-1">
@@ -516,8 +513,8 @@ function UserDropdown({ userInitials, userName, userEmail, isAdmin, isRefreshing
 interface MobileMenuProps {
     isOpen: boolean
     onClose: () => void
-    tools: Tool[]
-    teams: any[]
+    tools: Array<Tool>
+    teams: Array<any>
 }
 
 function MobileMenu({ isOpen, onClose, tools, teams }: MobileMenuProps) {

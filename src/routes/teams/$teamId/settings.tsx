@@ -1,5 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { getTeamById } from '@/app/actions/teams'
+import { getTeamById } from "@/app/actions/teams"
+import { PageHeader } from "@/components/shared";
 import { getTeamApplications, updateApplication } from '@/app/actions/applications'
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -8,7 +9,7 @@ import {
   Boxes,
   LifeBuoy,
   Wrench,
-  Users2,
+  Users2
 } from 'lucide-react'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -98,17 +99,14 @@ function TeamSettingsPage() {
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-6xl space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">
-            Settings
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your team settings and preferences for <span className="font-semibold text-foreground">{team.teamName}</span>.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Settings"
+        description={
+          <>
+            Manage your operational configurations, members, and preferences for <span className="font-bold text-white drop-shadow-sm">{team.teamName}</span>.
+          </>
+        }
+      />
 
       <div className="flex flex-col md:flex-row gap-8">
         <SettingsNav

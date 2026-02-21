@@ -23,6 +23,38 @@ import {
 
 // ─── View Dialog ───
 
+const LabelValue = ({
+  label,
+  value,
+  subValue,
+  email,
+}: {
+  label: string
+  value: string | null | undefined
+  subValue?: string | null
+  email?: string | null
+}) => (
+  <div className="space-y-1">
+    <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+      {label}
+    </p>
+    <div className="flex flex-col">
+      <p className="text-sm font-semibold">{value || 'N/A'}</p>
+      {subValue && (
+        <p className="text-[10px] text-muted-foreground">{subValue}</p>
+      )}
+      {email && (
+        <a
+          href={`mailto:${email}`}
+          className="text-[10px] text-primary hover:underline flex items-center gap-1 mt-0.5"
+        >
+          <Mail className="h-2.5 w-2.5" /> {email}
+        </a>
+      )}
+    </div>
+  </div>
+)
+
 export function ViewApplicationDialog({
   app,
   open,
@@ -33,38 +65,6 @@ export function ViewApplicationDialog({
   onOpenChange: (open: boolean) => void
 }) {
   if (!app) return null
-
-  const LabelValue = ({
-    label,
-    value,
-    subValue,
-    email,
-  }: {
-    label: string
-    value: string | null | undefined
-    subValue?: string | null
-    email?: string | null
-  }) => (
-    <div className="space-y-1">
-      <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-        {label}
-      </p>
-      <div className="flex flex-col">
-        <p className="text-sm font-semibold">{value || 'N/A'}</p>
-        {subValue && (
-          <p className="text-[10px] text-muted-foreground">{subValue}</p>
-        )}
-        {email && (
-          <a
-            href={`mailto:${email}`}
-            className="text-[10px] text-primary hover:underline flex items-center gap-1 mt-0.5"
-          >
-            <Mail className="h-2.5 w-2.5" /> {email}
-          </a>
-        )}
-      </div>
-    </div>
-  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -163,7 +163,7 @@ export function EditApplicationDialog({
   const {
     register,
     handleSubmit,
-    formState: {},
+    formState: { },
   } = useForm<z.infer<typeof UpdateApplicationSchema>>({
     resolver: zodResolver(UpdateApplicationSchema),
     defaultValues: {

@@ -23,7 +23,7 @@ import {
   Zap,
 } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
-import type {TurnoverSection} from '@/lib/zod/turnover.schema';
+import type { TurnoverSection } from '@/lib/zod/turnover.schema';
 import type { FinalizedTurnover } from '@/db/schema/turnover'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -51,7 +51,7 @@ import {
 } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
 import { getFinalizedTurnovers } from '@/app/actions/turnover'
-import { SECTION_CONFIG  } from '@/lib/zod/turnover.schema'
+import { SECTION_CONFIG } from '@/lib/zod/turnover.schema'
 import { EntryCard } from '@/components/turnover/entry-card'
 import { PageHeader } from '@/components/shared'
 
@@ -92,10 +92,15 @@ function TransitionHistoryPage() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Reset page when search changes
-  useEffect(() => {
+  // Reset page when search changes using inline state
+  const [prevDebouncedSearch, setPrevDebouncedSearch] = useState(debouncedSearch)
+  const [prevDateRange, setPrevDateRange] = useState(dateRange)
+
+  if (debouncedSearch !== prevDebouncedSearch || dateRange !== prevDateRange) {
+    setPrevDebouncedSearch(debouncedSearch)
+    setPrevDateRange(dateRange)
     setPage(0)
-  }, [debouncedSearch, dateRange])
+  }
 
   // Fetch turnovers
   const { data } = useQuery({

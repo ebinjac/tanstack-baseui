@@ -15,6 +15,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Header } from '@/components/header'
 import { SessionGuard } from '@/components/session-guard'
 import { getSession } from '@/app/ssr/auth'
+import { MotionConfig } from 'framer-motion'
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async () => {
@@ -61,19 +62,21 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <ThemeProvider defaultTheme="system" storageKey="ensemble-theme">
-          <QueryClientProvider client={queryClient}>
-            <SessionGuard session={session}>
-              <div className="relative flex min-h-screen flex-col">
-                {!isAdminRoute &&
-                  !location.pathname.includes('/link-manager') &&
-                  !location.pathname.includes('/turnover') && (
-                    <Header session={session} />
-                  )}
-                <main className="flex-1">{children}</main>
-              </div>
-              <Toaster />
-            </SessionGuard>
-          </QueryClientProvider>
+          <MotionConfig reducedMotion="user">
+            <QueryClientProvider client={queryClient}>
+              <SessionGuard session={session}>
+                <div className="relative flex min-h-screen flex-col">
+                  {!isAdminRoute &&
+                    !location.pathname.includes('/link-manager') &&
+                    !location.pathname.includes('/turnover') && (
+                      <Header session={session} />
+                    )}
+                  <main className="flex-1">{children}</main>
+                </div>
+                <Toaster />
+              </SessionGuard>
+            </QueryClientProvider>
+          </MotionConfig>
         </ThemeProvider>
 
         <TanStackDevtools

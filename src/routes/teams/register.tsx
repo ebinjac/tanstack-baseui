@@ -139,6 +139,26 @@ function TeamRegistrationPage() {
     let valid = false
     if (currentStep === 1) {
       valid = await trigger(['teamName', 'comments'])
+      if (valid) {
+        setIsCheckingName(true)
+        try {
+          const result = await checkTeamNameAvailability({
+            data: { name: getValues('teamName') },
+          })
+          if (!result.available) {
+            setError('teamName', {
+              type: 'manual',
+              message: result.reason || 'Team name is already taken',
+            })
+            valid = false
+          }
+        } catch (error) {
+          console.error('Error checking team name availability:', error)
+          valid = false
+        } finally {
+          setIsCheckingName(false)
+        }
+      }
     } else if (currentStep === 2) {
       valid = await trigger(['userGroup', 'adminGroup'])
     } else if (currentStep === 3) {
@@ -222,7 +242,7 @@ function TeamRegistrationPage() {
             {/* Background for Sidebar */}
             <div className="absolute inset-0 z-0">
               {/* Pattern Overlay */}
-              <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover bg-center opacity-20 mix-blend-overlay" />
+              <div className="absolute inset-0 bg-[url('/patterns/amex-3.avif')] bg-cover bg-center opacity-20 mix-blend-overlay" />
               {/* Subtle Gradient for depth */}
               <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/20 mix-blend-multiply" />
             </div>

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useCallback, useMemo, useRef, useState  } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -251,7 +251,7 @@ function ImportLinksPage() {
   }
 
   return (
-    <LinkManagerPage className="animate-in fade-in duration-500">
+    <LinkManagerPage>
       <PageHeader
         title="Import Resources"
         description="Import multiple links at once from text files, bookmarks, or other formats."
@@ -261,18 +261,18 @@ function ImportLinksPage() {
         {/* Sidebar Timeline */}
         <div className="lg:w-[280px] shrink-0">
           <div className="sticky top-8">
-            <Card className="border-border/50 bg-muted/20 backdrop-blur-xl">
+            <Card>
               <CardContent className="p-6">
                 <StepTimeline steps={STEPS} currentStep={currentStep} />
               </CardContent>
             </Card>
 
             {currentStep === 1 && (
-              <div className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/10 text-xs">
-                <p className="font-bold text-primary mb-2 flex items-center gap-2">
-                  <Settings2 className="w-3 h-3" /> Note
+              <div className="mt-6 p-4 rounded-md border bg-muted/50 text-sm">
+                <p className="font-medium flex items-center gap-2 mb-2">
+                  <Settings2 className="w-4 h-4" /> Note
                 </p>
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground leading-relaxed">
                   Select the format that matching your raw data. You can paste
                   content directly or upload a file in next step.
                 </p>
@@ -280,9 +280,9 @@ function ImportLinksPage() {
             )}
 
             {currentStep === 3 && (
-              <div className="mt-6">
+              <div className="mt-6 space-y-2">
                 <Button
-                  className="w-full font-bold shadow-lg shadow-primary/20"
+                  className="w-full"
                   size="lg"
                   onClick={handleFinalImport}
                   disabled={
@@ -298,8 +298,8 @@ function ImportLinksPage() {
                   Import {parsedLinks.filter((l) => l.isValid).length} Links
                 </Button>
                 <Button
-                  variant="ghost"
-                  className="w-full mt-2"
+                  variant="outline"
+                  className="w-full"
                   onClick={() => setCurrentStep(2)}
                 >
                   Back to Edit
@@ -320,73 +320,52 @@ function ImportLinksPage() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card className="border-border/50 shadow-sm">
+                <Card>
                   <CardHeader>
-                    <CardTitle className="text-2xl font-bold tracking-tight">
-                      Configuration
-                    </CardTitle>
+                    <CardTitle>Configuration</CardTitle>
                     <CardDescription>
-                      Choose the format of your source data and default
-                      settings.
+                      Choose the format of your source data and default settings.
                     </CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-8">
-                    <div className="space-y-4">
-                      <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                        Source Format
-                      </Label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  <CardContent className="space-y-6">
+                    <div className="space-y-3">
+                      <Label>Source Format</Label>
+                      <RadioGroup
+                        value={selectedFormat}
+                        onValueChange={(val: any) => setSelectedFormat(val)}
+                        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
+                      >
                         {(Object.keys(FORMAT_CONFIG) as Array<ImportFormat>).map(
                           (format) => {
                             const Config = FORMAT_CONFIG[format]
                             const Icon = Config.icon
                             return (
-                              <div
-                                key={format}
-                                onClick={() => setSelectedFormat(format)}
-                                className={cn(
-                                  'cursor-pointer relative flex flex-col gap-2 p-3 rounded-xl border-2 transition-all duration-200 hover:shadow-md h-full',
-                                  selectedFormat === format
-                                    ? 'border-primary bg-primary/5 shadow-sm scale-[1.02]'
-                                    : 'border-border/50 bg-card hover:border-primary/30 hover:bg-muted/30',
-                                )}
-                              >
-                                <div
+                              <div key={format} className="relative">
+                                <RadioGroupItem value={format} id={`format-${format}`} className="sr-only" />
+                                <Label
+                                  htmlFor={`format-${format}`}
                                   className={cn(
-                                    'w-8 h-8 rounded-md flex items-center justify-center transition-colors',
+                                    "flex flex-col items-center justify-between rounded-md border-2 p-4 gap-4 cursor-pointer text-center h-full transition-all",
                                     selectedFormat === format
-                                      ? 'bg-primary text-primary-foreground'
-                                      : 'bg-muted text-muted-foreground',
+                                      ? "border-primary bg-primary/5 shadow-sm"
+                                      : "border-muted bg-popover hover:bg-accent hover:text-accent-foreground"
                                   )}
                                 >
-                                  <Icon className="w-4 h-4" />
-                                </div>
-                                <div>
-                                  <h4
-                                    className={cn(
-                                      'font-bold text-xs',
-                                      selectedFormat === format
-                                        ? 'text-primary'
-                                        : 'text-foreground',
-                                    )}
-                                  >
-                                    {Config.label}
-                                  </h4>
-                                  <p className="text-[10px] text-muted-foreground mt-0.5 leading-tight line-clamp-2">
-                                    {Config.description}
-                                  </p>
-                                </div>
+                                  <Icon className={cn("w-6 h-6", selectedFormat === format ? "text-primary" : "text-muted-foreground")} />
+                                  <div className="space-y-1">
+                                    <p className={cn("text-sm font-medium leading-none", selectedFormat === format ? "text-primary" : "")}>{Config.label}</p>
+                                    <p className="text-xs text-muted-foreground">{Config.description}</p>
+                                  </div>
+                                </Label>
                               </div>
                             )
                           },
                         )}
-                      </div>
+                      </RadioGroup>
                     </div>
 
-                    <div className="space-y-4">
-                      <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-                        Default Visibility
-                      </Label>
+                    <div className="space-y-3">
+                      <Label>Default Visibility</Label>
                       <RadioGroup
                         value={defaultVisibility}
                         onValueChange={(v: any) => setDefaultVisibility(v)}
@@ -396,20 +375,21 @@ function ImportLinksPage() {
                           <RadioGroupItem
                             value="private"
                             id="def-private"
-                            className="peer sr-only"
+                            className="sr-only"
                           />
                           <Label
                             htmlFor="def-private"
-                            className="flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all peer-checked:border-primary peer-checked:bg-primary/5 hover:bg-muted/50"
+                            className={cn(
+                              "flex items-center gap-4 rounded-md border-2 p-4 cursor-pointer transition-all",
+                              defaultVisibility === 'private'
+                                ? "border-primary bg-primary/5 shadow-sm"
+                                : "border-muted bg-popover hover:bg-accent hover:text-accent-foreground"
+                            )}
                           >
-                            <div className="h-10 w-10 rounded-full bg-background flex items-center justify-center border shadow-sm">
-                              <Lock className="w-5 h-5 text-muted-foreground peer-checked:text-primary" />
-                            </div>
+                            <Lock className={cn("w-5 h-5", defaultVisibility === 'private' ? "text-primary" : "text-muted-foreground")} />
                             <div>
-                              <p className="font-bold">Private</p>
-                              <p className="text-xs text-muted-foreground">
-                                Only visible to you initially
-                              </p>
+                              <p className={cn("text-sm font-medium leading-none mb-1", defaultVisibility === 'private' ? "text-primary" : "")}>Private</p>
+                              <p className="text-xs text-muted-foreground">Only visible to you initially</p>
                             </div>
                           </Label>
                         </div>
@@ -417,32 +397,29 @@ function ImportLinksPage() {
                           <RadioGroupItem
                             value="public"
                             id="def-public"
-                            className="peer sr-only"
+                            className="sr-only"
                           />
                           <Label
                             htmlFor="def-public"
-                            className="flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all peer-checked:border-primary peer-checked:bg-primary/5 hover:bg-muted/50"
+                            className={cn(
+                              "flex items-center gap-4 rounded-md border-2 p-4 cursor-pointer transition-all",
+                              defaultVisibility === 'public'
+                                ? "border-primary bg-primary/5 shadow-sm"
+                                : "border-muted bg-popover hover:bg-accent hover:text-accent-foreground"
+                            )}
                           >
-                            <div className="h-10 w-10 rounded-full bg-background flex items-center justify-center border shadow-sm">
-                              <Globe2 className="w-5 h-5 text-muted-foreground peer-checked:text-primary" />
-                            </div>
+                            <Globe2 className={cn("w-5 h-5", defaultVisibility === 'public' ? "text-primary" : "text-muted-foreground")} />
                             <div>
-                              <p className="font-bold">Public</p>
-                              <p className="text-xs text-muted-foreground">
-                                Visible to everyone in team
-                              </p>
+                              <p className={cn("text-sm font-medium leading-none mb-1", defaultVisibility === 'public' ? "text-primary" : "")}>Public</p>
+                              <p className="text-xs text-muted-foreground">Visible to everyone in team</p>
                             </div>
                           </Label>
                         </div>
                       </RadioGroup>
                     </div>
                   </CardContent>
-                  <CardFooter className="border-t bg-muted/20 p-6 flex justify-end">
-                    <Button
-                      onClick={() => setCurrentStep(2)}
-                      size="lg"
-                      className="font-bold shadow-lg shadow-primary/10"
-                    >
+                  <CardFooter className="flex justify-end border-t p-6">
+                    <Button onClick={() => setCurrentStep(2)}>
                       Next Step <ArrowRight className="ml-2 w-4 h-4" />
                     </Button>
                   </CardFooter>
@@ -458,25 +435,23 @@ function ImportLinksPage() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card className="border-border/50 shadow-sm h-full flex flex-col">
+                <Card className="h-full flex flex-col">
                   <CardHeader>
-                    <CardTitle className="text-2xl font-bold tracking-tight">
-                      Data Source
-                    </CardTitle>
+                    <CardTitle>Data Source</CardTitle>
                     <CardDescription>
                       Paste your content or upload a file. Format:{' '}
                       {FORMAT_CONFIG[selectedFormat].label}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex-1 space-y-4">
-                    <div className="bg-muted/30 rounded-xl border border-dashed border-border p-4 h-[400px] flex flex-col focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                    <div className="rounded-md border p-4 h-[400px] flex flex-col focus-within:ring-1 focus-within:ring-ring transition-all bg-card">
                       <Textarea
                         value={rawInput}
                         onChange={(e) => setRawInput(e.target.value)}
                         placeholder={`Paste your ${FORMAT_CONFIG[selectedFormat].label} content here...\n\nExample:\n${FORMAT_CONFIG[selectedFormat].example}`}
-                        className="flex-1 resize-none bg-transparent border-none focus-visible:ring-0 p-4 font-mono text-sm leading-relaxed"
+                        className="flex-1 resize-none border-0 focus-visible:ring-0 shadow-none p-0 font-mono text-sm leading-relaxed"
                       />
-                      <div className="pt-4 border-t border-dashed flex items-center justify-between">
+                      <div className="pt-4 mt-2 border-t flex items-center justify-between">
                         <p className="text-xs text-muted-foreground font-medium">
                           {rawInput.length} chars •{' '}
                           {rawInput.split('\n').length} lines
@@ -490,24 +465,22 @@ function ImportLinksPage() {
                             accept=".txt,.csv,.json,.html,.md"
                           />
                           <Button
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             onClick={() => fileInputRef.current?.click()}
                           >
-                            <Upload className="mr-2 h-3.5 w-3.5" /> Upload File
+                            <Upload className="mr-2 h-4 w-4" /> Upload File
                           </Button>
                         </div>
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter className="border-t bg-muted/20 p-6 flex justify-between">
-                    <Button variant="ghost" onClick={() => setCurrentStep(1)}>
+                  <CardFooter className="border-t p-6 flex justify-between">
+                    <Button variant="outline" onClick={() => setCurrentStep(1)}>
                       Back
                     </Button>
                     <Button
                       onClick={handleParse}
-                      size="lg"
-                      className="font-bold"
                       disabled={!rawInput.trim()}
                     >
                       Parse Content <ArrowRight className="ml-2 w-4 h-4" />
@@ -525,19 +498,17 @@ function ImportLinksPage() {
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.2 }}
               >
-                <Card className="border-border/50 shadow-sm">
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="text-2xl font-bold tracking-tight">
-                        Review & Verify
-                      </CardTitle>
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between pb-4">
+                    <div className="space-y-1">
+                      <CardTitle>Review & Verify</CardTitle>
                       <CardDescription>
                         Found {parsedLinks.length} links.{' '}
                         {parsedLinks.filter((l) => l.isValid).length} valid.
                       </CardDescription>
                     </div>
                     <Button
-                      variant="outline"
+                      variant="secondary"
                       size="sm"
                       onClick={() => setParsedLinks([])}
                     >
@@ -551,29 +522,29 @@ function ImportLinksPage() {
                           <div
                             key={link.id}
                             className={cn(
-                              'group p-4 rounded-xl border transition-all hover:shadow-md bg-card',
+                              'p-4 rounded-md border text-sm transition-all bg-card',
                               link.isValid
-                                ? 'border-border/50'
-                                : 'border-destructive/30 bg-destructive/5',
+                                ? ''
+                                : 'border-destructive/50 bg-destructive/10',
                             )}
                           >
                             <div className="flex items-start gap-4">
                               <div
                                 className={cn(
-                                  'mt-1 h-6 w-6 rounded-full flex items-center justify-center shrink-0',
+                                  'mt-1 flex items-center justify-center shrink-0',
                                   link.isValid
-                                    ? 'bg-primary/10 text-primary'
-                                    : 'bg-destructive/10 text-destructive',
+                                    ? 'text-primary'
+                                    : 'text-destructive',
                                 )}
                               >
                                 {link.isValid ? (
-                                  <CheckCircle2 className="w-4 h-4" />
+                                  <CheckCircle2 className="w-5 h-5" />
                                 ) : (
-                                  <AlertCircle className="w-4 h-4" />
+                                  <AlertCircle className="w-5 h-5" />
                                 )}
                               </div>
-                              <div className="flex-1 min-w-0 space-y-2">
-                                <div className="flex items-center gap-2">
+                              <div className="flex-1 min-w-0 space-y-3">
+                                <div>
                                   <Input
                                     value={link.title}
                                     onChange={(e) =>
@@ -582,10 +553,10 @@ function ImportLinksPage() {
                                       })
                                     }
                                     placeholder="Link Title"
-                                    className="h-8 font-bold border-transparent hover:border-border focus:border-input transition-colors px-2 -ml-2 w-full bg-transparent"
+                                    className="h-8 shadow-none focus-visible:ring-1 bg-transparent"
                                   />
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div>
                                   <Input
                                     value={link.url}
                                     onChange={(e) =>
@@ -594,15 +565,15 @@ function ImportLinksPage() {
                                       })
                                     }
                                     className={cn(
-                                      'h-7 text-xs font-mono bg-muted/50 border-transparent hover:border-border focus:border-input transition-colors px-2 -ml-2 w-full',
+                                      'h-8 text-xs font-mono shadow-none focus-visible:ring-1 bg-muted/50',
                                       !link.isValid && 'text-destructive',
                                     )}
                                   />
                                 </div>
-                                <div className="flex flex-wrap gap-2 pt-1">
+                                <div className="flex items-center gap-2 pt-1">
                                   <Badge
-                                    variant="outline"
-                                    className="cursor-pointer hover:bg-muted"
+                                    variant="secondary"
+                                    className="cursor-pointer hover:bg-muted font-normal"
                                     onClick={() =>
                                       updateLink(link.id, {
                                         visibility:
@@ -621,8 +592,8 @@ function ImportLinksPage() {
                                   </Badge>
                                   {link.categoryId && (
                                     <Badge
-                                      variant="secondary"
-                                      className="bg-purple-500/10 text-purple-600 border-purple-200"
+                                      variant="outline"
+                                      className="font-normal"
                                     >
                                       {
                                         categories?.find(
@@ -634,7 +605,7 @@ function ImportLinksPage() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-5 px-2 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
+                                    className="h-6 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 ml-auto"
                                     onClick={() => removeLink(link.id)}
                                   >
                                     <Trash2 className="w-3 h-3 mr-1" /> Remove

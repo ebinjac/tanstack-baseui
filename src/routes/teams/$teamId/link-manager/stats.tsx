@@ -131,12 +131,10 @@ function LinkStatsPage() {
 function TopResourcesCard({ links }: { links: Array<any> }) {
   if (links.length === 0) {
     return (
-      <Card className="lg:col-span-8 border-border/50">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-bold flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <TrendingUp className="h-4 w-4 text-primary" />
-            </div>
+      <Card className="lg:col-span-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
             Top Resources
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground/70">
@@ -155,12 +153,10 @@ function TopResourcesCard({ links }: { links: Array<any> }) {
   }
 
   return (
-    <Card className="lg:col-span-8 border-border/50">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-bold flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </div>
+    <Card className="lg:col-span-8">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <TrendingUp className="h-5 w-5 text-primary" />
           Top Resources
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground/70">
@@ -168,40 +164,37 @@ function TopResourcesCard({ links }: { links: Array<any> }) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-3">
+        <div className="flex flex-col gap-2">
           {links.map((link: any, i: number) => (
             <div
               key={link.id}
-              className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all group border border-transparent"
+              className="flex items-center justify-between p-4 rounded-md border bg-card hover:bg-muted/50 transition-colors group"
             >
-              <div className="flex items-center gap-5 min-w-0">
-                <div className="w-12 h-12 rounded-2xl bg-background flex items-center justify-center font-black text-sm text-muted-foreground border border-border group-hover:text-primary group-hover:border-primary/30 transition-all shadow-sm">
-                  {String(i + 1).padStart(2, '0')}
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="flex items-center justify-center font-medium text-sm text-muted-foreground w-6 h-6 rounded-full border bg-muted/50 group-hover:text-primary group-hover:border-primary/50 transition-colors shrink-0">
+                  {i + 1}
                 </div>
-                <div className="space-y-1.5 min-w-0">
-                  <p className="font-bold text-lg tracking-tight text-foreground truncate">
+                <div className="space-y-1 min-w-0">
+                  <p className="font-medium text-sm leading-none truncate">
                     {link.title}
                   </p>
-                  <div className="flex items-center gap-3">
-                    <Badge
-                      variant="secondary"
-                      className="px-2 py-0 h-5 text-[9px] font-black uppercase tracking-wider bg-muted/50 border-none text-muted-foreground/70"
-                    >
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="font-normal text-[10px] px-1.5 py-0 h-4">
                       {link.category?.name || 'Uncategorized'}
                     </Badge>
-                    <span className="text-[10px] font-bold text-muted-foreground/30 flex items-center gap-1">
-                      <Box className="h-3 w-3" />{' '}
+                    <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <Box className="h-3 w-3" />
                       {link.application?.tla || 'Global'}
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-8">
+              <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <p className="text-3xl font-black text-foreground tracking-tighter leading-none">
+                  <p className="text-xl font-bold leading-none">
                     {link.usageCount}
                   </p>
-                  <p className="text-[10px] font-black text-muted-foreground/40 mt-1 uppercase tracking-wider">
+                  <p className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-wider">
                     Clicks
                   </p>
                 </div>
@@ -209,9 +202,9 @@ function TopResourcesCard({ links }: { links: Array<any> }) {
                   href={link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-11 h-11 rounded-2xl bg-background flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all border border-border shadow-md hover:text-primary hover:border-primary/40 hover:scale-110 active:scale-95"
+                  className="w-8 h-8 rounded-md flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent hover:border-border transition-colors group-hover:opacity-100 opacity-0 md:opacity-100 shrink-0"
                 >
-                  <ExternalLink className="h-5 w-5" />
+                  <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
             </div>

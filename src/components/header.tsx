@@ -165,11 +165,10 @@ export function Header({ session }: { session: SessionData | null }) {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-150 ease-out ${
-          scrolled
-            ? 'bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm'
-            : 'bg-transparent'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-150 ease-out ${scrolled
+          ? 'bg-background/80 backdrop-blur-xl border-b border-border/50 shadow-sm'
+          : 'bg-transparent'
+          }`}
       >
         {/* Subtle gradient line at top */}
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
@@ -332,7 +331,7 @@ function DesktopNav({ tools }: { tools: Array<Tool> }) {
               <div
                 className="absolute inset-0 opacity-[0.03] pointer-events-none"
                 style={{
-                  backgroundImage: `url('/patterns/amex-1.png')`,
+                  backgroundImage: `url('/patterns/amex-3.avif')`,
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                 }}
@@ -340,7 +339,7 @@ function DesktopNav({ tools }: { tools: Array<Tool> }) {
 
               {/* Header Section */}
               <div className="relative bg-muted/30 border-b border-border/50 p-4">
-                <div className="absolute inset-0 opacity-20 bg-[url('/patterns/amex-1.png')] bg-cover pointer-events-none" />
+                <div className="absolute inset-0 opacity-20 bg-[url('/patterns/amex-3.avif')] bg-cover pointer-events-none" />
                 <div className="flex items-center justify-between relative z-10">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
@@ -377,7 +376,7 @@ function DesktopNav({ tools }: { tools: Array<Tool> }) {
                     to={'/teams/register' as any}
                     className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-primary/5 to-transparent hover:from-primary/10 hover:to-primary/5 border border-primary/10 hover:border-primary/20 transition-all group relative overflow-hidden"
                   >
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-[url('/patterns/amex-1.png')] bg-cover transition-opacity duration-500" />
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-[url('/patterns/amex-3.avif')] bg-cover transition-opacity duration-500" />
 
                     <div className="flex items-center gap-3 relative z-10">
                       <div className="w-8 h-8 rounded-full bg-background flex items-center justify-center shadow-sm">

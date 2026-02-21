@@ -160,7 +160,7 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
         <div
           className="absolute inset-0 opacity-[0.03] pointer-events-none"
           style={{
-            backgroundImage: `url('/patterns/amex-1.png')`,
+            backgroundImage: `url('/patterns/amex-3.avif')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
@@ -169,7 +169,7 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
         <Command className="bg-transparent relative z-10 p-0">
           {/* Header */}
           <div className="relative bg-muted/30 border-b border-border/50 p-3">
-            <div className="absolute inset-0 opacity-10 bg-[url('/patterns/amex-1.png')] bg-cover pointer-events-none mix-blend-overlay" />
+            <div className="absolute inset-0 opacity-10 bg-[url('/patterns/amex-3.avif')] bg-cover pointer-events-none mix-blend-overlay" />
             <div className="flex items-center gap-2 relative z-10 px-1">
               <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1">
                 Select Organization
@@ -195,6 +195,7 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
                 return (
                   <CommandItem
                     key={team.teamId}
+                    value={team.teamName}
                     onSelect={() => {
                       setOpen(false)
                       localStorage.setItem(STORAGE_KEY, team.teamId)
@@ -298,7 +299,7 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
                 'border border-primary/10 hover:border-primary/20 hover:shadow-sm',
               )}
             >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-[url('/patterns/amex-1.png')] bg-cover transition-opacity duration-500 pointer-events-none" />
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-10 bg-[url('/patterns/amex-3.avif')] bg-cover transition-opacity duration-500 pointer-events-none" />
               <div className="h-5 w-5 rounded-md bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
                 <PlusCircle className="h-3 w-3 text-primary" />
               </div>

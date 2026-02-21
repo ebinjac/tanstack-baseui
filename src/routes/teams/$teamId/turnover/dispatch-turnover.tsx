@@ -44,6 +44,7 @@ import {
 } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
 import { PageHeader } from '@/components/shared'
+import { EmptyState } from '@/components/shared/empty-state'
 import {
   canFinalizeTurnover,
   finalizeTurnover,
@@ -346,18 +347,12 @@ function DispatchTurnoverPage() {
         {/* Application Accordions */}
         <div className="relative">
           {Object.keys(groupedEntries).length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-32 bg-card/10 backdrop-blur-sm border border-dashed border-border/50 rounded-[2.5rem] text-center space-y-6">
-              <div className="h-24 w-24 rounded-full bg-muted/20 flex items-center justify-center text-muted-foreground animate-pulse">
-                <Send className="h-10 w-10 opacity-30" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-black tracking-tight italic">
-                  No Active Entries
-                </h3>
-                <p className="text-muted-foreground max-w-sm font-medium">
-                  There are no turnover entries to dispatch at this time.
-                </p>
-              </div>
+            <div className="py-12">
+              <EmptyState
+                icon={Send}
+                title="No Active Entries"
+                description="There are no turnover entries to dispatch at this time."
+              />
             </div>
           ) : (
             <div className="space-y-6">

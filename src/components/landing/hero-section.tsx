@@ -164,7 +164,7 @@ export function HeroSection({
             <div
               className="absolute inset-0 opacity-20 pointer-events-none"
               style={{
-                backgroundImage: `url('/patterns/amex-1.png')`,
+                backgroundImage: `url('/patterns/amex-3.avif')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 mixBlendMode: 'color-dodge',
@@ -179,11 +179,10 @@ export function HeroSection({
                   return (
                     <div
                       key={idx}
-                      className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-500 shadow-sm cursor-pointer flex items-center gap-2 relative ${
-                        activeTab === idx
-                          ? 'bg-background text-primary scale-105 shadow-md'
-                          : 'bg-primary-foreground/10 text-primary-foreground/80 hover:bg-primary-foreground/20 hover:text-primary-foreground border-transparent'
-                      }`}
+                      className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-500 shadow-sm cursor-pointer flex items-center gap-2 relative ${activeTab === idx
+                        ? 'bg-background text-primary scale-105 shadow-md'
+                        : 'bg-primary-foreground/10 text-primary-foreground/80 hover:bg-primary-foreground/20 hover:text-primary-foreground border-transparent'
+                        }`}
                       onClick={() => setActiveTab(idx)}
                     >
                       <Icon className="w-4 h-4" />

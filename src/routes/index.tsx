@@ -486,14 +486,14 @@ function RouteComponent() {
       {/* === PREMIUM CTA SECTION === */}
       <section className="relative w-full py-32 mt-20 bg-primary overflow-hidden">
         {/* Deep AmEx Blue Base with rich gradients */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#00175a] via-primary to-[#004e9a] opacity-90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#000] via-primary to-[#000] opacity-90" />
 
         {/* Cinematic Pattern Background */}
         <div
           className="absolute inset-0 mix-blend-overlay opacity-50 transform-gpu rotate-[-2deg] scale-110"
           style={{
-            backgroundImage: `url('/patterns/amex-1.png')`,
-            backgroundSize: '800px',
+            backgroundImage: `url('/patterns/amex-2.jpg')`,
+            backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'contrast(1.5) brightness(0.8)',
           }}
@@ -510,7 +510,7 @@ function RouteComponent() {
         >
           <div className="bg-black/20 rounded-[3rem] border border-white/20 p-12 md:p-20 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-12 overflow-hidden relative">
             {/* Inner Pattern Accent */}
-            <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 bg-[url('/patterns/amex-1.png')] bg-cover mix-blend-plus-lighter pointer-events-none" />
+            <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 bg-[url('/patterns/amex-3.avif')] bg-cover mix-blend-plus-lighter pointer-events-none" />
 
             {/* Left Content */}
             <div className="space-y-6 md:w-2/3 text-center md:text-left relative z-10">

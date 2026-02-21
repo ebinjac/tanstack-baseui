@@ -1,65 +1,66 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   DndContext,
   DragOverlay,
-  closestCorners,
   KeyboardSensor,
   PointerSensor,
+  closestCorners,
+  useDroppable,
   useSensor,
   useSensors,
-  DragStartEvent,
-  DragOverEvent,
-  DragEndEvent,
-  UniqueIdentifier,
-  useDroppable,
 } from '@dnd-kit/core'
 import {
-  arrayMove,
   SortableContext,
+  arrayMove,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
   useSortable,
+  verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import {
-  GripVertical,
-  Plus,
   FolderOpen,
   FolderPlus,
+  GripVertical,
   Loader2,
-  Trash2,
+  Plus,
   Save,
+  Trash2,
 } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import type {
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  UniqueIdentifier} from '@dnd-kit/core';
+import type { Application } from '@/db/schema/teams'
+import type { ApplicationGroup } from '@/db/schema/application-groups'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import type { Application } from '@/db/schema/teams'
-import type { ApplicationGroup } from '@/db/schema/application-groups'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { syncGroupStructure } from '@/app/actions/application-groups'
-import { toast } from 'sonner'
 
 // ============================================================================
 // Types
 // ============================================================================
 
-type GroupWithApps = ApplicationGroup & { applications: Application[] }
+type GroupWithApps = ApplicationGroup & { applications: Array<Application> }
 
 interface DndGroup {
   id: string
   name: string
-  items: Application[]
+  items: Array<Application>
   color: string
   isNew?: boolean
 }
 
 interface GroupManagementDndProps {
   teamId: string
-  initialGroups: GroupWithApps[]
-  initialUngrouped: Application[]
+  initialGroups: Array<GroupWithApps>
+  initialUngrouped: Array<Application>
   onClose?: () => void
 }
 
@@ -80,7 +81,7 @@ const GROUP_COLORS = [
   '#a855f7',
 ]
 
-function generateGroupName(apps: Application[]) {
+function generateGroupName(apps: Array<Application>) {
   if (apps.length === 0) return 'New Group'
   return apps.map((a) => a.tla).join('/')
 }
@@ -283,7 +284,7 @@ function DroppableGroup({
 // ============================================================================
 
 interface DroppableUngroupedProps {
-  items: Application[]
+  items: Array<Application>
 }
 
 function DroppableUngrouped({ items }: DroppableUngroupedProps) {
@@ -343,7 +344,7 @@ export function GroupManagementDragDrop({
   const queryClient = useQueryClient()
 
   // State
-  const [groups, setGroups] = useState<DndGroup[]>(() =>
+  const [groups, setGroups] = useState<Array<DndGroup>>(() =>
     initialGroups.map((g) => ({
       id: g.id,
       name: g.name,
@@ -351,7 +352,7 @@ export function GroupManagementDragDrop({
       color: g.color || getRandomColor(),
     })),
   )
-  const [ungrouped, setUngrouped] = useState<Application[]>(initialUngrouped)
+  const [ungrouped, setUngrouped] = useState<Array<Application>>(initialUngrouped)
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
 
   // Find active app for overlay
@@ -370,12 +371,12 @@ export function GroupManagementDragDrop({
   const saveMutation = useMutation({
     mutationFn: (data: {
       teamId: string
-      groups: {
+      groups: Array<{
         id: string
         name: string
-        applicationIds: string[]
+        applicationIds: Array<string>
         color?: string
-      }[]
+      }>
     }) => syncGroupStructure({ data }),
     onSuccess: () => {
       queryClient.invalidateQueries({

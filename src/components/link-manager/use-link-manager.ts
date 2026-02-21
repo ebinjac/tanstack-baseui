@@ -7,21 +7,21 @@
  * @see skills/react-best-practices/rules/hook-extract-logic.md
  */
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query'
-import { linkKeys } from '@/lib/query-keys'
-import { getLinks, bulkUpdateLinks } from '@/app/actions/links'
 import { toast } from 'sonner'
 import type { LinkWithRelations } from '@/db/schema/links'
+import { linkKeys } from '@/lib/query-keys'
+import { bulkUpdateLinks, getLinks } from '@/app/actions/links'
 
 export interface UseLinkManagerOptions {
   teamId: string
   initialData: {
-    items: LinkWithRelations[]
+    items: Array<LinkWithRelations>
     nextCursor: string | null
     totalCount: number
   }
@@ -36,7 +36,7 @@ export interface UseLinkManagerOptions {
 
 export interface UseLinkManagerReturn {
   // Data
-  links: LinkWithRelations[]
+  links: Array<LinkWithRelations>
   totalCount: number
   isLoading: boolean
   isFetchingNextPage: boolean
@@ -133,7 +133,7 @@ export function useLinkManager({
   const bulkUpdateMutation = useMutation({
     mutationFn: (params: {
       teamId: string
-      linkIds: string[]
+      linkIds: Array<string>
       updates: { visibility?: 'public' | 'private'; categoryId?: string | null }
     }) => bulkUpdateLinks({ data: params }),
     onSuccess: (result) => {

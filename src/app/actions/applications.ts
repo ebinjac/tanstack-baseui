@@ -1,13 +1,13 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { applications } from '@/db/schema/teams'
-import { sql } from 'drizzle-orm'
 import {
   CreateApplicationSchema,
   UpdateApplicationSchema,
 } from '@/lib/zod/application.schema'
-import { requireAuth, assertTeamAdmin } from '@/lib/middleware/auth.middleware'
+import { assertTeamAdmin, requireAuth } from '@/lib/middleware/auth.middleware'
 
 export const createApplication = createServerFn({ method: 'POST' })
   .middleware([requireAuth])

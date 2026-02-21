@@ -22,12 +22,12 @@ export function PageHeader({
       )}
     >
       {/* Background Base & Pattern */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#00175a] via-primary to-[#004e9a]" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-[#006fcf] via-primary to-[#004e9a]" />
 
       <div
         className="absolute inset-0 z-0 opacity-40 mix-blend-overlay rotate-[1deg] scale-105"
         style={{
-          backgroundImage: `url('/patterns/amex-1.png')`,
+          backgroundImage: `url('/patterns/amex-2.jpg')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

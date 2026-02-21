@@ -7,36 +7,36 @@
  * @see skills/react-best-practices/rules/hook-extract-logic.md
  */
 
-import { useState, useMemo, useCallback } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
 import { useExpandState } from '@/hooks/use-expand-state'
 import { useSearchFilter } from '@/hooks/use-search-filter'
 import { turnoverKeys } from '@/lib/query-keys'
 import {
-  getDispatchEntries,
   canFinalizeTurnover,
   finalizeTurnover,
+  getDispatchEntries,
 } from '@/app/actions/turnover'
-import { toast } from 'sonner'
-import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
 
 export interface UseDispatchTurnoverOptions {
   teamId: string
-  initialEntries?: TurnoverEntryWithDetails[]
+  initialEntries?: Array<TurnoverEntryWithDetails>
 }
 
 export interface UseDispatchTurnoverReturn {
   // Data
-  entries: TurnoverEntryWithDetails[]
+  entries: Array<TurnoverEntryWithDetails>
   isLoading: boolean
 
   // Search
   searchQuery: string
   setSearchQuery: (query: string) => void
-  filteredEntries: TurnoverEntryWithDetails[]
+  filteredEntries: Array<TurnoverEntryWithDetails>
 
   // Grouping
-  groupedEntries: Record<string, TurnoverEntryWithDetails[]>
+  groupedEntries: Record<string, Array<TurnoverEntryWithDetails>>
 
   // Expand state
   expandedApps: ReturnType<typeof useExpandState<TurnoverEntryWithDetails>>
@@ -101,12 +101,12 @@ export function useDispatchTurnover({
       'title',
       'description',
       'createdBy',
-    ] as (keyof TurnoverEntryWithDetails)[],
+    ] as Array<keyof TurnoverEntryWithDetails>,
   })
 
   // Group entries by application
   const groupedEntries = useMemo(() => {
-    const grouped: Record<string, TurnoverEntryWithDetails[]> = {}
+    const grouped: Record<string, Array<TurnoverEntryWithDetails>> = {}
 
     filteredEntries.forEach((entry) => {
       const appId = entry.applicationId

@@ -2,8 +2,10 @@ import React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { toast } from 'sonner'
+import { Loader2, Settings2 } from 'lucide-react'
+import type { z } from 'zod'
+import type { ScorecardEntry } from './types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,10 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Settings2, Loader2 } from 'lucide-react'
 import { updateScorecardEntry } from '@/app/actions/scorecard'
 import { UpdateScorecardEntrySchema } from '@/lib/zod/scorecard.schema'
-import type { ScorecardEntry } from './types'
 
 interface EditEntryDialogProps {
   entry: ScorecardEntry

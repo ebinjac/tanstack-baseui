@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Boxes, Loader2, Search } from 'lucide-react'
+import { ApplicationActions } from './application-actions'
 import {
   Card,
   CardContent,
@@ -17,13 +19,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { Boxes, Search, Loader2 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/empty-state'
-import { ApplicationActions } from './application-actions'
 
 interface ApplicationsTabProps {
   team: any
-  applications: any[] | undefined
+  applications: Array<any> | undefined
   isLoadingApps: boolean
   isAdmin: boolean
   syncMutation: any

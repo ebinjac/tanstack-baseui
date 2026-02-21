@@ -1,25 +1,29 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { format } from 'date-fns'
 import {
-  Send,
-  Search,
-  Layers,
+  AlertCircle,
   AlertTriangle,
+  Bell,
+  CheckCircle2,
   ChevronRight,
   ChevronsUpDown,
-  Loader2,
-  FileText,
-  CheckCircle2,
-  AlertCircle,
-  Bell,
-  Zap,
-  MessageSquare,
-  HelpCircle,
   Clock,
+  FileText,
+  HelpCircle,
+  Layers,
+  Loader2,
+  MessageSquare,
+  Search,
+  Send,
+  Zap,
 } from 'lucide-react'
+import { toast } from 'sonner'
+import { AnimatePresence, motion } from 'framer-motion'
+import type { TurnoverSection } from '@/lib/zod/turnover.schema';
+import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -39,18 +43,16 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
+import { PageHeader } from '@/components/shared'
 import {
-  getDispatchEntries,
   canFinalizeTurnover,
   finalizeTurnover,
+  getDispatchEntries,
 } from '@/app/actions/turnover'
-import { SECTION_CONFIG, type TurnoverSection } from '@/lib/zod/turnover.schema'
+import { SECTION_CONFIG } from '@/lib/zod/turnover.schema'
 import { EntryCard } from '@/components/turnover/entry-card'
-import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
 import { Skeleton } from '@/components/ui/skeleton'
 import { StatsSummaryItem } from '@/components/link-manager/shared'
-import { motion, AnimatePresence } from 'framer-motion'
 import { turnoverKeys } from '@/lib/query-keys'
 
 export const Route = createFileRoute(
@@ -176,14 +178,14 @@ function DispatchTurnoverPage() {
   const groupedEntries = useMemo(() => {
     const filtered = searchQuery
       ? entries.filter(
-          (e: TurnoverEntryWithDetails) =>
-            e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            e.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            e.createdBy.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
+        (e: TurnoverEntryWithDetails) =>
+          e.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          e.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          e.createdBy.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
       : entries
 
-    const grouped: Record<string, TurnoverEntryWithDetails[]> = {}
+    const grouped: Record<string, Array<TurnoverEntryWithDetails>> = {}
 
     filtered.forEach((entry: TurnoverEntryWithDetails) => {
       const appId = entry.applicationId
@@ -239,56 +241,41 @@ function DispatchTurnoverPage() {
     <div className="flex-1 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
       <div className="space-y-8 p-8 pt-6">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex flex-col">
-            <h1 className="text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-              Dispatch Turnover
-            </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge
-                variant="outline"
-                className="text-[10px] font-bold bg-primary/5 border-primary/20 text-primary px-2 h-5"
-              >
-                Shift Review
-              </Badge>
-              <span className="text-muted-foreground/30">•</span>
-              <p className="text-sm font-medium text-muted-foreground">
-                Handover summary for {format(new Date(), 'MMMM dd, yyyy')}
-              </p>
-            </div>
+        <PageHeader
+          title="Dispatch Turnover"
+          description={`Shift Review • Handover summary for ${format(new Date(), 'MMMM dd, yyyy')}`}
+          className="w-full"
+        >
+          {/* Search */}
+          <div className="relative group w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/70" />
+            <Input
+              placeholder="Filter entries..."
+              className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus-visible:ring-1 focus-visible:ring-white/40 border"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Search */}
-            <div className="relative group w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input
-                placeholder="Filter entries..."
-                className="h-11 pl-12 rounded-xl bg-background/50 border-none focus:ring-2 focus:ring-primary/20 focus:bg-background transition-all font-bold text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            {/* Finalize Button */}
-            <Button
-              onClick={() => setFinalizeDialogOpen(true)}
-              disabled={
-                checkingCooldown ||
-                !canFinalizeData?.canFinalize ||
-                entries.length === 0
-              }
-              className="h-11 px-6 gap-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 font-bold text-xs rounded-xl shadow-lg shadow-green-500/10"
-            >
-              {checkingCooldown ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <FileText className="w-4 h-4" />
-              )}
-              Finalize Turnover
-            </Button>
-          </div>
-        </div>
+          {/* Finalize Button */}
+          <Button
+            variant="secondary"
+            onClick={() => setFinalizeDialogOpen(true)}
+            disabled={
+              checkingCooldown ||
+              !canFinalizeData?.canFinalize ||
+              entries.length === 0
+            }
+            className="gap-2"
+          >
+            {checkingCooldown ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileText className="w-4 h-4" />
+            )}
+            Finalize Turnover
+          </Button>
+        </PageHeader>
 
         {/* Cooldown Message */}
         <AnimatePresence>
@@ -382,7 +369,7 @@ function DispatchTurnoverPage() {
                 const isExpanded = expandedApps.has(appId)
 
                 // Group by section
-                const bySection: Record<string, TurnoverEntryWithDetails[]> = {}
+                const bySection: Record<string, Array<TurnoverEntryWithDetails>> = {}
                 appEntries.forEach((entry) => {
                   if (!bySection[entry.section]) {
                     bySection[entry.section] = []
@@ -478,16 +465,16 @@ function DispatchTurnoverPage() {
                                             : sConfig.colorClass.includes('red')
                                               ? 'bg-red-100'
                                               : sConfig.colorClass.includes(
-                                                    'amber',
-                                                  )
+                                                'amber',
+                                              )
                                                 ? 'bg-amber-100'
                                                 : sConfig.colorClass.includes(
-                                                      'purple',
-                                                    )
+                                                  'purple',
+                                                )
                                                   ? 'bg-purple-100'
                                                   : sConfig.colorClass.includes(
-                                                        'green',
-                                                      )
+                                                    'green',
+                                                  )
                                                     ? 'bg-green-100'
                                                     : 'bg-muted',
                                         )}
@@ -533,28 +520,18 @@ function DispatchTurnoverPage() {
 
         {/* Finalize Dialog */}
         <Dialog open={finalizeDialogOpen} onOpenChange={setFinalizeDialogOpen}>
-          <DialogContent className="rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl min-w-[500px]">
-            <div className="bg-primary p-8 text-primary-foreground relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 -mr-32 -mt-32 opacity-20 bg-white rounded-full blur-3xl pointer-events-none" />
-              <div className="relative z-10">
-                <div className="h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/20 shadow-lg mb-6">
-                  <FileText className="h-7 w-7" />
-                </div>
-                <DialogHeader className="space-y-2">
-                  <DialogTitle className="text-3xl font-black tracking-tight">
-                    Finalize Turnover
-                  </DialogTitle>
-                  <DialogDescription className="text-primary-foreground/70 font-medium">
-                    Create a permanent snapshot of the current turnover state
-                    for auditing and reporting.
-                  </DialogDescription>
-                </DialogHeader>
-              </div>
-            </div>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Finalize Turnover</DialogTitle>
+              <DialogDescription>
+                Create a permanent snapshot of the current turnover state
+                for auditing and reporting.
+              </DialogDescription>
+            </DialogHeader>
 
-            <div className="p-8 space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest pl-1">
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Shift Intelligence Notes
                 </label>
                 <Textarea
@@ -562,68 +539,46 @@ function DispatchTurnoverPage() {
                   value={finalizeNotes}
                   onChange={(e) => setFinalizeNotes(e.target.value)}
                   rows={4}
-                  className="rounded-2xl bg-muted/50 border-transparent focus:bg-background transition-all font-medium text-sm p-4"
                 />
               </div>
 
-              <div className="bg-muted/30 rounded-2xl p-6 space-y-3 border border-border/50">
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
-                    Active Applications:
-                  </span>
-                  <span className="text-sm font-black text-foreground">
-                    {stats.activeApps}
-                  </span>
+              <div className="bg-muted rounded-md p-4 space-y-3">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Active Applications:</span>
+                  <span className="font-semibold">{stats.activeApps}</span>
                 </div>
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
-                    Total Handover Items:
-                  </span>
-                  <span className="text-sm font-black text-foreground">
-                    {stats.totalEntries}
-                  </span>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Total Handover Items:</span>
+                  <span className="font-semibold">{stats.totalEntries}</span>
                 </div>
-                <div className="h-px bg-border/40 my-1" />
-                <div className="flex justify-between items-center px-1">
-                  <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
-                    Critical Intensity:
-                  </span>
-                  <span
-                    className={cn(
-                      'text-sm font-black',
-                      stats.criticalItems > 0
-                        ? 'text-orange-600'
-                        : 'text-muted-foreground',
-                    )}
-                  >
+                <div className="h-px bg-border my-1" />
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Critical Intensity:</span>
+                  <span className={cn("font-bold", stats.criticalItems > 0 ? "text-destructive" : "text-muted-foreground")}>
                     {stats.criticalItems} High Priority
                   </span>
                 </div>
               </div>
-
-              <DialogFooter className="gap-3 sm:justify-start">
-                <Button
-                  onClick={() => finalizeMutation.mutate()}
-                  disabled={finalizeMutation.isPending}
-                  className="flex-1 h-12 rounded-xl font-bold text-sm bg-primary shadow-lg shadow-primary/20"
-                >
-                  {finalizeMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                  ) : (
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                  )}
-                  Authorize Finalization
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setFinalizeDialogOpen(false)}
-                  disabled={finalizeMutation.isPending}
-                  className="h-12 px-6 rounded-xl font-bold text-sm border-primary/20 hover:bg-primary/5"
-                >
-                  Cancel
-                </Button>
-              </DialogFooter>
             </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setFinalizeDialogOpen(false)}
+                disabled={finalizeMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => finalizeMutation.mutate()}
+                disabled={finalizeMutation.isPending}
+              >
+                {finalizeMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Authorize Finalization
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

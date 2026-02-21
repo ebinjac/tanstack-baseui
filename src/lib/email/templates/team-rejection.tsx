@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Section, Text, Heading, Row, Column } from '@react-email/components'
+import { Column, Heading, Row, Section, Text } from '@react-email/components'
 import { EnsembleLayout } from './ensemble-layout'
 
 interface TeamRejectionEmailProps {

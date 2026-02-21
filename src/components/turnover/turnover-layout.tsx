@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { Link, useLocation, useParams } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
-import { cn } from '@/lib/utils'
 import {
   ArrowRightLeft,
-  Send,
-  History,
   BarChart3,
   ChevronLeft,
+  History,
   PanelLeftClose,
   PanelLeftOpen,
+  Send,
 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Tooltip,
@@ -47,7 +47,7 @@ const navItems = [
 ] as const
 
 export function TurnoverSidebar() {
-  const { teamId } = useParams({ strict: false }) as { teamId: string }
+  const { teamId } = useParams({ strict: false })
   const location = useLocation()
   const [isCollapsed, setIsCollapsed] = useState(true)
 

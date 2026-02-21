@@ -1,4 +1,21 @@
 import {
+  Activity,
+  Boxes,
+  Calendar,
+  Contact2,
+  Fingerprint,
+  Globe,
+  Mail,
+  MessageSquare,
+  Pencil,
+  ShieldAlert,
+  ShieldCheck,
+  Terminal,
+  User,
+  Users2,
+} from 'lucide-react'
+import { InfoItem, StatsCard } from './shared'
+import {
   Card,
   CardContent,
   CardDescription,
@@ -6,23 +23,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  Boxes,
-  Activity,
-  ShieldAlert,
-  Fingerprint,
-  ShieldCheck,
-  Pencil,
-  Terminal,
-  Users2,
-  Globe,
-  Calendar,
-  Contact2,
-  User,
-  Mail,
-  MessageSquare,
-} from 'lucide-react'
-import { StatsCard, InfoItem } from './shared'
 
 interface TeamStats {
   total: number

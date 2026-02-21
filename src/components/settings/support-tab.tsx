@@ -1,4 +1,11 @@
 import {
+  ExternalLink,
+  HelpCircle,
+  Mail,
+  MessageSquare,
+  User,
+} from 'lucide-react'
+import {
   Card,
   CardContent,
   CardDescription,
@@ -6,13 +13,6 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import {
-  MessageSquare,
-  Mail,
-  ExternalLink,
-  User,
-  HelpCircle,
-} from 'lucide-react'
 
 interface SupportTabProps {
   team: any

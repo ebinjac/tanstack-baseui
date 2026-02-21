@@ -1,17 +1,17 @@
 import {
-  uuid,
-  varchar,
-  text,
-  timestamp,
-  integer,
-  decimal,
   bigint,
   boolean,
+  decimal,
   index,
+  integer,
+  text,
+  timestamp,
   uniqueIndex,
+  uuid,
+  varchar,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
-import { ensembleSchema, applications, teams } from './teams'
+import { applications, ensembleSchema, teams } from './teams'
 
 // Scorecard Entries - Sub-applications for tracking
 export const scorecardEntries = ensembleSchema.table(

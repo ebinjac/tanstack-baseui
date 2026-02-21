@@ -7,10 +7,11 @@
  * @see skills/react-best-practices/rules/err-boundaries.md
  */
 
-import { Component, type ReactNode, type ErrorInfo } from 'react'
+import { Component   } from 'react'
+import { AlertTriangle, ArrowLeft, Home, RefreshCw } from 'lucide-react'
+import type {ErrorInfo, ReactNode} from 'react';
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { AlertTriangle, RefreshCw, Home, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // ============================================================================
@@ -22,7 +23,7 @@ export interface ErrorBoundaryProps {
   fallback?: ReactNode
   onError?: (error: Error, errorInfo: ErrorInfo) => void
   onReset?: () => void
-  resetKeys?: unknown[]
+  resetKeys?: Array<unknown>
 }
 
 export interface ErrorFallbackProps {

@@ -8,7 +8,7 @@
  * @see skills/react-best-practices/rules/hook-extract-logic.md
  */
 
-import { useState, useMemo, useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 export interface UsePaginationOptions {
   /** Total number of items */
@@ -154,9 +154,9 @@ export function usePagination({
  * ```
  */
 export function usePaginatedItems<T>(
-  items: T[],
+  items: Array<T>,
   options?: Omit<UsePaginationOptions, 'totalItems'> & { pageSize?: number },
-): UsePaginationReturn & { items: T[] } {
+): UsePaginationReturn & { items: Array<T> } {
   const pagination = usePagination({
     ...options,
     totalItems: items.length,

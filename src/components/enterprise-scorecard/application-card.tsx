@@ -1,6 +1,17 @@
 'use client'
 
 import { useMemo } from 'react'
+import { AlertTriangle, ChevronDown, Lock } from 'lucide-react'
+import { EntryRows } from './entry-rows'
+import { CURRENT_MONTH, CURRENT_YEAR, MONTHS } from './constants'
+import type {
+  Application,
+  AvailabilityRecord,
+  LeadershipDisplay,
+  ScorecardEntry,
+  VisibleMonth,
+  VolumeRecord,
+} from './types'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -11,28 +22,17 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { ChevronDown, AlertTriangle, Lock } from 'lucide-react'
-import { EntryRows } from './entry-rows'
-import { MONTHS, CURRENT_YEAR, CURRENT_MONTH } from './constants'
-import type {
-  Application,
-  ScorecardEntry,
-  AvailabilityRecord,
-  VolumeRecord,
-  LeadershipDisplay,
-  VisibleMonth,
-} from './types'
 
 interface ApplicationCardProps {
   app: Application
   isExpanded: boolean
   onToggle: () => void
-  entries: ScorecardEntry[]
+  entries: Array<ScorecardEntry>
   availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>
   volumeByEntry: Record<string, Record<string, VolumeRecord>>
   selectedYear: number
-  leadership: LeadershipDisplay[]
-  visibleMonths?: VisibleMonth[]
+  leadership: Array<LeadershipDisplay>
+  visibleMonths?: Array<VisibleMonth>
 }
 
 export function ApplicationCard({

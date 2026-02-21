@@ -9,12 +9,12 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { QueryClientProvider } from '@tanstack/react-query'
 
 import appCss from '../styles.css?url'
+import type { RouterContext } from '@/router'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Header } from '@/components/header'
 import { SessionGuard } from '@/components/session-guard'
 import { getSession } from '@/app/ssr/auth'
-import type { RouterContext } from '@/router'
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async () => {

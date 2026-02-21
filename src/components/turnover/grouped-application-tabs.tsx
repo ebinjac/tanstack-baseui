@@ -1,12 +1,12 @@
 'use client'
 
-import { cn } from '@/lib/utils'
-import { Layers, Boxes } from 'lucide-react'
+import { Boxes, Layers } from 'lucide-react'
 import type { Application } from '@/db/schema/teams'
 import type { ApplicationGroup } from '@/db/schema/application-groups'
+import { cn } from '@/lib/utils'
 import { EmptyState } from '@/components/shared/empty-state'
 
-type GroupWithApplications = ApplicationGroup & { applications: Application[] }
+type GroupWithApplications = ApplicationGroup & { applications: Array<Application> }
 
 // ============================================================================
 // Types for the new tab system
@@ -17,18 +17,18 @@ export interface TabItem {
   label: string
   type: 'group' | 'application'
   color?: string
-  applications: Application[] // For groups: all apps in group. For single: just the one app
+  applications: Array<Application> // For groups: all apps in group. For single: just the one app
 }
 
 interface GroupedApplicationTabsProps {
-  groups: GroupWithApplications[]
-  ungroupedApplications: Application[]
+  groups: Array<GroupWithApplications>
+  ungroupedApplications: Array<Application>
   activeTabId: string | null
   onSelectTab: (tabId: string, tabItem: TabItem) => void
 }
 
 interface FlatApplicationTabsProps {
-  applications: Application[]
+  applications: Array<Application>
   activeApplicationId: string | null
   onSelectApplication: (appId: string) => void
 }
@@ -45,7 +45,7 @@ export function GroupedApplicationTabs({
 }: GroupedApplicationTabsProps) {
   // Build tab items: each group with 2+ apps becomes a single tab
   // Each ungrouped app becomes its own tab
-  const tabItems: TabItem[] = []
+  const tabItems: Array<TabItem> = []
 
   // Add group tabs (only groups with 2+ applications)
   groups.forEach((group) => {

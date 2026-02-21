@@ -1,11 +1,23 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { CreateApplicationSchema } from '@/lib/zod/application.schema'
-import { createApplication, checkTeamTLA } from '@/app/actions/applications'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import {
+  BookUser,
+  Boxes,
+  ChevronLeft,
+  ChevronRight,
+  Info,
+  Loader2,
+  Plus,
+  Search,
+  ShieldCheck,
+} from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import type { z } from 'zod'
+import { CreateApplicationSchema } from '@/lib/zod/application.schema'
+import { checkTeamTLA, createApplication } from '@/app/actions/applications'
 import { cn } from '@/lib/utils'
 import {
   Dialog,
@@ -18,18 +30,6 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Boxes,
-  BookUser,
-  Plus,
-  Search,
-  Loader2,
-  Info,
-  ChevronRight,
-  ChevronLeft,
-  ShieldCheck,
-} from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { StepTimeline } from '@/components/ui/step-timeline'
 
 interface AddApplicationDialogProps {

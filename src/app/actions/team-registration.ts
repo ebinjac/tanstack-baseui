@@ -1,13 +1,13 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { sql } from 'drizzle-orm'
 import { TeamRegistrationSchema } from '@/lib/zod/team-registration.schema'
 import { db } from '@/db'
 import { teamRegistrationRequests, teams } from '@/db/schema/teams'
-import { sql } from 'drizzle-orm'
 import { requireAuth } from '@/lib/middleware/auth.middleware'
 import {
-  sendTeamRegistrationEmail,
   sendTeamApprovalEmail,
+  sendTeamRegistrationEmail,
   sendTeamRejectionEmail,
 } from '@/lib/email/email.service'
 

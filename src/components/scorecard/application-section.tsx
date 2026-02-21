@@ -1,4 +1,13 @@
 import { useMemo } from 'react'
+import { Activity, ChevronDown, Hash, Info, Plus } from 'lucide-react'
+import { EntryRows } from './entry-rows'
+import type {
+  Application,
+  AvailabilityRecord,
+  MonthInfo,
+  ScorecardEntry,
+  VolumeRecord,
+} from './types'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -9,25 +18,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { ChevronDown, Plus, Activity, Info, Hash } from 'lucide-react'
-import type {
-  Application,
-  ScorecardEntry,
-  AvailabilityRecord,
-  VolumeRecord,
-  MonthInfo,
-} from './types'
-import { EntryRows } from './entry-rows'
 
 interface ApplicationSectionProps {
   app: Application
   isAdmin: boolean
   isExpanded: boolean
   onToggle: () => void
-  entries: ScorecardEntry[]
+  entries: Array<ScorecardEntry>
   availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>
   volumeByEntry: Record<string, Record<string, VolumeRecord>>
-  displayMonths: MonthInfo[]
+  displayMonths: Array<MonthInfo>
   onAddEntry: () => void
   onEditEntry: (entry: ScorecardEntry) => void
   onDeleteEntry: (entry: ScorecardEntry) => void

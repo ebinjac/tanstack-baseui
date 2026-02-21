@@ -1,11 +1,25 @@
 import { memo } from 'react'
+import {
+  Activity,
+  Box,
+  ExternalLink,
+  Globe2,
+  Info,
+  Layers,
+  Lock,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from 'lucide-react'
+import { useLinkMutations } from './hooks/use-link-mutations'
+import type { LinkWithRelations } from '@/db/schema/links'
 import { Button } from '@/components/ui/button'
 import {
   Card,
+  CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-  CardContent,
 } from '@/components/ui/card'
 import {
   DropdownMenu,
@@ -13,22 +27,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  ExternalLink,
-  Globe2,
-  Lock,
-  MoreHorizontal,
-  Trash2,
-  Pencil,
-  Info,
-  Box,
-  Activity,
-  Layers,
-} from 'lucide-react'
-import { LinkWithRelations } from '@/db/schema/links'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { useLinkMutations } from './hooks/use-link-mutations'
 
 interface LinkCardProps {
   link: LinkWithRelations
@@ -47,13 +47,6 @@ export const LinkCard = memo(function LinkCard({
 
   return (
     <Card className="group relative h-full flex flex-col transition-all duration-300 border border-border/50 bg-card/40 backdrop-blur-md hover:bg-card/60 hover:border-primary/40 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] overflow-hidden rounded-2xl hover:-translate-y-[5px]">
-      {/* Status Accent Bar */}
-      <div
-        className={cn(
-          'absolute left-0 top-0 bottom-0 w-1.5 transition-all group-hover:w-2',
-          link.visibility === 'public' ? 'bg-blue-500/30' : 'bg-amber-500/30',
-        )}
-      />
 
       <CardHeader className="pb-3 pt-5 px-5 space-y-3">
         <div className="flex justify-between items-start gap-3">

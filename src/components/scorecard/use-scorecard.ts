@@ -7,8 +7,25 @@
  * @see skills/react-best-practices/rules/hook-extract-logic.md
  */
 
-import { useState, useMemo, useCallback } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useCallback, useMemo, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import {
+  MONTH_NAMES,
+  TIME_PERIOD_OPTIONS,
+  currentYear,
+  getMonthsForPeriod,
+  getMonthsForYear,
+} from './constants'
+import type {
+  Application,
+  AvailabilityRecord,
+  MonthInfo,
+  ScorecardEntry,
+  TimePeriod,
+  ViewMode,
+  VolumeRecord,
+} from './types'
 import { useExpandState } from '@/hooks/use-expand-state'
 import { useYearSelection } from '@/hooks/use-date-range'
 import { scorecardKeys } from '@/lib/query-keys'
@@ -17,28 +34,11 @@ import {
   scorecardPublishStatusOptions,
 } from '@/lib/query-options'
 import {
-  getScorecardData,
   getPublishStatus,
+  getScorecardData,
   publishScorecard,
   unpublishScorecard,
 } from '@/app/actions/scorecard'
-import { toast } from 'sonner'
-import type {
-  ViewMode,
-  TimePeriod,
-  ScorecardEntry,
-  Application,
-  AvailabilityRecord,
-  VolumeRecord,
-  MonthInfo,
-} from './types'
-import {
-  TIME_PERIOD_OPTIONS,
-  currentYear,
-  getMonthsForPeriod,
-  getMonthsForYear,
-  MONTH_NAMES,
-} from './constants'
 
 export interface UseScorecardOptions {
   teamId: string
@@ -46,10 +46,10 @@ export interface UseScorecardOptions {
 }
 
 export interface ScorecardData {
-  applications: Application[]
-  entries: ScorecardEntry[]
-  availability: AvailabilityRecord[]
-  volume: VolumeRecord[]
+  applications: Array<Application>
+  entries: Array<ScorecardEntry>
+  availability: Array<AvailabilityRecord>
+  volume: Array<VolumeRecord>
 }
 
 export interface UseScorecardReturn {
@@ -62,9 +62,9 @@ export interface UseScorecardReturn {
   setSelectedYear: (year: number) => void
 
   // Display months
-  displayMonths: MonthInfo[]
+  displayMonths: Array<MonthInfo>
   filterLabel: string
-  yearsToFetch: number[]
+  yearsToFetch: Array<number>
 
   // Data
   scorecardData: ScorecardData
@@ -79,7 +79,7 @@ export interface UseScorecardReturn {
   >
 
   // Lookup maps
-  entriesByApp: Record<string, ScorecardEntry[]>
+  entriesByApp: Record<string, Array<ScorecardEntry>>
   availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>
   volumeByEntry: Record<string, Record<string, VolumeRecord>>
 
@@ -96,8 +96,8 @@ export interface UseScorecardReturn {
   }
 
   // Publish state
-  unpublishedMonths: MonthInfo[]
-  pendingChangesMonths: MonthInfo[]
+  unpublishedMonths: Array<MonthInfo>
+  pendingChangesMonths: Array<MonthInfo>
   showPublishDialog: boolean
   publishMonth: { year: number; month: number } | null
   publishAction: 'publish' | 'unpublish'
@@ -251,7 +251,7 @@ export function useScorecard({
 
   // Build lookup maps with year-month composite key
   const { entriesByApp, availabilityByEntry, volumeByEntry } = useMemo(() => {
-    const entriesByApp: Record<string, ScorecardEntry[]> = {}
+    const entriesByApp: Record<string, Array<ScorecardEntry>> = {}
     const availabilityByEntry: Record<
       string,
       Record<string, AvailabilityRecord>

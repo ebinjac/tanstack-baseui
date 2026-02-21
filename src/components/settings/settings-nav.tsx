@@ -1,6 +1,6 @@
+import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
-import { LucideIcon } from 'lucide-react'
 
 export interface NavItem {
   value: string
@@ -10,7 +10,7 @@ export interface NavItem {
 }
 
 interface SettingsNavProps {
-  items: NavItem[]
+  items: Array<NavItem>
   activeTab: string
   onTabChange: (tab: string) => void
 }

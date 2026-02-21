@@ -1,9 +1,9 @@
 import nodemailer from 'nodemailer'
 import { render } from '@react-email/components'
+import React from 'react'
 import { TeamRegistrationEmail } from './templates/team-registration'
 import { TeamApprovalEmail } from './templates/team-approval'
 import { TeamRejectionEmail } from './templates/team-rejection'
-import React from 'react'
 
 // SMTP Configuration from environment variables
 const SMTP_HOST = process.env.SMTP_HOST || 'smtp.freesmtpservers.com'

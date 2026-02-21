@@ -1,6 +1,6 @@
 import { createMiddleware } from '@tanstack/react-start'
-import { getSession } from '@/app/ssr/auth'
 import type { SessionData } from '@/lib/auth/config'
+import { getSession } from '@/app/ssr/auth'
 
 /**
  * Base auth middleware — attaches session to context for all downstream handlers.

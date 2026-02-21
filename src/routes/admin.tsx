@@ -1,9 +1,10 @@
 import {
-  createFileRoute,
   Link,
   Outlet,
+  createFileRoute,
   useLocation,
 } from '@tanstack/react-router'
+import { ArrowLeft } from 'lucide-react'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import {
   SidebarInset,
@@ -20,7 +21,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import { ArrowLeft } from 'lucide-react'
 
 export const Route = createFileRoute('/admin')({
   component: AdminLayout,

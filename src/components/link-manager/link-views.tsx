@@ -1,3 +1,24 @@
+import { memo, useCallback, useState } from 'react'
+import {
+  Box,
+  Calendar,
+  CheckSquare,
+  ExternalLink,
+  Globe2,
+  Info,
+  Layers,
+  Lock,
+  MoreHorizontal,
+  MousePointer2,
+  Pencil,
+  Square,
+  Trash2,
+} from 'lucide-react'
+import { format } from 'date-fns'
+import { LinkCard } from './link-card'
+import { CreateLinkDialog } from './create-link-dialog'
+import { useLinkMutations } from './hooks/use-link-mutations'
+import type { LinkWithRelations } from '@/db/schema/links'
 import {
   Table,
   TableBody,
@@ -6,7 +27,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { memo, useState, useCallback } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,34 +36,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  ExternalLink,
-  Globe2,
-  Lock,
-  MoreHorizontal,
-  Trash2,
-  Calendar,
-  MousePointer2,
-  Pencil,
-  Info,
-  Box,
-  Layers,
-  CheckSquare,
-  Square,
-} from 'lucide-react'
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { LinkWithRelations } from '@/db/schema/links'
-import { LinkCard } from './link-card'
-import { CreateLinkDialog } from './create-link-dialog'
-import { useLinkMutations } from './hooks/use-link-mutations'
 import { cn } from '@/lib/utils'
-import { format } from 'date-fns'
 
 interface ViewProps {
-  links: LinkWithRelations[]
+  links: Array<LinkWithRelations>
   teamId: string
   selectedLinks?: Set<string>
   onToggleSelect?: (linkId: string) => void
@@ -80,7 +80,7 @@ export function GridView({
         open={!!dialogMode}
         onOpenChange={(open) => !open && setDialogMode(null)}
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {links.map((link) => (
           <GridItem
             key={link.id}
@@ -141,7 +141,7 @@ const GridItem = memo(function GridItem({
         className={cn(
           'transition-all rounded-2xl',
           isSelected &&
-            'ring-2 ring-primary ring-offset-2 ring-offset-background',
+          'ring-2 ring-primary ring-offset-2 ring-offset-background',
         )}
       >
         <LinkCard link={link} teamId={teamId} onView={onView} onEdit={onEdit} />
@@ -445,7 +445,7 @@ const CompactItem = memo(function CompactItem({
       className={cn(
         'group bg-card/40 backdrop-blur-sm border border-border/50 p-3 rounded-xl flex items-center justify-between hover:shadow-lg hover:border-primary/30 hover:bg-card transition-all cursor-pointer relative overflow-hidden',
         isSelected &&
-          'ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5',
+        'ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5',
       )}
       onClick={() => onOpen(link)}
     >

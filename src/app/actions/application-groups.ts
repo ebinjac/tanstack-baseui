@@ -1,12 +1,12 @@
-import { db } from '@/db'
-import {
-  applicationGroups,
-  applicationGroupMemberships,
-} from '@/db/schema/application-groups'
-import { teams, applications } from '@/db/schema/teams'
-import { eq, asc, inArray, sql } from 'drizzle-orm'
+import { asc, eq, inArray, sql } from 'drizzle-orm'
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { db } from '@/db'
+import {
+  applicationGroupMemberships,
+  applicationGroups,
+} from '@/db/schema/application-groups'
+import { applications, teams } from '@/db/schema/teams'
 import { requireAuth } from '@/lib/middleware/auth.middleware'
 
 // ============================================================================
@@ -254,7 +254,7 @@ export const addApplicationsToGroup = createServerFn({ method: 'POST' })
         .from(applicationGroupMemberships)
         .where(eq(applicationGroupMemberships.groupId, data.groupId))
 
-      let nextOrder = (maxOrderResult[0]?.maxOrder ?? 0) + 1
+      const nextOrder = (maxOrderResult[0]?.maxOrder ?? 0) + 1
 
       // Remove existing memberships for these applications (they can only be in one group)
       await db

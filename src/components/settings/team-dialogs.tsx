@@ -1,6 +1,9 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { Loader2 } from 'lucide-react'
+import type { z } from 'zod'
 import { UpdateTeamSchema } from '@/lib/zod/team.schema'
 import { updateTeam } from '@/app/actions/teams'
 import {
@@ -14,9 +17,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { useMutation } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
 
 interface EditTeamDialogProps {
   team: any

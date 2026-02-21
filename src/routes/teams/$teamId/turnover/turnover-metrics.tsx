@@ -1,19 +1,31 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { format, subDays } from 'date-fns'
 import {
   Activity,
-  CheckCircle2,
   AlertCircle,
-  Star,
-  Calendar,
-  Download,
-  TrendingUp,
-  PieChart,
   BarChart3,
+  Calendar,
+  CheckCircle2,
+  Download,
+  PieChart,
+  Star,
+  TrendingUp,
 } from 'lucide-react'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Legend,
+  Pie,
+  PieChart as RechartsPieChart,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import type { DateRange } from 'react-day-picker'
+import type {TurnoverSection} from '@/lib/zod/turnover.schema';
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -31,26 +43,16 @@ import {
 import { Calendar as CalendarComponent } from '@/components/ui/calendar'
 import {
   ChartContainer,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-  ChartLegendContent,
 } from '@/components/ui/chart'
 import { cn } from '@/lib/utils'
 import { getTurnoverMetrics } from '@/app/actions/turnover'
-import { SECTION_CONFIG, type TurnoverSection } from '@/lib/zod/turnover.schema'
-import {
-  Area,
-  AreaChart,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Pie,
-  PieChart as RechartsPieChart,
-  Legend,
-} from 'recharts'
-import type { DateRange } from 'react-day-picker'
+import { SECTION_CONFIG  } from '@/lib/zod/turnover.schema'
 import { EmptyState } from '@/components/shared/empty-state'
 import { StatsSummaryItem } from '@/components/link-manager/shared'
+import { PageHeader } from '@/components/shared'
 
 export const Route = createFileRoute(
   '/teams/$teamId/turnover/turnover-metrics',
@@ -153,25 +155,16 @@ function TurnoverMetricsPage() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4"
       >
-        <div className="flex items-center gap-3">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight">
-              Turnover Intelligence
-            </h1>
-            <p className="text-muted-foreground">
-              Comprehensive analysis of handover activities and resolution
-              performance.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
+        <PageHeader
+          title="Turnover Intelligence"
+          description="Comprehensive analysis of handover activities and resolution performance."
+          className="w-full"
+        >
           {/* Date Range Picker */}
           <Popover>
             <PopoverTrigger>
-              <Button variant="outline" className="gap-2">
+              <Button variant="outline" className="gap-2 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white">
                 <Calendar className="w-4 h-4" />
                 {dateRange?.from ? (
                   dateRange.to ? (
@@ -198,11 +191,11 @@ function TurnoverMetricsPage() {
             </PopoverContent>
           </Popover>
 
-          <Button onClick={handleExport} variant="outline" className="gap-2">
+          <Button onClick={handleExport} variant="outline" className="gap-2 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white">
             <Download className="w-4 h-4" />
             Export CSV
           </Button>
-        </div>
+        </PageHeader>
       </motion.div>
 
       {/* KPI Cards */}

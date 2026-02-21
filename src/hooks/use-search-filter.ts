@@ -7,13 +7,13 @@
  * @see skills/react-best-practices/rules/hook-extract-logic.md
  */
 
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 export interface UseSearchFilterOptions<T> {
   /** Array of items to filter */
-  items: T[]
+  items: Array<T>
   /** Fields to search within each item */
-  searchFields: (keyof T)[]
+  searchFields: Array<keyof T>
   /** Debounce delay in milliseconds (default: 300) */
   debounceMs?: number
   /** Initial search term */
@@ -32,7 +32,7 @@ export interface UseSearchFilterReturn<T> {
   /** Clear search term */
   clearSearch: () => void
   /** Filtered items based on search */
-  filteredItems: T[]
+  filteredItems: Array<T>
   /** Whether any search is active */
   isSearching: boolean
 }
@@ -141,9 +141,9 @@ export function useSearchFilter<T>({
  */
 export interface UseMultiFilterOptions<T, F extends Record<string, unknown>> {
   /** Array of items to filter */
-  items: T[]
+  items: Array<T>
   /** Fields to search within each item */
-  searchFields: (keyof T)[]
+  searchFields: Array<keyof T>
   /** Initial filter state */
   initialFilters: F
   /** Filter function for applying filters */
@@ -154,7 +154,7 @@ export interface UseMultiFilterOptions<T, F extends Record<string, unknown>> {
 
 export interface UseMultiFilterReturn<T, F extends Record<string, unknown>> {
   /** Filtered items */
-  filteredItems: T[]
+  filteredItems: Array<T>
   /** Current filter state */
   filters: F
   /** Set a specific filter value */

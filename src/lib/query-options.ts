@@ -8,26 +8,26 @@
  * @see skills/tanstack-router/rules/load-ensure-query-data.md
  */
 
-import { queryOptions, infiniteQueryOptions } from '@tanstack/react-query'
+import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query'
 import {
-  scorecardKeys,
-  turnoverKeys,
-  linkKeys,
-  teamKeys,
   adminKeys,
+  linkKeys,
+  scorecardKeys,
+  teamKeys,
+  turnoverKeys,
 } from './query-keys'
 import {
-  getScorecardData,
-  getPublishStatus,
   getGlobalScorecardData,
+  getPublishStatus,
+  getScorecardData,
 } from '@/app/actions/scorecard'
 import {
-  getTurnoverEntries,
   getDispatchEntries,
-  getTurnoverMetrics,
   getFinalizedTurnovers,
+  getTurnoverEntries,
+  getTurnoverMetrics,
 } from '@/app/actions/turnover'
-import { getLinks, getLinkStats, getLinkCategories } from '@/app/actions/links'
+import { getLinkCategories, getLinkStats, getLinks } from '@/app/actions/links'
 import { getTeamById, getTeams } from '@/app/actions/teams'
 import { getSystemHealth } from '@/app/actions/health'
 import { getApplicationGroups } from '@/app/actions/application-groups'
@@ -90,7 +90,7 @@ export interface TurnoverDataOptions {
  */
 export const turnoverEntriesOptions = (
   teamId: string,
-  applicationIds?: string[],
+  applicationIds?: Array<string>,
   section?: string,
 ) =>
   queryOptions({

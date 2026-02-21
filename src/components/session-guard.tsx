@@ -4,10 +4,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from '@tanstack/react-router'
 import { motion } from 'framer-motion'
-import { Layers, Database, AlertTriangle, RefreshCw } from 'lucide-react'
+import { AlertTriangle, Database, Layers, RefreshCw } from 'lucide-react'
 import { useAuthBlueSSO } from './use-authblue-sso'
-import { loginUser } from '@/app/ssr/auth'
 import type { SessionData } from '@/lib/auth/config'
+import { loginUser } from '@/app/ssr/auth'
 
 type SessionStatus = 'idle' | 'loading' | 'success' | 'error'
 

@@ -1,7 +1,25 @@
 import { useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm, type FieldValues, Controller } from 'react-hook-form'
+import { Controller,  useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Activity,
+  AlertCircle,
+  Bell,
+  CheckCircle2,
+  FileText,
+  HelpCircle,
+  Layers,
+  Loader2,
+  MessageSquare,
+  Star,
+  Zap,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import type {FieldValues} from 'react-hook-form';
+import type {CreateTurnoverEntryInput, TurnoverSection} from '@/lib/zod/turnover.schema';
+import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
+import type { Application } from '@/db/schema/teams'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,33 +34,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import {
-  CheckCircle2,
-  AlertCircle,
-  Bell,
-  Zap,
-  MessageSquare,
-  HelpCircle,
-  Star,
-  Loader2,
-  FileText,
-  Activity,
-  Layers,
-} from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
 import {
+  
   CreateTurnoverEntrySchema,
-  SECTION_CONFIG,
-  type TurnoverSection,
-  type CreateTurnoverEntryInput,
+  SECTION_CONFIG
+  
 } from '@/lib/zod/turnover.schema'
 import {
   createTurnoverEntry,
   updateTurnoverEntry,
 } from '@/app/actions/turnover'
-import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
-import type { Application } from '@/db/schema/teams'
 
 const RFC_STATUS_OPTIONS = [
   'Draft',
@@ -72,7 +74,7 @@ interface EntryDialogProps {
   editEntry?: TurnoverEntryWithDetails | null
   // Group-related props
   isGrouped?: boolean
-  groupApplications?: Application[]
+  groupApplications?: Array<Application>
 }
 
 export function EntryDialog({
@@ -120,7 +122,7 @@ export function EntryDialog({
         form.reset({
           teamId,
           applicationId: editEntry.applicationId,
-          section: editEntry.section as TurnoverSection,
+          section: editEntry.section,
           title: editEntry.title,
           description: editEntry.description || '',
           comments: editEntry.comments || '',

@@ -1,11 +1,11 @@
 import { createServerFn } from '@tanstack/react-start'
-import { db } from '@/db'
-import { links, linkCategories } from '@/db/schema/links'
-import { CreateLinkSchema, BulkCreateLinkSchema } from '@/lib/zod/links.schema'
 import { z } from 'zod'
 import { and, desc, eq, ilike, lt, or, sql } from 'drizzle-orm'
-import { requireAuth } from '@/lib/middleware/auth.middleware'
 import type { SessionData } from '@/lib/auth/config'
+import { db } from '@/db'
+import { linkCategories, links } from '@/db/schema/links'
+import { BulkCreateLinkSchema, CreateLinkSchema } from '@/lib/zod/links.schema'
+import { requireAuth } from '@/lib/middleware/auth.middleware'
 
 // ─── Helpers ───
 
@@ -120,7 +120,7 @@ export const getLinks = createServerFn({ method: 'GET' })
     const items = hasMore ? rows.slice(0, limit) : rows
     const nextCursor =
       hasMore && items.length > 0
-        ? items[items.length - 1].createdAt!.toISOString()
+        ? items[items.length - 1].createdAt.toISOString()
         : null
 
     return {
@@ -317,7 +317,7 @@ export const bulkCreateLinks = createServerFn({ method: 'POST' })
       applicationId: link.applicationId || null,
       categoryId: link.categoryId || null,
       description: link.description || null,
-      visibility: link.visibility as 'private' | 'public',
+      visibility: link.visibility,
     }))
 
     await db.insert(links).values(linksToInsert)

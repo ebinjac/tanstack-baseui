@@ -1,11 +1,11 @@
 import * as React from 'react'
 import {
-  Section,
-  Text,
+  Button,
+  Column,
   Heading,
   Row,
-  Column,
-  Button,
+  Section,
+  Text,
 } from '@react-email/components'
 import { EnsembleLayout } from './ensemble-layout'
 

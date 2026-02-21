@@ -1,26 +1,26 @@
 import { createServerFn } from '@tanstack/react-start'
+import { z } from 'zod'
+import { and, count, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import {
+  finalizedTurnovers,
+  turnoverCommsDetails,
   turnoverEntries,
-  turnoverRfcDetails,
   turnoverIncDetails,
   turnoverMimDetails,
-  turnoverCommsDetails,
-  finalizedTurnovers,
+  turnoverRfcDetails,
 } from '@/db/schema/turnover'
 import {
   CreateTurnoverEntrySchema,
-  UpdateTurnoverEntrySchema,
-  ToggleImportantSchema,
-  ResolveEntrySchema,
   DeleteEntrySchema,
-  GetEntriesSchema,
   FinalizeTurnoverSchema,
+  GetEntriesSchema,
   GetFinalizedTurnoversSchema,
   GetTurnoverMetricsSchema,
+  ResolveEntrySchema,
+  ToggleImportantSchema,
+  UpdateTurnoverEntrySchema,
 } from '@/lib/zod/turnover.schema'
-import { z } from 'zod'
-import { and, desc, eq, gte, lte, or, sql, count, ilike } from 'drizzle-orm'
 import { requireAuth } from '@/lib/middleware/auth.middleware'
 
 // ========================
@@ -588,7 +588,7 @@ export const getFinalizedTurnovers = createServerFn({ method: 'GET' })
     return {
       turnovers: turnovers.map((t) => ({
         ...t,
-        snapshotData: t.snapshotData as Record<string, {}>[],
+        snapshotData: t.snapshotData as Array<Record<string, {}>>,
       })),
       total: countResult[0]?.count || 0,
     }
@@ -611,7 +611,7 @@ export const getFinalizedTurnoverById = createServerFn({ method: 'GET' })
 
     return {
       ...turnover,
-      snapshotData: turnover.snapshotData as Record<string, {}>[],
+      snapshotData: turnover.snapshotData as Array<Record<string, {}>>,
     }
   })
 

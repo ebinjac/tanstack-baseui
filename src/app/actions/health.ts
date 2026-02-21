@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
-import { db } from '@/db'
 import { sql } from 'drizzle-orm'
+import { db } from '@/db'
 
 export interface HealthCheck {
   name: string
@@ -14,7 +14,7 @@ export interface SystemHealth {
   overall: 'healthy' | 'degraded' | 'unhealthy'
   timestamp: string
   uptime: number
-  checks: HealthCheck[]
+  checks: Array<HealthCheck>
   environment: {
     nodeVersion: string
     platform: string
@@ -133,7 +133,7 @@ function checkServer(): HealthCheck {
 // Main health check function
 export const getSystemHealth = createServerFn({ method: 'GET' }).handler(
   async () => {
-    const checks: HealthCheck[] = []
+    const checks: Array<HealthCheck> = []
 
     // Run all health checks
     checks.push(await checkDatabase())

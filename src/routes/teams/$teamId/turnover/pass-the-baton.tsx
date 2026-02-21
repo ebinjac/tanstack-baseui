@@ -1,8 +1,13 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { AlertTriangle, FolderOpen, Layers, Settings2 } from 'lucide-react'
+import type { TabItem } from '@/components/turnover/grouped-application-tabs';
+import type { TurnoverSection } from '@/lib/zod/turnover.schema';
+import type { Application } from '@/db/schema/teams'
+import type { ApplicationGroup } from '@/db/schema/application-groups'
+import { PageHeader } from '@/components/shared'
 
-import { AlertTriangle, FolderOpen, Settings2, Layers } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
@@ -13,13 +18,10 @@ import { getTurnoverEntries } from '@/app/actions/turnover'
 import { SectionTable } from '@/components/turnover/section-table'
 import { GroupManagementDialog } from '@/components/turnover/group-management-sheet'
 import {
-  GroupedApplicationTabs,
   FlatApplicationTabs,
-  type TabItem,
+  GroupedApplicationTabs
+
 } from '@/components/turnover/grouped-application-tabs'
-import { type TurnoverSection } from '@/lib/zod/turnover.schema'
-import type { Application } from '@/db/schema/teams'
-import type { ApplicationGroup } from '@/db/schema/application-groups'
 
 export const Route = createFileRoute('/teams/$teamId/turnover/pass-the-baton')({
   component: PassTheBatonPage,
@@ -32,7 +34,7 @@ export const Route = createFileRoute('/teams/$teamId/turnover/pass-the-baton')({
   },
 })
 
-const SECTIONS: TurnoverSection[] = [
+const SECTIONS: Array<TurnoverSection> = [
   'RFC',
   'INC',
   'ALERTS',
@@ -65,7 +67,7 @@ function PassTheBatonPage() {
       if (groupingEnabled && groups.length > 0) {
         // Find first valid group (2+ apps) or first ungrouped app
         const firstGroup = groups.find(
-          (g: ApplicationGroup & { applications: Application[] }) =>
+          (g: ApplicationGroup & { applications: Array<Application> }) =>
             g.applications.length >= 2,
         )
         if (firstGroup) {
@@ -146,6 +148,11 @@ function PassTheBatonPage() {
 
   return (
     <div className="p-8 mx-auto space-y-8">
+      <PageHeader
+        title="Pass the Baton"
+        description="Create and manage turnover entries for your applications and groups."
+        className="w-full"
+      />
       {/* Application Selection Header */}
       {applications && applications.length > 0 ? (
         <div className="space-y-4">
@@ -227,7 +234,7 @@ function PassTheBatonPage() {
         </div>
       ) : (
         // Empty State - No Applications
-        <div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed">
+        (<div className="text-center py-20 bg-muted/20 rounded-2xl border border-dashed">
           <div className="w-20 h-20 rounded-3xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
             <FolderOpen className="w-10 h-10 text-muted-foreground" />
           </div>
@@ -242,9 +249,8 @@ function PassTheBatonPage() {
               Go to Settings to Add Applications
             </Button>
           </Link>
-        </div>
+        </div>)
       )}
-
       {/* Critical Items Alert */}
       {importantEntries.length > 0 && (
         <div>
@@ -269,7 +275,6 @@ function PassTheBatonPage() {
           </div>
         </div>
       )}
-
       {/* Section Tables */}
       {activeTab && primaryAppId && (
         <div key={activeTab.id} className="space-y-6">

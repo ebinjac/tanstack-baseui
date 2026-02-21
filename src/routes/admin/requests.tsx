@@ -1,5 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
 import {
+  CheckCircle2,
+  ClipboardList,
+  Clock,
+  ExternalLink,
+  Filter,
+  MoreHorizontal,
+  Search,
+  XCircle,
+} from 'lucide-react'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { formatDistanceToNow } from 'date-fns'
+import type { TeamRegistrationRequest } from '@/db/schema/teams'
+import {
   getRegistrationRequests,
   updateRequestStatus,
 } from '@/app/actions/team-registration'
@@ -13,20 +28,7 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  CheckCircle2,
-  XCircle,
-  Clock,
-  MoreHorizontal,
-  ExternalLink,
-  Search,
-  Filter,
-  ClipboardList,
-} from 'lucide-react'
-import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { PageHeader } from '@/components/shared'
-import { toast } from 'sonner'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -42,20 +44,20 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
 } from '@/components/ui/dialog'
 import {
   AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogFooter,
-  AlertDialogCancel,
-  AlertDialogAction,
-  AlertDialogDescription,
 } from '@/components/ui/alert-dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -66,8 +68,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { formatDistanceToNow } from 'date-fns'
-import { TeamRegistrationRequest } from '@/db/schema/teams'
 
 export const Route = createFileRoute('/admin/requests')({
   component: AdminRequests,

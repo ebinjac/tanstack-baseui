@@ -1,18 +1,18 @@
 import { useMemo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
-import { TableRow, TableCell } from '@/components/ui/table'
-import { cn } from '@/lib/utils'
 import { Pencil, Trash2 } from 'lucide-react'
-import { upsertAvailability, upsertVolume } from '@/app/actions/scorecard'
-import type {
-  ScorecardEntry,
-  AvailabilityRecord,
-  VolumeRecord,
-  MonthInfo,
-} from './types'
 import { DataCell } from './data-cell'
 import { formatVolume, parseVolumeInput } from './utils'
+import type {
+  AvailabilityRecord,
+  MonthInfo,
+  ScorecardEntry,
+  VolumeRecord,
+} from './types'
+import { Button } from '@/components/ui/button'
+import { TableCell, TableRow } from '@/components/ui/table'
+import { cn } from '@/lib/utils'
+import { upsertAvailability, upsertVolume } from '@/app/actions/scorecard'
 import { scorecardKeys } from '@/lib/query-keys'
 
 interface EntryRowsProps {
@@ -20,7 +20,7 @@ interface EntryRowsProps {
   isAdmin: boolean
   availability: Record<string, AvailabilityRecord>
   volume: Record<string, VolumeRecord>
-  displayMonths: MonthInfo[]
+  displayMonths: Array<MonthInfo>
   onEdit: () => void
   onDelete: () => void
   teamId: string
@@ -76,7 +76,7 @@ export function EntryRows({
 
   // Calculate average availability (only filled, non-future months)
   const avgAvailability = useMemo(() => {
-    const values: number[] = []
+    const values: Array<number> = []
     displayMonths.forEach(({ year, month, isFuture }) => {
       if (isFuture) return
       const key = `${year}-${month}`

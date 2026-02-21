@@ -1,34 +1,35 @@
 import { useState } from 'react'
-import { PageHeader } from '@/components/shared'
 import { createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { getSystemHealth, type HealthCheck } from '@/app/actions/health'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Cpu,
+  Database,
+  HardDrive,
+  RefreshCcw,
+  Server,
+  Settings,
+  XCircle,
+  Zap,
+} from 'lucide-react'
+import type {HealthCheck} from '@/app/actions/health';
+import { PageHeader } from '@/components/shared'
+import {  getSystemHealth } from '@/app/actions/health'
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Activity,
-  Database,
-  Server,
-  Settings,
-  RefreshCcw,
-  CheckCircle2,
-  AlertTriangle,
-  XCircle,
-  Clock,
-  Cpu,
-  HardDrive,
-  Zap,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react'
 
 export const Route = createFileRoute('/admin/health')({
   component: HealthPage,

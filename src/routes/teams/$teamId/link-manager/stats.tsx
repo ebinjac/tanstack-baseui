@@ -1,34 +1,34 @@
 // Link Performance Dashboard
 import { createFileRoute } from '@tanstack/react-router'
-import { getLinkStats } from '@/app/actions/links'
 import { useQuery } from '@tanstack/react-query'
 import {
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
   XAxis,
   YAxis,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts'
 import {
+  BarChart3,
+  Box,
+  ExternalLink,
+  Layers,
+  Link as LinkIcon,
+  MousePointer2,
+  Shield,
+  TrendingUp,
+} from 'lucide-react'
+import {
   ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
 } from '@/components/ui/chart'
-import {
-  BarChart3,
-  TrendingUp,
-  MousePointer2,
-  Link as LinkIcon,
-  Layers,
-  Box,
-  Shield,
-  ExternalLink,
-} from 'lucide-react'
+import { getLinkStats } from '@/app/actions/links'
 import { Button } from '@/components/ui/button'
 
 import {
@@ -40,10 +40,10 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
-  StatsSummaryItem,
-  PageLoading,
   EmptyState,
   LinkManagerPage,
+  PageLoading,
+  StatsSummaryItem,
 } from '@/components/link-manager/shared'
 import { PageHeader } from '@/components/shared'
 
@@ -128,7 +128,7 @@ function LinkStatsPage() {
 // ============================================================================
 // Top Resources Card
 // ============================================================================
-function TopResourcesCard({ links }: { links: any[] }) {
+function TopResourcesCard({ links }: { links: Array<any> }) {
   if (links.length === 0) {
     return (
       <Card className="lg:col-span-8 border-border/50">
@@ -225,7 +225,7 @@ function TopResourcesCard({ links }: { links: any[] }) {
 // ============================================================================
 // Visibility Pie Chart
 // ============================================================================
-function VisibilityChart({ data }: { data: any[] }) {
+function VisibilityChart({ data }: { data: Array<any> }) {
   return (
     <Card className="lg:col-span-4 self-stretch border-border/50">
       <CardHeader className="pb-2">
@@ -294,7 +294,7 @@ function VisibilityChart({ data }: { data: any[] }) {
 // ============================================================================
 // Category Bar Chart
 // ============================================================================
-function CategoryChart({ data }: { data: any[] }) {
+function CategoryChart({ data }: { data: Array<any> }) {
   if (data.length === 0) {
     return (
       <Card className="border-border/50">
@@ -383,7 +383,7 @@ function CategoryChart({ data }: { data: any[] }) {
 // ============================================================================
 // Application Bar Chart
 // ============================================================================
-function ApplicationChart({ data }: { data: any[] }) {
+function ApplicationChart({ data }: { data: Array<any> }) {
   if (data.length === 0) {
     return (
       <Card className="border-border/50">

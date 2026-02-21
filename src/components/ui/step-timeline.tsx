@@ -9,7 +9,7 @@ export interface Step {
 }
 
 interface StepTimelineProps {
-  steps: Step[]
+  steps: Array<Step>
   currentStep: number
   className?: string
 }

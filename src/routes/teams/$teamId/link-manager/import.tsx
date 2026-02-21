@@ -1,9 +1,35 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useCallback, useRef } from 'react'
+import { useCallback, useMemo, useRef, useState  } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import {
+  AlertCircle,
+  ArrowRight,
+  Box,
+  CheckCircle2,
+  ChevronDown,
+  Copy,
+  File,
+  FileCode2,
+  FileJson2,
+  FileText,
+  FileType,
+  Globe2,
+  Layers,
+  Loader2,
+  Lock,
+  Settings2,
+  ShieldCheck,
+  Trash2,
+  Upload,
+  XCircle,
+} from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
+import type { CreateLinkSchema } from '@/lib/zod/links.schema'
+import type { z } from 'zod'
+import type { Step } from '@/components/ui/step-timeline';
 import { bulkCreateLinks, getLinkCategories } from '@/app/actions/links'
 import { getTeamApplications } from '@/app/actions/applications'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
@@ -11,10 +37,10 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Label } from '@/components/ui/label'
@@ -26,36 +52,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import {
-  Upload,
-  Globe2,
-  Lock,
-  Trash2,
-  Loader2,
-  ArrowRight,
-  FileCode2,
-  FileJson2,
-  FileText,
-  FileType,
-  File,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Copy,
-  Settings2,
-  ShieldCheck,
-  Box,
-  Layers,
-  ChevronDown,
-} from 'lucide-react'
-import { CreateLinkSchema } from '@/lib/zod/links.schema'
-import { z } from 'zod'
 import { cn } from '@/lib/utils'
-import { motion, AnimatePresence } from 'framer-motion'
 import { LinkManagerPage } from '@/components/link-manager/shared'
 import { PageHeader } from '@/components/shared'
-import { StepTimeline, Step } from '@/components/ui/step-timeline'
-import { useMemo } from 'react'
+import { StepTimeline } from '@/components/ui/step-timeline'
 
 export const Route = createFileRoute('/teams/$teamId/link-manager/import')({
   component: ImportLinksPage,
@@ -112,7 +112,7 @@ const FORMAT_CONFIG: Record<
   },
 }
 
-const STEPS: Step[] = [
+const STEPS: Array<Step> = [
   {
     id: 1,
     title: 'Configuration',
@@ -146,7 +146,7 @@ function ImportLinksPage() {
     'private' | 'public'
   >('private')
   const [rawInput, setRawInput] = useState('')
-  const [parsedLinks, setParsedLinks] = useState<ParsedLink[]>([])
+  const [parsedLinks, setParsedLinks] = useState<Array<ParsedLink>>([])
   const [expandedLinkId, setExpandedLinkId] = useState<string | null>(null)
 
   // Queries
@@ -162,7 +162,7 @@ function ImportLinksPage() {
   // Parser Logic
   const parsers = useParseLinks(teamId, defaultVisibility)
   const mutation = useMutation({
-    mutationFn: (data: { teamId: string; links: any[] }) =>
+    mutationFn: (data: { teamId: string; links: Array<any> }) =>
       bulkCreateLinks({ data }),
     onSuccess: (data) => {
       toast.success(`Successfully imported ${data.count} links`)
@@ -180,7 +180,7 @@ function ImportLinksPage() {
     }
 
     try {
-      let links: ParsedLink[] = parsers[selectedFormat](rawInput)
+      let links: Array<ParsedLink> = parsers[selectedFormat](rawInput)
       // Deduplicate
       const seen = new Set<string>()
       links = links.filter((link) => {
@@ -336,7 +336,7 @@ function ImportLinksPage() {
                         Source Format
                       </Label>
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                        {(Object.keys(FORMAT_CONFIG) as ImportFormat[]).map(
+                        {(Object.keys(FORMAT_CONFIG) as Array<ImportFormat>).map(
                           (format) => {
                             const Config = FORMAT_CONFIG[format]
                             const Icon = Config.icon
@@ -699,7 +699,7 @@ function useParseLinks(
               applicationId: null,
             }
           })
-          .filter(Boolean) as ParsedLink[]
+          .filter(Boolean) as Array<ParsedLink>
       },
       json: (input: string) => {
         try {

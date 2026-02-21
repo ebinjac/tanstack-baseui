@@ -3,25 +3,29 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { formatDistanceToNow } from 'date-fns'
 import {
-  Star,
-  Info,
-  MoreHorizontal,
-  Edit,
-  CheckCircle,
-  Trash2,
-  ExternalLink,
-  MessageSquare,
-  CheckCircle2,
   AlertCircle,
-  Bell,
-  Zap,
-  HelpCircle,
   AlertTriangle,
+  Bell,
+  CheckCircle,
+  CheckCircle2,
   Clock,
-  Hourglass,
+  Edit,
+  ExternalLink,
   Hash,
+  HelpCircle,
+  Hourglass,
+  Info,
   Loader2,
+  MessageSquare,
+  MoreHorizontal,
+  Star,
+  Trash2,
+  Zap,
 } from 'lucide-react'
+import { toast } from 'sonner'
+import type {TurnoverSection} from '@/lib/zod/turnover.schema';
+import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
+import type { Application } from '@/db/schema/teams'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -50,14 +54,11 @@ import {
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import {
-  toggleImportantEntry,
   deleteTurnoverEntry,
   resolveTurnoverEntry,
+  toggleImportantEntry,
 } from '@/app/actions/turnover'
-import { toast } from 'sonner'
-import { SECTION_CONFIG, type TurnoverSection } from '@/lib/zod/turnover.schema'
-import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
-import type { Application } from '@/db/schema/teams'
+import { SECTION_CONFIG  } from '@/lib/zod/turnover.schema'
 import { turnoverKeys } from '@/lib/query-keys'
 
 // SLA calculation
@@ -135,7 +136,7 @@ interface EntryCardProps {
   readOnly?: boolean
   // Group-related props - for showing which app an entry belongs to
   showApplicationBadge?: boolean
-  groupApplications?: Application[]
+  groupApplications?: Array<Application>
 }
 
 export function EntryCard({
@@ -151,8 +152,8 @@ export function EntryCard({
   const [showResolveDialog, setShowResolveDialog] = useState(false)
   const [showInfoDialog, setShowInfoDialog] = useState(false)
 
-  const sectionConfig = SECTION_CONFIG[entry.section as TurnoverSection]
-  const SectionIcon = SECTION_ICONS[entry.section as TurnoverSection]
+  const sectionConfig = SECTION_CONFIG[entry.section]
+  const SectionIcon = SECTION_ICONS[entry.section]
   const slaStatus = calculateSlaStatus(entry)
   const slaConfig = SLA_CONFIG[slaStatus]
   const SlaIcon = slaConfig.icon

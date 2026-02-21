@@ -1,15 +1,15 @@
+import {
+  ArrowUpRight,
+  BarChart3,
+  Link2,
+  RefreshCw,
+  Server,
+  Wrench,
+} from 'lucide-react'
+import { ToolItem } from './shared'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  BarChart3,
-  Wrench,
-  Server,
-  Link2,
-  RefreshCw,
-  ArrowUpRight,
-} from 'lucide-react'
-import { ToolItem } from './shared'
 
 interface ResourcesTabProps {
   stats: {

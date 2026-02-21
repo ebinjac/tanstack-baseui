@@ -1,4 +1,12 @@
+import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { Globe2, Loader2, Lock, Trash2, Upload } from 'lucide-react'
+import type { z } from 'zod'
+import type { CreateLinkSchema } from '@/lib/zod/links.schema'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { bulkCreateLinks } from '@/app/actions/links'
+import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog,
   DialogContent,
@@ -8,14 +16,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Textarea } from '@/components/ui/textarea'
-import { useState } from 'react'
-import { z } from 'zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { bulkCreateLinks } from '@/app/actions/links'
-import { toast } from 'sonner'
-import { Loader2, Upload, Globe2, Lock, Trash2 } from 'lucide-react'
-import { CreateLinkSchema } from '@/lib/zod/links.schema'
 
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
@@ -36,7 +36,7 @@ export function UniversalImporterDialog({
 }: UniversalImporterDialogProps) {
   const [open, setOpen] = useState(false)
   const [rawInput, setRawInput] = useState('')
-  const [parsedLinks, setParsedLinks] = useState<ParsedLink[]>([])
+  const [parsedLinks, setParsedLinks] = useState<Array<ParsedLink>>([])
   const [step, setStep] = useState<'input' | 'review'>('input')
 
   const queryClient = useQueryClient()
@@ -45,7 +45,7 @@ export function UniversalImporterDialog({
     // Simple heuristic parser: Extract URLs from text
     // Splits by newline, looks for http/https
     const lines = rawInput.split(/\n+/)
-    const links: ParsedLink[] = []
+    const links: Array<ParsedLink> = []
 
     const urlRegex = /(https?:\/\/[^\s]+)/g
 
@@ -91,7 +91,7 @@ export function UniversalImporterDialog({
   }
 
   const mutation = useMutation({
-    mutationFn: (data: { teamId: string; links: any[] }) =>
+    mutationFn: (data: { teamId: string; links: Array<any> }) =>
       bulkCreateLinks({ data }),
     onSuccess: (data) => {
       toast.success(`Successfully imported ${data.count} links`)

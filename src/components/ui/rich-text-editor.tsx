@@ -1,23 +1,24 @@
 'use client'
 
-import { useEditor, EditorContent, type Editor } from '@tiptap/react'
+import {  EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
 import Placeholder from '@tiptap/extension-placeholder'
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState  } from 'react'
 import {
   Bold,
   Italic,
-  Underline as UnderlineIcon,
-  Strikethrough,
+  Link as LinkIcon,
   List,
   ListOrdered,
-  Link as LinkIcon,
-  Undo,
   Redo,
   RemoveFormatting,
+  Strikethrough,
+  Underline as UnderlineIcon,
+  Undo,
 } from 'lucide-react'
+import type {Editor} from '@tiptap/react';
 import { cn } from '@/lib/utils'
 import { Toggle } from '@/components/ui/toggle'
 import {
@@ -27,7 +28,6 @@ import {
 } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
 
 interface RichTextEditorProps {
   value: string

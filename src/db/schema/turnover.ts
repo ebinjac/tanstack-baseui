@@ -1,14 +1,14 @@
 import {
-  uuid,
-  varchar,
-  text,
-  timestamp,
   boolean,
   index,
   json,
+  text,
+  timestamp,
+  uuid,
+  varchar,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
-import { ensembleSchema, teams, applications } from './teams'
+import { applications, ensembleSchema, teams } from './teams'
 
 // Enum for entry section types
 export const turnoverSection = ensembleSchema.enum('turnover_section', [

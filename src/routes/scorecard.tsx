@@ -1,7 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { PageHeader } from '@/components/shared'
-import { useState, useMemo, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import {
+  Activity,
+  Building2,
+  FileSpreadsheet,
+  Loader2,
+  RotateCcw,
+  X,
+} from 'lucide-react'
+import type {Application, AvailabilityRecord, ScorecardEntry, ScorecardStats, Team, VolumeRecord} from '@/components/enterprise-scorecard';
+import { PageHeader } from '@/components/shared'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -21,33 +30,25 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import {
-  Activity,
-  Loader2,
-  Building2,
-  X,
-  FileSpreadsheet,
-  RotateCcw,
-} from 'lucide-react'
 import { getGlobalScorecardData } from '@/app/actions/scorecard'
 import { EmptyState } from '@/components/shared/empty-state'
 import { scorecardKeys } from '@/lib/query-keys'
 
 // Import enterprise scorecard components
 import {
+  
+  
+  CURRENT_MONTH,
+  CURRENT_YEAR,
   EnterpriseFilters,
-  StatsSummary,
-  TeamSection,
   EntryRows,
   MONTHS,
-  CURRENT_YEAR,
-  CURRENT_MONTH,
-  type Team,
-  type Application,
-  type ScorecardEntry,
-  type AvailabilityRecord,
-  type VolumeRecord,
-  type ScorecardStats,
+  
+  
+  StatsSummary,
+  
+  TeamSection
+  
 } from '@/components/enterprise-scorecard'
 
 export const Route = createFileRoute('/scorecard')({
@@ -85,7 +86,7 @@ function GlobalScorecardPage() {
     if (drawerRange === 'last6') count = 6
     if (drawerRange === 'last12') count = 12
 
-    const result: { month: number; year: number }[] = []
+    const result: Array<{ month: number; year: number }> = []
     let currM = endMonth
     let currY = selectedYear
 
@@ -120,8 +121,8 @@ function GlobalScorecardPage() {
   // Build lookup maps and apply client-side team/app filtering
   const { appsByTeam, entriesByApp, availabilityByEntry, volumeByEntry } =
     useMemo(() => {
-      const appsByTeam: Record<string, Application[]> = {}
-      const entriesByApp: Record<string, ScorecardEntry[]> = {}
+      const appsByTeam: Record<string, Array<Application>> = {}
+      const entriesByApp: Record<string, Array<ScorecardEntry>> = {}
       const availabilityByEntry: Record<
         string,
         Record<string, AvailabilityRecord>
@@ -235,7 +236,7 @@ function GlobalScorecardPage() {
 
   // Get leadership display for an application
   const getLeadershipDisplay = (app: Application) => {
-    const leaders: { role: string; name: string }[] = []
+    const leaders: Array<{ role: string; name: string }> = []
     if (app.ownerSvpName) leaders.push({ role: 'SVP', name: app.ownerSvpName })
     if (app.vpName) leaders.push({ role: 'VP', name: app.vpName })
     if (app.directorName) leaders.push({ role: 'Dir', name: app.directorName })

@@ -1,5 +1,8 @@
 'use client'
 
+import { Calendar, Users, X } from 'lucide-react'
+import { AVAILABLE_YEARS, LEADERSHIP_TYPES } from './constants'
+import type { Application, LeadershipOptions, Team } from './types'
 import { Badge } from '@/components/ui/badge'
 import {
   Select,
@@ -10,16 +13,13 @@ import {
 } from '@/components/ui/select'
 import {
   Combobox,
-  ComboboxInput,
   ComboboxContent,
-  ComboboxList,
-  ComboboxItem,
   ComboboxGroup,
+  ComboboxInput,
+  ComboboxItem,
   ComboboxLabel,
+  ComboboxList,
 } from '@/components/ui/combobox'
-import { Calendar, Users, X } from 'lucide-react'
-import { AVAILABLE_YEARS, LEADERSHIP_TYPES } from './constants'
-import type { Team, Application, LeadershipOptions } from './types'
 
 interface EnterpriseFiltersProps {
   selectedYear: number
@@ -33,8 +33,8 @@ interface EnterpriseFiltersProps {
   onTeamSearchChange: (search: string) => void
   onAppSearchChange: (search: string) => void
   onClearAll: () => void
-  teams: Team[]
-  applications: Application[]
+  teams: Array<Team>
+  applications: Array<Application>
   leadershipOptions?: LeadershipOptions
 }
 

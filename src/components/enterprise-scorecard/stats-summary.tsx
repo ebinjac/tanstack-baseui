@@ -1,8 +1,8 @@
 'use client'
 
-import { Activity, Hash, AlertTriangle, Layers } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Activity, AlertTriangle, Hash, Layers } from 'lucide-react'
 import type { ScorecardStats } from './types'
+import { cn } from '@/lib/utils'
 
 interface StatsSummaryProps {
   stats: ScorecardStats

@@ -1,19 +1,18 @@
 import {
+  boolean,
+  check,
+  index,
+  integer,
+  pgEnum,
   pgTable,
-  uuid,
-  varchar,
   text,
   timestamp,
-  pgEnum,
-  integer,
-  boolean,
-  index,
   uniqueIndex,
-  check,
+  uuid,
+  varchar,
 } from 'drizzle-orm/pg-core'
-import { sql } from 'drizzle-orm'
-import { relations } from 'drizzle-orm'
-import { ensembleSchema, teams, applications } from './teams'
+import { relations, sql  } from 'drizzle-orm'
+import { applications, ensembleSchema, teams } from './teams'
 
 export const linkVisibility = ensembleSchema.enum('link_visibility', [
   'private',

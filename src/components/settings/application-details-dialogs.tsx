@@ -1,3 +1,9 @@
+import { AlertTriangle, Hash, Loader2, Mail } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import type { z } from 'zod'
 import {
   Dialog,
   DialogContent,
@@ -9,17 +15,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import { Mail, Loader2, AlertTriangle, Hash } from 'lucide-react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { UpdateApplicationSchema } from '@/lib/zod/application.schema'
 import {
-  updateApplication,
   deleteApplication,
+  updateApplication,
 } from '@/app/actions/applications'
-import { useMutation } from '@tanstack/react-query'
-import { toast } from 'sonner'
 
 // ─── View Dialog ───
 

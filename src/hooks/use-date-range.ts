@@ -7,20 +7,20 @@
  * @see skills/react-best-practices/rules/hook-extract-logic.md
  */
 
-import { useState, useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
-  format,
-  startOfMonth,
   endOfMonth,
-  startOfYear,
-  endOfYear,
-  subMonths,
-  subYears,
-  subDays,
-  startOfWeek,
   endOfWeek,
+  endOfYear,
+  format,
   isValid,
   parseISO,
+  startOfMonth,
+  startOfWeek,
+  startOfYear,
+  subDays,
+  subMonths,
+  subYears,
 } from 'date-fns'
 
 export interface DateRange {
@@ -314,7 +314,7 @@ export interface UseYearSelectionOptions {
 export interface UseYearSelectionReturn {
   year: number
   setYear: (year: number) => void
-  years: number[]
+  years: Array<number>
   nextYear: () => void
   prevYear: () => void
   hasNextYear: boolean
@@ -333,7 +333,7 @@ export function useYearSelection(
   const years = useMemo(() => {
     const min = minYear ?? currentYear - 10
     const max = maxYear ?? currentYear + 1
-    const result: number[] = []
+    const result: Array<number> = []
     for (let y = min; y <= max; y++) {
       result.push(y)
     }

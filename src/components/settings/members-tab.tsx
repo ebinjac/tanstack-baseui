@@ -1,3 +1,14 @@
+import {
+  AlertTriangle,
+  Info,
+  Loader2,
+  RefreshCw,
+  ShieldCheck,
+  User,
+  Users2,
+} from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Card,
@@ -8,21 +19,10 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Users2,
-  ShieldCheck,
-  User,
-  Loader2,
-  AlertTriangle,
-  RefreshCw,
-  Info,
-} from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import { toast } from 'sonner'
 import { EmptyState } from '@/components/shared/empty-state'
 
 interface LdapResponse {
-  names: string[]
+  names: Array<string>
 }
 
 interface MembersTabProps {
@@ -157,7 +157,7 @@ interface MemberGroupProps {
   description: string
   isLoading: boolean
   error: Error | null
-  members: string[]
+  members: Array<string>
   variant: 'admin' | 'member'
 }
 

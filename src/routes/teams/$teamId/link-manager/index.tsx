@@ -1,40 +1,42 @@
 import { createFileRoute } from '@tanstack/react-router'
-import {
-  getLinks,
-  getLinkCategories,
-  bulkUpdateLinks,
-} from '@/app/actions/links'
-import { getTeamApplications } from '@/app/actions/applications'
 import { z } from 'zod'
-import { Button } from '@/components/ui/button'
 import {
-  Search,
-  Grip,
-  Table as TableIcon,
-  LayoutList,
-  Globe2,
-  Lock,
-  Layers,
-  Box,
-  X,
-  Tag,
   Activity,
-  RotateCcw,
+  Box,
+  Globe2,
+  Grip,
+  Layers,
+  LayoutList,
   Loader2,
+  Lock,
   Plus,
+  RotateCcw,
+  Search,
+  Table as TableIcon,
+  Tag,
+  X,
 } from 'lucide-react'
-import { Input } from '@/components/ui/input'
 import {
   useInfiniteQuery,
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query'
-import { useMemo, useState, useCallback, useRef, memo, useEffect } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  bulkUpdateLinks,
+  getLinkCategories,
+  getLinks,
+} from '@/app/actions/links'
+import { getTeamApplications } from '@/app/actions/applications'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { CreateLinkDialog } from '@/components/link-manager/create-link-dialog'
 import {
+  CompactView,
   GridView,
   TableView,
-  CompactView,
 } from '@/components/link-manager/link-views'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -46,16 +48,14 @@ import {
 } from '@/components/ui/select'
 import {
   Popover,
-  PopoverTrigger,
   PopoverContent,
+  PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
-import { motion, AnimatePresence } from 'framer-motion'
 import { Label } from '@/components/ui/label'
 import {
-  StatsSummaryItem,
   LinkManagerPage as PageWrapper,
+  StatsSummaryItem,
 } from '@/components/link-manager/shared'
 import { PageHeader } from '@/components/shared'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -162,7 +162,7 @@ function LinkManagerIndexPage() {
 
   // Bulk update mutation
   const bulkUpdateMutation = useMutation({
-    mutationFn: (data: { teamId: string; linkIds: string[]; updates: any }) =>
+    mutationFn: (data: { teamId: string; linkIds: Array<string>; updates: any }) =>
       bulkUpdateLinks({ data }),
     onSuccess: (res) => {
       toast.success(`Updated ${res.count} links`)
@@ -309,8 +309,8 @@ function LinkManagerIndexPage() {
         <CreateLinkDialog
           teamId={teamId}
           trigger={
-            <Button className="h-10 px-6 gap-2 font-bold text-xs rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
-              <Plus className="h-4 w-4" /> Add Link
+            <Button variant="secondary" className="gap-2">
+              <Plus className="w-4 h-4" /> Add Link
             </Button>
           }
         />
@@ -451,7 +451,7 @@ function LinkManagerIndexPage() {
 // ============================================================================
 interface BulkActionsBarProps {
   selectedCount: number
-  categories: any[] | undefined
+  categories: Array<any> | undefined
   onClearSelection: () => void
   onSelectAll: () => void
   onBulkVisibility: (visibility: 'public' | 'private') => void
@@ -556,8 +556,8 @@ const BulkActionsBar = memo(function BulkActionsBar({
 interface FilterCockpitProps {
   searchParams: any
   viewMode: 'grid' | 'table' | 'compact'
-  applications: any[] | undefined
-  categories: any[] | undefined
+  applications: Array<any> | undefined
+  categories: Array<any> | undefined
   selectedApp: any | undefined
   selectedCategory: any | undefined
   activeFilterCount: number
@@ -585,34 +585,34 @@ const FilterCockpit = memo(function FilterCockpit({
   onClearAllFilters,
 }: FilterCockpitProps) {
   return (
-    <div className="bg-card/40 backdrop-blur-sm border border-border/50 p-1.5 rounded-2xl space-y-3 relative overflow-hidden">
-      <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-3">
+    <div className="space-y-3">
+      <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 bg-card border p-1 rounded-xl shadow-sm relative overflow-hidden">
         {/* Search Container */}
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary opacity-50" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Filter by title, tag, or description..."
-            className="h-12 pl-12 bg-background/50 border-none rounded-xl font-bold text-sm focus:ring-primary/20 focus:bg-background transition-all w-full"
+            className="h-10 pl-9 bg-transparent border-0 shadow-none focus-visible:ring-0 w-full text-sm font-medium"
             defaultValue={searchParams.search}
             onChange={(e) => onSearch(e.target.value)}
           />
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap xl:flex-nowrap">
+        <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap shrink-0 pr-1">
           {/* Visibility Pills */}
           <VisibilityPills
             value={searchParams.visibility || 'all'}
             onChange={onVisibilityChange}
           />
 
-          <div className="h-8 w-px bg-border/50 mx-1 hidden xl:block" />
+          <div className="h-6 w-px bg-border mx-1 hidden xl:block" />
 
           {/* Application Filter */}
           <Select
             value={searchParams.applicationId || 'all'}
             onValueChange={onApplicationChange}
           >
-            <SelectTrigger className="h-12 w-[180px] xl:w-[220px] bg-background/50 border-none font-bold text-xs rounded-xl focus:ring-primary/20 group shrink-0">
+            <SelectTrigger className="h-10 w-[180px] xl:w-[200px] bg-transparent border-0 shadow-none focus:ring-0 font-medium text-sm group shrink-0">
               <div className="flex items-center gap-2 overflow-hidden">
                 <Box className="h-4 w-4 text-blue-500 shrink-0" />
                 <SelectValue
@@ -621,10 +621,10 @@ const FilterCockpit = memo(function FilterCockpit({
                 />
               </div>
             </SelectTrigger>
-            <SelectContent className="rounded-xl max-h-[400px] min-w-[300px]">
+            <SelectContent>
               <SelectItem
                 value="all"
-                className="font-bold text-xs italic opacity-70"
+                className="font-medium text-sm italic opacity-70"
               >
                 All Applications
               </SelectItem>
@@ -632,7 +632,7 @@ const FilterCockpit = memo(function FilterCockpit({
                 <SelectItem
                   key={app.id}
                   value={app.id}
-                  className="font-bold text-xs"
+                  className="font-medium text-sm"
                 >
                   <span className="flex items-center gap-2">
                     <span className="text-primary/60 shrink-0">{app.tla}</span>
@@ -649,7 +649,7 @@ const FilterCockpit = memo(function FilterCockpit({
             value={searchParams.categoryId || 'all'}
             onValueChange={onCategoryChange}
           >
-            <SelectTrigger className="h-12 w-[160px] xl:w-[200px] bg-background/50 border-none font-bold text-xs rounded-xl focus:ring-primary/20 group shrink-0">
+            <SelectTrigger className="h-10 w-[160px] xl:w-[180px] bg-transparent border-0 shadow-none focus:ring-0 font-medium text-sm group shrink-0">
               <div className="flex items-center gap-2 overflow-hidden">
                 <Layers className="h-4 w-4 text-purple-600 shrink-0" />
                 <SelectValue
@@ -658,10 +658,10 @@ const FilterCockpit = memo(function FilterCockpit({
                 />
               </div>
             </SelectTrigger>
-            <SelectContent className="rounded-xl min-w-[200px]">
+            <SelectContent>
               <SelectItem
                 value="all"
-                className="font-bold text-xs italic opacity-70"
+                className="font-medium text-sm italic opacity-70"
               >
                 All Categories
               </SelectItem>
@@ -669,7 +669,7 @@ const FilterCockpit = memo(function FilterCockpit({
                 <SelectItem
                   key={cat.id}
                   value={cat.id}
-                  className="font-bold text-xs"
+                  className="font-medium text-sm"
                 >
                   {cat.name}
                 </SelectItem>
@@ -677,7 +677,7 @@ const FilterCockpit = memo(function FilterCockpit({
             </SelectContent>
           </Select>
 
-          <div className="h-8 w-px bg-border/50 mx-1 hidden xl:block" />
+          <div className="h-6 w-px bg-border mx-1 hidden xl:block" />
 
           {/* View Mode Toggle */}
           <ViewModeToggle value={viewMode} onChange={onViewModeChange} />
@@ -718,7 +718,7 @@ const VisibilityPills = memo(function VisibilityPills({
   ]
 
   return (
-    <div className="bg-muted/40 p-1.5 rounded-xl flex items-center gap-1 border border-border/50 h-12 px-1.5 shrink-0 relative">
+    <div className="bg-muted p-1 rounded-lg flex items-center gap-1 h-10 shrink-0 relative">
       {options.map((v) => {
         const isActive = value === v.id
         return (
@@ -726,7 +726,7 @@ const VisibilityPills = memo(function VisibilityPills({
             key={v.id}
             onClick={() => onChange(v.id)}
             className={cn(
-              'relative px-4 h-9 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-2 z-10',
+              'relative px-3 h-8 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 z-10',
               isActive
                 ? 'text-primary'
                 : 'text-muted-foreground hover:text-foreground',
@@ -746,7 +746,7 @@ const VisibilityPills = memo(function VisibilityPills({
             {isActive && (
               <motion.div
                 layoutId="active-vis-bg"
-                className="absolute inset-0 bg-background rounded-lg shadow-sm border border-border/10 -z-10"
+                className="absolute inset-0 bg-background rounded-md shadow-sm border border-border/50 -z-10"
                 transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
               />
             )}
@@ -774,15 +774,15 @@ const ViewModeToggle = memo(function ViewModeToggle({
   ]
 
   return (
-    <div className="bg-muted/40 p-1 rounded-xl flex items-center gap-1 border border-border/50 h-12 px-1.5 shrink-0">
+    <div className="bg-muted p-1 rounded-lg flex items-center gap-1 h-10 shrink-0">
       {options.map((option) => (
         <button
           key={option.id}
           onClick={() => onChange(option.id)}
           className={cn(
-            'h-9 w-9 rounded-lg flex items-center justify-center transition-all',
+            'h-8 w-8 rounded-md flex items-center justify-center transition-all',
             value === option.id
-              ? 'bg-background shadow-sm text-primary ring-1 ring-border/10'
+              ? 'bg-background shadow-sm text-primary border border-border/50'
               : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
           )}
         >

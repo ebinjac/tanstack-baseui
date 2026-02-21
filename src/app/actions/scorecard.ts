@@ -1,28 +1,28 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { eq } from 'drizzle-orm'
 import { db } from '@/db'
 import {
-  scorecardEntries,
   scorecardAvailability,
-  scorecardVolume,
+  scorecardEntries,
   scorecardPublishStatus,
+  scorecardVolume,
 } from '@/db/schema'
-import { eq } from 'drizzle-orm'
 import {
+  CheckScorecardIdentifierSchema,
   CreateScorecardEntrySchema,
+  GetPublishStatusSchema,
+  GetScorecardDataSchema,
+  PublishScorecardSchema,
+  UnpublishScorecardSchema,
   UpdateScorecardEntrySchema,
   UpsertAvailabilitySchema,
   UpsertVolumeSchema,
-  GetScorecardDataSchema,
-  CheckScorecardIdentifierSchema,
-  PublishScorecardSchema,
-  UnpublishScorecardSchema,
-  GetPublishStatusSchema,
 } from '@/lib/zod/scorecard.schema'
 import {
-  requireAuth,
   assertTeamAdmin,
   assertTeamMember,
+  requireAuth,
 } from '@/lib/middleware/auth.middleware'
 
 // Get all scorecard data for a team and year
@@ -51,8 +51,8 @@ export const getScorecardData = createServerFn({ method: 'GET' })
     const entryIds = entries.map((e) => e.id)
 
     // Get availability and volume for the year
-    let availabilityData: (typeof scorecardAvailability.$inferSelect)[] = []
-    let volumeData: (typeof scorecardVolume.$inferSelect)[] = []
+    let availabilityData: Array<typeof scorecardAvailability.$inferSelect> = []
+    let volumeData: Array<typeof scorecardVolume.$inferSelect> = []
 
     if (entryIds.length > 0) {
       availabilityData = await db.query.scorecardAvailability.findMany({
@@ -106,7 +106,7 @@ export const createScorecardEntry = createServerFn({ method: 'POST' })
 
     // Check uniqueness of scorecardIdentifier
     const existing = await db.query.scorecardEntries.findFirst({
-      where: (entries, { eq }) => eq(entries.scorecardIdentifier, identifier!),
+      where: (entries, { eq }) => eq(entries.scorecardIdentifier, identifier),
     })
 
     if (existing) {
@@ -521,8 +521,8 @@ export const getGlobalScorecardData = createServerFn({ method: 'GET' })
     const entryIds = entries.map((e) => e.id)
 
     // Get availability and volume for the year
-    let availabilityData: (typeof scorecardAvailability.$inferSelect)[] = []
-    let volumeData: (typeof scorecardVolume.$inferSelect)[] = []
+    let availabilityData: Array<typeof scorecardAvailability.$inferSelect> = []
+    let volumeData: Array<typeof scorecardVolume.$inferSelect> = []
 
     if (entryIds.length > 0) {
       const rawAvailability = await db.query.scorecardAvailability.findMany({
@@ -738,7 +738,7 @@ export const getGlobalPublishStatus = createServerFn({ method: 'GET' })
     })
 
     // Group by team ID and return list of published months per team
-    const publishedByTeam: Record<string, number[]> = {}
+    const publishedByTeam: Record<string, Array<number>> = {}
     publishedRecords.forEach((record) => {
       if (!publishedByTeam[record.teamId]) {
         publishedByTeam[record.teamId] = []

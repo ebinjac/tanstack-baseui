@@ -1,31 +1,31 @@
 import {
-  createFileRoute,
-  Outlet,
   Link,
-  useRouterState,
-  useRouteContext,
+  Outlet,
+  createFileRoute,
   redirect,
+  useRouteContext,
+  useRouterState,
 } from '@tanstack/react-router'
+import { ArrowRightLeft, BarChart3, History, Home, Send } from 'lucide-react'
+import type { SessionData } from '@/lib/auth/config'
 import {
-  SidebarProvider,
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
+  SidebarProvider,
   SidebarRail,
-  SidebarInset,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
-import { ArrowRightLeft, Send, History, BarChart3, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { TeamSwitcher } from '@/components/team-switcher'
-import { SessionData } from '@/lib/auth/config'
 import { ModeToggle } from '@/components/mode-toggle'
 
 export const Route = createFileRoute('/teams/$teamId/turnover')({
@@ -48,9 +48,7 @@ function TurnoverLayoutComponent() {
 
   // Get session context
   // @ts-ignore - Context inference can be tricky across files
-  const context = useRouteContext({ from: '__root__' }) as {
-    session: SessionData | null
-  }
+  const context = useRouteContext({ from: '__root__' })
   const teams = context.session?.permissions || []
 
   // Fix: Prevent layout flickering/overlap when navigating away

@@ -4,10 +4,12 @@ import * as React from 'react'
 import {
   ChevronsUpDown,
   PlusCircle,
+  Search,
   Settings,
   Sparkles,
-  Search,
 } from 'lucide-react'
+import { Link, useRouter, useRouterState } from '@tanstack/react-router'
+import type { SessionData } from '@/lib/auth/config'
 import { cn } from '@/lib/utils'
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
@@ -24,15 +26,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { SessionData } from '@/lib/auth/config'
-import { useRouter, useRouterState, Link } from '@tanstack/react-router'
 import { EmptyState } from '@/components/shared/empty-state'
 
 type Team = SessionData['permissions'][number]
 
 interface TeamSwitcherProps {
   className?: string
-  teams: Team[]
+  teams: Array<Team>
 }
 
 const STORAGE_KEY = 'ensemble-last-team-id'
@@ -204,7 +204,7 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
                       const currentMatches = router.state.matches
                       const teamMatch = [...currentMatches]
                         .reverse()
-                        .find((m: any) => (m.params as any).teamId)
+                        .find((m: any) => (m.params).teamId)
                       const leafMatch =
                         currentMatches[currentMatches.length - 1]
 

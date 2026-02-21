@@ -1,3 +1,23 @@
+import { Controller, useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { useEffect, useState } from 'react'
+import {
+  Box,
+  Check,
+  Globe2,
+  Layers,
+  Link as LinkIcon,
+  Loader2,
+  Lock,
+  Plus,
+  Tag,
+  Type,
+  X,
+} from 'lucide-react'
+import type { z } from 'zod'
+import type { LinkWithRelations } from '@/db/schema/links'
 import {
   Dialog,
   DialogContent,
@@ -11,34 +31,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { CreateLinkSchema } from '@/lib/zod/links.schema'
-import { z } from 'zod'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createLink,
-  getLinkCategories,
   createLinkCategory,
+  getLinkCategories,
   updateLink,
 } from '@/app/actions/links'
 import { getTeamApplications } from '@/app/actions/applications'
-import { LinkWithRelations } from '@/db/schema/links'
-import { toast } from 'sonner'
-import { useState, useEffect } from 'react'
-import {
-  Globe2,
-  Lock,
-  Plus,
-  Loader2,
-  X,
-  Link as LinkIcon,
-  Type,
-  Layers,
-  Box,
-  Tag,
-  Check,
-} from 'lucide-react'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -574,7 +574,7 @@ export function CreateLinkDialog({
             </Label>
             <div className="bg-muted/30 border border-muted-foreground/20 rounded-md p-2 focus-within:ring-1 focus-within:ring-ring focus-within:border-ring transition-all">
               <div className="flex flex-wrap gap-2 mb-2">
-                {(form.watch('tags') as string[])?.map((tag) => (
+                {(form.watch('tags') as Array<string>)?.map((tag) => (
                   <Badge
                     key={tag}
                     variant="secondary"

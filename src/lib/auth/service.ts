@@ -1,6 +1,6 @@
 // lib/auth/service.ts
+import { eq, inArray, or } from 'drizzle-orm'
 import { db } from '@/db' // Your Drizzle DB instance
-import { inArray, or, eq } from 'drizzle-orm'
 import { teams } from '@/db/schema'
 
 type TeamPermission = {
@@ -10,8 +10,8 @@ type TeamPermission = {
 }
 
 export async function resolveUserPermissions(
-  userGroups: string[],
-): Promise<TeamPermission[]> {
+  userGroups: Array<string>,
+): Promise<Array<TeamPermission>> {
   if (!userGroups.length) return []
 
   // 1. Query DB: Find all teams where user's groups match either User or Admin columns

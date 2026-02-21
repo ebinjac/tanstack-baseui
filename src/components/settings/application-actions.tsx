@@ -1,3 +1,11 @@
+import {
+  Eye,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 import {
@@ -9,14 +17,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-  Eye,
-  Pencil,
-  RefreshCw,
-  Trash2,
-  MoreHorizontal,
-  Loader2,
-} from 'lucide-react'
 
 interface ApplicationActionsProps {
   isAdmin: boolean

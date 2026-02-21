@@ -1,41 +1,42 @@
-import React, { useState, useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { Activity, Filter, TrendingUp } from 'lucide-react'
+import type {
+  Application,
+  AvailabilityRecord,
+  MonthInfo,
+  ScorecardEntry,
+  VolumeRecord,
+} from './types'
+import type {ChartConfig} from '@/components/ui/chart';
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import {
+  
   ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
-  type ChartConfig,
+  ChartTooltip,
+  ChartTooltipContent
 } from '@/components/ui/chart'
-import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
-  Area,
-  AreaChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import { TrendingUp, Activity, Filter } from 'lucide-react'
-import type {
-  Application,
-  ScorecardEntry,
-  AvailabilityRecord,
-  VolumeRecord,
-  MonthInfo,
-} from './types'
 import { cn } from '@/lib/utils'
 
 // Cleaner, more defined color palette
@@ -53,11 +54,11 @@ const CHART_COLORS = [
 interface MetricsChartSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  applications: Application[]
-  entriesByApp: Record<string, ScorecardEntry[]>
+  applications: Array<Application>
+  entriesByApp: Record<string, Array<ScorecardEntry>>
   availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>
   volumeByEntry: Record<string, Record<string, VolumeRecord>>
-  displayMonths: MonthInfo[]
+  displayMonths: Array<MonthInfo>
   filterLabel: string
 }
 
@@ -93,7 +94,7 @@ export function MetricsChartSheet({
 
   // Get all entries flattened
   const allEntries = useMemo(() => {
-    const entries: (ScorecardEntry & { appName: string; appTla: string })[] = []
+    const entries: Array<ScorecardEntry & { appName: string; appTla: string }> = []
     applications.forEach((app) => {
       const appEntries = entriesByApp[app.id] || []
       appEntries.forEach((entry) => {

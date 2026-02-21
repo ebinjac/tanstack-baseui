@@ -3,14 +3,14 @@ import {
   Body,
   Container,
   Head,
+  Hr,
   Html,
   Img,
+  Link,
   Preview,
   Section,
-  Text,
   Tailwind,
-  Link,
-  Hr,
+  Text,
 } from '@react-email/components'
 
 interface EnsembleLayoutProps {

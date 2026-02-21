@@ -1,43 +1,44 @@
 import * as React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { PageHeader } from '@/components/shared'
-import { getRegistrationRequests } from '@/app/actions/team-registration'
-import { getTeams } from '@/app/actions/teams'
 import { useQuery } from '@tanstack/react-query'
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card'
-import {
+  CheckCircle2,
   ClipboardList,
   Clock,
-  CheckCircle2,
-  XCircle,
   TrendingUp,
   Users,
+  XCircle,
 } from 'lucide-react'
 import {
   Area,
   AreaChart,
   CartesianGrid,
-  XAxis,
-  YAxis,
+  Cell,
   Pie,
   PieChart,
-  Cell,
+  XAxis,
+  YAxis,
 } from 'recharts'
+import { format, isSameDay, startOfDay, subDays } from 'date-fns'
+import type {
+  ChartConfig} from '@/components/ui/chart';
+import { PageHeader } from '@/components/shared'
+import { getRegistrationRequests } from '@/app/actions/team-registration'
+import { getTeams } from '@/app/actions/teams'
 import {
-  ChartConfig,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import {
   ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
 } from '@/components/ui/chart'
-import { format, subDays, startOfDay, isSameDay } from 'date-fns'
 import { adminKeys, teamKeys } from '@/lib/query-keys'
 
 export const Route = createFileRoute('/admin/')({

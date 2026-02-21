@@ -1,28 +1,28 @@
 import {
-  LayoutDashboard,
-  Users,
-  ClipboardList,
-  ChevronRight,
-  ShieldCheck,
   Activity,
-  LogOut,
+  ChevronRight,
+  ClipboardList,
   HelpCircle,
+  LayoutDashboard,
+  LogOut,
   MessageSquare,
+  ShieldCheck,
+  Users,
 } from 'lucide-react'
+import { Link, useLocation } from '@tanstack/react-router'
 import {
   Sidebar,
   SidebarContent,
-  SidebarHeader,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
   SidebarSeparator,
 } from '@/components/ui/sidebar'
-import { Link, useLocation } from '@tanstack/react-router'
 
 const items = [
   {

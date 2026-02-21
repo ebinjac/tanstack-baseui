@@ -1,9 +1,24 @@
 import {
+  Link,
   createFileRoute,
   redirect,
-  Link,
-  useRouteContext,
+  useRouteContext, useRouter 
 } from '@tanstack/react-router'
+import {
+  ArrowRight,
+  Briefcase,
+  Mail,
+  RefreshCcw,
+  Shield,
+  User,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { useState } from 'react'
+import { loginUser } from '../app/ssr/auth'
+import { useAuthBlueSSO } from '../components/use-authblue-sso'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Card,
   CardContent,
@@ -11,22 +26,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  User,
-  Mail,
-  Shield,
-  Briefcase,
-  ArrowRight,
-  RefreshCcw,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import { useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
-import { loginUser } from '../app/ssr/auth'
-import { useAuthBlueSSO } from '../components/use-authblue-sso'
 
 export const Route = createFileRoute('/profile')({
   beforeLoad: ({ context }) => {

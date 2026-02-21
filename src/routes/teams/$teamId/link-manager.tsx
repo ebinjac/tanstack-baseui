@@ -1,30 +1,30 @@
 import {
-  createFileRoute,
-  Outlet,
   Link,
-  useRouterState,
+  Outlet,
+  createFileRoute,
   useRouteContext,
+  useRouterState,
 } from '@tanstack/react-router'
+import { BarChart3, Home, Layers, Link as LinkIcon, Upload } from 'lucide-react'
+import type { SessionData } from '@/lib/auth/config'
 import {
-  SidebarProvider,
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
-  SidebarHeader,
-  SidebarFooter,
+  SidebarProvider,
   SidebarRail,
-  SidebarInset,
+  SidebarTrigger,
 } from '@/components/ui/sidebar'
-import { Link as LinkIcon, BarChart3, Layers, Upload, Home } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { TeamSwitcher } from '@/components/team-switcher'
-import { SessionData } from '@/lib/auth/config'
 import { ModeToggle } from '@/components/mode-toggle'
 
 export const Route = createFileRoute('/teams/$teamId/link-manager')({
@@ -38,9 +38,7 @@ function LinkManagerLayout() {
 
   // Get session context
   // @ts-ignore - Context inference can be tricky across files
-  const context = useRouteContext({ from: '__root__' }) as {
-    session: SessionData | null
-  }
+  const context = useRouteContext({ from: '__root__' })
   const teams = context.session?.permissions || []
 
   // Fix: Prevent layout flickering/overlap when navigating away

@@ -7,10 +7,10 @@
  * @see skills/code-quality/rules/dry-no-copy-paste.md
  */
 
+import { memo } from 'react'
+import type {LucideIcon} from 'lucide-react';
 import { cn } from '@/lib/utils'
 import { Card, CardContent } from '@/components/ui/card'
-import { type LucideIcon } from 'lucide-react'
-import { memo } from 'react'
 
 export interface StatsCardProps {
   /** Icon to display */

@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Layers, Loader2 } from 'lucide-react'
+import { GroupManagementDragDrop } from './group-management-dnd'
 import {
   Sheet,
   SheetContent,
@@ -14,12 +16,10 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
-import { Layers, Loader2 } from 'lucide-react'
 import {
   getApplicationGroups,
   toggleTurnoverGrouping,
 } from '@/app/actions/application-groups'
-import { GroupManagementDragDrop } from './group-management-dnd'
 
 interface GroupManagementProps {
   teamId: string

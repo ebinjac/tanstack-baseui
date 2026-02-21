@@ -1,5 +1,23 @@
 import React from 'react'
 import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import {
+  AreaChart as AreaChartIcon,
+  BarChartIcon,
+  LineChart as LineChartIcon,
+  TrendingUp,
+} from 'lucide-react'
+import type {ChartConfig} from '@/components/ui/chart';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -8,30 +26,13 @@ import {
 } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  
   ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
   ChartLegend,
   ChartLegendContent,
-  type ChartConfig,
+  ChartTooltip,
+  ChartTooltipContent
 } from '@/components/ui/chart'
-import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
-  Area,
-  AreaChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from 'recharts'
-import {
-  TrendingUp,
-  LineChart as LineChartIcon,
-  AreaChart as AreaChartIcon,
-  BarChartIcon,
-} from 'lucide-react'
 
 interface ChartDataPoint {
   month: string
@@ -42,7 +43,7 @@ interface ChartDataPoint {
 interface MetricsChartDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  chartData: ChartDataPoint[]
+  chartData: Array<ChartDataPoint>
   chartMetric: 'availability' | 'volume'
   setChartMetric: (metric: 'availability' | 'volume') => void
   chartType: 'line' | 'bar' | 'area'
@@ -89,7 +90,7 @@ export function MetricsChartDialog({
           <div className="flex flex-col sm:flex-row justify-between gap-4 items-start sm:items-center bg-muted/40 p-3 rounded-lg border">
             <Tabs
               value={chartMetric}
-              onValueChange={(v) => setChartMetric(v as any)}
+              onValueChange={(v) => setChartMetric(v)}
               className="w-full sm:w-auto"
             >
               <TabsList>
@@ -100,7 +101,7 @@ export function MetricsChartDialog({
 
             <Tabs
               value={chartType}
-              onValueChange={(v) => setChartType(v as any)}
+              onValueChange={(v) => setChartType(v)}
               className="w-full sm:w-auto"
             >
               <TabsList>

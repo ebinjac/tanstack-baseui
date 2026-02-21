@@ -1,28 +1,29 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { getTeamById } from '@/app/actions/teams'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { Boxes, LayoutDashboard, LifeBuoy, Users2, Wrench } from 'lucide-react'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type {
+  NavItem} from '@/components/settings';
 import { PageHeader } from '@/components/shared'
+import { getTeamById } from '@/app/actions/teams'
 import {
   getTeamApplications,
   updateApplication,
 } from '@/app/actions/applications'
-import { useState } from 'react'
-import { toast } from 'sonner'
-import { LayoutDashboard, Boxes, LifeBuoy, Wrench, Users2 } from 'lucide-react'
-
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
-  SettingsNav,
-  OverviewTab,
-  ApplicationsTab,
-  MembersTab,
-  ResourcesTab,
-  SupportTab,
-  NavItem,
-  EditTeamDialog,
   AddApplicationDialog,
-  ViewApplicationDialog,
-  EditApplicationDialog,
+  ApplicationsTab,
   DeleteConfirmationDialog,
+  EditApplicationDialog,
+  EditTeamDialog,
+  MembersTab,
+  OverviewTab,
+  ResourcesTab,
+  SettingsNav,
+  SupportTab,
+  ViewApplicationDialog,
 } from '@/components/settings'
 
 export const Route = createFileRoute('/teams/$teamId/settings')({
@@ -92,7 +93,7 @@ function TeamSettingsPage() {
     },
   }
 
-  const navItems: NavItem[] = [
+  const navItems: Array<NavItem> = [
     { value: 'overview', label: 'Overview', icon: LayoutDashboard },
     {
       value: 'applications',

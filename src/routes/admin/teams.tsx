@@ -1,4 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
+import {
+  Building2,
+  CheckCircle2,
+  ExternalLink,
+  Filter,
+  MoreHorizontal,
+  Search,
+  Shield,
+  UserCheck,
+  Users,
+  XCircle,
+} from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { formatDistanceToNow } from 'date-fns'
+import type { Team } from '@/db/schema/teams'
 import { getTeams } from '@/app/actions/teams'
 import {
   Table,
@@ -10,20 +26,6 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  MoreHorizontal,
-  ExternalLink,
-  Search,
-  Shield,
-  Users,
-  CheckCircle2,
-  XCircle,
-  Filter,
-  UserCheck,
-  Building2,
-} from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
 import { PageHeader } from '@/components/shared'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -40,10 +42,10 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
 } from '@/components/ui/dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
@@ -53,8 +55,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { formatDistanceToNow } from 'date-fns'
-import { Team } from '@/db/schema/teams'
 
 export const Route = createFileRoute('/admin/teams')({
   component: AdminTeams,

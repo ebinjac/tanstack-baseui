@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { deleteLink, trackLinkUsage } from '@/app/actions/links'
 import { toast } from 'sonner'
 import { useCallback } from 'react'
 import type { LinkWithRelations } from '@/db/schema/links'
+import { deleteLink, trackLinkUsage } from '@/app/actions/links'
 
 /**
  * Shared hook for link delete & track-usage mutations.

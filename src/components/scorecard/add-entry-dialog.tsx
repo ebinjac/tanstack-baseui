@@ -1,8 +1,9 @@
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { toast } from 'sonner'
+import { Loader2, Plus } from 'lucide-react'
+import type { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Plus, Loader2 } from 'lucide-react'
 import { createScorecardEntry } from '@/app/actions/scorecard'
 import { CreateScorecardEntrySchema } from '@/lib/zod/scorecard.schema'
 

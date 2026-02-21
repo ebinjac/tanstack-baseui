@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { SSOUser } from '@/lib/zod/auth.schema'
+import type { SSOUser } from '@/lib/zod/auth.schema'
 
 // Mock SSO user data for development
 const mockSSOUser: SSOUser = {

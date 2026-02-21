@@ -1,28 +1,30 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import { format } from 'date-fns'
-import type { DateRange } from 'react-day-picker'
 import {
-  History,
-  Search,
-  Grid3X3,
-  List,
-  FileText,
-  Star,
-  Layers,
-  ChevronLeft,
-  ChevronRight,
-  X,
-  CheckCircle2,
   AlertCircle,
   Bell,
-  Zap,
-  MessageSquare,
-  HelpCircle,
   CalendarIcon,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  Grid3X3,
+  HelpCircle,
+  History,
+  Layers,
+  List,
+  MessageSquare,
+  Search,
+  Star,
+  X,
+  Zap,
 } from 'lucide-react'
+import type { DateRange } from 'react-day-picker'
+import type {TurnoverSection} from '@/lib/zod/turnover.schema';
+import type { FinalizedTurnover } from '@/db/schema/turnover'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -49,9 +51,9 @@ import {
 } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
 import { getFinalizedTurnovers } from '@/app/actions/turnover'
-import { SECTION_CONFIG, type TurnoverSection } from '@/lib/zod/turnover.schema'
-import type { FinalizedTurnover } from '@/db/schema/turnover'
+import { SECTION_CONFIG  } from '@/lib/zod/turnover.schema'
 import { EntryCard } from '@/components/turnover/entry-card'
+import { PageHeader } from '@/components/shared'
 
 export const Route = createFileRoute(
   '/teams/$teamId/turnover/transition-history',
@@ -120,7 +122,7 @@ function TransitionHistoryPage() {
 
   // Type-safe access to data
   const queryResult = data as
-    | { turnovers: FinalizedTurnover[]; total: number }
+    | { turnovers: Array<FinalizedTurnover>; total: number }
     | undefined
   const turnovers = queryResult?.turnovers || []
   const total = queryResult?.total || 0
@@ -171,60 +173,44 @@ function TransitionHistoryPage() {
     <div className="flex-1 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
       <div className="space-y-8 p-8 pt-6">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="flex flex-col">
-            <h1 className="text-4xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-              Transition History
-            </h1>
-            <div className="flex items-center gap-2 mt-1">
-              <Badge
-                variant="outline"
-                className="text-[10px] font-bold bg-primary/5 border-primary/20 text-primary px-2 h-5"
-              >
-                Archives
-              </Badge>
-              <span className="text-muted-foreground/30">•</span>
-              <p className="text-sm font-medium text-muted-foreground">
-                Browse all finalized shift handovers and transitions
-              </p>
-            </div>
+        <PageHeader
+          title="Transition History"
+          description="Browse all finalized shift handovers and transitions."
+          className="w-full"
+        >
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 p-1 bg-white/10 rounded-xl border border-white/20">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className={cn("gap-2 h-9 rounded-lg text-white hover:text-white", viewMode === 'grid' ? "bg-white/20 hover:bg-white/30" : "hover:bg-white/10")}
+            >
+              <Grid3X3 className="w-4 h-4" />
+              Grid
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className={cn("gap-2 h-9 rounded-lg text-white hover:text-white", viewMode === 'list' ? "bg-white/20 hover:bg-white/30" : "hover:bg-white/10")}
+            >
+              <List className="w-4 h-4" />
+              List
+            </Button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* View Toggle */}
-            <div className="flex items-center gap-1 p-1 bg-background/50 rounded-xl border-none">
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className="gap-2 h-9 rounded-lg"
-              >
-                <Grid3X3 className="w-4 h-4" />
-                Grid
-              </Button>
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="gap-2 h-9 rounded-lg"
-              >
-                <List className="w-4 h-4" />
-                List
-              </Button>
-            </div>
-
-            {/* Search */}
-            <div className="relative group w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-              <Input
-                placeholder="Search by notes, user..."
-                className="h-11 pl-12 rounded-xl bg-background/50 border-none focus:ring-2 focus:ring-primary/20 focus:bg-background transition-all font-bold text-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+          {/* Search */}
+          <div className="relative group w-80">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/70 group-focus-within:text-white transition-colors" />
+            <Input
+              placeholder="Search by notes, user..."
+              className="h-11 pl-12 rounded-xl bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition-all font-medium text-sm hover:bg-white/15"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-        </div>
+        </PageHeader>
 
         {/* Filters Row */}
         <div className="flex flex-wrap items-center gap-3">
@@ -541,10 +527,10 @@ function TransitionHistoryPage() {
                   <div className="space-y-6">
                     {(() => {
                       const snapshotData =
-                        selectedSnapshot.snapshotData as any[]
+                        selectedSnapshot.snapshotData as Array<any>
 
                       // Group by application
-                      const groupedByApp: Record<string, any[]> = {}
+                      const groupedByApp: Record<string, Array<any>> = {}
                       snapshotData.forEach((entry) => {
                         const appId = entry.applicationId
                         if (!groupedByApp[appId]) groupedByApp[appId] = []
@@ -608,14 +594,14 @@ function TransitionHistoryPage() {
                         const isExpanded = expandedApps[appId]
 
                         // Group by section
-                        const groupedBySection: Record<string, any[]> = {}
+                        const groupedBySection: Record<string, Array<any>> = {}
                         appEntries.forEach((entry) => {
                           if (!groupedBySection[entry.section])
                             groupedBySection[entry.section] = []
                           groupedBySection[entry.section].push(entry)
                         })
 
-                        const sectionOrder: TurnoverSection[] = [
+                        const sectionOrder: Array<TurnoverSection> = [
                           'MIM',
                           'INC',
                           'RFC',
@@ -626,7 +612,7 @@ function TransitionHistoryPage() {
                         const sortedSections = sectionOrder
                           .filter((s) => groupedBySection[s])
                           .map(
-                            (s) => [s, groupedBySection[s]] as [string, any[]],
+                            (s) => [s, groupedBySection[s]] as [string, Array<any>],
                           )
 
                         return (
@@ -703,11 +689,11 @@ function TransitionHistoryPage() {
                                       ([section, entries]) => {
                                         const sConfig =
                                           SECTION_CONFIG[
-                                            section as TurnoverSection
+                                          section as TurnoverSection
                                           ]
                                         const SectionIcon =
                                           SECTION_ICONS[
-                                            section as TurnoverSection
+                                          section as TurnoverSection
                                           ]
 
                                         return (
@@ -724,20 +710,20 @@ function TransitionHistoryPage() {
                                                   )
                                                     ? 'bg-blue-100'
                                                     : sConfig.colorClass.includes(
-                                                          'red',
-                                                        )
+                                                      'red',
+                                                    )
                                                       ? 'bg-red-100'
                                                       : sConfig.colorClass.includes(
-                                                            'amber',
-                                                          )
+                                                        'amber',
+                                                      )
                                                         ? 'bg-amber-100'
                                                         : sConfig.colorClass.includes(
-                                                              'purple',
-                                                            )
+                                                          'purple',
+                                                        )
                                                           ? 'bg-purple-100'
                                                           : sConfig.colorClass.includes(
-                                                                'green',
-                                                              )
+                                                            'green',
+                                                          )
                                                             ? 'bg-green-100'
                                                             : 'bg-muted',
                                                 )}

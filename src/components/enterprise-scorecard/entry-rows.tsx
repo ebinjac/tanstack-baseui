@@ -1,22 +1,22 @@
 'use client'
 
 import { useMemo } from 'react'
+import { CURRENT_MONTH, CURRENT_YEAR } from './constants'
+import type {
+  AvailabilityRecord,
+  ScorecardEntry,
+  VisibleMonth,
+  VolumeRecord,
+} from './types'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { CURRENT_YEAR, CURRENT_MONTH } from './constants'
-import type {
-  ScorecardEntry,
-  AvailabilityRecord,
-  VolumeRecord,
-  VisibleMonth,
-} from './types'
 
 interface EntryRowsProps {
   entry: ScorecardEntry
   availability: Record<string, AvailabilityRecord>
   volume: Record<string, VolumeRecord>
   selectedYear: number
-  visibleMonths?: VisibleMonth[]
+  visibleMonths?: Array<VisibleMonth>
 }
 
 export function formatVolume(value: number): string {
@@ -42,7 +42,7 @@ export function EntryRows({
 
   // Calculate average availability
   const avgAvail = useMemo(() => {
-    const values: number[] = []
+    const values: Array<number> = []
     monthsToShow.forEach(({ month, year }) => {
       const isFuture = year === CURRENT_YEAR && month > CURRENT_MONTH
       const key = `${year}-${month}`

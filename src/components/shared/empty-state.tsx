@@ -8,18 +8,19 @@
  * @see skills/code-quality/rules/dry-no-copy-paste.md
  */
 
+import { FileX, FolderOpen, Inbox,  Search } from 'lucide-react'
+import { memo } from 'react'
+import type {LucideIcon} from 'lucide-react';
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
   EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
   EmptyMedia,
+  EmptyTitle,
 } from '@/components/ui/empty'
-import { type LucideIcon, Inbox, Search, FileX, FolderOpen } from 'lucide-react'
-import { memo } from 'react'
 
 export type EmptyStateVariant = 'default' | 'search' | 'error' | 'folder'
 

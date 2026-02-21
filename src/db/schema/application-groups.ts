@@ -1,16 +1,16 @@
 import {
-  uuid,
-  varchar,
-  text,
-  timestamp,
-  integer,
   boolean,
   index,
+  integer,
+  text,
+  timestamp,
   uniqueIndex,
+  uuid,
+  varchar,
 } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
-import { ensembleSchema, teams, applications } from './teams'
+import { applications, ensembleSchema, teams } from './teams'
 
 // ============================================================================
 // Application Groups - Logical grouping of applications

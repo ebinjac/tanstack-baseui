@@ -1,4 +1,19 @@
-import { useRouteContext, Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, useRouteContext } from '@tanstack/react-router'
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Calendar,
+  CheckCircle2,
+  ChevronsUpDown,
+  EyeOff,
+  Hash,
+  Loader2,
+  Percent,
+  Send,
+  TrendingUp,
+} from 'lucide-react'
+import type {TimePeriod, ViewMode} from '@/components/scorecard';
 import { PageHeader } from '@/components/shared'
 import { getTeamById } from '@/app/actions/teams'
 import {
@@ -29,26 +44,12 @@ import {
 } from '@/components/ui/alert-dialog'
 
 import { cn } from '@/lib/utils'
-import {
-  ChevronsUpDown,
-  AlertTriangle,
-  BarChart3,
-  Activity,
-  TrendingUp,
-  Loader2,
-  Hash,
-  Percent,
-  Calendar,
-  CheckCircle2,
-  Send,
-  EyeOff,
-} from 'lucide-react'
 
 // Import from scorecard components
 import {
   // Types
-  type ViewMode,
-  type TimePeriod,
+  
+  
 
   // Constants
   TIME_PERIOD_OPTIONS,
@@ -63,7 +64,7 @@ import {
   MetricsChartSheet,
 
   // Hook
-  useScorecard,
+  useScorecard
 } from '@/components/scorecard'
 
 export const Route = createFileRoute('/teams/$teamId/scorecard')({

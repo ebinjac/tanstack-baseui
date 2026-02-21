@@ -27,7 +27,7 @@ import type { QueryClient } from '@tanstack/react-query'
  */
 export async function ensureQueryDataInLoader<T>(
   queryClient: QueryClient,
-  options: { queryKey: readonly unknown[]; queryFn: () => Promise<T> },
+  options: { queryKey: ReadonlyArray<unknown>; queryFn: () => Promise<T> },
 ): Promise<T> {
   return queryClient.ensureQueryData(options)
 }
@@ -50,10 +50,10 @@ export async function ensureQueryDataInLoader<T>(
 export async function ensureMultipleQueries(
   queryClient: QueryClient,
   optionsList: Array<{
-    queryKey: readonly unknown[]
+    queryKey: ReadonlyArray<unknown>
     queryFn: () => Promise<any>
   }>,
-): Promise<any[]> {
+): Promise<Array<any>> {
   return Promise.all(
     optionsList.map((options) => queryClient.ensureQueryData(options)),
   )
@@ -84,11 +84,11 @@ export interface RouteContextWithQueryClient {
  */
 export async function invalidateInAction(
   queryClient: QueryClient,
-  keys: Array<readonly unknown[]>,
+  keys: Array<ReadonlyArray<unknown>>,
 ): Promise<void> {
   await Promise.all(
     keys.map((key) =>
-      queryClient.invalidateQueries({ queryKey: key as unknown[] }),
+      queryClient.invalidateQueries({ queryKey: key as Array<unknown> }),
     ),
   )
 }

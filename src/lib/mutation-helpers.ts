@@ -10,11 +10,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import {
-  scorecardKeys,
-  turnoverKeys,
-  linkKeys,
-  teamKeys,
   adminKeys,
+  linkKeys,
+  scorecardKeys,
+  teamKeys,
+  turnoverKeys,
 } from './query-keys'
 
 // ==========================================
@@ -286,7 +286,7 @@ export function useMutationWithInvalidation<TData, TVariables>({
   onError,
 }: {
   mutationFn: (variables: TVariables) => Promise<TData>
-  invalidateKeys: Array<readonly unknown[]>
+  invalidateKeys: Array<ReadonlyArray<unknown>>
   onSuccess?: (data: TData) => void
   onError?: (error: Error) => void
 }) {
@@ -300,7 +300,7 @@ export function useMutationWithInvalidation<TData, TVariables>({
         // Invalidate all specified keys
         await Promise.all(
           invalidateKeys.map((key) =>
-            queryClient.invalidateQueries({ queryKey: key as unknown[] }),
+            queryClient.invalidateQueries({ queryKey: key as Array<unknown> }),
           ),
         )
 

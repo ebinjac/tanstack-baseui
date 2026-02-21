@@ -1,4 +1,4 @@
-import type { TimePeriod, MonthInfo } from './types'
+import type { MonthInfo, TimePeriod } from './types'
 
 export const MONTHS = [
   'Jan',
@@ -35,11 +35,11 @@ const now = new Date()
 export const currentYear = now.getFullYear()
 export const currentMonth = now.getMonth() + 1 // 1-12
 
-export const TIME_PERIOD_OPTIONS: {
+export const TIME_PERIOD_OPTIONS: Array<{
   value: TimePeriod
   label: string
   description: string
-}[] = [
+}> = [
   { value: '1m', label: 'Last Month', description: 'Current month only' },
   { value: '3m', label: 'Last 3 Months', description: 'Rolling 3 months' },
   { value: '6m', label: 'Last 6 Months', description: 'Rolling 6 months' },
@@ -58,8 +58,8 @@ export const AVAILABLE_YEARS = Array.from(
 )
 
 // Helper: Get months for a time period
-export function getMonthsForPeriod(period: TimePeriod): MonthInfo[] {
-  const months: MonthInfo[] = []
+export function getMonthsForPeriod(period: TimePeriod): Array<MonthInfo> {
+  const months: Array<MonthInfo> = []
 
   switch (period) {
     case '1m': {
@@ -144,8 +144,8 @@ export function getMonthsForPeriod(period: TimePeriod): MonthInfo[] {
 }
 
 // Helper: Get months for a specific year
-export function getMonthsForYear(year: number): MonthInfo[] {
-  const months: MonthInfo[] = []
+export function getMonthsForYear(year: number): Array<MonthInfo> {
+  const months: Array<MonthInfo> = []
   for (let m = 1; m <= 12; m++) {
     const isFuture =
       year > currentYear || (year === currentYear && m > currentMonth)

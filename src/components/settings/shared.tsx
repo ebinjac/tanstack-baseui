@@ -1,5 +1,5 @@
-import { Card, CardContent } from '@/components/ui/card'
 import { ArrowUpRight } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface StatsCardProps {
   icon: React.ReactNode

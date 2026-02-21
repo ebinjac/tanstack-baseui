@@ -7,13 +7,13 @@
  * @see skills/react-best-practices/rules/hook-extract-logic.md
  */
 
-import { useState, useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 export interface UseExpandStateOptions<T> {
   /** Unique identifier for each item */
   getItemId: (item: T) => string
   /** Initial expanded state: 'none' | 'all' | string[] of IDs */
-  initialExpanded?: 'none' | 'all' | string[]
+  initialExpanded?: 'none' | 'all' | Array<string>
   /** Maximum number of items that can be expanded at once (optional) */
   maxExpanded?: number
 }
@@ -30,11 +30,11 @@ export interface UseExpandStateReturn {
   /** Collapse an item */
   collapse: (id: string) => void
   /** Expand all items */
-  expandAll: (ids: string[]) => void
+  expandAll: (ids: Array<string>) => void
   /** Collapse all items */
   collapseAll: () => void
   /** Set expanded items directly */
-  setExpanded: (ids: string[]) => void
+  setExpanded: (ids: Array<string>) => void
   /** Whether any items are expanded */
   hasExpanded: boolean
   /** Number of expanded items */
@@ -143,7 +143,7 @@ export function useExpandState<T>(
 
   // Expand all
   const expandAll = useCallback(
-    (ids: string[]) => {
+    (ids: Array<string>) => {
       setExpandedIds(() => {
         if (maxExpanded) {
           return new Set(ids.slice(0, maxExpanded))
@@ -160,7 +160,7 @@ export function useExpandState<T>(
   }, [])
 
   // Set expanded directly
-  const setExpanded = useCallback((ids: string[]) => {
+  const setExpanded = useCallback((ids: Array<string>) => {
     setExpandedIds(new Set(ids))
   }, [])
 

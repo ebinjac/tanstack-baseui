@@ -1,10 +1,10 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
+import { desc, eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { teams } from '@/db/schema/teams'
-import { desc, eq } from 'drizzle-orm'
 import { UpdateTeamSchema } from '@/lib/zod/team.schema'
-import { requireAuth, assertTeamAdmin } from '@/lib/middleware/auth.middleware'
+import { assertTeamAdmin, requireAuth } from '@/lib/middleware/auth.middleware'
 
 export const getTeams = createServerFn({ method: 'GET' })
   .middleware([requireAuth])

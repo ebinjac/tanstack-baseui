@@ -2,28 +2,29 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import {
-  Plus,
-  Loader2,
-  Star,
-  CheckCircle2,
   AlertCircle,
   Bell,
-  Zap,
-  MessageSquare,
-  HelpCircle,
+  CheckCircle2,
   FolderOpen,
+  HelpCircle,
+  Loader2,
+  MessageSquare,
+  Plus,
+  Star,
+  Zap,
 } from 'lucide-react'
+import { EntryCard } from './entry-card'
+import { EntryDialog } from './entry-dialog'
+import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
+import type { Application } from '@/db/schema/teams'
+import type {TurnoverSection} from '@/lib/zod/turnover.schema';
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 import { getTurnoverEntries } from '@/app/actions/turnover'
-import { SECTION_CONFIG, type TurnoverSection } from '@/lib/zod/turnover.schema'
-import { EntryCard } from './entry-card'
-import { EntryDialog } from './entry-dialog'
-import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
-import type { Application } from '@/db/schema/teams'
+import { SECTION_CONFIG  } from '@/lib/zod/turnover.schema'
 
 const SECTION_ICONS: Record<TurnoverSection, any> = {
   RFC: CheckCircle2,
@@ -40,7 +41,7 @@ interface SectionTableProps {
   section: TurnoverSection
   // Group-related props - for showing application selector in entry dialog
   isGrouped?: boolean
-  groupApplications?: Application[]
+  groupApplications?: Array<Application>
 }
 
 export function SectionTable({

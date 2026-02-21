@@ -1,7 +1,8 @@
-import { ReactNode } from 'react'
+import { Loader2,  Search } from 'lucide-react'
+import type {LucideIcon} from 'lucide-react';
+import type { ReactNode } from 'react'
 
 import { Input } from '@/components/ui/input'
-import { Loader2, Search, type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EmptyState as SharedEmptyState } from '@/components/shared/empty-state'
 

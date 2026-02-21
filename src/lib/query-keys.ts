@@ -24,7 +24,7 @@ export interface LinkFilters {
 }
 
 export interface TurnoverFilters {
-  applicationIds?: string[]
+  applicationIds?: Array<string>
   section?: string
   includeResolved?: boolean
 }
@@ -90,7 +90,7 @@ export const turnoverKeys = {
       [...turnoverKeys.team(teamId), 'entries', filters] as const,
     section: (
       teamId: string,
-      applicationIds: string[],
+      applicationIds: Array<string>,
       section: string,
       withResolved?: string,
     ) =>

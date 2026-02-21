@@ -1,6 +1,8 @@
 import React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { Loader2, Trash2 } from 'lucide-react'
+import type { ScorecardEntry } from './types'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,9 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Trash2, Loader2 } from 'lucide-react'
 import { deleteScorecardEntry } from '@/app/actions/scorecard'
-import type { ScorecardEntry } from './types'
 
 interface DeleteEntryDialogProps {
   entry: ScorecardEntry

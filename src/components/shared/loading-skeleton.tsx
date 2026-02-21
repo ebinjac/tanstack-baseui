@@ -6,10 +6,10 @@
  * @see skills/code-quality/rules/dry-no-copy-paste.md
  */
 
+import { memo } from 'react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { memo } from 'react'
 
 /**
  * PageHeaderSkeleton - Skeleton for page headers

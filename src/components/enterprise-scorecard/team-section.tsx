@@ -1,35 +1,35 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
 import { ChevronDown, Eye } from 'lucide-react'
 import { ApplicationCard } from './application-card'
 import type {
-  Team,
   Application,
-  ScorecardEntry,
   AvailabilityRecord,
-  VolumeRecord,
   LeadershipDisplay,
+  ScorecardEntry,
+  Team,
   VisibleMonth,
+  VolumeRecord,
 } from './types'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 interface TeamSectionProps {
   team: Team
   isExpanded: boolean
   onToggle: () => void
-  applications: Application[]
-  entriesByApp: Record<string, ScorecardEntry[]>
+  applications: Array<Application>
+  entriesByApp: Record<string, Array<ScorecardEntry>>
   availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>
   volumeByEntry: Record<string, Record<string, VolumeRecord>>
   expandedApps: Set<string>
   onToggleApp: (appId: string) => void
   selectedYear: number
-  getLeadershipDisplay: (app: Application) => LeadershipDisplay[]
+  getLeadershipDisplay: (app: Application) => Array<LeadershipDisplay>
   onViewFull: () => void
-  visibleMonths?: VisibleMonth[]
+  visibleMonths?: Array<VisibleMonth>
 }
 
 export function TeamSection({

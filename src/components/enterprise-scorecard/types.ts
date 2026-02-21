@@ -48,20 +48,20 @@ export interface VolumeRecord {
 }
 
 export interface LeadershipOptions {
-  svp?: (string | null)[]
-  vp?: (string | null)[]
-  director?: (string | null)[]
-  appOwner?: (string | null)[]
-  appManager?: (string | null)[]
-  unitCio?: (string | null)[]
+  svp?: Array<string | null>
+  vp?: Array<string | null>
+  director?: Array<string | null>
+  appOwner?: Array<string | null>
+  appManager?: Array<string | null>
+  unitCio?: Array<string | null>
 }
 
 export interface ScorecardData {
-  teams: Team[]
-  applications: Application[]
-  entries: ScorecardEntry[]
-  availability: AvailabilityRecord[]
-  volume: VolumeRecord[]
+  teams: Array<Team>
+  applications: Array<Application>
+  entries: Array<ScorecardEntry>
+  availability: Array<AvailabilityRecord>
+  volume: Array<VolumeRecord>
   leadershipOptions: LeadershipOptions
 }
 

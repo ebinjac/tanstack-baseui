@@ -4,10 +4,11 @@ import {
   setCookie,
 } from '@tanstack/react-start/server'
 import { sealData, unsealData } from 'iron-session'
-import { SESSION_CONFIG, SessionData } from '@/lib/auth/config'
+import { createServerFn } from '@tanstack/react-start'
+import type { SessionData } from '@/lib/auth/config';
+import { SESSION_CONFIG } from '@/lib/auth/config'
 import { resolveUserPermissions } from '@/lib/auth/service'
 import { ssoUserSchema } from '@/lib/zod/auth.schema'
-import { createServerFn } from '@tanstack/react-start'
 
 /**
  * LOGIN: Receives SSO Data -> Calculates Roles -> Sets Encrypted Cookie

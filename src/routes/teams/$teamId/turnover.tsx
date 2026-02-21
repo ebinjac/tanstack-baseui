@@ -101,7 +101,7 @@ function TurnoverLayoutComponent() {
                 <ArrowRightLeft className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Turnover Portal</span>
+                <span className="truncate font-semibold">TO - HUB</span>
                 <span className="truncate text-xs text-muted-foreground">
                   Shift Handover
                 </span>

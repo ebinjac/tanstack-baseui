@@ -71,7 +71,7 @@ const getTools = (teamId: string | null): Array<Tool> => [
     icon: LayoutDashboard,
   },
   {
-    title: 'Turnover',
+    title: 'TO - HUB',
     href: teamId ? `/teams/${teamId}/turnover` : '/turnover',
     description: 'Seamless shift handovers and transition tracking.',
     icon: RefreshCcw,

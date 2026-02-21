@@ -377,7 +377,7 @@ export function HeroSection({
 
                 <div className="relative z-10">
                   <p className="text-lg font-bold leading-tight opacity-90 max-w-[180px]">
-                    Automated Turnover Efficiency
+                    Turnover Efficiency
                   </p>
                 </div>
                 <div className="relative z-10 flex items-baseline gap-1 mt-auto">

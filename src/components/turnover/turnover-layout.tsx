@@ -69,7 +69,7 @@ export function TurnoverSidebar() {
             {!isCollapsed && (
               <Link
                 to="/teams/$teamId/settings"
-                params={{ teamId }}
+                params={{ teamId: teamId! }}
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -128,7 +128,7 @@ export function TurnoverSidebar() {
             const LinkComponent = (
               <Link
                 to={`/teams/$teamId/turnover/${item.path}`}
-                params={{ teamId }}
+                params={{ teamId: teamId! }}
                 className={cn(
                   'group relative flex items-center rounded-lg transition-all duration-200 select-none',
                   isActive

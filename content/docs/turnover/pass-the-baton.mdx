@@ -1,0 +1,86 @@
+---
+title: Pass the Baton
+description: Logging and managing active shift entries by application
+---
+
+# Pass the Baton
+
+**Pass the Baton** is the active logbook for the current shift. Here, team members log every event, change, incident, and communication that the next shift needs to be aware of.
+
+---
+
+*Placeholder: screenshot of the Pass the Baton page showing application tabs and section tables*
+
+## Application Tabs
+
+At the top of the page, you'll see tabs for each application (or group) your team manages.
+
+### Flat Tabs (Default)
+When no groups are configured, each application appears as its own tab labeled by its **TLA** (Three-Letter Acronym), e.g., `KMS`, `TKS`, `AIF`.
+
+### Grouped Tabs
+If your admin has configured application groups (e.g., `KMS/TKS`), grouped tabs appear instead. A group must contain **at least 2 applications** to be valid. The **"Grouped View"** toggle and badge showing the group count appear in the header.
+
+> [!NOTE]
+> The **Grouped View** switch is informational. To create or modify groups, click the **"Manage Groups"** or **"Create Groups"** button.
+
+---
+
+*Placeholder: screenshot showing Grouped Application Tabs*
+
+## Critical Items Alert
+
+If any entry within the active application tab is marked as **Important**, a prominent orange warning banner appears at the top of the page.
+
+```
+⚠️ Critical Turnover Items — X items
+"Action required: These items have been flagged for immediate attention."
+```
+
+> [!IMPORTANT]
+> Always address critical items before ending your shift.
+
+## Section Tables
+
+The main area shows a **2-column grid** of the six standard sections:
+
+| Section | Icon Description |
+|---------|----------------|
+| **RFC** (Request for Change) | Active change tickets being tracked this shift |
+| **INC** (Incident) | Open or recently resolved incidents |
+| **ALERTS** | Monitoring alerts triggered during the shift |
+| **MIM** (Major Incident Management) | Critical outage records |
+| **COMMS** (Communications) | Email threads or announcements relevant to the shift |
+| **FYI** (For Your Information) | General notes, reminders, or interesting findings |
+
+### Adding an Entry
+
+Within any section table, click the **"+ Add"** button to open the Entry Dialog.
+
+**Entry Dialog Fields:**
+
+| Field | Notes |
+|-------|-------|
+| **Application** | If viewing a grouped tab, you must select which specific application this entry applies to |
+| **Title** | A brief, descriptive title |
+| **Description** | Detailed context or steps |
+| **Section** | Pre-selected based on which table you clicked |
+| **Mark as Important** | Flags the entry as critical, triggering the orange alert banner |
+
+For **RFC** entries, additional fields appear: RFC Number, RFC Status, and Validated By.
+For **INC** entries: Incident Number is shown.
+For **MIM** entries: MIM Link is shown.
+For **COMMS** entries: Email Subject is shown.
+
+### Editing & Resolving Entries
+
+Each entry card shows inline actions:
+- **Edit**: Update any field on the entry
+- **Resolve / Unresolve**: Mark the item as handled (recently resolved items may still appear briefly)
+- **Delete**: Remove the entry entirely
+
+---
+
+## No Applications Configured?
+
+If your team has no applications set up, Pass the Baton shows an empty state with a button to **"Go to Settings to Add Applications"**. Contact your team admin to configure applications first.

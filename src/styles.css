@@ -2,6 +2,8 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/figtree';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -181,36 +183,30 @@
 */
 
 ::-webkit-scrollbar-thumb {
-  background-color: color-mix(
-    in srgb,
-    var(--muted-foreground) 30%,
-    transparent
-  );
+  background-color: color-mix(in srgb,
+      var(--muted-foreground) 30%,
+      transparent);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(
-    in srgb,
-    var(--muted-foreground) 50%,
-    transparent
-  );
+  background-color: color-mix(in srgb,
+      var(--muted-foreground) 50%,
+      transparent);
 }
 
 /* Firefox */
 @supports (scrollbar-color: auto) {
   * {
     scrollbar-width: thin;
-    scrollbar-color: color-mix(
-        in srgb,
+    scrollbar-color: color-mix(in srgb,
         var(--muted-foreground) 30%,
-        transparent
-      )
-      transparent;
+        transparent) transparent;
   }
 }
 
 @keyframes breathe {
+
   0%,
   100% {
     opacity: 0.4;

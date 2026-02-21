@@ -5,10 +5,13 @@ import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import { nitro } from 'nitro/vite'
+import mdx from 'fumadocs-mdx/vite';
+import * as MdxConfig from './source.config';
 
 const config = defineConfig({
   plugins: [
     devtools(),
+    mdx(MdxConfig),
     nitro(),
     // this is the plugin that enables path aliases
     viteTsConfigPaths({

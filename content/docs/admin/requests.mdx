@@ -1,0 +1,41 @@
+---
+title: Admin Requests
+description: Managing team registration and access requests
+---
+
+# Admin Requests
+
+The **Admin Requests** page shows all pending, approved, and rejected requests submitted through the Team Registration form.
+
+---
+
+*Placeholder: screenshot of the Admin Requests page with the requests table*
+
+## Request Table
+
+Each row in the requests table shows:
+
+| Column | Description |
+|--------|-------------|
+| **Team Name** | The requested team name |
+| **Contact** | Name and email of the requester |
+| **User Group** | The User AD group they specified |
+| **Admin Group** | The Admin AD group they specified |
+| **Status** | `Pending` / `Approved` / `Rejected` |
+| **Submitted** | Date & time of submission |
+| **Actions** | Approve, Reject, or View Details |
+
+## Approving a Request
+
+Click **"Approve"** on a pending request. A confirmation dialog appears showing the full request details (team name, groups, contact). Confirm to provision the team workspace.
+
+> [!IMPORTANT]
+> Approving a request creates the team workspace and grants the specified AD groups their respective access levels.
+
+## Rejecting a Request
+
+Click **"Reject"** on a pending request. A confirmation dialog appears. Confirm to reject. The requester will be notified at their contact email.
+
+## Viewing Details
+
+Click **"View Details"** to open a read-only detail panel for any request, showing all fields without taking any action.

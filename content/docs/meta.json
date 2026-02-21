@@ -1,0 +1,12 @@
+{
+    "title": "Ensemble Docs",
+    "pages": [
+        "index",
+        "onboarding",
+        "scorecard",
+        "turnover",
+        "link-manager",
+        "admin",
+        "settings"
+    ]
+}

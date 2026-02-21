@@ -1,0 +1,101 @@
+---
+title: Scorecard Overview
+description: Your team's application health and performance dashboard
+---
+
+# Scorecard
+
+The **Scorecard** is your team's central view for tracking application health, availability, and transaction volume. It aggregates data across all applications configured for your team and presents it in a clean, filterable table and metric visualizations.
+
+---
+
+*Placeholder: screenshot of the full Scorecard page showing the Stats Row and Application Health table*
+
+## The Stats Row
+
+At the top of the Scorecard, five live statistics are shown for the currently selected time period:
+
+| Stat | Description |
+|------|-----------|
+| **Applications** | Total number of applications being tracked for your team |
+| **Tracked Tech** | Total number of individual scorecard entries (tech records) logged |
+| **Availability** | Count of availability records within the selected filter period |
+| **Volume Log** | Count of volume records within the selected filter period |
+| **SLA Breaches** | Count of records that breached SLA within the selected filter period. Displays in red when non-zero. |
+
+## Viewing & Filtering Data
+
+### View Modes
+
+The main table supports two view modes, toggled via the **Period / Year** tab:
+
+| Mode | Behavior |
+|------|---------|
+| **Period** | Filter by a rolling time window (e.g., Last 3 Months, Last 6 Months, This Year) |
+| **Year** | Filter by a specific calendar year |
+
+### Period Filter Options
+
+When in **Period** mode, the dropdown provides rolling time window options. These correctly span across year boundaries. For example, "Last 3 Months" selected in February will include January, December (previous year), and November (previous year).
+
+### Expanding Application Rows
+
+Each application has its own collapsible section in the table. Use:
+- **Expand All / Collapse All** button in the toolbar to toggle all sections at once
+- Click on any application row to expand or collapse it individually
+
+---
+
+*Placeholder: screenshot of an expanded application row in the Scorecard table*
+
+## Metric Visualization (Chart)
+
+Click the **"Visualize"** button (chart icon) in the toolbar to open the **Metrics Chart Sheet** on the right side of the screen.
+
+- Select one or more applications to compare
+- Each application is shown as a separate colored line or bar
+- Switch between chart types (Line, Bar, Area) using the chart toolbar
+- Hover over data points to see exact values for that month
+- Volume numbers are formatted for readability (e.g., `1.5M`, `2.3B`)
+
+---
+
+*Placeholder: screenshot of the Metrics Chart Sheet open on the right side*
+
+## Admin-Only: Publish & Sync
+
+If you have an **Admin** role for your team, you will see an additional **Sync Status Bar** below the stats row.
+
+### Sync States
+
+| State | Meaning |
+|-------|---------|
+| **Fully Synchronized** (green) | All months are published and up-to-date |
+| **Sync Required** (orange, pulsing) | There are unpublished or pending changes |
+
+Month pills appear next to the sync message, color-coded as follows:
+
+| Color | Indicates |
+|-------|---------|
+| 🟢 Green | Published and synchronized |
+| 🟠 Orange | Pending changes (click to publish) |
+| 🟡 Amber | Unpublished (click to publish) |
+
+Click a month pill to **Publish** or **Unpublish** that month's data. A confirmation dialog appears before any action is taken.
+
+> [!CAUTION]
+> Unpublishing hides data from the Enterprise Scorecard for all users. This can be reversed by publishing again.
+
+---
+
+## Adding & Editing Entries (Admins Only)
+
+Admins can add, edit, and delete scorecard entries within each expanded application section.
+
+- **Add Entry**: Click the **"+ Add Entry"** button within an application section
+- **Edit Entry**: Click the edit icon on any entry row
+- **Delete Entry**: Click the delete icon and confirm in the alert dialog
+
+## Enterprise Scorecard
+
+The **Enterprise View** button in the header navigates to the global Scorecard (`/scorecard`), where you can see published data across all teams — useful for leadership reviews.

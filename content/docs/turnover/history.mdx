@@ -1,0 +1,64 @@
+---
+title: Transition History
+description: Browsing and reviewing all past finalized turnovers
+---
+
+# Transition History
+
+**Transition History** is the permanent archive of every finalized shift handover. It provides a full audit trail for operations review, incident post-mortems, and compliance.
+
+---
+
+*Placeholder: screenshot of the Transition History page in grid view*
+
+## Browsing the Archive
+
+### View Modes
+
+Toggle between **Grid** and **List** view using the buttons in the page header:
+
+| Mode | Best For |
+|------|---------|
+| **Grid** (default) | Visual scanning, seeing multiple records at a glance |
+| **List** | Dense information, viewing notes inline |
+
+Both views show:
+- Date and time of finalization
+- Finalizer's name (shown with initials avatar)
+- Number of applications and total entries in that snapshot
+- Orange star badge if the snapshot contained critical items
+
+### Filtering Records
+
+**Search**: Type in the search bar to filter by notes text, finalizer name, or other content.
+
+**Date Range**: Click the **"Pick a date range"** button to open a two-month calendar picker. Select a start and end date to filter records within that window.
+
+Click **"Clear filters"** to reset all active filters.
+
+### Pagination
+
+Records are paginated with 20 per page. Use **Previous / Next** buttons at the bottom, with a current page indicator (e.g., `2 / 5`).
+
+---
+
+## Viewing a Snapshot
+
+Click any turnover card to open the **Turnover Snapshot** dialog, which opens as a **full-screen overlay**.
+
+---
+
+*Placeholder: screenshot of the full-screen Snapshot Dialog open*
+
+### Snapshot Dialog Contents
+
+The dialog header shows:
+- Date and time the turnover was finalized
+- The name of the person who finalized it
+
+Inside the scrollable content:
+- A **filter bar** to search within this snapshot's entries (by title, description, creator, RFC/INC numbers, etc.)
+- **Shift Notes** box (amber) if the finalizer added notes during the Finalize dialog
+- Collapsible **application accordion** groups, each expandable to reveal entries by section (MIM, INC, RFC, ALERTS, COMMS, FYI — sorted in priority order)
+
+Each entry within the snapshot is displayed in **read-only** mode with all original field values preserved.

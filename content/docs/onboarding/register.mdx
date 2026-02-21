@@ -1,0 +1,64 @@
+---
+title: Team Registration
+description: A step-by-step guide to the 4-step team registration form
+---
+
+# Team Registration
+
+Navigate to **`/teams/register`** to open the registration wizard. The form is divided into **4 steps**, each validated before allowing you to proceed.
+
+---
+
+*Placeholder: screenshot of the Team Registration page (step 1)*
+
+## Step 1 — Team Details
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **Team Name** | ✅ Yes | Must be unique. Availability is checked in real-time as you type. A green checkmark ✓ confirms the name is available. |
+| **Description & Notes** | No | Provide context to help administrators approve your request quickly. |
+
+> [!TIP]
+> Team names must be at least 3 characters long before availability is checked. Wait for the spinner to disappear before clicking **Continue**.
+
+---
+
+## Step 2 — Access Control
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **User Active Directory Group** | ✅ Yes | e.g., `ENSEMBLE-PE-USERS`. All members of this group will have standard access. |
+| **Admin Active Directory Group** | ✅ Yes | e.g., `ENSEMBLE-PE-ADMINS`. Members of this group will have administrative privileges within the team. |
+
+> [!CAUTION]
+> Ensure both AD groups are **currently active** in your corporate directory before submitting. Inactive groups will cause access provisioning to fail.
+
+---
+
+## Step 3 — Contact Information
+
+| Field | Required | Notes |
+|-------|----------|-------|
+| **Primary Point of Contact** | ✅ Yes | The full name of the person responsible for this team on the platform. |
+| **Contact Email Address** | ✅ Yes | A valid corporate email. Confirmation and updates will be sent here. |
+
+---
+
+## Step 4 — Review & Submit
+
+This step displays a summary of all information you entered. Review each field carefully before submitting.
+
+A **"Final Validation"** notice reminds you that by submitting, you confirm all details are correct and authorized.
+
+Click **"Submit Registration"** to send the request for admin review.
+
+### After Submission
+
+Once submitted, you will see a success screen confirming:
+- Your request has been sent for review
+- A confirmation email was sent to your contact address
+- You will be notified once an administrator approves the request
+
+---
+
+*Placeholder: screenshot of the Step 4 review screen / success confirmation screen*

@@ -1,0 +1,9 @@
+{
+    "title": "Admin",
+    "pages": [
+        "index",
+        "requests",
+        "teams",
+        "health"
+    ]
+}

@@ -16,6 +16,7 @@ import { Header } from '@/components/header'
 import { SessionGuard } from '@/components/session-guard'
 import { getSession } from '@/app/ssr/auth'
 import { MotionConfig } from 'framer-motion'
+import { RootProvider } from 'fumadocs-ui/provider/tanstack';
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async () => {
@@ -64,17 +65,19 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <ThemeProvider defaultTheme="system" storageKey="ensemble-theme">
           <MotionConfig reducedMotion="user">
             <QueryClientProvider client={queryClient}>
-              <SessionGuard session={session}>
-                <div className="relative flex min-h-screen flex-col">
-                  {!isAdminRoute &&
-                    !location.pathname.includes('/link-manager') &&
-                    !location.pathname.includes('/turnover') && (
-                      <Header session={session} />
-                    )}
-                  <main className="flex-1">{children}</main>
-                </div>
-                <Toaster />
-              </SessionGuard>
+              <RootProvider>
+                <SessionGuard session={session}>
+                  <div className="relative flex min-h-screen flex-col">
+                    {!isAdminRoute &&
+                      !location.pathname.includes('/link-manager') &&
+                      !location.pathname.includes('/turnover') && (
+                        <Header session={session} />
+                      )}
+                    <main className="flex-1">{children}</main>
+                  </div>
+                  <Toaster />
+                </SessionGuard>
+              </RootProvider>
             </QueryClientProvider>
           </MotionConfig>
         </ThemeProvider>

@@ -1,0 +1,77 @@
+---
+title: Dispatch Turnover
+description: Reviewing and finalizing the shift handover
+---
+
+# Dispatch Turnover
+
+**Dispatch Turnover** is the final step of the shift process. This page compiles all active entries from *Pass the Baton* into a structured, reviewable summary before you officially hand over to the incoming shift.
+
+---
+
+*Placeholder: screenshot of the Dispatch Turnover page with accordion list of applications*
+
+## Stats Summary
+
+Three summary cards appear at the top of the page:
+
+| Card | What it shows |
+|------|---------------|
+| **Active Applications** | Count of unique applications that have open entries |
+| **Total Entries** | Total number of all open turnover entries |
+| **Critical Items** | Number of entries marked as Important (shown in amber if non-zero) |
+
+## Filtering the View
+
+Use the **search bar** in the page header to filter entries by:
+- Entry title
+- Description content
+- Creator name
+
+Use **Expand All View / Collapse All View** to toggle all application accordions at once.
+
+## Application Accordions
+
+Entries are grouped by application. Each collapsible card shows:
+
+- The **Application Name** and **TLA badge** (e.g., `KMS`)
+- The **Tier** (e.g., Tier 1, Tier 2)
+- Count of items in that application
+- A **"Critical"** orange badge if any entry within is marked as Important
+- A left border — **orange** for critical applications, **blue** for normal
+
+Expand an accordion to see entries organized by section (RFC, INC, ALERTS, etc.).
+
+---
+
+*Placeholder: screenshot of an expanded accordion showing sections and entry cards*
+
+## Finalize Turnover
+
+When you are ready to hand over, click **"Finalize Turnover"**. This opens a confirmation dialog.
+
+> [!IMPORTANT]
+> The Finalize button is **disabled** if:
+> - There are no active entries to dispatch
+> - A **cooldown period** is still active (a recent finalization was made too recently)
+
+### Finalize Dialog
+
+| Field | Notes |
+|-------|-------|
+| **Shift Intelligence Notes** | An optional high-level summary or specific instructions for the incoming shift (e.g., known issues, pending actions) |
+
+A summary panel within the dialog shows:
+- Active Applications count
+- Total Handover Items count
+- Critical Intensity (number of high priority items)
+
+Click **"Authorize Finalization"** to confirm. This creates a permanent, immutable snapshot stored in **Transition History**.
+
+### Cooldown
+
+After finalizing, a **cooldown period** prevents immediate re-finalization. If the cooldown is active, a banner appears with:
+```
+🕐 Turnover Finalization Cooldown
+[Message explaining when you can finalize again]
+```

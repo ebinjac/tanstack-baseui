@@ -1,0 +1,40 @@
+---
+title: Health Monitoring
+description: Real-time system health dashboard for Ensemble
+---
+
+# Health Monitoring
+
+The **Health Monitoring** page provides a real-time view of the Ensemble platform's operational status. This helps administrators quickly identify and respond to infrastructure issues before they impact users.
+
+---
+
+*Placeholder: screenshot of the Health Monitoring page with service status cards*
+
+## What is Monitored?
+
+The health dashboard checks and reports on:
+
+| Component | What is Checked |
+|-----------|----------------|
+| **Database Connection** | Whether the primary database is reachable and responsive |
+| **API Services** | Status of core backend services |
+| **System Uptime** | How long the server has been running without restart |
+| **Environment Details** | Current environment (Production, Staging) and configuration details |
+
+## Status Indicators
+
+Each monitored component displays a status:
+
+| Status | Meaning |
+|--------|---------|
+| 🟢 **Healthy** | The component is operating normally |
+| 🔴 **Degraded / Error** | The component has a problem that needs attention |
+| 🟡 **Warning** | The component is partially functioning but flagged |
+
+## Refreshing Data
+
+Health checks are run automatically when you open the page. Click the **Refresh** button to re-run all checks and get the latest status.
+
+> [!TIP]
+> Bookmark this page to quickly check system health during incidents or after deployments.

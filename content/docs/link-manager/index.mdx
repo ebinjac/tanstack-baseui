@@ -1,0 +1,91 @@
+---
+title: Link Manager Overview
+description: Your team's central resource repository for bookmarks and URLs
+---
+
+# Link Manager
+
+The **Link Manager** is your team's curated bookmark repository. It centralizes all important URLs — dashboards, documentation, repositories, monitoring tools — so no one wastes time searching for critical resources.
+
+---
+
+*Placeholder: screenshot of the Link Manager in Grid view with the stats bar and filter cockpit visible*
+
+## Stats Summary
+
+Four summary cards display at the top of the Link Manager:
+
+| Card | Description |
+|------|-------------|
+| **Total Resources** | The total number of links in your team's repository |
+| **Public Access** | Links marked as public (visible to everyone) |
+| **Team Restricted** | Links marked as private (visible only to team members) |
+| **Total Insights** | Aggregated click/usage count across all links (formatted as `1.2k` for 1200+) |
+
+## Viewing Links
+
+### Three View Modes
+
+Toggle between views using the icons on the right side of the filter bar:
+
+| Icon | View | Best For |
+|------|------|---------|
+| List icon | **Grid** (default) | Visual cards with full title and category |
+| Table icon | **Table** | Dense, spreadsheet-style with sortable columns |
+| Grip icon | **Compact** | Minimal rows for maximum density |
+
+### Infinite Scroll
+
+Links are loaded in pages of 30. As you scroll down, additional resources load automatically. A loading indicator appears while fetching, and a summary message shows when all resources are loaded.
+
+---
+
+## Filtering Links
+
+The **Filter Cockpit** bar combines all controls in one place:
+
+| Control | Options |
+|---------|---------|
+| **Search** | Type to filter by title, tag, or description (300ms debounce) |
+| **Visibility** | Pill buttons: `All` / `Public` / `Private` |
+| **Application** | Dropdown: filter by a specific application (shows TLA + name) |
+| **Category** | Dropdown: filter by a defined link category |
+
+Active filters appear as removable chips below the filter bar. Click the **X** on any chip to remove that filter individually, or use **Clear all** to reset.
+
+---
+
+*Placeholder: screenshot showing the Active Filters Row chips below the filter cockpit*
+
+## Adding a Link
+
+Click the **"+ Add Link"** button in the page header to open the Create Link Dialog.
+
+| Field | Notes |
+|-------|-------|
+| **URL** | The full URL of the resource |
+| **Title** | A short, descriptive name |
+| **Application** | Associate the link with a specific application |
+| **Category** | Assign an existing category (or leave uncategorized) |
+| **Visibility** | Choose `Public` or `Private` |
+
+## Editing & Deleting Links
+
+Each link card has an action menu with:
+- **Edit** — Opens the edit dialog to update any field
+- **Delete** — Removes the link from the repository
+
+## Bulk Actions
+
+Select multiple links by clicking checkboxes (in Grid and Table views). Once one or more links are selected, the **Bulk Actions Bar** slides in:
+
+| Action | Description |
+|--------|-------------|
+| **Make Public** | Sets all selected links to public visibility |
+| **Make Private** | Sets all selected links to private visibility |
+| **Assign Category** | Dropdown to assign a category to all selected links at once |
+| **Select All Page** | Selects all 30 links on the current loaded page |
+| **Clear Selection** | Deselects all |
+
+> [!NOTE]
+> Bulk category assignment can also set links to "No Category" by selecting that option from the dropdown.

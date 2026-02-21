@@ -15,7 +15,6 @@ import {
   LogOut,
   Menu,
   RefreshCcw,
-  ShieldCheck,
   Sparkles,
   User,
   X,
@@ -93,7 +92,7 @@ const getTools = (teamId: string | null): Array<Tool> => [
 const NAV_LINKS: Array<NavLink> = [
   { href: '/support', icon: HelpCircle, label: 'Support' },
   { href: '/about', icon: Info, label: 'About' },
-  { href: '/know-more', icon: BookOpen, label: 'Docs' },
+  { href: '/docs', icon: BookOpen, label: 'Docs' },
 ]
 
 // ============================================================================
@@ -104,7 +103,6 @@ export function Header({ session }: { session: SessionData | null }) {
   const router = useRouter()
   const teams = session?.permissions || []
 
-  const isAdmin = teams.some((t) => t.role === 'ADMIN')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -199,7 +197,6 @@ export function Header({ session }: { session: SessionData | null }) {
                 userInitials={userInitials}
                 userName={user?.attributes.fullName}
                 userEmail={user?.attributes.email}
-                isAdmin={isAdmin}
                 isRefreshing={isRefreshing}
                 onRefreshPermissions={handleRefreshPermissions}
               />
@@ -405,7 +402,7 @@ function DesktopNav({ tools }: { tools: Array<Tool> }) {
               to={item.href as any}
               className="group inline-flex h-9 items-center justify-center rounded-full px-4 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200"
             >
-              <item.icon className="w-4 h-4 mr-2 group-hover:text-primary transition-colors" />
+              <item.icon className="w-4 h-4 mr-2 group-hover:text-foreground transition-colors" />
               {item.label}
             </Link>
           </NavigationMenuItem>
@@ -461,7 +458,6 @@ interface UserDropdownProps {
   userInitials: string
   userName?: string
   userEmail?: string
-  isAdmin: boolean
   isRefreshing: boolean
   onRefreshPermissions: () => void
 }
@@ -470,7 +466,6 @@ function UserDropdown({
   userInitials,
   userName,
   userEmail,
-  isAdmin,
   isRefreshing,
   onRefreshPermissions,
 }: UserDropdownProps) {
@@ -539,35 +534,37 @@ function UserDropdown({
             <span>Refresh Permissions</span>
           </DropdownMenuItem>
 
-          {isAdmin && (
-            <DropdownMenuItem
-              render={
-                <Link
-                  to="/admin"
-                  className="flex items-center w-full cursor-pointer rounded-lg"
-                >
-                  <ShieldCheck className="mr-3 h-4 w-4 text-primary" />
-                  <span className="font-semibold text-primary">
-                    Admin Panel
-                  </span>
-                </Link>
-              }
-            />
-          )}
+
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator className="my-2" />
 
         <DropdownMenuGroup>
-          <DropdownMenuItem className="cursor-pointer rounded-lg">
-            <LifeBuoy className="mr-3 h-4 w-4 text-muted-foreground" />
-            <span>Help & Support</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer rounded-lg">
-            <Sparkles className="mr-3 h-4 w-4 text-muted-foreground" />
-            <span>What's New</span>
-            <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground/50" />
-          </DropdownMenuItem>
+          <DropdownMenuItem
+            render={
+              <Link
+                to="/support"
+                className="flex items-center w-full cursor-pointer rounded-lg"
+              >
+                <LifeBuoy className="mr-3 h-4 w-4 text-muted-foreground" />
+                <span>Help & Support</span>
+              </Link>
+            }
+          />
+          <DropdownMenuItem
+            render={
+              <a
+                href="https://slack.com/app_redirect?channel=ensemble"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center w-full cursor-pointer rounded-lg"
+              >
+                <Sparkles className="mr-3 h-4 w-4 text-muted-foreground" />
+                <span>What's New</span>
+                <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground/50" />
+              </a>
+            }
+          />
         </DropdownMenuGroup>
 
         <DropdownMenuSeparator className="my-2" />

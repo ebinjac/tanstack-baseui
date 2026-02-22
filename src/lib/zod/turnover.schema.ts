@@ -39,28 +39,26 @@ export const IncFieldsSchema = z.object({
 })
 
 export const MimFieldsSchema = z.object({
-  mimLink: z.string().url('Must be a valid URL'),
-  mimSlackLink: z
-    .string()
-    .url('Must be a valid URL')
+  mimLink: z.url('Must be a valid URL'),
+  mimSlackLink: z.url('Must be a valid URL')
     .optional()
     .or(z.literal('')),
 })
 
 export const CommsFieldsSchema = z.object({
   emailSubject: z.string().optional(),
-  slackLink: z.string().url('Must be a valid URL').optional().or(z.literal('')),
+  slackLink: z.url('Must be a valid URL').optional().or(z.literal('')),
 })
 
 // Base entry schema
 export const CreateTurnoverEntryBaseSchema = z.object({
-  teamId: z.string().uuid(),
-  applicationId: z.string().uuid(),
+  teamId: z.uuid(),
+  applicationId: z.uuid(),
   section: TurnoverSectionSchema,
   title: z.string().max(255).optional().or(z.literal('')), // Title is auto-generated if empty
   description: z.string().optional(),
   comments: z.string().optional(), // HTML rich text
-  isImportant: z.boolean().optional().default(false),
+  isImportant: z.boolean().optional().prefault(false),
 })
 
 // Combined create schema with section-specific fields
@@ -83,21 +81,21 @@ export const CreateTurnoverEntrySchema = CreateTurnoverEntryBaseSchema.extend({
     case 'RFC':
       if (!data.rfcNumber) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: 'RFC Number is required',
           path: ['rfcNumber'],
         })
       }
       if (!data.rfcStatus) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: 'RFC Status is required',
           path: ['rfcStatus'],
         })
       }
       if (!data.validatedBy) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: 'Validated By is required',
           path: ['validatedBy'],
         })
@@ -106,7 +104,7 @@ export const CreateTurnoverEntrySchema = CreateTurnoverEntryBaseSchema.extend({
     case 'INC':
       if (!data.incidentNumber) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: 'Incident Number is required',
           path: ['incidentNumber'],
         })
@@ -115,7 +113,7 @@ export const CreateTurnoverEntrySchema = CreateTurnoverEntryBaseSchema.extend({
     case 'MIM':
       if (!data.mimLink) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: 'MIM Link is required',
           path: ['mimLink'],
         })
@@ -124,7 +122,7 @@ export const CreateTurnoverEntrySchema = CreateTurnoverEntryBaseSchema.extend({
     case 'COMMS':
       if (!data.emailSubject && !data.slackLink) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: 'Email Subject or Slack Link is required',
           path: ['emailSubject'],
         })
@@ -136,7 +134,7 @@ export const CreateTurnoverEntrySchema = CreateTurnoverEntryBaseSchema.extend({
     case 'FYI':
       if (!data.description) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: "custom",
           message: 'Content is required for FYI entries',
           path: ['description'],
         })
@@ -166,59 +164,59 @@ const UpdateTurnoverEntryBaseSchema = CreateTurnoverEntryBaseSchema.extend({
 // Update schema
 export const UpdateTurnoverEntrySchema =
   UpdateTurnoverEntryBaseSchema.partial().extend({
-    id: z.string().uuid(),
-    teamId: z.string().uuid(),
+    id: z.uuid(),
+    teamId: z.uuid(),
   })
 
 export type UpdateTurnoverEntryInput = z.infer<typeof UpdateTurnoverEntrySchema>
 
 // Toggle important
 export const ToggleImportantSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   isImportant: z.boolean(),
 })
 
 // Resolve entry
 export const ResolveEntrySchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
 })
 
 // Delete entry
 export const DeleteEntrySchema = z.object({
-  id: z.string().uuid(),
-  teamId: z.string().uuid(),
+  id: z.uuid(),
+  teamId: z.uuid(),
 })
 
 // Get entries
 export const GetEntriesSchema = z.object({
-  teamId: z.string().uuid(),
-  applicationId: z.string().uuid().optional(),
+  teamId: z.uuid(),
+  applicationId: z.uuid().optional(),
   section: TurnoverSectionSchema.optional(),
   status: TurnoverStatusSchema.optional(),
   includeRecentlyResolved: z.boolean().optional(), // Include resolved entries from last 24 hours
-  limit: z.number().int().positive().default(50).optional(),
-  offset: z.number().int().nonnegative().default(0).optional(),
+  limit: z.int().positive().prefault(50).optional(),
+  offset: z.int().nonnegative().prefault(0).optional(),
 })
 
 // Finalize turnover
 export const FinalizeTurnoverSchema = z.object({
-  teamId: z.string().uuid(),
+  teamId: z.uuid(),
   notes: z.string().optional(),
 })
 
 // Get finalized turnovers
 export const GetFinalizedTurnoversSchema = z.object({
-  teamId: z.string().uuid(),
+  teamId: z.uuid(),
   search: z.string().optional(),
   fromDate: z.string().optional(), // ISO date string
   toDate: z.string().optional(), // ISO date string
-  limit: z.number().int().positive().default(20).optional(),
-  offset: z.number().int().nonnegative().default(0).optional(),
+  limit: z.int().positive().prefault(20).optional(),
+  offset: z.int().nonnegative().prefault(0).optional(),
 })
 
 // Metrics
 export const GetTurnoverMetricsSchema = z.object({
-  teamId: z.string().uuid(),
+  teamId: z.uuid(),
   startDate: z.string(), // ISO date string
   endDate: z.string(), // ISO date string
 })

@@ -6,7 +6,7 @@ export const SessionSchema = z.object({
   user: z.object({
     firstName: z.string(),
     lastName: z.string(),
-    email: z.string().email(),
+    email: z.email(),
     adsId: z.string(),
   }),
   permissions: z.array(

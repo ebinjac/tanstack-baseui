@@ -389,7 +389,7 @@ export const getTurnoverEntries = createServerFn({ method: 'GET' })
 export const getDispatchEntries = createServerFn({ method: 'GET' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    z.object({ teamId: z.string().uuid() }).parse(data),
+    z.object({ teamId: z.uuid() }).parse(data),
   )
   .handler(async ({ data }) => {
     const { teamId } = data
@@ -443,7 +443,7 @@ export const getDispatchEntries = createServerFn({ method: 'GET' })
 export const canFinalizeTurnover = createServerFn({ method: 'GET' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    z.object({ teamId: z.string().uuid() }).parse(data),
+    z.object({ teamId: z.uuid() }).parse(data),
   )
   .handler(async ({ data }) => {
     // Check last finalization time (5 hours cooldown)
@@ -600,7 +600,7 @@ export const getFinalizedTurnovers = createServerFn({ method: 'GET' })
 export const getFinalizedTurnoverById = createServerFn({ method: 'GET' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    z.object({ id: z.string().uuid() }).parse(data),
+    z.object({ id: z.uuid() }).parse(data),
   )
   .handler(async ({ data }) => {
     const turnover = await db.query.finalizedTurnovers.findFirst({

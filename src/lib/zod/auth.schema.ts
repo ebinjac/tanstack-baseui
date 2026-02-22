@@ -8,8 +8,8 @@ export const ssoUserSchema = z.object({
     adsId: z.string().min(1),
     guid: z.string().min(1),
     employeeId: z.string().min(1),
-    email: z.string().email(),
-    picture: z.string().url().optional(),
+    email: z.email(),
+    picture: z.url().optional(),
   }),
   groups: z.array(z.string()),
 })
@@ -17,11 +17,11 @@ export const ssoUserSchema = z.object({
 export const sessionUserSchema = z.object({
   userId: z.string(),
   adsId: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   fullName: z.string(),
   groups: z.array(z.string()),
-  accessibleTeamIds: z.array(z.string().uuid()),
-  adminTeamIds: z.array(z.string().uuid()),
+  accessibleTeamIds: z.array(z.uuid()),
+  adminTeamIds: z.array(z.uuid()),
   iat: z.number(), // issued at
   exp: z.number(), // expiration
 })

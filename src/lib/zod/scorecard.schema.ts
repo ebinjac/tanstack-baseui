@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 // Create Scorecard Entry Schema
 export const CreateScorecardEntrySchema = z.object({
-  applicationId: z.string().uuid('Invalid application ID'),
+  applicationId: z.uuid('Invalid application ID'),
   scorecardIdentifier: z
     .string()
     .max(100, 'Identifier must be less than 100 characters')
@@ -28,7 +28,7 @@ export const CreateScorecardEntrySchema = z.object({
 
 // Update Scorecard Entry Schema
 export const UpdateScorecardEntrySchema = z.object({
-  id: z.string().uuid('Invalid entry ID'),
+  id: z.uuid('Invalid entry ID'),
   scorecardIdentifier: z
     .string()
     .min(2, 'Identifier must be at least 2 characters')
@@ -57,15 +57,11 @@ export const UpdateScorecardEntrySchema = z.object({
 
 // Upsert Availability Schema
 export const UpsertAvailabilitySchema = z.object({
-  scorecardEntryId: z.string().uuid('Invalid entry ID'),
-  year: z
-    .number()
-    .int()
+  scorecardEntryId: z.uuid('Invalid entry ID'),
+  year: z.int()
     .min(2000, 'Year must be 2000 or later')
     .max(2100, 'Year must be before 2100'),
-  month: z
-    .number()
-    .int()
+  month: z.int()
     .min(1, 'Month must be between 1 and 12')
     .max(12, 'Month must be between 1 and 12'),
   availability: z
@@ -77,18 +73,14 @@ export const UpsertAvailabilitySchema = z.object({
 
 // Upsert Volume Schema
 export const UpsertVolumeSchema = z.object({
-  scorecardEntryId: z.string().uuid('Invalid entry ID'),
-  year: z
-    .number()
-    .int()
+  scorecardEntryId: z.uuid('Invalid entry ID'),
+  year: z.int()
     .min(2000, 'Year must be 2000 or later')
     .max(2100, 'Year must be before 2100'),
-  month: z
-    .number()
-    .int()
+  month: z.int()
     .min(1, 'Month must be between 1 and 12')
     .max(12, 'Month must be between 1 and 12'),
-  volume: z.number().int().min(0, 'Volume must be non-negative'),
+  volume: z.int().min(0, 'Volume must be non-negative'),
   reason: z.string().nullable().optional(),
 })
 
@@ -100,26 +92,22 @@ export const BulkUpsertScorecardDataSchema = z.object({
 
 // Query Schemas
 export const GetScorecardDataSchema = z.object({
-  teamId: z.string().uuid('Invalid team ID'),
-  year: z.number().int().min(2000).max(2100),
+  teamId: z.uuid('Invalid team ID'),
+  year: z.int().min(2000).max(2100),
 })
 
 export const CheckScorecardIdentifierSchema = z.object({
   identifier: z.string().min(1),
-  excludeId: z.string().uuid().optional(), // Exclude current entry when editing
+  excludeId: z.uuid().optional(), // Exclude current entry when editing
 })
 
 // Publish/Unpublish Scorecard Schema
 export const PublishScorecardSchema = z.object({
-  teamId: z.string().uuid('Invalid team ID'),
-  year: z
-    .number()
-    .int()
+  teamId: z.uuid('Invalid team ID'),
+  year: z.int()
     .min(2000, 'Year must be 2000 or later')
     .max(2100, 'Year must be before 2100'),
-  month: z
-    .number()
-    .int()
+  month: z.int()
     .min(1, 'Month must be between 1 and 12')
     .max(12, 'Month must be between 1 and 12'),
 })
@@ -127,10 +115,8 @@ export const PublishScorecardSchema = z.object({
 export const UnpublishScorecardSchema = PublishScorecardSchema
 
 export const GetPublishStatusSchema = z.object({
-  teamId: z.string().uuid('Invalid team ID'),
-  year: z
-    .number()
-    .int()
+  teamId: z.uuid('Invalid team ID'),
+  year: z.int()
     .min(2000, 'Year must be 2000 or later')
     .max(2100, 'Year must be before 2100'),
 })

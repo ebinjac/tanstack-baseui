@@ -53,7 +53,7 @@ export const createApplication = createServerFn({ method: 'POST' })
 
 export const getTeamApplications = createServerFn({ method: 'GET' })
   .inputValidator((data: unknown) =>
-    z.object({ teamId: z.string().uuid() }).parse(data),
+    z.object({ teamId: z.uuid() }).parse(data),
   )
   .handler(async ({ data }) => {
     try {
@@ -102,7 +102,7 @@ export const updateApplication = createServerFn({ method: 'POST' })
 export const deleteApplication = createServerFn({ method: 'POST' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    z.object({ applicationId: z.string().uuid() }).parse(data),
+    z.object({ applicationId: z.uuid() }).parse(data),
   )
   .handler(async ({ data, context }) => {
     // Get application to find teamId
@@ -128,7 +128,7 @@ export const deleteApplication = createServerFn({ method: 'POST' })
 
 export const checkTeamTLA = createServerFn({ method: 'GET' })
   .inputValidator((data: unknown) =>
-    z.object({ teamId: z.string().uuid(), tla: z.string() }).parse(data),
+    z.object({ teamId: z.uuid(), tla: z.string() }).parse(data),
   )
   .handler(async ({ data }) => {
     try {

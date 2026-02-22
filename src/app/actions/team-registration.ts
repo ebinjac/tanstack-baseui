@@ -122,7 +122,7 @@ export const getRegistrationRequests = createServerFn({ method: 'GET' })
   })
 
 const UpdateRequestStatusSchema = z.object({
-  requestId: z.string().uuid(),
+  requestId: z.uuid(),
   status: z.enum(['approved', 'rejected', 'pending']),
   comments: z.string().optional(),
 })

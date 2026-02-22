@@ -204,7 +204,7 @@ export const updateScorecardEntry = createServerFn({ method: 'POST' })
 export const deleteScorecardEntry = createServerFn({ method: 'POST' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    z.object({ entryId: z.string().uuid() }).parse(data),
+    z.object({ entryId: z.uuid() }).parse(data),
   )
   .handler(async ({ data, context }) => {
     // Get the entry
@@ -395,7 +395,7 @@ export const getGlobalScorecardData = createServerFn({ method: 'GET' })
   .inputValidator((data: unknown) =>
     z
       .object({
-        year: z.number().int().min(2000).max(2100),
+        year: z.int().min(2000).max(2100),
         leadershipFilter: z.string().optional(),
         leadershipType: z.string().optional(),
       })
@@ -728,7 +728,7 @@ export const unpublishScorecard = createServerFn({ method: 'POST' })
 export const getGlobalPublishStatus = createServerFn({ method: 'GET' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    z.object({ year: z.number().int().min(2000).max(2100) }).parse(data),
+    z.object({ year: z.int().min(2000).max(2100) }).parse(data),
   )
   .handler(async ({ data }) => {
     // Get all published records for the year

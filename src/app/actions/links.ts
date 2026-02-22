@@ -30,12 +30,12 @@ export const getLinks = createServerFn({ method: 'GET' })
   .inputValidator((data: unknown) =>
     z
       .object({
-        teamId: z.string().uuid(),
+        teamId: z.uuid(),
         search: z.string().optional(),
-        visibility: z.enum(['all', 'private', 'public']).default('all'),
-        applicationId: z.string().uuid().optional(),
-        categoryId: z.string().uuid().optional(),
-        limit: z.number().int().min(1).max(100).default(30),
+        visibility: z.enum(['all', 'private', 'public']).prefault('all'),
+        applicationId: z.uuid().optional(),
+        categoryId: z.uuid().optional(),
+        limit: z.int().min(1).max(100).prefault(30),
         cursor: z.string().optional(), // ISO timestamp cursor for pagination
       })
       .parse(data),
@@ -169,7 +169,7 @@ export const createLink = createServerFn({ method: 'POST' })
 export const deleteLink = createServerFn({ method: 'POST' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    z.object({ id: z.string().uuid(), teamId: z.string().uuid() }).parse(data),
+    z.object({ id: z.uuid(), teamId: z.uuid() }).parse(data),
   )
   .handler(async ({ data, context }) => {
     const link = await db.query.links.findFirst({
@@ -200,7 +200,7 @@ export const deleteLink = createServerFn({ method: 'POST' })
 export const trackLinkUsage = createServerFn({ method: 'POST' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    z.object({ id: z.string().uuid() }).parse(data),
+    z.object({ id: z.uuid() }).parse(data),
   )
   .handler(async ({ data }) => {
     await db
@@ -219,14 +219,14 @@ export const updateLink = createServerFn({ method: 'POST' })
   .inputValidator((input: unknown) =>
     z
       .object({
-        id: z.string().uuid(),
-        teamId: z.string().uuid(),
+        id: z.uuid(),
+        teamId: z.uuid(),
         title: z.string().optional(),
-        url: z.string().url().optional(),
+        url: z.url().optional(),
         description: z.string().optional(),
         visibility: z.enum(['private', 'public']).optional(),
-        categoryId: z.string().uuid().nullable().optional(),
-        applicationId: z.string().uuid().nullable().optional(),
+        categoryId: z.uuid().nullable().optional(),
+        applicationId: z.uuid().nullable().optional(),
         tags: z.array(z.string()).optional(),
       })
       .parse(input),
@@ -334,12 +334,12 @@ export const bulkUpdateLinks = createServerFn({ method: 'POST' })
   .inputValidator((data: unknown) =>
     z
       .object({
-        teamId: z.string().uuid(),
-        linkIds: z.array(z.string().uuid()).min(1),
+        teamId: z.uuid(),
+        linkIds: z.array(z.uuid()).min(1),
         updates: z.object({
           visibility: z.enum(['private', 'public']).optional(),
-          categoryId: z.string().uuid().nullable().optional(),
-          applicationId: z.string().uuid().nullable().optional(),
+          categoryId: z.uuid().nullable().optional(),
+          applicationId: z.uuid().nullable().optional(),
           tagsToAdd: z.array(z.string()).optional(),
           replaceTags: z.boolean().optional(),
         }),
@@ -439,7 +439,7 @@ export const bulkUpdateLinks = createServerFn({ method: 'POST' })
 export const getLinkCategories = createServerFn({ method: 'GET' })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    z.object({ teamId: z.string().uuid() }).parse(data),
+    z.object({ teamId: z.uuid() }).parse(data),
   )
   .handler(async ({ data }) => {
     return await db.query.linkCategories.findMany({
@@ -456,7 +456,7 @@ export const createLinkCategory = createServerFn({ method: 'POST' })
   .inputValidator((data: unknown) =>
     z
       .object({
-        teamId: z.string().uuid(),
+        teamId: z.uuid(),
         name: z.string().min(1).max(100),
       })
       .parse(data),
@@ -482,7 +482,7 @@ export const updateLinkCategory = createServerFn({ method: 'POST' })
   .inputValidator((data: unknown) =>
     z
       .object({
-        id: z.string().uuid(),
+        id: z.uuid(),
         name: z.string().min(1).max(100),
         description: z.string().optional(),
       })
@@ -509,7 +509,7 @@ export const deleteLinkCategory = createServerFn({ method: 'POST' })
   .inputValidator((data: unknown) =>
     z
       .object({
-        id: z.string().uuid(),
+        id: z.uuid(),
       })
       .parse(data),
   )
@@ -528,7 +528,7 @@ export const getLinkStats = createServerFn({ method: 'GET' })
   .inputValidator((data: unknown) =>
     z
       .object({
-        teamId: z.string().uuid(),
+        teamId: z.uuid(),
       })
       .parse(data),
   )

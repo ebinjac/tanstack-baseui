@@ -93,15 +93,14 @@ export function CreateLinkDialog({
   useEffect(() => {
     if (open && link) {
       form.reset({
-        teamId,
-        visibility: link.visibility,
-        title: link.title,
-        url: link.url,
-        description: link.description || '',
-        tags: link.tags || [],
-        categoryId: link.categoryId || null,
-        applicationId: link.applicationId || null,
-      })
+                teamId,
+                visibility: link.visibility,
+                title: link.title,
+                url: link.url,
+                tags: link.tags || [],
+                categoryId: link.categoryId || null,
+                applicationId: link.applicationId || null,
+              }).describe(link.description || '')
     }
   }, [open, link, form, teamId])
 

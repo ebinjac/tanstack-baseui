@@ -23,7 +23,7 @@ export const getTeams = createServerFn({ method: 'GET' })
 
 export const getTeamById = createServerFn({ method: 'GET' })
   .inputValidator((data: unknown) =>
-    z.object({ teamId: z.string().uuid() }).parse(data),
+    z.object({ teamId: z.uuid() }).parse(data),
   )
   .handler(async ({ data }) => {
     try {

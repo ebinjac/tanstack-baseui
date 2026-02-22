@@ -13,18 +13,18 @@ import { requireAuth } from '@/lib/middleware/auth.middleware'
 // Schemas
 // ============================================================================
 const GetApplicationGroupsSchema = z.object({
-  teamId: z.string().uuid(),
+  teamId: z.uuid(),
 })
 
 const CreateApplicationGroupSchema = z.object({
-  teamId: z.string().uuid(),
+  teamId: z.uuid(),
   name: z.string().min(1).max(100),
   description: z.string().optional(),
   color: z.string().optional(),
 })
 
 const UpdateApplicationGroupSchema = z.object({
-  groupId: z.string().uuid(),
+  groupId: z.uuid(),
   name: z.string().min(1).max(100).optional(),
   description: z.string().optional(),
   color: z.string().optional(),
@@ -32,34 +32,34 @@ const UpdateApplicationGroupSchema = z.object({
 })
 
 const DeleteApplicationGroupSchema = z.object({
-  groupId: z.string().uuid(),
+  groupId: z.uuid(),
 })
 
 const AddApplicationsToGroupSchema = z.object({
-  groupId: z.string().uuid(),
-  applicationIds: z.array(z.string().uuid()),
+  groupId: z.uuid(),
+  applicationIds: z.array(z.uuid()),
 })
 
 const RemoveApplicationFromGroupSchema = z.object({
-  applicationId: z.string().uuid(),
+  applicationId: z.uuid(),
 })
 
 const ReorderGroupsSchema = z.object({
-  groupIds: z.array(z.string().uuid()),
+  groupIds: z.array(z.uuid()),
 })
 
 const ToggleTurnoverGroupingSchema = z.object({
-  teamId: z.string().uuid(),
+  teamId: z.uuid(),
   enabled: z.boolean(),
 })
 
 const SyncGroupStructureSchema = z.object({
-  teamId: z.string().uuid(),
+  teamId: z.uuid(),
   groups: z.array(
     z.object({
       id: z.string(), // Can be temporary ID for new groups
       name: z.string(),
-      applicationIds: z.array(z.string().uuid()),
+      applicationIds: z.array(z.uuid()),
       color: z.string().optional(),
     }),
   ),

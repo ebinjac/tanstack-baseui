@@ -64,9 +64,9 @@ import { linkKeys } from '@/lib/query-keys'
 // Schema for search params
 const linkSearchSchema = z.object({
   search: z.string().optional(),
-  visibility: z.enum(['all', 'private', 'public']).default('all').optional(),
-  applicationId: z.string().uuid().optional(),
-  categoryId: z.string().uuid().optional(),
+  visibility: z.enum(['all', 'private', 'public']).prefault('all').optional(),
+  applicationId: z.uuid().optional(),
+  categoryId: z.uuid().optional(),
 })
 
 const PAGE_SIZE = 30

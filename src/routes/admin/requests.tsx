@@ -1,4 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { formatDistanceToNow } from "date-fns";
 import {
   CheckCircle2,
   ClipboardList,
@@ -8,47 +10,16 @@ import {
   MoreHorizontal,
   Search,
   XCircle,
-} from 'lucide-react'
-import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { formatDistanceToNow } from 'date-fns'
-import type { TeamRegistrationRequest } from '@/db/schema/teams'
+} from "lucide-react";
+import type { ComponentType } from "react";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   getRegistrationRequests,
   updateRequestStatus,
-} from '@/app/actions/team-registration'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { PageHeader } from '@/components/shared'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { EmptyState } from '@/components/shared/empty-state'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/app/actions/team-registration";
+import { PageHeader } from "@/components/shared";
+import { EmptyState } from "@/components/shared/empty-state";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,135 +29,168 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Textarea } from '@/components/ui/textarea'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
+} from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from "@/components/ui/tooltip";
+import type { TeamRegistrationRequest } from "@/db/schema/teams";
 
-export const Route = createFileRoute('/admin/requests')({
+export const Route = createFileRoute("/admin/requests")({
   component: AdminRequests,
-})
+});
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: admin requests page with multiple filters and states
 function AdminRequests() {
-  const queryClient = useQueryClient()
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const queryClient = useQueryClient();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedRequest, setSelectedRequest] =
-    useState<TeamRegistrationRequest | null>(null)
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
-  const [actionType, setActionType] = useState<'approved' | 'rejected' | null>(
-    null,
-  )
-  const [comments, setComments] = useState('')
+    useState<TeamRegistrationRequest | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [actionType, setActionType] = useState<"approved" | "rejected" | null>(
+    null
+  );
+  const [comments, setComments] = useState("");
 
   const { data: requests, isLoading } = useQuery({
-    queryKey: ['registration-requests'],
+    queryKey: ["registration-requests"],
     queryFn: () => getRegistrationRequests(),
-  })
+  });
 
   const updateStatusMutation = useMutation({
     mutationFn: updateRequestStatus,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['registration-requests'] })
-      queryClient.invalidateQueries({ queryKey: ['teams'] })
+      queryClient.invalidateQueries({ queryKey: ["registration-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["teams"] });
       toast.success(
-        `Request ${actionType === 'approved' ? 'approved' : 'rejected'} successfully`,
-      )
-      resetState()
+        `Request ${actionType === "approved" ? "approved" : "rejected"} successfully`
+      );
+      resetState();
     },
     onError: (error: Error) => {
-      toast.error('Failed to update request', {
+      toast.error("Failed to update request", {
         description: error.message,
-      })
+      });
     },
-  })
+  });
 
   const resetState = () => {
-    setSelectedRequest(null)
-    setActionType(null)
-    setComments('')
-    setIsDetailsOpen(false)
-  }
+    setSelectedRequest(null);
+    setActionType(null);
+    setComments("");
+    setIsDetailsOpen(false);
+  };
 
   const handleAction = () => {
-    if (!selectedRequest || !actionType) return
+    if (!(selectedRequest && actionType)) {
+      return;
+    }
     updateStatusMutation.mutate({
       data: {
         requestId: selectedRequest.id,
         status: actionType,
         comments: comments.trim() || undefined,
       },
-    })
-  }
+    });
+  };
 
   const filteredRequests = requests?.filter((req) => {
     const matchesSearch =
       req.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       req.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.contactEmail.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || req.status === statusFilter
-    return matchesSearch && matchesStatus
-  })
+      req.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || req.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const stats = {
     total: requests?.length || 0,
-    pending: requests?.filter((r) => r.status === 'pending').length || 0,
-    approved: requests?.filter((r) => r.status === 'approved').length || 0,
-    rejected: requests?.filter((r) => r.status === 'rejected').length || 0,
-  }
+    pending: requests?.filter((r) => r.status === "pending").length || 0,
+    approved: requests?.filter((r) => r.status === "approved").length || 0,
+    rejected: requests?.filter((r) => r.status === "rejected").length || 0,
+  };
 
   return (
     <div className="space-y-6">
       {/* Premium Admin Header Banner */}
       <PageHeader
-        title="Team Requests"
         description="Manage and review incoming team registration applications."
+        title="Team Requests"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <MiniStatCard
+          color="blue"
+          icon={ClipboardList}
           title="Total"
           value={stats.total}
-          icon={ClipboardList}
-          color="blue"
         />
         <MiniStatCard
+          color="amber"
+          icon={Clock}
           title="Pending"
           value={stats.pending}
-          icon={Clock}
-          color="amber"
         />
         <MiniStatCard
+          color="emerald"
+          icon={CheckCircle2}
           title="Approved"
           value={stats.approved}
-          icon={CheckCircle2}
-          color="emerald"
         />
         <MiniStatCard
+          color="red"
+          icon={XCircle}
           title="Rejected"
           value={stats.rejected}
-          icon={XCircle}
-          color="red"
         />
       </div>
 
       <Card className="border-none shadow-xl ring-1 ring-gray-200 dark:ring-gray-800">
         <CardHeader className="pb-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="flex items-center gap-2">
               <div className="relative w-full md:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search by team, contact or email..."
-                  className="pl-10 h-10 bg-muted/50 border-none ring-1 ring-border"
-                  value={searchTerm}
+                  className="h-10 border-none bg-muted/50 pl-10 ring-1 ring-border"
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by team, contact or email..."
+                  value={searchTerm}
                 />
               </div>
               <TooltipProvider>
@@ -197,9 +201,9 @@ function AdminRequests() {
                         <DropdownMenuTrigger
                           render={
                             <Button
-                              variant="outline"
-                              size="icon"
                               className="h-10 w-10"
+                              size="icon"
+                              variant="outline"
                             >
                               <Filter className="h-4 w-4" />
                             </Button>
@@ -214,38 +218,38 @@ function AdminRequests() {
                       <DropdownMenuLabel>Status Filter</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => setStatusFilter('all')}
                         className="flex items-center justify-between"
+                        onClick={() => setStatusFilter("all")}
                       >
-                        All{' '}
-                        {statusFilter === 'all' && (
+                        All{" "}
+                        {statusFilter === "all" && (
                           <CheckCircle2 className="h-4 w-4 text-primary" />
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => setStatusFilter('pending')}
                         className="flex items-center justify-between"
+                        onClick={() => setStatusFilter("pending")}
                       >
-                        Pending{' '}
-                        {statusFilter === 'pending' && (
+                        Pending{" "}
+                        {statusFilter === "pending" && (
                           <CheckCircle2 className="h-4 w-4 text-amber-500" />
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => setStatusFilter('approved')}
                         className="flex items-center justify-between"
+                        onClick={() => setStatusFilter("approved")}
                       >
-                        Approved{' '}
-                        {statusFilter === 'approved' && (
+                        Approved{" "}
+                        {statusFilter === "approved" && (
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => setStatusFilter('rejected')}
                         className="flex items-center justify-between"
+                        onClick={() => setStatusFilter("rejected")}
                       >
-                        Rejected{' '}
-                        {statusFilter === 'rejected' && (
+                        Rejected{" "}
+                        {statusFilter === "rejected" && (
                           <CheckCircle2 className="h-4 w-4 text-red-500" />
                         )}
                       </DropdownMenuItem>
@@ -257,7 +261,7 @@ function AdminRequests() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-xl border border-border shadow-sm overflow-hidden bg-background">
+          <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow className="hover:bg-transparent">
@@ -269,15 +273,15 @@ function AdminRequests() {
                   </TableHead>
                   <TableHead className="font-semibold">Requested</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="text-right font-semibold pr-6">
+                  <TableHead className="pr-6 text-right font-semibold">
                     Management
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
+                {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-64 text-center">
+                    <TableCell className="h-64 text-center" colSpan={5}>
                       <div className="flex flex-col items-center gap-2">
                         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                         <span className="text-muted-foreground text-sm">
@@ -286,28 +290,31 @@ function AdminRequests() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : (filteredRequests?.length ?? 0) === 0 ? (
+                )}
+                {!isLoading && (filteredRequests?.length ?? 0) === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-64 text-center">
+                    <TableCell className="h-64 text-center" colSpan={5}>
                       <EmptyState
-                        icon={Search}
-                        title="No requests found"
-                        description="No requests match your current filters."
-                        variant="search"
-                        size="md"
                         actionText="Clear filters"
+                        description="No requests match your current filters."
+                        icon={Search}
                         onAction={() => {
-                          setSearchTerm('')
-                          setStatusFilter('all')
+                          setSearchTerm("");
+                          setStatusFilter("all");
                         }}
+                        size="md"
+                        title="No requests found"
+                        variant="search"
                       />
                     </TableCell>
                   </TableRow>
-                ) : (
+                )}
+                {!isLoading &&
+                  (filteredRequests?.length ?? 0) > 0 &&
                   filteredRequests?.map((req) => (
                     <TableRow
+                      className="group transition-colors hover:bg-muted/30"
                       key={req.id}
-                      className="group hover:bg-muted/30 transition-colors"
                     >
                       <TableCell>
                         <div className="flex flex-col gap-0.5">
@@ -316,14 +323,14 @@ function AdminRequests() {
                           </span>
                           <div className="flex items-center gap-2">
                             <Badge
+                              className="h-4 bg-accent/50 font-normal text-[10px]"
                               variant="outline"
-                              className="text-[10px] h-4 font-normal bg-accent/50"
                             >
                               U: {req.userGroup}
                             </Badge>
                             <Badge
+                              className="h-4 bg-accent/50 font-normal text-[10px]"
                               variant="outline"
-                              className="text-[10px] h-4 font-normal bg-accent/50"
                             >
                               A: {req.adminGroup}
                             </Badge>
@@ -332,12 +339,12 @@ function AdminRequests() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8 ring-1 ring-border shadow-sm">
-                            <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
+                          <Avatar className="h-8 w-8 shadow-sm ring-1 ring-border">
+                            <AvatarFallback className="bg-primary/5 font-bold text-primary text-xs">
                               {req.contactName
-                                .split(' ')
+                                .split(" ")
                                 .map((n) => n[0])
-                                .join('')
+                                .join("")
                                 .toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -345,7 +352,7 @@ function AdminRequests() {
                             <span className="font-medium leading-none">
                               {req.contactName}
                             </span>
-                            <span className="text-xs text-muted-foreground mt-1">
+                            <span className="mt-1 text-muted-foreground text-xs">
                               {req.contactEmail}
                             </span>
                           </div>
@@ -353,10 +360,10 @@ function AdminRequests() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium">
+                          <span className="font-medium text-sm">
                             {new Date(req.requestedAt).toLocaleDateString()}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-muted-foreground text-xs">
                             {formatDistanceToNow(new Date(req.requestedAt), {
                               addSuffix: true,
                             })}
@@ -366,72 +373,62 @@ function AdminRequests() {
                       <TableCell>
                         <StatusBadge status={req.status} />
                       </TableCell>
-                      <TableCell className="text-right pr-6">
-                        <div className="flex justify-end items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {req.status === 'pending' ? (
-                            <>
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger
-                                    render={
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-9 w-9 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
-                                        onClick={() => {
-                                          setSelectedRequest(req)
-                                          setActionType('approved')
-                                        }}
-                                        disabled={
-                                          updateStatusMutation.isPending
-                                        }
-                                      >
-                                        <CheckCircle2 className="h-5 w-5" />
-                                      </Button>
-                                    }
-                                  />
-                                  <TooltipContent>
-                                    Approve Request
-                                  </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                  <TooltipTrigger
-                                    render={
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="h-9 w-9 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                        onClick={() => {
-                                          setSelectedRequest(req)
-                                          setActionType('rejected')
-                                        }}
-                                        disabled={
-                                          updateStatusMutation.isPending
-                                        }
-                                      >
-                                        <XCircle className="h-5 w-5" />
-                                      </Button>
-                                    }
-                                  />
-                                  <TooltipContent>
-                                    Reject Request
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            </>
+                      <TableCell className="pr-6 text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                          {req.status === "pending" ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger
+                                  render={
+                                    <Button
+                                      className="h-9 w-9 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-emerald-900/20"
+                                      disabled={updateStatusMutation.isPending}
+                                      onClick={() => {
+                                        setSelectedRequest(req);
+                                        setActionType("approved");
+                                      }}
+                                      size="icon"
+                                      variant="ghost"
+                                    >
+                                      <CheckCircle2 className="h-5 w-5" />
+                                    </Button>
+                                  }
+                                />
+                                <TooltipContent>Approve Request</TooltipContent>
+                              </Tooltip>
+                              <Tooltip>
+                                <TooltipTrigger
+                                  render={
+                                    <Button
+                                      className="h-9 w-9 text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
+                                      disabled={updateStatusMutation.isPending}
+                                      onClick={() => {
+                                        setSelectedRequest(req);
+                                        setActionType("rejected");
+                                      }}
+                                      size="icon"
+                                      variant="ghost"
+                                    >
+                                      <XCircle className="h-5 w-5" />
+                                    </Button>
+                                  }
+                                />
+                                <TooltipContent>Reject Request</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           ) : (
-                            <div className="h-9 px-3 flex items-center text-xs text-muted-foreground gap-1.5 italic">
-                              Reviewed by{' '}
-                              {req.reviewedBy?.split('@')[0] || 'admin'}
+                            <div className="flex h-9 items-center gap-1.5 px-3 text-muted-foreground text-xs italic">
+                              Reviewed by{" "}
+                              {req.reviewedBy?.split("@")[0] || "admin"}
                             </div>
                           )}
                           <DropdownMenu>
                             <DropdownMenuTrigger
                               render={
                                 <Button
-                                  variant="ghost"
-                                  size="icon"
                                   className="h-9 w-9"
+                                  size="icon"
+                                  variant="ghost"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
@@ -441,8 +438,8 @@ function AdminRequests() {
                               <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => {
-                                  setSelectedRequest(req)
-                                  setIsDetailsOpen(true)
+                                  setSelectedRequest(req);
+                                  setIsDetailsOpen(true);
                                 }}
                               >
                                 <ExternalLink className="h-4 w-4" /> View
@@ -453,8 +450,7 @@ function AdminRequests() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
+                  ))}
               </TableBody>
             </Table>
           </div>
@@ -462,11 +458,11 @@ function AdminRequests() {
       </Card>
 
       {/* Details Dialog */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+      <Dialog onOpenChange={setIsDetailsOpen} open={isDetailsOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary/10 text-primary">
+            <div className="mb-2 flex items-center gap-3">
+              <div className="rounded-lg bg-primary/10 p-2 text-primary">
                 <ClipboardList className="h-5 w-5" />
               </div>
               <div>
@@ -481,15 +477,15 @@ function AdminRequests() {
             <div className="grid gap-6 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Team Name
                   </span>
-                  <p className="text-sm font-bold">
+                  <p className="font-bold text-sm">
                     {selectedRequest.teamName}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Status
                   </span>
                   <StatusBadge status={selectedRequest.status} />
@@ -498,69 +494,69 @@ function AdminRequests() {
               <Separator />
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     User Group (ADS)
                   </span>
-                  <p className="text-sm font-mono bg-muted/50 px-2 py-0.5 rounded border border-border w-fit">
+                  <p className="w-fit rounded border border-border bg-muted/50 px-2 py-0.5 font-mono text-sm">
                     {selectedRequest.userGroup}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Admin Group (ADS)
                   </span>
-                  <p className="text-sm font-mono bg-muted/50 px-2 py-0.5 rounded border border-border w-fit">
+                  <p className="w-fit rounded border border-border bg-muted/50 px-2 py-0.5 font-mono text-sm">
                     {selectedRequest.adminGroup}
                   </p>
                 </div>
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                   Contact Information
                 </span>
-                <div className="p-3 rounded-lg border border-border bg-muted/20 flex flex-col gap-1">
-                  <span className="text-sm font-bold">
+                <div className="flex flex-col gap-1 rounded-lg border border-border bg-muted/20 p-3">
+                  <span className="font-bold text-sm">
                     {selectedRequest.contactName}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {selectedRequest.contactEmail}
                   </span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Requested By
                   </span>
-                  <p className="text-sm font-medium">
+                  <p className="font-medium text-sm">
                     {selectedRequest.requestedBy}
                   </p>
                   <p className="text-[10px] text-muted-foreground italic">
                     {new Date(selectedRequest.requestedAt).toLocaleString()}
                   </p>
                 </div>
-                {selectedRequest.status !== 'pending' && (
+                {selectedRequest.status !== "pending" && (
                   <div className="space-y-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                       Reviewed By
                     </span>
-                    <p className="text-sm font-medium">
+                    <p className="font-medium text-sm">
                       {selectedRequest.reviewedBy}
                     </p>
                     <p className="text-[10px] text-muted-foreground italic">
                       {selectedRequest.reviewedAt
                         ? new Date(selectedRequest.reviewedAt).toLocaleString()
-                        : 'N/A'}
+                        : "N/A"}
                     </p>
                   </div>
                 )}
               </div>
               {selectedRequest.comments && (
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Reviewer Comments
                   </span>
-                  <p className="text-sm italic p-3 rounded-lg bg-orange-50/50 dark:bg-orange-900/10 border border-orange-200/50 dark:border-orange-800/50">
+                  <p className="rounded-lg border border-orange-200/50 bg-orange-50/50 p-3 text-sm italic dark:border-orange-800/50 dark:bg-orange-900/10">
                     "{selectedRequest.comments}"
                   </p>
                 </div>
@@ -569,32 +565,32 @@ function AdminRequests() {
           )}
           <DialogFooter className="sm:justify-between">
             <div className="flex items-center gap-2">
-              {selectedRequest?.status === 'pending' && (
+              {selectedRequest?.status === "pending" && (
                 <>
                   <Button
-                    variant="outline"
-                    className="text-emerald-600 border-emerald-200"
+                    className="border-emerald-200 text-emerald-600"
                     onClick={() => {
-                      setIsDetailsOpen(false)
-                      setActionType('approved')
+                      setIsDetailsOpen(false);
+                      setActionType("approved");
                     }}
+                    variant="outline"
                   >
                     Approve
                   </Button>
                   <Button
-                    variant="outline"
-                    className="text-red-600 border-red-200"
+                    className="border-red-200 text-red-600"
                     onClick={() => {
-                      setIsDetailsOpen(false)
-                      setActionType('rejected')
+                      setIsDetailsOpen(false);
+                      setActionType("rejected");
                     }}
+                    variant="outline"
                   >
                     Reject
                   </Button>
                 </>
               )}
             </div>
-            <Button variant="secondary" onClick={() => setIsDetailsOpen(false)}>
+            <Button onClick={() => setIsDetailsOpen(false)} variant="secondary">
               Close
             </Button>
           </DialogFooter>
@@ -603,40 +599,44 @@ function AdminRequests() {
 
       {/* Action Confirmation Dialog */}
       <AlertDialog
-        open={!!actionType}
         onOpenChange={(open) => !open && resetState()}
+        open={!!actionType}
       >
         <AlertDialogContent className="sm:max-w-[450px]">
           <AlertDialogHeader>
             <div
-              className={`p-2 rounded-full w-fit mb-2 ${actionType === 'approved' ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40' : 'bg-red-100 text-red-600 dark:bg-red-900/40'}`}
+              className={`mb-2 w-fit rounded-full p-2 ${actionType === "approved" ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40" : "bg-red-100 text-red-600 dark:bg-red-900/40"}`}
             >
-              {actionType === 'approved' ? (
+              {actionType === "approved" ? (
                 <CheckCircle2 className="h-6 w-6" />
               ) : (
                 <XCircle className="h-6 w-6" />
               )}
             </div>
             <AlertDialogTitle className="text-xl">
-              Confirm {actionType === 'approved' ? 'Approval' : 'Rejection'}
+              Confirm {actionType === "approved" ? "Approval" : "Rejection"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to {actionType} the team registration for{' '}
+              Are you sure you want to {actionType} the team registration for{" "}
               <strong>{selectedRequest?.teamName}</strong>?
-              {actionType === 'approved' &&
-                ' This will automatically create the team in the system.'}
+              {actionType === "approved" &&
+                " This will automatically create the team in the system."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-4 space-y-4">
+          <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">
+              <label
+                className="font-medium text-sm"
+                htmlFor="rejection-comments"
+              >
                 Internal Comments (Optional)
               </label>
               <Textarea
+                className="min-h-[100px] resize-none focus-visible:ring-primary"
+                id="rejection-comments"
+                onChange={(e) => setComments(e.target.value)}
                 placeholder="Reason for this action..."
                 value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                className="min-h-[100px] resize-none focus-visible:ring-primary"
               />
               <p className="text-[11px] text-muted-foreground">
                 These comments will be visible in the request history details.
@@ -649,25 +649,25 @@ function AdminRequests() {
             </AlertDialogCancel>
             <AlertDialogAction
               className={
-                actionType === 'approved'
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  : 'bg-red-600 hover:bg-red-700 text-white'
+                actionType === "approved"
+                  ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                  : "bg-red-600 text-white hover:bg-red-700"
               }
-              onClick={(e) => {
-                e.preventDefault()
-                handleAction()
-              }}
               disabled={updateStatusMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                handleAction();
+              }}
             >
               {updateStatusMutation.isPending
-                ? 'Processing...'
-                : `Confirm ${actionType ? actionType.charAt(0).toUpperCase() + actionType.slice(1) : ''}`}
+                ? "Processing..."
+                : `Confirm ${actionType ? actionType.charAt(0).toUpperCase() + actionType.slice(1) : ""}`}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }
 
 function MiniStatCard({
@@ -676,58 +676,58 @@ function MiniStatCard({
   icon: Icon,
   color,
 }: {
-  title: string
-  value: number
-  icon: any
-  color: 'blue' | 'amber' | 'emerald' | 'red'
+  title: string;
+  value: number;
+  icon: ComponentType<{ className?: string }>;
+  color: "blue" | "amber" | "emerald" | "red";
 }) {
   const colors = {
-    blue: 'text-blue-600 bg-blue-100 dark:bg-blue-900/20',
-    amber: 'text-amber-600 bg-amber-100 dark:bg-amber-900/20',
-    emerald: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/20',
-    red: 'text-red-600 bg-red-100 dark:bg-red-900/20',
-  }
+    blue: "text-blue-600 bg-blue-100 dark:bg-blue-900/20",
+    amber: "text-amber-600 bg-amber-100 dark:bg-amber-900/20",
+    emerald: "text-emerald-600 bg-emerald-100 dark:bg-emerald-900/20",
+    red: "text-red-600 bg-red-100 dark:bg-red-900/20",
+  };
 
   return (
-    <Card className="border-none shadow-sm ring-1 ring-border group overflow-hidden bg-background">
-      <CardContent className="p-4 flex items-center justify-between">
+    <Card className="group overflow-hidden border-none bg-background shadow-sm ring-1 ring-border">
+      <CardContent className="flex items-center justify-between p-4">
         <div className="space-y-0.5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
             {title}
           </p>
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="font-bold text-2xl tracking-tight">{value}</p>
         </div>
         <div
-          className={`p-2 rounded-lg transition-transform group-hover:scale-110 duration-300 ${colors[color]}`}
+          className={`rounded-lg p-2 transition-transform duration-300 group-hover:scale-110 ${colors[color]}`}
         >
           <Icon className="h-5 w-5" />
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
-    case 'pending':
+    case "pending":
       return (
-        <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200/50 dark:border-amber-800/50 gap-1.5 flex w-fit items-center">
+        <Badge className="flex w-fit items-center gap-1.5 border-amber-200/50 bg-amber-100 text-amber-700 hover:bg-amber-100 dark:border-amber-800/50 dark:bg-amber-900/30 dark:text-amber-400">
           <Clock className="h-3 w-3" /> Pending
         </Badge>
-      )
-    case 'approved':
+      );
+    case "approved":
       return (
-        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-800/50 gap-1.5 flex w-fit items-center">
+        <Badge className="flex w-fit items-center gap-1.5 border-emerald-200/50 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800/50 dark:bg-emerald-900/30 dark:text-emerald-400">
           <CheckCircle2 className="h-3 w-3" /> Approved
         </Badge>
-      )
-    case 'rejected':
+      );
+    case "rejected":
       return (
-        <Badge className="bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 border-red-200/50 dark:border-red-800/50 gap-1.5 flex w-fit items-center">
+        <Badge className="flex w-fit items-center gap-1.5 border-red-200/50 bg-red-100 text-red-700 hover:bg-red-100 dark:border-red-800/50 dark:bg-red-900/30 dark:text-red-400">
           <XCircle className="h-3 w-3" /> Rejected
         </Badge>
-      )
+      );
     default:
-      return <Badge variant="secondary">{status}</Badge>
+      return <Badge variant="secondary">{status}</Badge>;
   }
 }

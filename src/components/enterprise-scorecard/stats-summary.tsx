@@ -1,76 +1,76 @@
-'use client'
+"use client";
 
-import { Activity, AlertTriangle, Hash, Layers } from 'lucide-react'
-import type { ScorecardStats } from './types'
-import { cn } from '@/lib/utils'
+import { Activity, AlertTriangle, Hash, Layers } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { ScorecardStats } from "./types";
 
 interface StatsSummaryProps {
-  stats: ScorecardStats
+  stats: ScorecardStats;
 }
 
 export function StatsSummary({ stats }: StatsSummaryProps) {
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 py-4">
-      <div className="flex flex-col justify-center py-2 relative z-10">
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-primary/10 text-primary">
+    <div className="grid grid-cols-2 gap-8 py-4 md:grid-cols-4">
+      <div className="relative z-10 flex flex-col justify-center py-2">
+        <div className="mb-3 flex items-center gap-2.5">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Layers className="h-4 w-4" />
           </div>
-          <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">
+          <p className="truncate font-bold text-[11px] text-muted-foreground uppercase tracking-widest">
             Teams
           </p>
         </div>
-        <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">
+        <p className="font-black text-4xl text-foreground tabular-nums leading-none tracking-tighter md:text-5xl">
           {stats.teams}
         </p>
       </div>
 
-      <div className="flex flex-col justify-center py-2 relative z-10">
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 dark:bg-indigo-500/20">
+      <div className="relative z-10 flex flex-col justify-center py-2">
+        <div className="mb-3 flex items-center gap-2.5">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
             <Activity className="h-4 w-4" />
           </div>
-          <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">
+          <p className="truncate font-bold text-[11px] text-muted-foreground uppercase tracking-widest">
             Applications
           </p>
         </div>
-        <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">
+        <p className="font-black text-4xl text-foreground tabular-nums leading-none tracking-tighter md:text-5xl">
           {stats.apps}
         </p>
       </div>
 
-      <div className="flex flex-col justify-center py-2 relative z-10 mt-4 md:mt-0">
-        <div className="flex items-center gap-2.5 mb-3">
-          <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-green-500/10 text-green-600 dark:text-green-400 dark:bg-green-500/20">
+      <div className="relative z-10 mt-4 flex flex-col justify-center py-2 md:mt-0">
+        <div className="mb-3 flex items-center gap-2.5">
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400">
             <Hash className="h-4 w-4" />
           </div>
-          <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">
+          <p className="truncate font-bold text-[11px] text-muted-foreground uppercase tracking-widest">
             Metrics
           </p>
         </div>
-        <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">
+        <p className="font-black text-4xl text-foreground tabular-nums leading-none tracking-tighter md:text-5xl">
           {stats.entries}
         </p>
       </div>
 
-      <div className="flex flex-col justify-center py-2 relative z-10 mt-4 md:mt-0">
-        <div className="flex items-center gap-2.5 mb-3">
+      <div className="relative z-10 mt-4 flex flex-col justify-center py-2 md:mt-0">
+        <div className="mb-3 flex items-center gap-2.5">
           <div
             className={cn(
-              'h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0',
+              "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg",
               stats.availBreaches > 0
-                ? 'bg-red-500/10 text-red-600 dark:text-red-500'
-                : 'bg-primary/10 text-primary',
+                ? "bg-red-500/10 text-red-600 dark:text-red-500"
+                : "bg-primary/10 text-primary"
             )}
           >
             <AlertTriangle className="h-4 w-4" />
           </div>
           <p
             className={cn(
-              'text-[11px] font-bold uppercase tracking-widest truncate',
+              "truncate font-bold text-[11px] uppercase tracking-widest",
               stats.availBreaches > 0
-                ? 'text-red-500/80 dark:text-red-400'
-                : 'text-muted-foreground',
+                ? "text-red-500/80 dark:text-red-400"
+                : "text-muted-foreground"
             )}
           >
             Breaches
@@ -78,15 +78,15 @@ export function StatsSummary({ stats }: StatsSummaryProps) {
         </div>
         <p
           className={cn(
-            'text-4xl md:text-5xl font-black tabular-nums tracking-tighter leading-none',
+            "font-black text-4xl tabular-nums leading-none tracking-tighter md:text-5xl",
             stats.availBreaches > 0
-              ? 'text-red-600 dark:text-red-500'
-              : 'text-foreground',
+              ? "text-red-600 dark:text-red-500"
+              : "text-foreground"
           )}
         >
           {stats.availBreaches}
         </p>
       </div>
     </div>
-  )
+  );
 }

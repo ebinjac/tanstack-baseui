@@ -1,12 +1,10 @@
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { Globe2, Loader2, Lock, Trash2, Upload } from 'lucide-react'
-import type { z } from 'zod'
-import type { CreateLinkSchema } from '@/lib/zod/links.schema'
-import { Button, buttonVariants } from '@/components/ui/button'
-import { bulkCreateLinks } from '@/app/actions/links'
-import { Textarea } from '@/components/ui/textarea'
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Globe2, Loader2, Lock, Trash2, Upload } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { z } from "zod";
+import { bulkCreateLinks } from "@/app/actions/links";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -15,244 +13,261 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import type { CreateLinkSchema } from "@/lib/zod/links.schema";
 
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+const TITLE_CLEANUP_REGEX = /^[-:;>]+$/;
+const LEADING_SPECIAL_CHARS_REGEX = /^[-:;>]+/;
+const NEWLINE_SPLIT_REGEX = /\n+/;
 
 interface UniversalImporterDialogProps {
-  teamId: string
+  teamId: string;
 }
 
 type ParsedLink = z.infer<typeof CreateLinkSchema> & {
-  id: string
-  isValid: boolean
-  error?: string
-}
+  id: string;
+  isValid: boolean;
+  error?: string;
+};
 
 export function UniversalImporterDialog({
   teamId,
 }: UniversalImporterDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [rawInput, setRawInput] = useState('')
-  const [parsedLinks, setParsedLinks] = useState<Array<ParsedLink>>([])
-  const [step, setStep] = useState<'input' | 'review'>('input')
+  const [open, setOpen] = useState(false);
+  const [rawInput, setRawInput] = useState("");
+  const [parsedLinks, setParsedLinks] = useState<ParsedLink[]>([]);
+  const [step, setStep] = useState<"input" | "review">("input");
 
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
-  const parseLinks = () => {
-    // Simple heuristic parser: Extract URLs from text
-    // Splits by newline, looks for http/https
-    const lines = rawInput.split(/\n+/)
-    const links: Array<ParsedLink> = []
+  // Helper to extract title from line
+  const getTitleFromLine = (line: string, url: string): string => {
+    let title = line.replace(url, "").trim();
 
-    const urlRegex = /(https?:\/\/[^\s]+)/g
-
-    lines.forEach((line) => {
-      const match = line.match(urlRegex)
-      if (match) {
-        match.forEach((url) => {
-          // Attempt to extract a title from the line by removing the URL
-          let title = line.replace(url, '').trim()
-          // If title is empty or just special chars, use domain as title
-          if (!title || /^[-:;>]+$/.test(title)) {
-            try {
-              title = new URL(url).hostname
-            } catch {
-              title = 'Untitled Link'
-            }
-          }
-
-          // Clean up title
-          title = title.replace(/^[-:;>]+/, '').trim()
-
-          links.push({
-            id: crypto.randomUUID(),
-            teamId, // Will be ignored by schema omit but needed for type
-            title,
-            url: url,
-            description: '',
-            visibility: 'private', // Default to private for safety
-            tags: [],
-            isValid: true,
-          })
-        })
+    // If title is empty or just special chars, use domain as title
+    if (!title || TITLE_CLEANUP_REGEX.test(title)) {
+      try {
+        title = new URL(url).hostname;
+      } catch {
+        title = "Untitled Link";
       }
-    })
-
-    if (links.length === 0) {
-      toast.error('No valid links found in text')
-      return
     }
 
-    setParsedLinks(links)
-    setStep('review')
-  }
+    // Clean up title (remove leading special chars)
+    return title.replace(LEADING_SPECIAL_CHARS_REGEX, "").trim();
+  };
+
+  const parseLinks = () => {
+    const lines = rawInput.split(NEWLINE_SPLIT_REGEX);
+    const links: ParsedLink[] = [];
+
+    for (const line of lines) {
+      const match = line.match(URL_REGEX);
+      if (!match) {
+        continue;
+      }
+
+      for (const url of match) {
+        const title = getTitleFromLine(line, url);
+
+        links.push({
+          id: crypto.randomUUID(),
+          teamId,
+          title,
+          url,
+          description: "",
+          visibility: "private",
+          tags: [],
+          isValid: true,
+        });
+      }
+    }
+
+    if (links.length === 0) {
+      toast.error("No valid links found in text");
+      return;
+    }
+
+    setParsedLinks(links);
+    setStep("review");
+  };
 
   const mutation = useMutation({
-    mutationFn: (data: { teamId: string; links: Array<any> }) =>
-      bulkCreateLinks({ data }),
+    mutationFn: (data: {
+      teamId: string;
+      links: Omit<ParsedLink, "id" | "isValid" | "error" | "teamId">[];
+    }) => bulkCreateLinks({ data }),
     onSuccess: (data) => {
-      toast.success(`Successfully imported ${data.count} links`)
-      queryClient.invalidateQueries({ queryKey: ['links', teamId] })
-      setOpen(false)
-      setRawInput('')
-      setParsedLinks([])
-      setStep('input')
+      toast.success(`Successfully imported ${data.count} links`);
+      queryClient.invalidateQueries({ queryKey: ["links", teamId] });
+      setOpen(false);
+      setRawInput("");
+      setParsedLinks([]);
+      setStep("input");
     },
     onError: (err) => {
-      toast.error('Import failed: ' + err.message)
+      toast.error(`Import failed: ${err.message}`);
     },
-  })
+  });
 
   const handleImport = () => {
-    const validLinks = parsedLinks.filter((l) => l.isValid)
-    if (validLinks.length === 0) return
+    const validLinks = parsedLinks.filter((l) => l.isValid);
+    if (validLinks.length === 0) {
+      return;
+    }
 
     // Strip UI-only fields
     const payload = validLinks.map(
-      ({ id, isValid, error, teamId: _, ...rest }) => rest,
-    )
+      ({ id, isValid, error, teamId: _, ...rest }) => rest
+    );
 
     mutation.mutate({
       teamId,
       links: payload,
-    })
-  }
+    });
+  };
 
   const removeLink = (id: string) => {
-    setParsedLinks((prev) => prev.filter((l) => l.id !== id))
-  }
+    setParsedLinks((prev) => prev.filter((l) => l.id !== id));
+  };
 
   const updateLink = (id: string, updates: Partial<ParsedLink>) => {
     setParsedLinks((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, ...updates } : l)),
-    )
-  }
+      prev.map((l) => (l.id === id ? { ...l, ...updates } : l))
+    );
+  };
 
-  const setAllVisibility = (vis: 'public' | 'private') => {
-    setParsedLinks((prev) => prev.map((l) => ({ ...l, visibility: vis })))
-  }
+  const setAllVisibility = (vis: "public" | "private") => {
+    setParsedLinks((prev) => prev.map((l) => ({ ...l, visibility: vis })));
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
-        className={cn(buttonVariants({ variant: 'outline' }), 'gap-2')}
-      >
-        <Upload className="w-4 h-4" /> Import
+    <Dialog onOpenChange={setOpen} open={open}>
+      <DialogTrigger>
+        <Button className="gap-2" type="button" variant="outline">
+          <Upload className="h-4 w-4" /> Import
+        </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+      <DialogContent className="flex h-[80vh] max-w-4xl flex-col">
         <DialogHeader>
           <DialogTitle>Universal Link Importer</DialogTitle>
           <DialogDescription>
-            {step === 'input'
+            {step === "input"
               ? "Paste text containing URLs (emails, chat logs, lists). We'll extract and organize them."
-              : 'Review and refine your links before importing.'}
+              : "Review and refine your links before importing."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden min-h-0 pt-4">
-          {step === 'input' ? (
+        <div className="min-h-0 flex-1 overflow-hidden pt-4">
+          {step === "input" ? (
             <Textarea
+              className="h-full resize-none font-mono text-sm"
+              onChange={(e) => setRawInput(e.target.value)}
               placeholder="Paste your links here...
 Example:
 Check out this design resource: https://dribbble.com/shots/123
 Also relevant: https://github.com/shadcn/ui - Component library
 "
-              className="h-full font-mono text-sm resize-none"
               value={rawInput}
-              onChange={(e) => setRawInput(e.target.value)}
             />
           ) : (
-            <div className="flex flex-col h-full gap-4">
-              <div className="flex justify-between items-center px-1">
-                <div className="flex gap-2 text-sm text-muted-foreground">
+            <div className="flex h-full flex-col gap-4">
+              <div className="flex items-center justify-between px-1">
+                <div className="flex gap-2 text-muted-foreground text-sm">
                   <span>{parsedLinks.length} links found</span>
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    variant="ghost"
+                    className="h-7 text-xs"
+                    onClick={() => setAllVisibility("public")}
                     size="sm"
-                    onClick={() => setAllVisibility('public')}
-                    className="text-xs h-7"
+                    type="button"
+                    variant="ghost"
                   >
                     Set all Public
                   </Button>
                   <Button
-                    variant="ghost"
+                    className="h-7 text-xs"
+                    onClick={() => setAllVisibility("private")}
                     size="sm"
-                    onClick={() => setAllVisibility('private')}
-                    className="text-xs h-7"
+                    type="button"
+                    variant="ghost"
                   >
                     Set all Private
                   </Button>
                 </div>
               </div>
 
-              <ScrollArea className="flex-1 border rounded-md p-4">
+              <ScrollArea className="flex-1 rounded-md border p-4">
                 <div className="space-y-4">
                   {parsedLinks.map((link) => (
                     <div
+                      className="group flex items-start gap-4 rounded-lg bg-muted/30 p-3 transition-colors hover:bg-muted/50"
                       key={link.id}
-                      className="flex gap-4 items-start p-3 bg-muted/30 rounded-lg group hover:bg-muted/50 transition-colors"
                     >
                       <div className="flex-1 space-y-2">
                         <div className="flex gap-2">
                           <Input
-                            value={link.title}
+                            className="h-8 border-transparent bg-transparent font-bold hover:border-input focus:bg-background"
                             onChange={(e) =>
                               updateLink(link.id, { title: e.target.value })
                             }
-                            className="h-8 font-bold bg-transparent border-transparent hover:border-input focus:bg-background"
+                            value={link.title}
                           />
                           <div className="flex shrink-0">
                             <Button
-                              variant="ghost"
-                              size="sm"
                               className={cn(
-                                'h-8 px-2',
-                                link.visibility === 'public'
-                                  ? 'text-blue-500'
-                                  : 'text-amber-500',
+                                "h-8 px-2",
+                                link.visibility === "public"
+                                  ? "text-blue-500"
+                                  : "text-amber-500"
                               )}
                               onClick={() =>
                                 updateLink(link.id, {
                                   visibility:
-                                    link.visibility === 'public'
-                                      ? 'private'
-                                      : 'public',
+                                    link.visibility === "public"
+                                      ? "private"
+                                      : "public",
                                 })
                               }
+                              size="sm"
+                              type="button"
+                              variant="ghost"
                             >
-                              {link.visibility === 'public' ? (
-                                <Globe2 className="w-4 h-4" />
+                              {link.visibility === "public" ? (
+                                <Globe2 className="h-4 w-4" />
                               ) : (
-                                <Lock className="w-4 h-4" />
+                                <Lock className="h-4 w-4" />
                               )}
                             </Button>
                             <Button
-                              variant="ghost"
-                              size="sm"
                               className="h-8 w-8 text-destructive opacity-50 group-hover:opacity-100"
                               onClick={() => removeLink(link.id)}
+                              size="sm"
+                              type="button"
+                              variant="ghost"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
-                        <div className="flex gap-2 items-center px-3">
-                          <span className="text-xs text-muted-foreground font-mono truncate max-w-[500px]">
+                        <div className="flex items-center gap-2 px-3">
+                          <span className="max-w-[500px] truncate font-mono text-muted-foreground text-xs">
                             {link.url}
                           </span>
                         </div>
                         <Input
-                          placeholder="Description (optional)"
-                          value={link.description || ''}
+                          className="h-7 border-transparent bg-transparent text-xs hover:border-input focus:bg-background"
                           onChange={(e) =>
                             updateLink(link.id, { description: e.target.value })
                           }
-                          className="h-7 text-xs bg-transparent border-transparent hover:border-input focus:bg-background"
+                          placeholder="Description (optional)"
+                          value={link.description || ""}
                         />
                       </div>
                     </div>
@@ -264,20 +279,29 @@ Also relevant: https://github.com/shadcn/ui - Component library
         </div>
 
         <DialogFooter className="mt-4">
-          {step === 'review' && (
-            <Button variant="outline" onClick={() => setStep('input')}>
+          {step === "review" && (
+            <Button
+              onClick={() => setStep("input")}
+              type="button"
+              variant="outline"
+            >
               Back to Paste
             </Button>
           )}
 
-          {step === 'input' ? (
-            <Button onClick={parseLinks} disabled={!rawInput.trim()}>
+          {step === "input" ? (
+            <Button
+              disabled={!rawInput.trim()}
+              onClick={parseLinks}
+              type="button"
+            >
               Review Links
             </Button>
           ) : (
             <Button
-              onClick={handleImport}
               disabled={parsedLinks.length === 0 || mutation.isPending}
+              onClick={handleImport}
+              type="button"
             >
               {mutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -288,5 +312,5 @@ Also relevant: https://github.com/shadcn/ui - Component library
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

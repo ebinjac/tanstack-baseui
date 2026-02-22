@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from 'react'
+import { format } from "date-fns";
 import {
   Box,
   Calendar,
@@ -13,12 +13,16 @@ import {
   Pencil,
   Square,
   Trash2,
-} from 'lucide-react'
-import { format } from 'date-fns'
-import { LinkCard } from './link-card'
-import { CreateLinkDialog } from './create-link-dialog'
-import { useLinkMutations } from './hooks/use-link-mutations'
-import type { LinkWithRelations } from '@/db/schema/links'
+} from "lucide-react";
+import { memo, useCallback, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -26,27 +30,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/table";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/tooltip";
+import type { LinkWithRelations } from "@/db/schema/links";
+import { cn } from "@/lib/utils";
+import { CreateLinkDialog } from "./create-link-dialog";
+import { useLinkMutations } from "./hooks/use-link-mutations";
+import { LinkCard } from "./link-card";
 
 interface ViewProps {
-  links: Array<LinkWithRelations>
-  teamId: string
-  selectedLinks?: Set<string>
-  onToggleSelect?: (linkId: string) => void
+  links: LinkWithRelations[];
+  onToggleSelect?: (linkId: string) => void;
+  selectedLinks?: Set<string>;
+  teamId: string;
 }
 
 // =============================================================================
@@ -58,53 +58,53 @@ export function GridView({
   selectedLinks,
   onToggleSelect,
 }: ViewProps) {
-  const [dialogLink, setDialogLink] = useState<LinkWithRelations | null>(null)
-  const [dialogMode, setDialogMode] = useState<'edit' | 'view' | null>(null)
+  const [dialogLink, setDialogLink] = useState<LinkWithRelations | null>(null);
+  const [dialogMode, setDialogMode] = useState<"edit" | "view" | null>(null);
 
   const handleView = useCallback((link: LinkWithRelations) => {
-    setDialogLink(link)
-    setDialogMode('view')
-  }, [])
+    setDialogLink(link);
+    setDialogMode("view");
+  }, []);
 
   const handleEdit = useCallback((link: LinkWithRelations) => {
-    setDialogLink(link)
-    setDialogMode('edit')
-  }, [])
+    setDialogLink(link);
+    setDialogMode("edit");
+  }, []);
 
   return (
     <>
       <CreateLinkDialog
-        teamId={teamId}
         link={dialogLink || undefined}
-        mode={dialogMode || 'view'}
-        open={!!dialogMode}
+        mode={dialogMode || "view"}
         onOpenChange={(open) => !open && setDialogMode(null)}
+        open={!!dialogMode}
+        teamId={teamId}
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {links.map((link) => (
           <GridItem
+            isSelected={selectedLinks?.has(link.id) ?? false}
             key={link.id}
             link={link}
-            teamId={teamId}
-            isSelected={selectedLinks?.has(link.id) ?? false}
+            onEdit={handleEdit}
             onToggleSelect={onToggleSelect}
             onView={handleView}
-            onEdit={handleEdit}
+            teamId={teamId}
           />
         ))}
       </div>
     </>
-  )
+  );
 }
 
 // Memoized individual grid item so selection toggle doesn't re-render siblings
 interface GridItemProps {
-  link: LinkWithRelations
-  teamId: string
-  isSelected: boolean
-  onToggleSelect?: (linkId: string) => void
-  onView: (link: LinkWithRelations) => void
-  onEdit: (link: LinkWithRelations) => void
+  isSelected: boolean;
+  link: LinkWithRelations;
+  onEdit: (link: LinkWithRelations) => void;
+  onToggleSelect?: (linkId: string) => void;
+  onView: (link: LinkWithRelations) => void;
+  teamId: string;
 }
 
 const GridItem = memo(function GridItem({
@@ -116,39 +116,40 @@ const GridItem = memo(function GridItem({
   onEdit,
 }: GridItemProps) {
   return (
-    <div className="relative group">
+    <div className="group relative">
       {onToggleSelect && (
         <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onToggleSelect(link.id)
-          }}
           className={cn(
-            'absolute -top-2 -left-2 z-10 w-8 h-8 rounded-xl flex items-center justify-center transition-all shadow-lg',
+            "absolute -top-2 -left-2 z-10 flex h-8 w-8 items-center justify-center rounded-xl shadow-lg transition-all",
             isSelected
-              ? 'bg-primary text-primary-foreground scale-100'
-              : 'bg-background border border-border/50 text-muted-foreground opacity-0 group-hover:opacity-100 scale-90 hover:scale-100',
+              ? "scale-100 bg-primary text-primary-foreground"
+              : "scale-90 border border-border/50 bg-background text-muted-foreground opacity-0 hover:scale-100 group-hover:opacity-100"
           )}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect(link.id);
+          }}
+          type="button"
         >
           {isSelected ? (
-            <CheckSquare className="w-4 h-4" />
+            <CheckSquare className="h-4 w-4" />
           ) : (
-            <Square className="w-4 h-4" />
+            <Square className="h-4 w-4" />
           )}
         </button>
       )}
       <div
         className={cn(
-          'transition-all rounded-2xl',
+          "rounded-2xl transition-all",
           isSelected &&
-          'ring-2 ring-primary ring-offset-2 ring-offset-background',
+            "ring-2 ring-primary ring-offset-2 ring-offset-background"
         )}
       >
-        <LinkCard link={link} teamId={teamId} onView={onView} onEdit={onEdit} />
+        <LinkCard link={link} onEdit={onEdit} onView={onView} teamId={teamId} />
       </div>
     </div>
-  )
-})
+  );
+});
 
 // =============================================================================
 // TableView
@@ -159,42 +160,42 @@ export function TableView({
   selectedLinks,
   onToggleSelect,
 }: ViewProps) {
-  const { deleteMutation, handleOpen } = useLinkMutations(teamId)
-  const [dialogLink, setDialogLink] = useState<LinkWithRelations | null>(null)
-  const [dialogMode, setDialogMode] = useState<'edit' | 'view' | null>(null)
+  const { deleteMutation, handleOpen } = useLinkMutations(teamId);
+  const [dialogLink, setDialogLink] = useState<LinkWithRelations | null>(null);
+  const [dialogMode, setDialogMode] = useState<"edit" | "view" | null>(null);
 
   return (
-    <div className="bg-card/40 backdrop-blur-md border border-border/50 rounded-2xl overflow-hidden relative">
+    <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-card/40 backdrop-blur-md">
       <CreateLinkDialog
-        teamId={teamId}
         link={dialogLink || undefined}
-        mode={dialogMode || 'view'}
-        open={!!dialogMode}
+        mode={dialogMode || "view"}
         onOpenChange={(open) => !open && setDialogMode(null)}
+        open={!!dialogMode}
+        teamId={teamId}
       />
       <Table>
         <TableHeader>
-          <TableRow className="hover:bg-transparent border-border/30 h-14">
-            {onToggleSelect && <TableHead className="w-[60px]"></TableHead>}
-            <TableHead className="w-[340px] text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 pl-6">
+          <TableRow className="h-14 border-border/30 hover:bg-transparent">
+            {onToggleSelect && <TableHead className="w-[60px]" />}
+            <TableHead className="w-[340px] pl-6 font-black text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em]">
               Resource Details
             </TableHead>
-            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+            <TableHead className="font-black text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em]">
               Application
             </TableHead>
-            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+            <TableHead className="font-black text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em]">
               Classification
             </TableHead>
-            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+            <TableHead className="font-black text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em]">
               Access
             </TableHead>
-            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+            <TableHead className="font-black text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em]">
               Engagement
             </TableHead>
-            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+            <TableHead className="font-black text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em]">
               Created
             </TableHead>
-            <TableHead className="text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 pr-8">
+            <TableHead className="pr-8 text-right font-black text-[10px] text-muted-foreground/60 uppercase tracking-[0.2em]">
               Manage
             </TableHead>
           </TableRow>
@@ -202,29 +203,30 @@ export function TableView({
         <TableBody>
           {links.map((link) => (
             <TableRow
-              key={link.id}
               className={cn(
-                'group transition-all h-20 border-border/20',
+                "group h-20 border-border/20 transition-all",
                 selectedLinks?.has(link.id)
-                  ? 'bg-primary/5'
-                  : 'hover:bg-muted/30',
+                  ? "bg-primary/5"
+                  : "hover:bg-muted/30"
               )}
+              key={link.id}
             >
               {onToggleSelect && (
                 <TableCell className="pl-6">
                   <button
-                    onClick={() => onToggleSelect(link.id)}
                     className={cn(
-                      'w-9 h-9 rounded-xl flex items-center justify-center transition-all border',
+                      "flex h-9 w-9 items-center justify-center rounded-xl border transition-all",
                       selectedLinks?.has(link.id)
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'bg-background border-border/50 text-muted-foreground/40 hover:text-primary hover:border-primary/40 hover:bg-primary/5',
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border/50 bg-background text-muted-foreground/40 hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
                     )}
+                    onClick={() => onToggleSelect(link.id)}
+                    type="button"
                   >
                     {selectedLinks?.has(link.id) ? (
-                      <CheckSquare className="w-4 h-4" />
+                      <CheckSquare className="h-4 w-4" />
                     ) : (
-                      <Square className="w-4 h-4" />
+                      <Square className="h-4 w-4" />
                     )}
                   </button>
                 </TableCell>
@@ -232,19 +234,20 @@ export function TableView({
               <TableCell className="max-w-[340px] pl-6">
                 <div className="flex flex-col gap-1.5 overflow-hidden">
                   <div className="flex items-center gap-2">
-                    <span
-                      className="font-black text-sm tracking-tight text-foreground cursor-pointer hover:text-primary transition-colors truncate block"
+                    <button
+                      className="block truncate font-black text-foreground text-sm tracking-tight transition-colors hover:text-primary"
                       onClick={() => handleOpen(link)}
+                      type="button"
                     >
                       {link.title}
-                    </span>
-                    <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+                    </button>
+                    <ExternalLink className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-40" />
                   </div>
 
                   <Tooltip>
                     <TooltipTrigger
                       render={
-                        <span className="text-[10px] text-muted-foreground/60 truncate italic block cursor-help font-medium">
+                        <span className="block cursor-help truncate font-medium text-[10px] text-muted-foreground/60 italic">
                           {link.url}
                         </span>
                       }
@@ -255,11 +258,11 @@ export function TableView({
                   </Tooltip>
 
                   {link.tags && link.tags.length > 0 && (
-                    <div className="flex gap-1 mt-1 flex-wrap">
-                      {link.tags.slice(0, 3).map((tag, i) => (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {link.tags.slice(0, 3).map((tag) => (
                         <span
-                          key={i}
-                          className="inline-flex items-center text-[9px] px-1.5 py-0.5 bg-muted/40 rounded-md text-muted-foreground font-black uppercase tracking-widest border border-border/40"
+                          className="inline-flex items-center rounded-md border border-border/40 bg-muted/40 px-1.5 py-0.5 font-black text-[9px] text-muted-foreground uppercase tracking-widest"
+                          key={tag}
                         >
                           #{tag}
                         </span>
@@ -271,13 +274,13 @@ export function TableView({
               <TableCell>
                 {link.application ? (
                   <Badge
+                    className="h-6 shrink-0 gap-1.5 rounded-lg border-blue-500/20 bg-blue-500/5 px-2.5 font-black text-[9px] text-blue-600 uppercase tracking-widest"
                     variant="outline"
-                    className="h-6 gap-1.5 text-[9px] font-black uppercase tracking-widest bg-blue-500/5 text-blue-600 border-blue-500/20 rounded-lg shrink-0 px-2.5"
                   >
-                    <Box className="w-3 h-3" /> {link.application.tla}
+                    <Box className="h-3 w-3" /> {link.application.tla}
                   </Badge>
                 ) : (
-                  <span className="text-muted-foreground/20 font-black uppercase tracking-widest text-[9px]">
+                  <span className="font-black text-[9px] text-muted-foreground/20 uppercase tracking-widest">
                     Global Target
                   </span>
                 )}
@@ -285,110 +288,110 @@ export function TableView({
               <TableCell>
                 {link.category ? (
                   <Badge
+                    className="h-6 shrink-0 gap-1.5 rounded-lg border-purple-500/20 bg-purple-500/5 px-2.5 font-black text-[9px] text-purple-600 uppercase tracking-widest"
                     variant="outline"
-                    className="h-6 gap-1.5 text-[9px] font-black uppercase tracking-widest bg-purple-500/5 text-purple-600 border-purple-500/20 rounded-lg shrink-0 px-2.5"
                   >
-                    <Layers className="w-3 h-3" /> {link.category.name}
+                    <Layers className="h-3 w-3" /> {link.category.name}
                   </Badge>
                 ) : (
-                  <span className="text-muted-foreground/20 font-black uppercase tracking-widest text-[9px]">
+                  <span className="font-black text-[9px] text-muted-foreground/20 uppercase tracking-widest">
                     Unclassified
                   </span>
                 )}
               </TableCell>
               <TableCell>
-                {link.visibility === 'public' ? (
+                {link.visibility === "public" ? (
                   <Badge
+                    className="h-6 shrink-0 gap-1.5 rounded-lg border-green-500/20 bg-green-500/5 px-2.5 font-black text-[9px] text-green-600 uppercase tracking-widest"
                     variant="outline"
-                    className="h-6 gap-1.5 text-[9px] font-black uppercase tracking-widest bg-green-500/5 text-green-600 border-green-500/20 rounded-lg shrink-0 px-2.5"
                   >
-                    <Globe2 className="w-3 h-3" /> PUBLIC
+                    <Globe2 className="h-3 w-3" /> PUBLIC
                   </Badge>
                 ) : (
                   <Badge
+                    className="h-6 shrink-0 gap-1.5 rounded-lg border-border/50 bg-muted/50 px-2.5 font-black text-[9px] text-muted-foreground uppercase tracking-widest"
                     variant="outline"
-                    className="h-6 gap-1.5 text-[9px] font-black uppercase tracking-widest bg-muted/50 text-muted-foreground border-border/50 rounded-lg shrink-0 px-2.5"
                   >
-                    <Lock className="w-3 h-3" /> PRIVATE
+                    <Lock className="h-3 w-3" /> PRIVATE
                   </Badge>
                 )}
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-1.5 text-xs font-black tracking-tight leading-none">
-                    <MousePointer2 className="w-3 h-3 text-primary opacity-60" />
+                  <div className="flex items-center gap-1.5 font-black text-xs leading-none tracking-tight">
+                    <MousePointer2 className="h-3 w-3 text-primary opacity-60" />
                     {link.usageCount || 0}
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                  <span className="font-black text-[9px] text-muted-foreground uppercase tracking-widest opacity-50">
                     Insights
                   </span>
                 </div>
               </TableCell>
               <TableCell>
                 <div className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-1.5 text-xs font-black tracking-tight leading-none">
-                    <Calendar className="w-3 h-3 text-muted-foreground/60" />
+                  <div className="flex items-center gap-1.5 font-black text-xs leading-none tracking-tight">
+                    <Calendar className="h-3 w-3 text-muted-foreground/60" />
                     {link.createdAt
-                      ? format(new Date(link.createdAt), 'MMM d')
-                      : 'N/A'}
+                      ? format(new Date(link.createdAt), "MMM d")
+                      : "N/A"}
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-50">
+                  <span className="font-black text-[9px] text-muted-foreground uppercase tracking-widest opacity-50">
                     Deployed
                   </span>
                 </div>
               </TableCell>
-              <TableCell className="text-right pr-8">
+              <TableCell className="pr-8 text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     render={
                       <Button
-                        variant="ghost"
+                        className="h-10 w-10 rounded-2xl text-muted-foreground hover:bg-muted/50"
                         size="icon"
-                        className="h-10 w-10 text-muted-foreground hover:bg-muted/50 rounded-2xl"
+                        variant="ghost"
                       >
-                        <MoreHorizontal className="w-4 h-4" />
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     }
                   />
                   <DropdownMenuContent
                     align="end"
-                    className="rounded-xl p-1.5 border-border/50 shadow-2xl min-w-[180px]"
+                    className="min-w-[180px] rounded-xl border-border/50 p-1.5 shadow-2xl"
                   >
                     <DropdownMenuItem
+                      className="cursor-pointer gap-3 rounded-lg py-2 font-semibold text-xs"
                       onClick={() => handleOpen(link)}
-                      className="gap-3 py-2 rounded-lg text-xs font-semibold cursor-pointer"
                     >
-                      <ExternalLink className="w-4 h-4 opacity-50" /> Navigate
+                      <ExternalLink className="h-4 w-4 opacity-50" /> Navigate
                       Home
                     </DropdownMenuItem>
                     <DropdownMenuItem
+                      className="cursor-pointer gap-3 rounded-lg py-2 font-semibold text-xs"
                       onClick={() => {
-                        setDialogLink(link)
-                        setDialogMode('view')
+                        setDialogLink(link);
+                        setDialogMode("view");
                       }}
-                      className="gap-3 py-2 rounded-lg text-xs font-semibold cursor-pointer"
                     >
                       <Info className="mr-2 h-4 w-4 opacity-50" /> Asset
                       Intelligence
                     </DropdownMenuItem>
                     <DropdownMenuItem
+                      className="cursor-pointer gap-3 rounded-lg py-2 font-semibold text-xs"
                       onClick={() => {
-                        setDialogLink(link)
-                        setDialogMode('edit')
+                        setDialogLink(link);
+                        setDialogMode("edit");
                       }}
-                      className="gap-3 py-2 rounded-lg text-xs font-semibold cursor-pointer"
                     >
                       <Pencil className="mr-2 h-4 w-4 opacity-50" /> Refine
                       Metadata
                     </DropdownMenuItem>
-                    <div className="h-px bg-border/50 my-1 mx-2" />
+                    <div className="mx-2 my-1 h-px bg-border/50" />
                     <DropdownMenuItem
-                      className="text-destructive focus:text-destructive gap-3 py-2 rounded-lg text-xs font-semibold cursor-pointer"
+                      className="cursor-pointer gap-3 rounded-lg py-2 font-semibold text-destructive text-xs focus:text-destructive"
                       onClick={() =>
                         deleteMutation.mutate({ data: { id: link.id, teamId } })
                       }
                     >
-                      <Trash2 className="w-4 h-4 opacity-50" /> Terminate Link
+                      <Trash2 className="h-4 w-4 opacity-50" /> Terminate Link
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -398,7 +401,7 @@ export function TableView({
         </TableBody>
       </Table>
     </div>
-  )
+  );
 }
 
 // =============================================================================
@@ -410,28 +413,28 @@ export function CompactView({
   selectedLinks,
   onToggleSelect,
 }: ViewProps) {
-  const { handleOpen } = useLinkMutations(teamId)
+  const { handleOpen } = useLinkMutations(teamId);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
       {links.map((link) => (
         <CompactItem
+          isSelected={selectedLinks?.has(link.id) ?? false}
           key={link.id}
           link={link}
-          isSelected={selectedLinks?.has(link.id) ?? false}
-          onToggleSelect={onToggleSelect}
           onOpen={handleOpen}
+          onToggleSelect={onToggleSelect}
         />
       ))}
     </div>
-  )
+  );
 }
 
 interface CompactItemProps {
-  link: LinkWithRelations
-  isSelected: boolean
-  onToggleSelect?: (linkId: string) => void
-  onOpen: (link: LinkWithRelations) => void
+  isSelected: boolean;
+  link: LinkWithRelations;
+  onOpen: (link: LinkWithRelations) => void;
+  onToggleSelect?: (linkId: string) => void;
 }
 
 const CompactItem = memo(function CompactItem({
@@ -441,86 +444,88 @@ const CompactItem = memo(function CompactItem({
   onOpen,
 }: CompactItemProps) {
   return (
-    <div
+    <button
       className={cn(
-        'group bg-card/40 backdrop-blur-sm border border-border/50 p-3 rounded-xl flex items-center justify-between hover:shadow-lg hover:border-primary/30 hover:bg-card transition-all cursor-pointer relative overflow-hidden',
+        "group relative flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-xl border border-border/50 bg-card/40 p-3 text-left backdrop-blur-sm transition-all hover:border-primary/30 hover:bg-card hover:shadow-lg",
         isSelected &&
-        'ring-2 ring-primary ring-offset-2 ring-offset-background bg-primary/5',
+          "bg-primary/5 ring-2 ring-primary ring-offset-2 ring-offset-background"
       )}
       onClick={() => onOpen(link)}
+      type="button"
     >
       {/* Access Indicator Dots */}
       <div
         className={cn(
-          'absolute top-0 right-0 h-8 w-8 flex items-center justify-center -mr-1 -mt-1 opacity-[0.05] rounded-full',
-          link.visibility === 'public' ? 'bg-blue-500' : 'bg-amber-500',
+          "absolute top-0 right-0 -mt-1 -mr-1 flex h-8 w-8 items-center justify-center rounded-full opacity-[0.05]",
+          link.visibility === "public" ? "bg-blue-500" : "bg-amber-500"
         )}
       />
 
       {onToggleSelect && (
         <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onToggleSelect(link.id)
-          }}
           className={cn(
-            'absolute -top-1 -left-1 z-10 w-6 h-6 rounded-md flex items-center justify-center transition-all shadow-md border',
+            "absolute -top-1 -left-1 z-10 flex h-6 w-6 items-center justify-center rounded-md border shadow-md transition-all",
             isSelected
-              ? 'bg-primary text-primary-foreground border-primary'
-              : 'bg-background border-border/50 text-muted-foreground/30 opacity-0 group-hover:opacity-100 scale-90 hover:scale-100',
+              ? "border-primary bg-primary text-primary-foreground"
+              : "scale-90 border-border/50 bg-background text-muted-foreground/30 opacity-0 hover:scale-100 group-hover:opacity-100"
           )}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect(link.id);
+          }}
+          type="button"
         >
           {isSelected ? (
-            <CheckSquare className="w-3 h-3" />
+            <CheckSquare className="h-3 w-3" />
           ) : (
-            <Square className="w-3 h-3" />
+            <Square className="h-3 w-3" />
           )}
         </button>
       )}
       <div className="flex items-center gap-3 overflow-hidden">
         <div
           className={cn(
-            'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105',
-            link.visibility === 'public'
-              ? 'bg-blue-500/5 text-blue-600 border-blue-500/20'
-              : 'bg-amber-500/5 text-amber-600 border-amber-500/20',
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border transition-transform group-hover:scale-105",
+            link.visibility === "public"
+              ? "border-blue-500/20 bg-blue-500/5 text-blue-600"
+              : "border-amber-500/20 bg-amber-500/5 text-amber-600"
           )}
         >
-          {link.visibility === 'public' ? (
-            <Globe2 className="w-4 h-4" />
+          {link.visibility === "public" ? (
+            <Globe2 className="h-4 w-4" />
           ) : (
-            <Lock className="w-4 h-4" />
+            <Lock className="h-4 w-4" />
           )}
         </div>
         <div className="flex flex-col overflow-hidden">
           <Tooltip>
             <TooltipTrigger
               render={
-                <span className="text-[12px] font-bold tracking-tight truncate group-hover:text-primary transition-colors block leading-tight">
+                <span className="block truncate font-bold text-[12px] leading-tight tracking-tight transition-colors group-hover:text-primary">
                   {link.title}
                 </span>
               }
             />
             <TooltipContent className="max-w-xs break-all rounded-lg p-2.5 shadow-xl">
               <p className="font-bold text-[11px]">{link.title}</p>
-              <p className="text-[9px] font-medium opacity-60 mt-0.5 truncate">
+              <p className="mt-0.5 truncate font-medium text-[9px] opacity-60">
                 {link.url}
               </p>
             </TooltipContent>
           </Tooltip>
-          <div className="flex items-center gap-1.5 overflow-hidden mt-0.5">
-            <span className="text-[8px] font-bold text-primary uppercase tracking-wider truncate">
-              {link.application?.tla || 'GLOBAL'}
+          <div className="mt-0.5 flex items-center gap-1.5 overflow-hidden">
+            <span className="truncate font-bold text-[8px] text-primary uppercase tracking-wider">
+              {link.application?.tla || "GLOBAL"}
             </span>
-            <span className="text-[8px] text-muted-foreground/20 font-bold">
+            <span className="font-bold text-[8px] text-muted-foreground/20">
               •
             </span>
-            <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-wider truncate">
+            <span className="truncate font-bold text-[8px] text-muted-foreground/40 uppercase tracking-wider">
               {link.usageCount || 0} INSIGHTS
             </span>
           </div>
         </div>
       </div>
-    </div>
-  )
-})
+    </button>
+  );
+});

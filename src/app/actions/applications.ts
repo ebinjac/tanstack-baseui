@@ -1,36 +1,36 @@
-import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
-import { sql } from 'drizzle-orm'
-import { db } from '@/db'
-import { applications } from '@/db/schema/teams'
+import { createServerFn } from "@tanstack/react-start";
+import { sql } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/db";
+import { applications } from "@/db/schema/teams";
+import { assertTeamAdmin, requireAuth } from "@/lib/middleware/auth.middleware";
 import {
   CreateApplicationSchema,
   UpdateApplicationSchema,
-} from '@/lib/zod/application.schema'
-import { assertTeamAdmin, requireAuth } from '@/lib/middleware/auth.middleware'
+} from "@/lib/zod/application.schema";
 
-export const createApplication = createServerFn({ method: 'POST' })
+export const createApplication = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => CreateApplicationSchema.parse(data))
   .handler(async ({ data, context }) => {
-    assertTeamAdmin(context.session, data.teamId)
+    assertTeamAdmin(context.session, data.teamId);
 
-    const userEmail = context.userEmail
+    const userEmail = context.userEmail;
 
     // cleaning logic: trim strings, convert empty/whitespace to null. Preserve numbers/booleans.
     const cleanedData = Object.fromEntries(
       Object.entries(data).map(([key, value]) => {
-        if (typeof value === 'string') {
-          const trimmed = value.trim()
-          return [key, trimmed === '' ? null : trimmed]
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          return [key, trimmed === "" ? null : trimmed];
         }
-        return [key, value]
-      }),
-    ) as typeof data
+        return [key, value];
+      })
+    ) as typeof data;
 
     // Explicitly check for Asset ID
     if (!cleanedData.assetId) {
-      throw new Error('Invalid Asset ID')
+      throw new Error("Invalid Asset ID");
     }
 
     try {
@@ -41,46 +41,46 @@ export const createApplication = createServerFn({ method: 'POST' })
           createdBy: userEmail,
           updatedBy: userEmail,
         })
-        .returning()
+        .returning();
 
-      return { success: true, applicationId: newApp.id }
+      return { success: true, applicationId: newApp.id };
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : 'Failed to create application'
-      throw new Error(message)
+        error instanceof Error ? error.message : "Failed to create application";
+      throw new Error(message);
     }
-  })
+  });
 
-export const getTeamApplications = createServerFn({ method: 'GET' })
-  .inputValidator((data: unknown) =>
-    z.object({ teamId: z.uuid() }).parse(data),
-  )
+export const getTeamApplications = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => z.object({ teamId: z.uuid() }).parse(data))
   .handler(async ({ data }) => {
     try {
       const apps = await db.query.applications.findMany({
         where: (applications, { eq }) => eq(applications.teamId, data.teamId),
-      })
-      return apps
+      });
+      return apps;
     } catch (error: unknown) {
-      console.error('Failed to fetch applications:', error)
-      throw new Error('Failed to fetch applications')
+      console.error("Failed to fetch applications:", error);
+      throw new Error("Failed to fetch applications");
     }
-  })
+  });
 
-export const updateApplication = createServerFn({ method: 'POST' })
+export const updateApplication = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => UpdateApplicationSchema.parse(data))
   .handler(async ({ data, context }) => {
     // Get application to find teamId
     const app = await db.query.applications.findFirst({
       where: (applications, { eq }) => eq(applications.id, data.id),
-    })
+    });
 
-    if (!app) throw new Error('Application not found')
+    if (!app) {
+      throw new Error("Application not found");
+    }
 
-    assertTeamAdmin(context.session, app.teamId)
+    assertTeamAdmin(context.session, app.teamId);
 
-    const userEmail = context.userEmail
+    const userEmail = context.userEmail;
 
     try {
       await db
@@ -90,45 +90,47 @@ export const updateApplication = createServerFn({ method: 'POST' })
           updatedBy: userEmail,
           updatedAt: new Date(),
         })
-        .where(sql`${applications.id} = ${data.id}`)
+        .where(sql`${applications.id} = ${data.id}`);
 
-      return { success: true }
+      return { success: true };
     } catch (error: unknown) {
-      console.error('Failed to update application:', error)
-      throw new Error('Failed to update application')
+      console.error("Failed to update application:", error);
+      throw new Error("Failed to update application");
     }
-  })
+  });
 
-export const deleteApplication = createServerFn({ method: 'POST' })
+export const deleteApplication = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    z.object({ applicationId: z.uuid() }).parse(data),
+    z.object({ applicationId: z.uuid() }).parse(data)
   )
   .handler(async ({ data, context }) => {
     // Get application to find teamId
     const app = await db.query.applications.findFirst({
       where: (applications, { eq }) => eq(applications.id, data.applicationId),
-    })
+    });
 
-    if (!app) throw new Error('Application not found')
+    if (!app) {
+      throw new Error("Application not found");
+    }
 
-    assertTeamAdmin(context.session, app.teamId)
+    assertTeamAdmin(context.session, app.teamId);
 
     try {
       await db
         .delete(applications)
-        .where(sql`${applications.id} = ${data.applicationId}`)
+        .where(sql`${applications.id} = ${data.applicationId}`);
 
-      return { success: true }
+      return { success: true };
     } catch (error: unknown) {
-      console.error('Failed to delete application:', error)
-      throw new Error('Failed to delete application')
+      console.error("Failed to delete application:", error);
+      throw new Error("Failed to delete application");
     }
-  })
+  });
 
-export const checkTeamTLA = createServerFn({ method: 'GET' })
+export const checkTeamTLA = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) =>
-    z.object({ teamId: z.uuid(), tla: z.string() }).parse(data),
+    z.object({ teamId: z.uuid(), tla: z.string() }).parse(data)
   )
   .handler(async ({ data }) => {
     try {
@@ -136,12 +138,12 @@ export const checkTeamTLA = createServerFn({ method: 'GET' })
         where: (applications, { and, eq, ilike }) =>
           and(
             eq(applications.teamId, data.teamId),
-            ilike(applications.tla, data.tla),
+            ilike(applications.tla, data.tla)
           ),
-      })
-      return { exists: !!existing }
+      });
+      return { exists: !!existing };
     } catch (error: unknown) {
-      console.error('Failed to check TLA:', error)
-      throw new Error('Failed to check TLA')
+      console.error("Failed to check TLA:", error);
+      throw new Error("Failed to check TLA");
     }
-  })
+  });

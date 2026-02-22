@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 export const ssoUserSchema = z.object({
   attributes: z.object({
@@ -12,7 +12,7 @@ export const ssoUserSchema = z.object({
     picture: z.url().optional(),
   }),
   groups: z.array(z.string()),
-})
+});
 
 export const sessionUserSchema = z.object({
   userId: z.string(),
@@ -24,7 +24,7 @@ export const sessionUserSchema = z.object({
   adminTeamIds: z.array(z.uuid()),
   iat: z.number(), // issued at
   exp: z.number(), // expiration
-})
+});
 
-export type SSOUser = z.infer<typeof ssoUserSchema>
-export type SessionUser = z.infer<typeof sessionUserSchema>
+export type SSOUser = z.infer<typeof ssoUserSchema>;
+export type SessionUser = z.infer<typeof sessionUserSchema>;

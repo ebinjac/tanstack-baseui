@@ -1,8 +1,4 @@
 {
-    "title": "Link Manager",
-    "pages": [
-        "index",
-        "management",
-        "stats"
-    ]
+  "title": "Link Manager",
+  "pages": ["index", "management", "stats"]
 }

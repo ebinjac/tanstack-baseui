@@ -1,7 +1,7 @@
-import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
-import { and, count, desc, eq, gte, ilike, lte, or, sql } from 'drizzle-orm'
-import { db } from '@/db'
+import { createServerFn } from "@tanstack/react-start";
+import { and, count, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/db";
 import {
   finalizedTurnovers,
   turnoverCommsDetails,
@@ -9,7 +9,8 @@ import {
   turnoverIncDetails,
   turnoverMimDetails,
   turnoverRfcDetails,
-} from '@/db/schema/turnover'
+} from "@/db/schema/turnover";
+import { requireAuth } from "@/lib/middleware/auth.middleware";
 import {
   CreateTurnoverEntrySchema,
   DeleteEntrySchema,
@@ -20,8 +21,7 @@ import {
   ResolveEntrySchema,
   ToggleImportantSchema,
   UpdateTurnoverEntrySchema,
-} from '@/lib/zod/turnover.schema'
-import { requireAuth } from '@/lib/middleware/auth.middleware'
+} from "@/lib/zod/turnover.schema";
 
 // ========================
 // Entry Management
@@ -30,34 +30,37 @@ import { requireAuth } from '@/lib/middleware/auth.middleware'
 /**
  * CREATE TURNOVER ENTRY
  */
-export const createTurnoverEntry = createServerFn({ method: 'POST' })
+export const createTurnoverEntry = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => CreateTurnoverEntrySchema.parse(data))
   .handler(async ({ data, context }) => {
-    const userName = context.userName
+    const userName = context.userName;
 
     // Generate title based on section if not provided
-    let title = data.title
-    if (!title || title.trim() === '') {
+    let title = data.title;
+    if (!title || title.trim() === "") {
       switch (data.section) {
-        case 'RFC':
-          title = data.rfcNumber || 'RFC Entry'
-          break
-        case 'INC':
-          title = data.incidentNumber || 'Incident Entry'
-          break
-        case 'ALERTS':
-          title = 'Alert Entry'
-          break
-        case 'MIM':
-          title = 'MIM Entry'
-          break
-        case 'COMMS':
-          title = data.emailSubject || 'Communication'
-          break
-        case 'FYI':
-          title = data.description?.substring(0, 50) || 'FYI Entry'
-          break
+        case "RFC":
+          title = data.rfcNumber || "RFC Entry";
+          break;
+        case "INC":
+          title = data.incidentNumber || "Incident Entry";
+          break;
+        case "ALERTS":
+          title = "Alert Entry";
+          break;
+        case "MIM":
+          title = "MIM Entry";
+          break;
+        case "COMMS":
+          title = data.emailSubject || "Communication";
+          break;
+        case "FYI":
+          title = data.description?.substring(0, 50) || "FYI Entry";
+          break;
+        default:
+          title = "Turnover Entry";
+          break;
       }
     }
 
@@ -74,200 +77,254 @@ export const createTurnoverEntry = createServerFn({ method: 'POST' })
         isImportant: data.isImportant,
         createdBy: userName,
       })
-      .returning()
+      .returning();
 
     // Insert section-specific details
     switch (data.section) {
-      case 'RFC':
+      case "RFC":
         if (data.rfcNumber && data.rfcStatus && data.validatedBy) {
           await db.insert(turnoverRfcDetails).values({
             entryId: entry.id,
             rfcNumber: data.rfcNumber,
             rfcStatus: data.rfcStatus,
             validatedBy: data.validatedBy,
-          })
+          });
         }
-        break
-      case 'INC':
+        break;
+      case "INC":
         if (data.incidentNumber) {
           await db.insert(turnoverIncDetails).values({
             entryId: entry.id,
             incidentNumber: data.incidentNumber,
-          })
+          });
         }
-        break
-      case 'MIM':
+        break;
+      case "MIM":
         if (data.mimLink) {
           await db.insert(turnoverMimDetails).values({
             entryId: entry.id,
             mimLink: data.mimLink,
             mimSlackLink: data.mimSlackLink || null,
-          })
+          });
         }
-        break
-      case 'COMMS':
+        break;
+      case "COMMS":
         await db.insert(turnoverCommsDetails).values({
           entryId: entry.id,
           emailSubject: data.emailSubject || null,
           slackLink: data.slackLink || null,
-        })
-        break
+        });
+        break;
+      default:
+        break;
     }
 
-    return { success: true, entryId: entry.id }
-  })
+    return { success: true, entryId: entry.id };
+  });
+
+async function updateRfcDetails(
+  data: z.infer<typeof UpdateTurnoverEntrySchema>
+) {
+  if (!(data.rfcNumber || data.rfcStatus || data.validatedBy)) {
+    return;
+  }
+
+  const existingRfc = await db.query.turnoverRfcDetails.findFirst({
+    where: eq(turnoverRfcDetails.entryId, data.id),
+  });
+
+  const rfcUpdateData: Record<string, unknown> = {};
+  if (data.rfcNumber) {
+    rfcUpdateData.rfcNumber = data.rfcNumber;
+  }
+  if (data.rfcStatus) {
+    rfcUpdateData.rfcStatus = data.rfcStatus;
+  }
+  if (data.validatedBy) {
+    rfcUpdateData.validatedBy = data.validatedBy;
+  }
+
+  if (existingRfc) {
+    await db
+      .update(turnoverRfcDetails)
+      .set(rfcUpdateData)
+      .where(eq(turnoverRfcDetails.entryId, data.id));
+  } else if (data.rfcNumber && data.rfcStatus && data.validatedBy) {
+    await db.insert(turnoverRfcDetails).values({
+      entryId: data.id,
+      rfcNumber: data.rfcNumber,
+      rfcStatus: data.rfcStatus,
+      validatedBy: data.validatedBy,
+    });
+  }
+}
+
+async function updateIncDetails(
+  data: z.infer<typeof UpdateTurnoverEntrySchema>
+) {
+  if (!data.incidentNumber) {
+    return;
+  }
+
+  const existingInc = await db.query.turnoverIncDetails.findFirst({
+    where: eq(turnoverIncDetails.entryId, data.id),
+  });
+
+  if (existingInc) {
+    await db
+      .update(turnoverIncDetails)
+      .set({ incidentNumber: data.incidentNumber })
+      .where(eq(turnoverIncDetails.entryId, data.id));
+  } else {
+    await db.insert(turnoverIncDetails).values({
+      entryId: data.id,
+      incidentNumber: data.incidentNumber,
+    });
+  }
+}
+
+async function updateMimDetails(
+  data: z.infer<typeof UpdateTurnoverEntrySchema>
+) {
+  if (!data.mimLink) {
+    return;
+  }
+
+  const existingMim = await db.query.turnoverMimDetails.findFirst({
+    where: eq(turnoverMimDetails.entryId, data.id),
+  });
+
+  if (existingMim) {
+    await db
+      .update(turnoverMimDetails)
+      .set({
+        mimLink: data.mimLink,
+        mimSlackLink: data.mimSlackLink || null,
+      })
+      .where(eq(turnoverMimDetails.entryId, data.id));
+  } else {
+    await db.insert(turnoverMimDetails).values({
+      entryId: data.id,
+      mimLink: data.mimLink,
+      mimSlackLink: data.mimSlackLink || null,
+    });
+  }
+}
+
+async function updateCommsDetails(
+  data: z.infer<typeof UpdateTurnoverEntrySchema>
+) {
+  const existingComms = await db.query.turnoverCommsDetails.findFirst({
+    where: eq(turnoverCommsDetails.entryId, data.id),
+  });
+
+  if (existingComms) {
+    await db
+      .update(turnoverCommsDetails)
+      .set({
+        emailSubject: data.emailSubject || null,
+        slackLink: data.slackLink || null,
+      })
+      .where(eq(turnoverCommsDetails.entryId, data.id));
+  } else {
+    await db.insert(turnoverCommsDetails).values({
+      entryId: data.id,
+      emailSubject: data.emailSubject || null,
+      slackLink: data.slackLink || null,
+    });
+  }
+}
+
+async function updateTurnoverSectionDetails(
+  data: z.infer<typeof UpdateTurnoverEntrySchema>,
+  existingSection: string
+) {
+  switch (existingSection) {
+    case "RFC":
+      await updateRfcDetails(data);
+      break;
+    case "INC":
+      await updateIncDetails(data);
+      break;
+    case "MIM":
+      await updateMimDetails(data);
+      break;
+    case "COMMS":
+      await updateCommsDetails(data);
+      break;
+    default:
+      break;
+  }
+}
 
 /**
  * UPDATE TURNOVER ENTRY
  */
-export const updateTurnoverEntry = createServerFn({ method: 'POST' })
+export const updateTurnoverEntry = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => UpdateTurnoverEntrySchema.parse(data))
   .handler(async ({ data, context }) => {
-    const userName = context.userName
+    const userName = context.userName;
 
     // Verify entry exists
     const existingEntry = await db.query.turnoverEntries.findFirst({
       where: eq(turnoverEntries.id, data.id),
-    })
+    });
 
-    if (!existingEntry) throw new Error('Entry not found')
+    if (!existingEntry) {
+      throw new Error("Entry not found");
+    }
 
     // Update main entry
     const updateData: Record<string, unknown> = {
       updatedBy: userName,
       updatedAt: new Date(),
+    };
+    if (data.title !== undefined) {
+      updateData.title = data.title;
     }
-    if (data.title !== undefined) updateData.title = data.title
-    if (data.description !== undefined)
-      updateData.description = data.description
-    if (data.comments !== undefined) updateData.comments = data.comments
-    if (data.isImportant !== undefined)
-      updateData.isImportant = data.isImportant
+    if (data.description !== undefined) {
+      updateData.description = data.description;
+    }
+    if (data.comments !== undefined) {
+      updateData.comments = data.comments;
+    }
+    if (data.isImportant !== undefined) {
+      updateData.isImportant = data.isImportant;
+    }
 
     await db
       .update(turnoverEntries)
       .set(updateData)
-      .where(eq(turnoverEntries.id, data.id))
+      .where(eq(turnoverEntries.id, data.id));
 
     // Update section-specific details
-    switch (existingEntry.section) {
-      case 'RFC':
-        if (data.rfcNumber || data.rfcStatus || data.validatedBy) {
-          const existingRfc = await db.query.turnoverRfcDetails.findFirst({
-            where: eq(turnoverRfcDetails.entryId, data.id),
-          })
+    await updateTurnoverSectionDetails(data, existingEntry.section);
 
-          const rfcUpdateData: Record<string, unknown> = {}
-          if (data.rfcNumber) rfcUpdateData.rfcNumber = data.rfcNumber
-          if (data.rfcStatus) rfcUpdateData.rfcStatus = data.rfcStatus
-          if (data.validatedBy) rfcUpdateData.validatedBy = data.validatedBy
-
-          if (existingRfc) {
-            await db
-              .update(turnoverRfcDetails)
-              .set(rfcUpdateData)
-              .where(eq(turnoverRfcDetails.entryId, data.id))
-          } else if (data.rfcNumber && data.rfcStatus && data.validatedBy) {
-            await db.insert(turnoverRfcDetails).values({
-              entryId: data.id,
-              rfcNumber: data.rfcNumber,
-              rfcStatus: data.rfcStatus,
-              validatedBy: data.validatedBy,
-            })
-          }
-        }
-        break
-      case 'INC':
-        if (data.incidentNumber) {
-          const existingInc = await db.query.turnoverIncDetails.findFirst({
-            where: eq(turnoverIncDetails.entryId, data.id),
-          })
-
-          if (existingInc) {
-            await db
-              .update(turnoverIncDetails)
-              .set({ incidentNumber: data.incidentNumber })
-              .where(eq(turnoverIncDetails.entryId, data.id))
-          } else {
-            await db.insert(turnoverIncDetails).values({
-              entryId: data.id,
-              incidentNumber: data.incidentNumber,
-            })
-          }
-        }
-        break
-      case 'MIM':
-        if (data.mimLink) {
-          const existingMim = await db.query.turnoverMimDetails.findFirst({
-            where: eq(turnoverMimDetails.entryId, data.id),
-          })
-
-          if (existingMim) {
-            await db
-              .update(turnoverMimDetails)
-              .set({
-                mimLink: data.mimLink,
-                mimSlackLink: data.mimSlackLink || null,
-              })
-              .where(eq(turnoverMimDetails.entryId, data.id))
-          } else {
-            await db.insert(turnoverMimDetails).values({
-              entryId: data.id,
-              mimLink: data.mimLink,
-              mimSlackLink: data.mimSlackLink || null,
-            })
-          }
-        }
-        break
-      case 'COMMS': {
-        const existingComms = await db.query.turnoverCommsDetails.findFirst({
-          where: eq(turnoverCommsDetails.entryId, data.id),
-        })
-
-        if (existingComms) {
-          await db
-            .update(turnoverCommsDetails)
-            .set({
-              emailSubject: data.emailSubject || null,
-              slackLink: data.slackLink || null,
-            })
-            .where(eq(turnoverCommsDetails.entryId, data.id))
-        } else {
-          await db.insert(turnoverCommsDetails).values({
-            entryId: data.id,
-            emailSubject: data.emailSubject || null,
-            slackLink: data.slackLink || null,
-          })
-        }
-        break
-      }
-    }
-
-    return { success: true }
-  })
+    return { success: true };
+  });
 
 /**
  * DELETE TURNOVER ENTRY
  */
-export const deleteTurnoverEntry = createServerFn({ method: 'POST' })
+export const deleteTurnoverEntry = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => DeleteEntrySchema.parse(data))
   .handler(async ({ data }) => {
     // Delete entry (cascades to extension tables)
-    await db.delete(turnoverEntries).where(eq(turnoverEntries.id, data.id))
+    await db.delete(turnoverEntries).where(eq(turnoverEntries.id, data.id));
 
-    return { success: true }
-  })
+    return { success: true };
+  });
 
 /**
  * TOGGLE IMPORTANT FLAG
  */
-export const toggleImportantEntry = createServerFn({ method: 'POST' })
+export const toggleImportantEntry = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => ToggleImportantSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const userName = context.userName
+    const userName = context.userName;
 
     await db
       .update(turnoverEntries)
@@ -276,38 +333,38 @@ export const toggleImportantEntry = createServerFn({ method: 'POST' })
         updatedBy: userName,
         updatedAt: new Date(),
       })
-      .where(eq(turnoverEntries.id, data.id))
+      .where(eq(turnoverEntries.id, data.id));
 
-    return { success: true }
-  })
+    return { success: true };
+  });
 
 /**
  * RESOLVE ENTRY
  */
-export const resolveTurnoverEntry = createServerFn({ method: 'POST' })
+export const resolveTurnoverEntry = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => ResolveEntrySchema.parse(data))
   .handler(async ({ data, context }) => {
-    const userName = context.userName
+    const userName = context.userName;
 
     await db
       .update(turnoverEntries)
       .set({
-        status: 'RESOLVED',
+        status: "RESOLVED",
         resolvedBy: userName,
         resolvedAt: new Date(),
         updatedBy: userName,
         updatedAt: new Date(),
       })
-      .where(eq(turnoverEntries.id, data.id))
+      .where(eq(turnoverEntries.id, data.id));
 
-    return { success: true }
-  })
+    return { success: true };
+  });
 
 /**
  * GET TURNOVER ENTRIES
  */
-export const getTurnoverEntries = createServerFn({ method: 'GET' })
+export const getTurnoverEntries = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => GetEntriesSchema.parse(data))
   .handler(async ({ data }) => {
@@ -319,33 +376,34 @@ export const getTurnoverEntries = createServerFn({ method: 'GET' })
       includeRecentlyResolved,
       limit = 50,
       offset = 0,
-    } = data
+    } = data;
 
-    const filters = [eq(turnoverEntries.teamId, teamId)]
+    const filters = [eq(turnoverEntries.teamId, teamId)];
 
     if (applicationId) {
-      filters.push(eq(turnoverEntries.applicationId, applicationId))
+      filters.push(eq(turnoverEntries.applicationId, applicationId));
     }
 
     if (section) {
-      filters.push(eq(turnoverEntries.section, section))
+      filters.push(eq(turnoverEntries.section, section));
     }
 
     // Handle status filter with includeRecentlyResolved option
     if (includeRecentlyResolved) {
       // Include OPEN entries AND entries resolved within last 24 hours
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-      filters.push(
-        or(
-          eq(turnoverEntries.status, 'OPEN'),
-          and(
-            eq(turnoverEntries.status, 'RESOLVED'),
-            gte(turnoverEntries.resolvedAt, twentyFourHoursAgo),
-          ),
-        )!,
-      )
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const openOrRecentlyResolved = or(
+        eq(turnoverEntries.status, "OPEN"),
+        and(
+          eq(turnoverEntries.status, "RESOLVED"),
+          gte(turnoverEntries.resolvedAt, twentyFourHoursAgo)
+        )
+      );
+      if (openOrRecentlyResolved) {
+        filters.push(openOrRecentlyResolved);
+      }
     } else if (status) {
-      filters.push(eq(turnoverEntries.status, status))
+      filters.push(eq(turnoverEntries.status, status));
     }
 
     const entries = await db.query.turnoverEntries.findMany({
@@ -369,46 +427,44 @@ export const getTurnoverEntries = createServerFn({ method: 'GET' })
         mimDetails: true,
         commsDetails: true,
       },
-    })
+    });
 
     // Get total count
     const countResult = await db
       .select({ count: count() })
       .from(turnoverEntries)
-      .where(and(...filters))
+      .where(and(...filters));
 
     return {
       entries,
       total: countResult[0]?.count || 0,
-    }
-  })
+    };
+  });
 
 /**
  * GET ENTRIES FOR DISPATCH (includes RESOLVED from today)
  */
-export const getDispatchEntries = createServerFn({ method: 'GET' })
+export const getDispatchEntries = createServerFn({ method: "GET" })
   .middleware([requireAuth])
-  .inputValidator((data: unknown) =>
-    z.object({ teamId: z.uuid() }).parse(data),
-  )
+  .inputValidator((data: unknown) => z.object({ teamId: z.uuid() }).parse(data))
   .handler(async ({ data }) => {
-    const { teamId } = data
+    const { teamId } = data;
 
     // Get today's start
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     // Get all OPEN entries OR entries resolved today
     const entries = await db.query.turnoverEntries.findMany({
       where: and(
         eq(turnoverEntries.teamId, teamId),
         or(
-          eq(turnoverEntries.status, 'OPEN'),
+          eq(turnoverEntries.status, "OPEN"),
           and(
-            eq(turnoverEntries.status, 'RESOLVED'),
-            gte(turnoverEntries.updatedAt, today),
-          ),
-        ),
+            eq(turnoverEntries.status, "RESOLVED"),
+            gte(turnoverEntries.updatedAt, today)
+          )
+        )
       ),
       orderBy: [
         desc(turnoverEntries.isImportant),
@@ -428,10 +484,10 @@ export const getDispatchEntries = createServerFn({ method: 'GET' })
         mimDetails: true,
         commsDetails: true,
       },
-    })
+    });
 
-    return entries
-  })
+    return entries;
+  });
 
 // ========================
 // Finalization
@@ -440,71 +496,69 @@ export const getDispatchEntries = createServerFn({ method: 'GET' })
 /**
  * CHECK IF CAN FINALIZE (Cooldown check)
  */
-export const canFinalizeTurnover = createServerFn({ method: 'GET' })
+export const canFinalizeTurnover = createServerFn({ method: "GET" })
   .middleware([requireAuth])
-  .inputValidator((data: unknown) =>
-    z.object({ teamId: z.uuid() }).parse(data),
-  )
+  .inputValidator((data: unknown) => z.object({ teamId: z.uuid() }).parse(data))
   .handler(async ({ data }) => {
     // Check last finalization time (5 hours cooldown)
-    const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000)
+    const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000);
 
     const lastFinalization = await db.query.finalizedTurnovers.findFirst({
       where: and(
         eq(finalizedTurnovers.teamId, data.teamId),
-        gte(finalizedTurnovers.finalizedAt, fiveHoursAgo),
+        gte(finalizedTurnovers.finalizedAt, fiveHoursAgo)
       ),
       orderBy: [desc(finalizedTurnovers.finalizedAt)],
-    })
+    });
 
     if (lastFinalization) {
       const remainingTime = Math.ceil(
         (lastFinalization.finalizedAt.getTime() +
           5 * 60 * 60 * 1000 -
           Date.now()) /
-          60000,
-      )
+          60_000
+      );
       return {
         canFinalize: false,
         message: `Cooldown active. Try again in ${remainingTime} minutes.`,
         lastFinalization: lastFinalization.finalizedAt,
-      }
+      };
     }
 
-    return { canFinalize: true, message: 'Ready to finalize' }
-  })
+    return { canFinalize: true, message: "Ready to finalize" };
+  });
 
 /**
  * FINALIZE TURNOVER
  */
-export const finalizeTurnover = createServerFn({ method: 'POST' })
+export const finalizeTurnover = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => FinalizeTurnoverSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const userName = context.userName
+    const userName = context.userName;
 
     // Check cooldown
     const canFinalizeResult = await canFinalizeTurnover({
       data: { teamId: data.teamId },
-    })
+    });
     if (!canFinalizeResult.canFinalize) {
-      throw new Error(canFinalizeResult.message)
+      throw new Error(canFinalizeResult.message);
     }
 
     // Get all current entries for snapshot
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
     const entries = await db.query.turnoverEntries.findMany({
       where: and(
         eq(turnoverEntries.teamId, data.teamId),
         or(
-          eq(turnoverEntries.status, 'OPEN'),
+          eq(turnoverEntries.status, "OPEN"),
           and(
-            eq(turnoverEntries.status, 'RESOLVED'),
-            gte(turnoverEntries.updatedAt, today),
-          ),
-        ),
+            eq(turnoverEntries.status, "RESOLVED"),
+            gte(turnoverEntries.updatedAt, today)
+          )
+        )
       ),
       with: {
         application: {
@@ -520,11 +574,11 @@ export const finalizeTurnover = createServerFn({ method: 'POST' })
         mimDetails: true,
         commsDetails: true,
       },
-    })
+    });
 
     // Calculate stats
-    const applicationIds = new Set(entries.map((e) => e.applicationId))
-    const importantCount = entries.filter((e) => e.isImportant).length
+    const applicationIds = new Set(entries.map((e) => e.applicationId));
+    const importantCount = entries.filter((e) => e.isImportant).length;
 
     // Create snapshot
     await db.insert(finalizedTurnovers).values({
@@ -535,41 +589,42 @@ export const finalizeTurnover = createServerFn({ method: 'POST' })
       importantCount: importantCount.toString(),
       notes: data.notes,
       finalizedBy: userName,
-    })
+    });
 
-    return { success: true }
-  })
+    return { success: true };
+  });
 
 /**
  * GET FINALIZED TURNOVERS
  */
-export const getFinalizedTurnovers = createServerFn({ method: 'GET' })
+export const getFinalizedTurnovers = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => GetFinalizedTurnoversSchema.parse(data))
   .handler(async ({ data }) => {
-    const { teamId, fromDate, toDate, search, limit = 20, offset = 0 } = data
+    const { teamId, fromDate, toDate, search, limit = 20, offset = 0 } = data;
 
-    const filters = [eq(finalizedTurnovers.teamId, teamId)]
+    const filters = [eq(finalizedTurnovers.teamId, teamId)];
 
     if (fromDate) {
-      filters.push(gte(finalizedTurnovers.finalizedAt, new Date(fromDate)))
+      filters.push(gte(finalizedTurnovers.finalizedAt, new Date(fromDate)));
     }
 
     if (toDate) {
-      const toDateObj = new Date(toDate)
-      toDateObj.setHours(23, 59, 59, 999)
-      filters.push(lte(finalizedTurnovers.finalizedAt, toDateObj))
+      const toDateObj = new Date(toDate);
+      toDateObj.setHours(23, 59, 59, 999);
+      filters.push(lte(finalizedTurnovers.finalizedAt, toDateObj));
     }
 
     if (search) {
-      const searchPattern = `%${search}%`
-      filters.push(
-        or(
-          ilike(finalizedTurnovers.finalizedBy, searchPattern),
-          ilike(finalizedTurnovers.notes, searchPattern),
-          sql`${finalizedTurnovers.snapshotData}::text ILIKE ${searchPattern}`,
-        )!,
-      )
+      const searchPattern = `%${search}%`;
+      const searchFilter = or(
+        ilike(finalizedTurnovers.finalizedBy, searchPattern),
+        ilike(finalizedTurnovers.notes, searchPattern),
+        sql`${finalizedTurnovers.snapshotData}::text ILIKE ${searchPattern}`
+      );
+      if (searchFilter) {
+        filters.push(searchFilter);
+      }
     }
 
     const turnovers = await db.query.finalizedTurnovers.findMany({
@@ -577,43 +632,45 @@ export const getFinalizedTurnovers = createServerFn({ method: 'GET' })
       orderBy: [desc(finalizedTurnovers.finalizedAt)],
       limit,
       offset,
-    })
+    });
 
     // Get total count
     const countResult = await db
       .select({ count: count() })
       .from(finalizedTurnovers)
-      .where(and(...filters))
+      .where(and(...filters));
 
     return {
       turnovers: turnovers.map((t) => ({
         ...t,
-        snapshotData: t.snapshotData as Array<Record<string, {}>>,
+        // biome-ignore lint/complexity/noBannedTypes: generic object structure from Drizzle JSON
+        snapshotData: t.snapshotData as Record<string, {}>[],
       })),
       total: countResult[0]?.count || 0,
-    }
-  })
+    };
+  });
 
 /**
  * GET FINALIZED TURNOVER BY ID
  */
-export const getFinalizedTurnoverById = createServerFn({ method: 'GET' })
+export const getFinalizedTurnoverById = createServerFn({ method: "GET" })
   .middleware([requireAuth])
-  .inputValidator((data: unknown) =>
-    z.object({ id: z.uuid() }).parse(data),
-  )
+  .inputValidator((data: unknown) => z.object({ id: z.uuid() }).parse(data))
   .handler(async ({ data }) => {
     const turnover = await db.query.finalizedTurnovers.findFirst({
       where: eq(finalizedTurnovers.id, data.id),
-    })
+    });
 
-    if (!turnover) throw new Error('Snapshot not found')
+    if (!turnover) {
+      throw new Error("Snapshot not found");
+    }
 
     return {
       ...turnover,
-      snapshotData: turnover.snapshotData as Array<Record<string, {}>>,
-    }
-  })
+      // biome-ignore lint/complexity/noBannedTypes: generic object structure from Drizzle JSON
+      snapshotData: turnover.snapshotData as Record<string, {}>[],
+    };
+  });
 
 // ========================
 // Metrics
@@ -622,59 +679,60 @@ export const getFinalizedTurnoverById = createServerFn({ method: 'GET' })
 /**
  * GET TURNOVER METRICS
  */
-export const getTurnoverMetrics = createServerFn({ method: 'GET' })
+export const getTurnoverMetrics = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => GetTurnoverMetricsSchema.parse(data))
   .handler(async ({ data }) => {
-    const { teamId, startDate, endDate } = data
+    const { teamId, startDate, endDate } = data;
 
-    const startDateObj = new Date(startDate)
-    const endDateObj = new Date(endDate)
-    endDateObj.setHours(23, 59, 59, 999)
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+    endDateObj.setHours(23, 59, 59, 999);
 
     // Get all entries in date range
     const entries = await db.query.turnoverEntries.findMany({
       where: and(
         eq(turnoverEntries.teamId, teamId),
         gte(turnoverEntries.createdAt, startDateObj),
-        lte(turnoverEntries.createdAt, endDateObj),
+        lte(turnoverEntries.createdAt, endDateObj)
       ),
-    })
+    });
 
     // Calculate KPIs
-    const totalEntries = entries.length
+    const totalEntries = entries.length;
     const resolvedEntries = entries.filter(
-      (e) => e.status === 'RESOLVED',
-    ).length
-    const openEntries = entries.filter((e) => e.status === 'OPEN').length
-    const criticalItems = entries.filter((e) => e.isImportant).length
+      (e) => e.status === "RESOLVED"
+    ).length;
+    const openEntries = entries.filter((e) => e.status === "OPEN").length;
+    const criticalItems = entries.filter((e) => e.isImportant).length;
     const resolutionRate =
-      totalEntries > 0 ? Math.round((resolvedEntries / totalEntries) * 100) : 0
+      totalEntries > 0 ? Math.round((resolvedEntries / totalEntries) * 100) : 0;
 
     // Section distribution
-    const sectionCounts: Record<string, number> = {}
-    entries.forEach((e) => {
-      sectionCounts[e.section] = (sectionCounts[e.section] || 0) + 1
-    })
+    const sectionCounts: Record<string, number> = {};
+    for (const e of entries) {
+      sectionCounts[e.section] = (sectionCounts[e.section] || 0) + 1;
+    }
 
     // Daily activity trend
-    const dailyStats: Record<string, { created: number; resolved: number }> = {}
+    const dailyStats: Record<string, { created: number; resolved: number }> =
+      {};
 
-    entries.forEach((e) => {
-      const dateKey = e.createdAt.toISOString().split('T')[0]
+    for (const e of entries) {
+      const dateKey = e.createdAt.toISOString().split("T")[0];
       if (!dailyStats[dateKey]) {
-        dailyStats[dateKey] = { created: 0, resolved: 0 }
+        dailyStats[dateKey] = { created: 0, resolved: 0 };
       }
-      dailyStats[dateKey].created++
+      dailyStats[dateKey].created++;
 
-      if (e.status === 'RESOLVED' && e.resolvedAt) {
-        const resolvedDateKey = e.resolvedAt.toISOString().split('T')[0]
+      if (e.status === "RESOLVED" && e.resolvedAt) {
+        const resolvedDateKey = e.resolvedAt.toISOString().split("T")[0];
         if (!dailyStats[resolvedDateKey]) {
-          dailyStats[resolvedDateKey] = { created: 0, resolved: 0 }
+          dailyStats[resolvedDateKey] = { created: 0, resolved: 0 };
         }
-        dailyStats[resolvedDateKey].resolved++
+        dailyStats[resolvedDateKey].resolved++;
       }
-    })
+    }
 
     // Convert to array and sort by date
     const activityTrend = Object.entries(dailyStats)
@@ -683,7 +741,7 @@ export const getTurnoverMetrics = createServerFn({ method: 'GET' })
         created: stats.created,
         resolved: stats.resolved,
       }))
-      .sort((a, b) => a.date.localeCompare(b.date))
+      .sort((a, b) => a.date.localeCompare(b.date));
 
     return {
       kpis: {
@@ -697,8 +755,8 @@ export const getTurnoverMetrics = createServerFn({ method: 'GET' })
         ([section, count]) => ({
           section,
           count,
-        }),
+        })
       ),
       activityTrend,
-    }
-  })
+    };
+  });

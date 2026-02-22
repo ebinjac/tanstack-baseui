@@ -1,11 +1,11 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
-import type { z } from 'zod'
-import { UpdateTeamSchema } from '@/lib/zod/team.schema'
-import { updateTeam } from '@/app/actions/teams'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import type { z } from "zod";
+import { updateTeam } from "@/app/actions/teams";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,16 +13,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { UpdateTeamSchema } from "@/lib/zod/team.schema";
+
+interface TeamRecord {
+  adminGroup: string;
+  contactEmail?: string | null;
+  contactName?: string | null;
+  id: string;
+  teamName: string;
+  userGroup: string;
+}
 
 interface EditTeamDialogProps {
-  team: any
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+  open: boolean;
+  team: TeamRecord;
 }
 
 export function EditTeamDialog({
@@ -42,29 +51,29 @@ export function EditTeamDialog({
       teamName: team.teamName,
       userGroup: team.userGroup,
       adminGroup: team.adminGroup,
-      contactName: team.contactName || '',
-      contactEmail: team.contactEmail || '',
+      contactName: team.contactName || "",
+      contactEmail: team.contactEmail || "",
     },
-  })
+  });
 
   const mutation = useMutation({
     mutationFn: (values: z.infer<typeof UpdateTeamSchema>) =>
       updateTeam({ data: values }),
     onSuccess: () => {
-      toast.success('Team updated successfully')
-      onSuccess()
+      toast.success("Team updated successfully");
+      onSuccess();
     },
     onError: () => {
-      toast.error('Failed to update team')
+      toast.error("Failed to update team");
     },
-  })
+  });
 
   const onSubmit = (values: z.infer<typeof UpdateTeamSchema>) => {
-    mutation.mutate(values)
-  }
+    mutation.mutate(values);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Team Details</DialogTitle>
@@ -72,16 +81,16 @@ export function EditTeamDialog({
             Update your team's core information and access groups.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+        <form className="space-y-4 py-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-2">
             <Label htmlFor="teamName">Team Name</Label>
             <Input
               id="teamName"
-              {...register('teamName')}
+              {...register("teamName")}
               placeholder="Enter team name"
             />
             {errors.teamName && (
-              <p className="text-xs text-destructive">
+              <p className="text-destructive text-xs">
                 {errors.teamName.message}
               </p>
             )}
@@ -91,11 +100,11 @@ export function EditTeamDialog({
               <Label htmlFor="adminGroup">Admin Group</Label>
               <Input
                 id="adminGroup"
-                {...register('adminGroup')}
+                {...register("adminGroup")}
                 placeholder="AD Group Name"
               />
               {errors.adminGroup && (
-                <p className="text-xs text-destructive">
+                <p className="text-destructive text-xs">
                   {errors.adminGroup.message}
                 </p>
               )}
@@ -104,11 +113,11 @@ export function EditTeamDialog({
               <Label htmlFor="userGroup">Member Group</Label>
               <Input
                 id="userGroup"
-                {...register('userGroup')}
+                {...register("userGroup")}
                 placeholder="AD Group Name"
               />
               {errors.userGroup && (
-                <p className="text-xs text-destructive">
+                <p className="text-destructive text-xs">
                   {errors.userGroup.message}
                 </p>
               )}
@@ -118,11 +127,11 @@ export function EditTeamDialog({
             <Label htmlFor="contactName">Primary Contact Name</Label>
             <Input
               id="contactName"
-              {...register('contactName')}
+              {...register("contactName")}
               placeholder="Full Name"
             />
             {errors.contactName && (
-              <p className="text-xs text-destructive">
+              <p className="text-destructive text-xs">
                 {errors.contactName.message}
               </p>
             )}
@@ -131,24 +140,24 @@ export function EditTeamDialog({
             <Label htmlFor="contactEmail">Primary Contact Email</Label>
             <Input
               id="contactEmail"
-              {...register('contactEmail')}
+              {...register("contactEmail")}
               placeholder="email@example.com"
             />
             {errors.contactEmail && (
-              <p className="text-xs text-destructive">
+              <p className="text-destructive text-xs">
                 {errors.contactEmail.message}
               </p>
             )}
           </div>
           <DialogFooter className="pt-4">
             <Button
+              onClick={() => onOpenChange(false)}
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button disabled={mutation.isPending} type="submit">
               {mutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
@@ -158,5 +167,5 @@ export function EditTeamDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

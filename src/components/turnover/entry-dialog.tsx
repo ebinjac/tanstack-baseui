@@ -1,7 +1,5 @@
-import { useEffect } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Controller,  useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Activity,
   AlertCircle,
@@ -14,67 +12,108 @@ import {
   MessageSquare,
   Star,
   Zap,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import type {FieldValues} from 'react-hook-form';
-import type {CreateTurnoverEntryInput, TurnoverSection} from '@/lib/zod/turnover.schema';
-import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
-import type { Application } from '@/db/schema/teams'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
-import { RichTextEditor } from '@/components/ui/rich-text-editor'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
+} from "lucide-react";
+import { useEffect } from "react";
+import type { FieldValues } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import {
+  createTurnoverEntry,
+  updateTurnoverEntry,
+} from "@/app/actions/turnover";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import type { Application } from "@/db/schema/teams";
+import type { TurnoverEntryWithDetails } from "@/db/schema/turnover";
+import { cn } from "@/lib/utils";
+import type {
+  CreateTurnoverEntryInput,
+  TurnoverSection,
+} from "@/lib/zod/turnover.schema";
 import {
-  
   CreateTurnoverEntrySchema,
-  SECTION_CONFIG
-  
-} from '@/lib/zod/turnover.schema'
-import {
-  createTurnoverEntry,
-  updateTurnoverEntry,
-} from '@/app/actions/turnover'
+  SECTION_CONFIG,
+} from "@/lib/zod/turnover.schema";
 
 const RFC_STATUS_OPTIONS = [
-  'Draft',
-  'In Progress',
-  'Pending Approval',
-  'Approved',
-  'Rejected',
-  'Implemented',
-  'Cancelled',
-]
+  "Draft",
+  "In Progress",
+  "Pending Approval",
+  "Approved",
+  "Rejected",
+  "Implemented",
+  "Cancelled",
+] as const;
 
-const SECTION_ICONS: Record<TurnoverSection, any> = {
+type RfcStatus = (typeof RFC_STATUS_OPTIONS)[number];
+
+const SECTION_ICONS: Record<
+  TurnoverSection,
+  React.ComponentType<{ className?: string }>
+> = {
   RFC: CheckCircle2,
   INC: AlertCircle,
   ALERTS: Bell,
   MIM: Zap,
   COMMS: MessageSquare,
   FYI: HelpCircle,
+};
+
+function getRfcStatusColor(status: string): string {
+  if (status === "Approved" || status === "Implemented") {
+    return "bg-green-500";
+  }
+  if (status === "Rejected" || status === "Cancelled") {
+    return "bg-red-500";
+  }
+  if (status === "In Progress" || status === "Pending Approval") {
+    return "bg-blue-500";
+  }
+  return "bg-slate-400";
+}
+
+function buildEditFormValues(teamId: string, entry: TurnoverEntryWithDetails) {
+  return {
+    teamId,
+    applicationId: entry.applicationId,
+    section: entry.section,
+    title: entry.title,
+    description: entry.description || "",
+    comments: entry.comments || "",
+    isImportant: entry.isImportant,
+    rfcNumber: entry.rfcDetails?.rfcNumber || "",
+    rfcStatus: (entry.rfcDetails?.rfcStatus ?? "") as RfcStatus,
+    validatedBy: entry.rfcDetails?.validatedBy || "",
+    incidentNumber: entry.incDetails?.incidentNumber || "",
+    mimLink: entry.mimDetails?.mimLink || "",
+    mimSlackLink: entry.mimDetails?.mimSlackLink || "",
+    emailSubject: entry.commsDetails?.emailSubject || "",
+    slackLink: entry.commsDetails?.slackLink || "",
+  };
 }
 
 interface EntryDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  teamId: string
-  applicationId: string
-  section: TurnoverSection
-  editEntry?: TurnoverEntryWithDetails | null
+  applicationId: string;
+  editEntry?: TurnoverEntryWithDetails | null;
+  groupApplications?: Application[];
   // Group-related props
-  isGrouped?: boolean
-  groupApplications?: Array<Application>
+  isGrouped?: boolean;
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+  section: TurnoverSection;
+  teamId: string;
 }
 
 export function EntryDialog({
@@ -87,79 +126,62 @@ export function EntryDialog({
   isGrouped = false,
   groupApplications = [],
 }: EntryDialogProps) {
-  const queryClient = useQueryClient()
-  const isEditing = !!editEntry
+  const queryClient = useQueryClient();
+  const isEditing = !!editEntry;
 
-  const sectionConfig = SECTION_CONFIG[section]
-  const SectionIcon = SECTION_ICONS[section]
+  const sectionConfig = SECTION_CONFIG[section];
+  const SectionIcon = SECTION_ICONS[section];
 
   const form = useForm({
-    // @ts-ignore - Type inference issue with Zod default values
     resolver: zodResolver(CreateTurnoverEntrySchema),
     defaultValues: {
       teamId,
       applicationId,
       section,
-      title: '',
-      description: '',
-      comments: '',
+      title: "",
+      description: "",
+      comments: "",
       isImportant: false,
-      rfcNumber: '',
+      rfcNumber: "",
       rfcStatus: undefined,
-      validatedBy: '',
-      incidentNumber: '',
-      mimLink: '',
-      mimSlackLink: '',
-      emailSubject: '',
-      slackLink: '',
+      validatedBy: "",
+      incidentNumber: "",
+      mimLink: "",
+      mimSlackLink: "",
+      emailSubject: "",
+      slackLink: "",
     },
-  })
+  });
 
   // Reset form when dialog opens or editEntry changes
   useEffect(() => {
     if (open) {
       if (editEntry) {
-        form.reset({
-          teamId,
-          applicationId: editEntry.applicationId,
-          section: editEntry.section,
-          title: editEntry.title,
-          description: editEntry.description || '',
-          comments: editEntry.comments || '',
-          isImportant: editEntry.isImportant,
-          rfcNumber: editEntry.rfcDetails?.rfcNumber || '',
-          rfcStatus: editEntry.rfcDetails?.rfcStatus as any,
-          validatedBy: editEntry.rfcDetails?.validatedBy || '',
-          incidentNumber: editEntry.incDetails?.incidentNumber || '',
-          mimLink: editEntry.mimDetails?.mimLink || '',
-          mimSlackLink: editEntry.mimDetails?.mimSlackLink || '',
-          emailSubject: editEntry.commsDetails?.emailSubject || '',
-          slackLink: editEntry.commsDetails?.slackLink || '',
-        })
+        form.reset(buildEditFormValues(teamId, editEntry));
       } else {
         // For new entries in a group, default to the first application
         const defaultAppId =
           isGrouped && groupApplications.length > 0
             ? groupApplications[0].id
-            : applicationId
+            : applicationId;
 
         form.reset({
           teamId,
           applicationId: defaultAppId,
           section,
-          title: '',
-          description: '',
-          comments: '',
+          title: "",
+          description: "",
+          comments: "",
           isImportant: false,
-          rfcNumber: '',
+          rfcNumber: "",
           rfcStatus: undefined,
-          validatedBy: '',
-          incidentNumber: '',
-          mimLink: '',
-          mimSlackLink: '',
-          emailSubject: '',
-          slackLink: '',
-        })
+          validatedBy: "",
+          incidentNumber: "",
+          mimLink: "",
+          mimSlackLink: "",
+          emailSubject: "",
+          slackLink: "",
+        });
       }
     }
   }, [
@@ -171,60 +193,60 @@ export function EntryDialog({
     section,
     isGrouped,
     groupApplications,
-  ])
+  ]);
 
   const createMutation = useMutation({
     mutationFn: (data: CreateTurnoverEntryInput) =>
       createTurnoverEntry({ data }),
     onSuccess: () => {
-      toast.success('Entry created successfully')
-      queryClient.invalidateQueries({ queryKey: ['turnover-entries', teamId] })
-      onOpenChange(false)
+      toast.success("Entry created successfully");
+      queryClient.invalidateQueries({ queryKey: ["turnover-entries", teamId] });
+      onOpenChange(false);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create entry')
+      toast.error(error.message || "Failed to create entry");
     },
-  })
+  });
 
   const updateMutation = useMutation({
     mutationFn: (data: CreateTurnoverEntryInput & { id: string }) =>
       updateTurnoverEntry({ data }),
     onSuccess: () => {
-      toast.success('Entry updated successfully')
-      queryClient.invalidateQueries({ queryKey: ['turnover-entries', teamId] })
-      onOpenChange(false)
+      toast.success("Entry updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["turnover-entries", teamId] });
+      onOpenChange(false);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update entry')
+      toast.error(error.message || "Failed to update entry");
     },
-  })
+  });
 
   const onSubmit = (data: FieldValues) => {
-    const entryData = data as CreateTurnoverEntryInput
+    const entryData = data as CreateTurnoverEntryInput;
     if (isEditing && editEntry) {
-      updateMutation.mutate({ ...entryData, id: editEntry.id })
+      updateMutation.mutate({ ...entryData, id: editEntry.id });
     } else {
-      createMutation.mutate(entryData)
+      createMutation.mutate(entryData);
     }
-  }
+  };
 
-  const isPending = createMutation.isPending || updateMutation.isPending
+  const isPending = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl min-w-[750px] p-0 gap-0 overflow-hidden">
+    <Dialog onOpenChange={onOpenChange} open={open}>
+      <DialogContent className="min-w-[750px] max-w-2xl gap-0 overflow-hidden p-0">
         {/* Header */}
-        <div className="px-6 py-5 border-b flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-            <SectionIcon className="w-5 h-5 text-muted-foreground" />
+        <div className="flex items-center gap-3 border-b px-6 py-5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+            <SectionIcon className="h-5 w-5 text-muted-foreground" />
           </div>
           <div>
-            <DialogTitle className="text-lg font-semibold">
-              {isEditing ? 'Modify Entry' : `New ${sectionConfig.name}`}
+            <DialogTitle className="font-semibold text-lg">
+              {isEditing ? "Modify Entry" : `New ${sectionConfig.name}`}
             </DialogTitle>
-            <p className="text-xs text-muted-foreground mt-0.5">
+            <p className="mt-0.5 text-muted-foreground text-xs">
               {isEditing
-                ? 'Update details for this entry.'
+                ? "Update details for this entry."
                 : `Log a new ${sectionConfig.shortName.toLowerCase()} record.`}
             </p>
           </div>
@@ -232,58 +254,58 @@ export function EntryDialog({
 
         {/* Form Body */}
         <form
+          className="flex max-h-[80vh] flex-col"
           onSubmit={form.handleSubmit(onSubmit, (errors) => {
-            console.log('Form validation errors:', errors)
-            toast.error('Please verify all required fields')
+            console.log("Form validation errors:", errors);
+            toast.error("Please verify all required fields");
           })}
-          className="flex flex-col max-h-[80vh]"
         >
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
             {/* Application Selector (Only for grouped entries) */}
             {isGrouped && groupApplications.length > 1 && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
-                    <Layers className="w-3 h-3 text-primary" />
+                  <div className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10">
+                    <Layers className="h-3 w-3 text-primary" />
                   </div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <h4 className="font-bold text-[11px] text-muted-foreground uppercase tracking-widest">
                     Application
                   </h4>
                 </div>
-                <div className="p-4 rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 space-y-2">
+                <div className="space-y-2 rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-4">
                   <Label
+                    className="font-semibold text-xs"
                     htmlFor="applicationId"
-                    className="text-xs font-semibold"
                   >
-                    Select Application{' '}
+                    Select Application{" "}
                     <span className="text-destructive">*</span>
                   </Label>
-                  <p className="text-xs text-muted-foreground mb-2">
+                  <p className="mb-2 text-muted-foreground text-xs">
                     This entry will be logged under the selected application.
                   </p>
                   <Controller
-                    name="applicationId"
                     control={form.control}
+                    name="applicationId"
                     render={({ field }) => (
                       <Select
-                        value={field.value}
                         onValueChange={field.onChange}
+                        value={field.value}
                       >
-                        <SelectTrigger className="h-11 text-sm bg-background">
+                        <SelectTrigger className="h-11 bg-background text-sm">
                           <SelectValue placeholder="Select application">
                             {field.value && (
                               <div className="flex items-center gap-2">
                                 <span className="font-bold">
                                   {
                                     groupApplications.find(
-                                      (a) => a.id === field.value,
+                                      (a) => a.id === field.value
                                     )?.tla
                                   }
                                 </span>
                                 <span className="text-muted-foreground">
                                   {
                                     groupApplications.find(
-                                      (a) => a.id === field.value,
+                                      (a) => a.id === field.value
                                     )?.applicationName
                                   }
                                 </span>
@@ -311,56 +333,56 @@ export function EntryDialog({
             )}
 
             {/* Section I: Core Identifiers */}
-            {(section === 'RFC' ||
-              section === 'INC' ||
-              section === 'MIM' ||
-              section === 'ALERTS' ||
-              section === 'COMMS') && (
+            {(section === "RFC" ||
+              section === "INC" ||
+              section === "MIM" ||
+              section === "ALERTS" ||
+              section === "COMMS") && (
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
-                    <Activity className="w-3 h-3 text-primary" />
+                  <div className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10">
+                    <Activity className="h-3 w-3 text-primary" />
                   </div>
-                  <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                  <h4 className="font-bold text-[11px] text-muted-foreground uppercase tracking-widest">
                     Details
                   </h4>
                 </div>
                 <div
                   className={cn(
-                    'grid gap-4 p-4 rounded-xl border bg-muted/5',
-                    section === 'RFC' ? 'grid-cols-3' : 'grid-cols-2',
+                    "grid gap-4 rounded-xl border bg-muted/5 p-4",
+                    section === "RFC" ? "grid-cols-3" : "grid-cols-2"
                   )}
                 >
-                  {section === 'RFC' && (
+                  {section === "RFC" && (
                     <>
                       <div className="space-y-2">
                         <Label
+                          className="font-semibold text-xs"
                           htmlFor="rfcNumber"
-                          className="text-xs font-semibold"
                         >
                           RFC Number <span className="text-destructive">*</span>
                         </Label>
                         <Input
+                          className="h-10 rounded-lg border-muted-foreground/15 bg-background font-mono text-sm focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
                           id="rfcNumber"
                           placeholder="CHG..."
-                          className="font-mono h-10 text-sm bg-background border-muted-foreground/15 focus:border-primary/40 focus:ring-2 focus:ring-primary/10 rounded-lg"
-                          {...form.register('rfcNumber')}
+                          {...form.register("rfcNumber")}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label
+                          className="font-semibold text-xs"
                           htmlFor="rfcStatus"
-                          className="text-xs font-semibold"
                         >
                           Status <span className="text-destructive">*</span>
                         </Label>
                         <Controller
-                          name="rfcStatus"
                           control={form.control}
+                          name="rfcStatus"
                           render={({ field }) => (
                             <Select
-                              value={field.value}
                               onValueChange={field.onChange}
+                              value={field.value}
                             >
                               <SelectTrigger className="h-9 text-sm">
                                 <SelectValue placeholder="Select status">
@@ -368,18 +390,8 @@ export function EntryDialog({
                                     <div className="flex items-center gap-2">
                                       <div
                                         className={cn(
-                                          'w-2 h-2 rounded-full',
-                                          field.value === 'Approved' ||
-                                            field.value === 'Implemented'
-                                            ? 'bg-green-500'
-                                            : field.value === 'Rejected' ||
-                                                field.value === 'Cancelled'
-                                              ? 'bg-red-500'
-                                              : field.value === 'In Progress' ||
-                                                  field.value ===
-                                                    'Pending Approval'
-                                                ? 'bg-blue-500'
-                                                : 'bg-slate-400',
+                                          "h-2 w-2 rounded-full",
+                                          getRfcStatusColor(field.value ?? "")
                                         )}
                                       />
                                       {field.value}
@@ -393,17 +405,8 @@ export function EntryDialog({
                                     <div className="flex items-center gap-2">
                                       <div
                                         className={cn(
-                                          'w-2 h-2 rounded-full',
-                                          status === 'Approved' ||
-                                            status === 'Implemented'
-                                            ? 'bg-green-500'
-                                            : status === 'Rejected' ||
-                                                status === 'Cancelled'
-                                              ? 'bg-red-500'
-                                              : status === 'In Progress' ||
-                                                  status === 'Pending Approval'
-                                                ? 'bg-blue-500'
-                                                : 'bg-slate-400',
+                                          "h-2 w-2 rounded-full",
+                                          getRfcStatusColor(status)
                                         )}
                                       />
                                       {status}
@@ -417,122 +420,122 @@ export function EntryDialog({
                       </div>
                       <div className="space-y-2">
                         <Label
+                          className="font-semibold text-xs"
                           htmlFor="validatedBy"
-                          className="text-xs font-semibold"
                         >
-                          Validated By{' '}
+                          Validated By{" "}
                           <span className="text-destructive">*</span>
                         </Label>
                         <Input
+                          className="h-9 text-sm"
                           id="validatedBy"
                           placeholder="Validator name..."
-                          className="h-9 text-sm"
-                          {...form.register('validatedBy')}
+                          {...form.register("validatedBy")}
                         />
                       </div>
                     </>
                   )}
 
-                  {section === 'INC' && (
+                  {section === "INC" && (
                     <div className="space-y-2 sm:col-span-2">
                       <Label
+                        className="font-semibold text-xs"
                         htmlFor="incidentNumber"
-                        className="text-xs font-semibold"
                       >
-                        Incident Number{' '}
+                        Incident Number{" "}
                         <span className="text-destructive">*</span>
                       </Label>
                       <Input
+                        className="h-10 font-bold font-mono text-lg"
                         id="incidentNumber"
                         placeholder="INC..."
-                        className="font-mono h-10 text-lg font-bold"
-                        {...form.register('incidentNumber')}
+                        {...form.register("incidentNumber")}
                       />
                     </div>
                   )}
 
-                  {section === 'ALERTS' && (
+                  {section === "ALERTS" && (
                     <div className="space-y-2 sm:col-span-2">
-                      <Label htmlFor="title" className="text-xs font-semibold">
+                      <Label className="font-semibold text-xs" htmlFor="title">
                         Alert Title <span className="text-destructive">*</span>
                       </Label>
                       <Input
+                        className="h-9 text-sm"
                         id="title"
                         placeholder="Alert title..."
-                        className="h-9 text-sm"
-                        {...form.register('title')}
+                        {...form.register("title")}
                       />
                     </div>
                   )}
 
-                  {section === 'MIM' && (
+                  {section === "MIM" && (
                     <>
                       <div className="space-y-2 sm:col-span-2">
                         <Label
+                          className="font-semibold text-xs"
                           htmlFor="mimLink"
-                          className="text-xs font-semibold"
                         >
-                          Bridge Link{' '}
+                          Bridge Link{" "}
                           <span className="text-destructive">*</span>
                         </Label>
                         <Input
+                          className="h-9 text-sm"
                           id="mimLink"
                           placeholder="https://..."
-                          className="h-9 text-sm"
-                          {...form.register('mimLink')}
+                          {...form.register("mimLink")}
                         />
                       </div>
                       <div className="space-y-2 sm:col-span-2">
                         <Label
+                          className="font-semibold text-xs"
                           htmlFor="mimSlackLink"
-                          className="text-xs font-semibold"
                         >
                           Slack Channel
                         </Label>
                         <Input
+                          className="h-9 text-sm"
                           id="mimSlackLink"
                           placeholder="Slack link..."
-                          className="h-9 text-sm"
-                          {...form.register('mimSlackLink')}
+                          {...form.register("mimSlackLink")}
                         />
                       </div>
                     </>
                   )}
 
-                  {section === 'COMMS' && (
+                  {section === "COMMS" && (
                     <>
                       <div className="space-y-2">
                         <Label
+                          className="font-semibold text-xs"
                           htmlFor="emailSubject"
-                          className="text-xs font-semibold"
                         >
-                          Subject{' '}
-                          <span className="text-muted-foreground text-[10px]">
+                          Subject{" "}
+                          <span className="text-[10px] text-muted-foreground">
                             (or Slack)
                           </span>
                         </Label>
                         <Input
+                          className="h-9 font-medium text-sm"
                           id="emailSubject"
                           placeholder="Email subject..."
-                          className="h-9 text-sm font-medium"
-                          {...form.register('emailSubject')}
+                          {...form.register("emailSubject")}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label
+                          className="font-semibold text-xs"
                           htmlFor="slackLink"
-                          className="text-xs font-semibold"
                         >
-                          Slack Thread{' '}
-                          <span className="text-muted-foreground text-[10px]">
+                          Slack Thread{" "}
+                          <span className="text-[10px] text-muted-foreground">
                             (or Subject)
                           </span>
                         </Label>
                         <Input
+                          className="h-9 font-medium text-sm"
                           id="slackLink"
                           placeholder="Thread link..."
-                          className="h-9 text-sm font-medium"
-                          {...form.register('slackLink')}
+                          {...form.register("slackLink")}
                         />
                       </div>
                     </>
@@ -544,44 +547,44 @@ export function EntryDialog({
             {/* Section II: Narrative Content */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
-                  <FileText className="w-3 h-3 text-primary" />
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10">
+                  <FileText className="h-3 w-3 text-primary" />
                 </div>
-                <h4 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                <h4 className="font-bold text-[11px] text-muted-foreground uppercase tracking-widest">
                   Content
                 </h4>
               </div>
               <div className="space-y-4 rounded-xl border bg-muted/5 p-4">
                 <div className="space-y-2">
                   <Label
+                    className="font-semibold text-xs"
                     htmlFor="description"
-                    className="text-xs font-semibold"
                   >
-                    Description{' '}
-                    {section === 'FYI' && (
+                    Description{" "}
+                    {section === "FYI" && (
                       <span className="text-destructive">*</span>
                     )}
                   </Label>
                   <Textarea
+                    className="border-muted-foreground/10 text-sm focus:ring-1"
                     id="description"
                     placeholder="Brief overview..."
-                    rows={section === 'FYI' ? 4 : 2}
-                    className="text-sm border-muted-foreground/10 focus:ring-1"
-                    {...form.register('description')}
+                    rows={section === "FYI" ? 4 : 2}
+                    {...form.register("description")}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="comments" className="text-xs font-semibold">
+                  <Label className="font-semibold text-xs" htmlFor="comments">
                     Detailed Comments
                   </Label>
-                  <div className="rounded-lg border overflow-hidden bg-background">
+                  <div className="overflow-hidden rounded-lg border bg-background">
                     <RichTextEditor
-                      value={form.watch('comments') || ''}
-                      onChange={(value) => form.setValue('comments', value)}
-                      placeholder="Additional details..."
-                      disabled={isPending}
                       className="min-h-[140px]"
+                      disabled={isPending}
+                      onChange={(value) => form.setValue("comments", value)}
+                      placeholder="Additional details..."
+                      value={form.watch("comments") || ""}
                     />
                   </div>
                 </div>
@@ -591,66 +594,66 @@ export function EntryDialog({
             {/* Section III: Toggle */}
             <div
               className={cn(
-                'flex items-center justify-between p-4 rounded-xl border transition-all duration-200',
-                form.watch('isImportant')
-                  ? 'bg-gradient-to-r from-orange-50 to-amber-50/50 border-orange-200 dark:from-orange-950/30 dark:to-amber-950/20 dark:border-orange-800/30'
-                  : 'bg-muted/5',
+                "flex items-center justify-between rounded-xl border p-4 transition-all duration-200",
+                form.watch("isImportant")
+                  ? "border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50/50 dark:border-orange-800/30 dark:from-orange-950/30 dark:to-amber-950/20"
+                  : "bg-muted/5"
               )}
             >
               <div className="flex items-center gap-3">
                 <div
                   className={cn(
-                    'w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200',
-                    form.watch('isImportant')
-                      ? 'bg-gradient-to-br from-orange-400 to-amber-500 text-white shadow-md shadow-orange-500/20'
-                      : 'bg-muted text-muted-foreground',
+                    "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200",
+                    form.watch("isImportant")
+                      ? "bg-gradient-to-br from-orange-400 to-amber-500 text-white shadow-md shadow-orange-500/20"
+                      : "bg-muted text-muted-foreground"
                   )}
                 >
                   <Star
                     className={cn(
-                      'w-4 h-4 transition-transform',
-                      form.watch('isImportant') && 'fill-current scale-110',
+                      "h-4 w-4 transition-transform",
+                      form.watch("isImportant") && "scale-110 fill-current"
                     )}
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-bold">Mark as Important</p>
+                  <p className="font-bold text-sm">Mark as Important</p>
                   <p className="text-[10px] text-muted-foreground">
                     Highlight for urgent attention
                   </p>
                 </div>
               </div>
               <Switch
-                id="isImportant"
-                checked={form.watch('isImportant')}
-                onCheckedChange={(checked) =>
-                  form.setValue('isImportant', checked)
-                }
+                checked={form.watch("isImportant")}
                 className="data-[state=checked]:bg-orange-500"
+                id="isImportant"
+                onCheckedChange={(checked) =>
+                  form.setValue("isImportant", checked)
+                }
               />
             </div>
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t flex items-center justify-end gap-3 shrink-0">
+          <div className="flex shrink-0 items-center justify-end gap-3 border-t px-6 py-4">
             <Button
+              className="h-9 px-4"
+              disabled={isPending}
+              onClick={() => onOpenChange(false)}
               type="button"
               variant="ghost"
-              onClick={() => onOpenChange(false)}
-              disabled={isPending}
-              className="h-9 px-4"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending} className="h-9 px-6">
+            <Button className="h-9 px-6" disabled={isPending} type="submit">
               {isPending && (
-                <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
+                <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
               )}
-              {isEditing ? 'Save Updates' : 'Create Entry'}
+              {isEditing ? "Save Updates" : "Create Entry"}
             </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

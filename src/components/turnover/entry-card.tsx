@@ -1,7 +1,5 @@
-import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-
-import { formatDistanceToNow } from 'date-fns'
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
 import {
   AlertCircle,
   AlertTriangle,
@@ -21,20 +19,14 @@ import {
   Star,
   Trash2,
   Zap,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import type {TurnoverSection} from '@/lib/zod/turnover.schema';
-import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
-import type { Application } from '@/db/schema/teams'
-import { Button, buttonVariants } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+  deleteTurnoverEntry,
+  resolveTurnoverEntry,
+  toggleImportantEntry,
+} from "@/app/actions/turnover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,101 +36,140 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { cn } from '@/lib/utils'
-import {
-  deleteTurnoverEntry,
-  resolveTurnoverEntry,
-  toggleImportantEntry,
-} from '@/app/actions/turnover'
-import { SECTION_CONFIG  } from '@/lib/zod/turnover.schema'
-import { turnoverKeys } from '@/lib/query-keys'
+} from "@/components/ui/tooltip";
+import type { Application } from "@/db/schema/teams";
+import type { TurnoverEntryWithDetails } from "@/db/schema/turnover";
+import { turnoverKeys } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
+import type { TurnoverSection } from "@/lib/zod/turnover.schema";
+import { SECTION_CONFIG } from "@/lib/zod/turnover.schema";
 
 // SLA calculation
-type SlaStatus = 'OVERDUE' | 'AT_RISK' | 'UNATTENDED' | 'STALE' | 'HEALTHY'
+type SlaStatus = "OVERDUE" | "AT_RISK" | "UNATTENDED" | "STALE" | "HEALTHY";
 
 function calculateSlaStatus(entry: TurnoverEntryWithDetails): SlaStatus {
-  if (entry.status === 'RESOLVED') return 'HEALTHY'
+  if (entry.status === "RESOLVED") {
+    return "HEALTHY";
+  }
 
-  const now = new Date()
-  const createdAt = new Date(entry.createdAt)
-  const updatedAt = entry.updatedAt ? new Date(entry.updatedAt) : createdAt
+  const now = new Date();
+  const createdAt = new Date(entry.createdAt);
+  const updatedAt = entry.updatedAt ? new Date(entry.updatedAt) : createdAt;
 
-  const hoursOpen = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60)
-  const daysOpen = hoursOpen / 24
+  const hoursOpen = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+  const daysOpen = hoursOpen / 24;
   const hoursSinceUpdate =
-    (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60)
+    (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
 
-  if (daysOpen > 7) return 'OVERDUE'
-  if (daysOpen >= 5) return 'AT_RISK'
-  if (hoursOpen > 24 && !entry.comments && !entry.updatedBy) return 'UNATTENDED'
-  if (hoursSinceUpdate > 48) return 'STALE'
-  return 'HEALTHY'
+  if (daysOpen > 7) {
+    return "OVERDUE";
+  }
+  if (daysOpen >= 5) {
+    return "AT_RISK";
+  }
+  if (hoursOpen > 24 && !entry.comments && !entry.updatedBy) {
+    return "UNATTENDED";
+  }
+  if (hoursSinceUpdate > 48) {
+    return "STALE";
+  }
+  return "HEALTHY";
 }
 
 const SLA_CONFIG: Record<
   SlaStatus,
-  { label: string; icon: any; colorClass: string; bgClass: string }
+  {
+    label: string;
+    icon: React.ComponentType<{ className?: string }>;
+    colorClass: string;
+    bgClass: string;
+  }
 > = {
   OVERDUE: {
-    label: 'Overdue (>7d)',
+    label: "Overdue (>7d)",
     icon: AlertTriangle,
-    colorClass: 'text-red-600',
-    bgClass: 'bg-red-100 dark:bg-red-900/30',
+    colorClass: "text-red-600",
+    bgClass: "bg-red-100 dark:bg-red-900/30",
   },
   AT_RISK: {
-    label: 'Due Soon',
+    label: "Due Soon",
     icon: AlertCircle,
-    colorClass: 'text-orange-600',
-    bgClass: 'bg-orange-100 dark:bg-orange-900/30',
+    colorClass: "text-orange-600",
+    bgClass: "bg-orange-100 dark:bg-orange-900/30",
   },
   UNATTENDED: {
-    label: 'Needs Triage',
+    label: "Needs Triage",
     icon: HelpCircle,
-    colorClass: 'text-purple-600',
-    bgClass: 'bg-purple-100 dark:bg-purple-900/30',
+    colorClass: "text-purple-600",
+    bgClass: "bg-purple-100 dark:bg-purple-900/30",
   },
   STALE: {
-    label: 'Stale Update',
+    label: "Stale Update",
     icon: Hourglass,
-    colorClass: 'text-amber-600',
-    bgClass: 'bg-amber-100 dark:bg-amber-900/30',
+    colorClass: "text-amber-600",
+    bgClass: "bg-amber-100 dark:bg-amber-900/30",
   },
   HEALTHY: {
-    label: 'Healthy',
+    label: "Healthy",
     icon: CheckCircle2,
-    colorClass: 'text-slate-500',
-    bgClass: 'bg-slate-100 dark:bg-slate-800/30',
+    colorClass: "text-slate-500",
+    bgClass: "bg-slate-100 dark:bg-slate-800/30",
   },
-}
+};
 
 // Section icon mapping
-const SECTION_ICONS: Record<TurnoverSection, any> = {
+const SECTION_ICONS: Record<
+  TurnoverSection,
+  React.ComponentType<{ className?: string }>
+> = {
   RFC: CheckCircle2,
   INC: AlertCircle,
   ALERTS: Bell,
   MIM: Zap,
   COMMS: MessageSquare,
   FYI: HelpCircle,
+};
+
+function getRfcStatusColor(status: string): string {
+  if (status === "Approved" || status === "Implemented") {
+    return "bg-green-500";
+  }
+  if (status === "Rejected" || status === "Cancelled") {
+    return "bg-red-500";
+  }
+  if (status === "In Progress" || status === "Pending Approval") {
+    return "bg-blue-500";
+  }
+  return "bg-slate-400";
 }
 
 interface EntryCardProps {
-  entry: TurnoverEntryWithDetails
-  teamId: string
-  onEdit?: (entry: TurnoverEntryWithDetails) => void
-  readOnly?: boolean
+  entry: TurnoverEntryWithDetails;
+  groupApplications?: Application[];
+  onEdit?: (entry: TurnoverEntryWithDetails) => void;
+  readOnly?: boolean;
   // Group-related props - for showing which app an entry belongs to
-  showApplicationBadge?: boolean
-  groupApplications?: Array<Application>
+  showApplicationBadge?: boolean;
+  teamId: string;
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: complex UI card with multiple conditional sections
 export function EntryCard({
   entry,
   teamId,
@@ -147,16 +178,16 @@ export function EntryCard({
   showApplicationBadge = false,
   groupApplications: _groupApplications = [],
 }: EntryCardProps) {
-  const queryClient = useQueryClient()
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [showResolveDialog, setShowResolveDialog] = useState(false)
-  const [showInfoDialog, setShowInfoDialog] = useState(false)
+  const queryClient = useQueryClient();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showResolveDialog, setShowResolveDialog] = useState(false);
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
 
-  const sectionConfig = SECTION_CONFIG[entry.section]
-  const SectionIcon = SECTION_ICONS[entry.section]
-  const slaStatus = calculateSlaStatus(entry)
-  const slaConfig = SLA_CONFIG[slaStatus]
-  const SlaIcon = slaConfig.icon
+  const sectionConfig = SECTION_CONFIG[entry.section];
+  const SectionIcon = SECTION_ICONS[entry.section];
+  const slaStatus = calculateSlaStatus(entry);
+  const slaConfig = SLA_CONFIG[slaStatus];
+  const SlaIcon = slaConfig.icon;
 
   // Mutations
   const toggleImportantMutation = useMutation({
@@ -166,100 +197,103 @@ export function EntryCard({
       }),
     onSuccess: () => {
       toast.success(
-        entry.isImportant
-          ? 'Removed from critical items'
-          : 'Marked as critical',
-      )
+        entry.isImportant ? "Removed from critical items" : "Marked as critical"
+      );
       queryClient.invalidateQueries({
         queryKey: turnoverKeys.entries.all(teamId),
-      })
+      });
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update')
+      toast.error(error.message || "Failed to update");
     },
-  })
+  });
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteTurnoverEntry({ data: { id: entry.id, teamId } }),
     onSuccess: () => {
-      toast.success('Entry deleted')
+      toast.success("Entry deleted");
       queryClient.invalidateQueries({
         queryKey: turnoverKeys.entries.all(teamId),
-      })
-      setShowDeleteDialog(false)
+      });
+      setShowDeleteDialog(false);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to delete')
+      toast.error(error.message || "Failed to delete");
     },
-  })
+  });
 
   const resolveMutation = useMutation({
     mutationFn: () => resolveTurnoverEntry({ data: { id: entry.id } }),
     onSuccess: () => {
-      toast.success('Entry resolved')
+      toast.success("Entry resolved");
       queryClient.invalidateQueries({
         queryKey: turnoverKeys.entries.all(teamId),
-      })
-      setShowResolveDialog(false)
+      });
+      setShowResolveDialog(false);
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Failed to resolve')
+      toast.error(error.message || "Failed to resolve");
     },
-  })
+  });
 
   // Get primary identifier based on section
   const getPrimaryId = () => {
     switch (entry.section) {
-      case 'RFC':
-        return entry.rfcDetails?.rfcNumber
-      case 'INC':
-        return entry.incDetails?.incidentNumber
-      case 'COMMS':
-        return entry.commsDetails?.emailSubject || entry.title
+      case "RFC":
+        return entry.rfcDetails?.rfcNumber;
+      case "INC":
+        return entry.incDetails?.incidentNumber;
+      case "COMMS":
+        return entry.commsDetails?.emailSubject || entry.title;
       default:
-        return entry.title
+        return entry.title;
     }
-  }
+  };
 
   // Format relative time
   const getRelativeTime = () => {
-    const date = new Date(entry.createdAt)
-    const now = new Date()
+    const date = new Date(entry.createdAt);
+    const now = new Date();
     const diffDays = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
-    )
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
-    if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Yesterday'
-    return `${diffDays} days ago`
-  }
+    if (diffDays === 0) {
+      return "Today";
+    }
+    if (diffDays === 1) {
+      return "Yesterday";
+    }
+    return `${diffDays} days ago`;
+  };
 
   return (
     <>
       <div
         className={cn(
-          'group relative border rounded-lg p-4 transition-all duration-200 bg-card hover:bg-accent/5 hover:shadow-md',
-          entry.isImportant && 'border-l-4 border-l-orange-500/80',
-          entry.status === 'RESOLVED' &&
-            'bg-muted/10 opacity-70 border-l-4 border-l-green-500/50',
+          "group relative rounded-lg border bg-card p-4 transition-all duration-200 hover:bg-accent/5 hover:shadow-md",
+          entry.isImportant && "border-l-4 border-l-orange-500/80",
+          entry.status === "RESOLVED" &&
+            "border-l-4 border-l-green-500/50 bg-muted/10 opacity-70"
         )}
       >
         {/* Header: Primary ID row */}
-        <div className="flex items-center justify-between gap-3 mb-1">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
+        <div className="mb-1 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
             {/* Star */}
             {!readOnly && (
               <button
-                onClick={() => toggleImportantMutation.mutate()}
-                disabled={toggleImportantMutation.isPending}
                 className="shrink-0"
+                disabled={toggleImportantMutation.isPending}
+                onClick={() => toggleImportantMutation.mutate()}
+                type="button"
               >
                 <Star
                   className={cn(
-                    'w-4 h-4 transition-colors',
+                    "h-4 w-4 transition-colors",
                     entry.isImportant
-                      ? 'fill-orange-500 text-orange-500'
-                      : 'text-muted-foreground hover:text-orange-400',
+                      ? "fill-orange-500 text-orange-500"
+                      : "text-muted-foreground hover:text-orange-400"
                   )}
                 />
               </button>
@@ -267,8 +301,8 @@ export function EntryCard({
 
             {/* Primary ID — wraps naturally, no truncation */}
             <span
-              className="font-mono font-bold text-sm break-words"
-              style={{ overflowWrap: 'anywhere' }}
+              className="break-words font-bold font-mono text-sm"
+              style={{ overflowWrap: "anywhere" }}
             >
               {getPrimaryId()}
             </span>
@@ -276,44 +310,44 @@ export function EntryCard({
 
           {/* Actions — always visible on the right */}
           {!readOnly && (
-            <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
               <Button
-                variant="ghost"
-                size="icon"
                 className="h-7 w-7"
                 onClick={() => setShowInfoDialog(true)}
+                size="icon"
+                variant="ghost"
               >
-                <Info className="w-3.5 h-3.5" />
+                <Info className="h-3.5 w-3.5" />
               </Button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger
                   className={cn(
-                    buttonVariants({ variant: 'ghost', size: 'icon' }),
-                    'h-7 w-7',
+                    buttonVariants({ variant: "ghost", size: "icon" }),
+                    "h-7 w-7"
                   )}
                 >
-                  <MoreHorizontal className="w-3.5 h-3.5" />
+                  <MoreHorizontal className="h-3.5 w-3.5" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => onEdit?.(entry)}>
-                    <Edit className="w-4 h-4 mr-2" />
+                    <Edit className="mr-2 h-4 w-4" />
                     Edit
                   </DropdownMenuItem>
-                  {entry.status === 'OPEN' && (
+                  {entry.status === "OPEN" && (
                     <DropdownMenuItem
                       onClick={() => setShowResolveDialog(true)}
                     >
-                      <CheckCircle className="w-4 h-4 mr-2" />
+                      <CheckCircle className="mr-2 h-4 w-4" />
                       Resolve
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
-                    onClick={() => setShowDeleteDialog(true)}
                     className="text-destructive focus:text-destructive"
+                    onClick={() => setShowDeleteDialog(true)}
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="mr-2 h-4 w-4" />
                     Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -323,31 +357,31 @@ export function EntryCard({
         </div>
 
         {/* Metadata row — compact, wraps gracefully */}
-        <div className="flex items-center gap-2 flex-wrap mb-3">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           {/* Application Badge (for grouped entries) */}
           {showApplicationBadge && entry.application && (
             <Badge
+              className="h-[18px] border-primary/20 bg-primary/5 px-1.5 py-0 font-bold text-[10px]"
               variant="outline"
-              className="text-[10px] font-bold px-1.5 py-0 h-[18px] bg-primary/5 border-primary/20"
             >
               {entry.application.tla}
             </Badge>
           )}
 
           {/* SLA Badge */}
-          {entry.status !== 'RESOLVED' && slaStatus !== 'HEALTHY' && (
+          {entry.status !== "RESOLVED" && slaStatus !== "HEALTHY" && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
                   <Badge
-                    variant="secondary"
                     className={cn(
-                      'gap-1 text-[10px] px-1.5 py-0 h-[18px]',
+                      "h-[18px] gap-1 px-1.5 py-0 text-[10px]",
                       slaConfig.bgClass,
-                      slaConfig.colorClass,
+                      slaConfig.colorClass
                     )}
+                    variant="secondary"
                   >
-                    <SlaIcon className="w-2.5 h-2.5" />
+                    <SlaIcon className="h-2.5 w-2.5" />
                     {slaConfig.label}
                   </Badge>
                 </TooltipTrigger>
@@ -361,35 +395,26 @@ export function EntryCard({
           )}
 
           {/* Status Badge */}
-          {entry.status === 'RESOLVED' && (
+          {entry.status === "RESOLVED" && (
             <Badge
+              className="h-[18px] gap-1 bg-green-100 px-1.5 py-0 text-[10px] text-green-700 dark:bg-green-900/30 dark:text-green-400"
               variant="secondary"
-              className="gap-1 text-[10px] px-1.5 py-0 h-[18px] bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
             >
-              <CheckCircle className="w-2.5 h-2.5" />
+              <CheckCircle className="h-2.5 w-2.5" />
               Resolved
             </Badge>
           )}
 
           {/* RFC Status Badge */}
-          {entry.section === 'RFC' && entry.rfcDetails && (
+          {entry.section === "RFC" && entry.rfcDetails && (
             <Badge
+              className="h-[18px] gap-1 px-1.5 py-0 text-[10px]"
               variant="outline"
-              className="text-[10px] gap-1 px-1.5 py-0 h-[18px]"
             >
               <div
                 className={cn(
-                  'w-1.5 h-1.5 rounded-full',
-                  entry.rfcDetails.rfcStatus === 'Approved' ||
-                    entry.rfcDetails.rfcStatus === 'Implemented'
-                    ? 'bg-green-500'
-                    : entry.rfcDetails.rfcStatus === 'Rejected' ||
-                        entry.rfcDetails.rfcStatus === 'Cancelled'
-                      ? 'bg-red-500'
-                      : entry.rfcDetails.rfcStatus === 'In Progress' ||
-                          entry.rfcDetails.rfcStatus === 'Pending Approval'
-                        ? 'bg-blue-500'
-                        : 'bg-slate-400',
+                  "h-1.5 w-1.5 rounded-full",
+                  getRfcStatusColor(entry.rfcDetails.rfcStatus)
                 )}
               />
               {entry.rfcDetails.rfcStatus}
@@ -397,21 +422,21 @@ export function EntryCard({
           )}
 
           {/* Validated By (RFC) */}
-          {entry.section === 'RFC' && entry.rfcDetails?.validatedBy && (
-            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-              <CheckCircle className="w-2.5 h-2.5" />
+          {entry.section === "RFC" && entry.rfcDetails?.validatedBy && (
+            <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+              <CheckCircle className="h-2.5 w-2.5" />
               {entry.rfcDetails.validatedBy}
             </span>
           )}
 
           {/* Separator dot */}
-          <span className="text-muted-foreground/30 text-[10px]">·</span>
+          <span className="text-[10px] text-muted-foreground/30">·</span>
 
           {/* Creator — compact text */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
-                <span className="text-[10px] text-muted-foreground font-medium">
+                <span className="font-medium text-[10px] text-muted-foreground">
                   {entry.createdBy}
                 </span>
               </TooltipTrigger>
@@ -421,7 +446,7 @@ export function EntryCard({
             </Tooltip>
           </TooltipProvider>
 
-          <span className="text-muted-foreground/30 text-[10px]">·</span>
+          <span className="text-[10px] text-muted-foreground/30">·</span>
 
           {/* Time — compact */}
           <span className="text-[10px] text-muted-foreground">
@@ -432,53 +457,53 @@ export function EntryCard({
         {/* Content Section */}
         <div
           className={cn(
-            'grid gap-4',
-            entry.comments ? 'grid-cols-1 md:grid-cols-3' : 'grid-cols-1',
+            "grid gap-4",
+            entry.comments ? "grid-cols-1 md:grid-cols-3" : "grid-cols-1"
           )}
         >
           {/* Description */}
-          <div className={cn(entry.comments ? 'md:col-span-1' : '')}>
-            {entry.section === 'MIM' && entry.mimDetails && (
-              <div className="flex flex-wrap gap-2 mb-2">
+          <div className={cn(entry.comments ? "md:col-span-1" : "")}>
+            {entry.section === "MIM" && entry.mimDetails && (
+              <div className="mb-2 flex flex-wrap gap-2">
                 <a
+                  className="inline-flex items-center gap-1.5 font-medium text-primary text-xs hover:underline"
                   href={entry.mimDetails.mimLink}
-                  target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                  target="_blank"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <ExternalLink className="h-3.5 w-3.5" />
                   Open MIM Bridge
                 </a>
                 {entry.mimDetails.mimSlackLink && (
                   <a
+                    className="inline-flex items-center gap-1.5 font-medium text-purple-600 text-xs hover:underline"
                     href={entry.mimDetails.mimSlackLink}
-                    target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-purple-600 hover:underline"
+                    target="_blank"
                   >
-                    <MessageSquare className="w-3.5 h-3.5" />
+                    <MessageSquare className="h-3.5 w-3.5" />
                     Slack Thread
                   </a>
                 )}
               </div>
             )}
 
-            {entry.section === 'COMMS' && entry.commsDetails?.slackLink && (
+            {entry.section === "COMMS" && entry.commsDetails?.slackLink && (
               <a
+                className="mb-2 inline-flex items-center gap-1.5 font-medium text-primary text-xs hover:underline"
                 href={entry.commsDetails.slackLink}
-                target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline mb-2"
+                target="_blank"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
+                <ExternalLink className="h-3.5 w-3.5" />
                 Open Slack Link
               </a>
             )}
 
             {entry.description && (
               <p
-                className="text-sm text-muted-foreground break-words"
-                style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}
+                className="break-words text-muted-foreground text-sm"
+                style={{ overflowWrap: "break-word", wordBreak: "normal" }}
               >
                 {entry.description}
               </p>
@@ -489,9 +514,10 @@ export function EntryCard({
           {entry.comments && (
             <div className="md:col-span-2">
               <div
-                className="text-sm prose prose-sm dark:prose-invert max-w-none break-words [&_*]:break-words"
-                style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}
+                className="prose prose-sm dark:prose-invert max-w-none break-words text-sm [&_*]:break-words"
+                // biome-ignore lint/security/noDangerouslySetInnerHtml: rich text editor content
                 dangerouslySetInnerHTML={{ __html: entry.comments }}
+                style={{ overflowWrap: "break-word", wordBreak: "normal" }}
               />
             </div>
           )}
@@ -499,7 +525,7 @@ export function EntryCard({
       </div>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog onOpenChange={setShowDeleteDialog} open={showDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -513,21 +539,21 @@ export function EntryCard({
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                deleteMutation.mutate()
-              }}
-              disabled={deleteMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteMutation.mutate();
+              }}
+              type="button"
             >
               {deleteMutation.isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Deleting...
                 </>
               ) : (
-                'Delete'
+                "Delete"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -535,7 +561,7 @@ export function EntryCard({
       </AlertDialog>
 
       {/* Resolve Confirmation Dialog */}
-      <AlertDialog open={showResolveDialog} onOpenChange={setShowResolveDialog}>
+      <AlertDialog onOpenChange={setShowResolveDialog} open={showResolveDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -549,20 +575,20 @@ export function EntryCard({
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              type="button"
-              onClick={(e) => {
-                e.preventDefault()
-                resolveMutation.mutate()
-              }}
               disabled={resolveMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                resolveMutation.mutate();
+              }}
+              type="button"
             >
               {resolveMutation.isPending ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Resolving...
                 </>
               ) : (
-                'Resolve'
+                "Resolve"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -570,87 +596,87 @@ export function EntryCard({
       </AlertDialog>
 
       {/* Info Dialog */}
-      <Dialog open={showInfoDialog} onOpenChange={setShowInfoDialog}>
-        <DialogContent className="max-w-2xl min-w-[700px] p-0 gap-0 overflow-hidden sm:rounded-2xl border bg-background shadow-xl">
-          <div className="px-6 py-6 border-b bg-muted/20 flex items-center justify-between">
+      <Dialog onOpenChange={setShowInfoDialog} open={showInfoDialog}>
+        <DialogContent className="min-w-[700px] max-w-2xl gap-0 overflow-hidden border bg-background p-0 shadow-xl sm:rounded-2xl">
+          <div className="flex items-center justify-between border-b bg-muted/20 px-6 py-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-background border shadow-sm">
-                <SectionIcon className="w-6 h-6 text-primary" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl border bg-background shadow-sm">
+                <SectionIcon className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
+                <DialogTitle className="font-bold text-foreground text-xl tracking-tight">
                   Entry Details
                 </DialogTitle>
-                <p className="text-sm text-muted-foreground font-medium mt-0.5">
+                <p className="mt-0.5 font-medium text-muted-foreground text-sm">
                   Comprehensive view of the turnover log
                 </p>
               </div>
             </div>
-            {entry.status === 'RESOLVED' && (
+            {entry.status === "RESOLVED" && (
               <Badge
+                className="bg-green-100 px-3 py-1 font-semibold text-green-700 text-xs uppercase tracking-wider dark:bg-green-900/40 dark:text-green-300"
                 variant="secondary"
-                className="bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-3 py-1 text-xs font-semibold uppercase tracking-wider"
               >
                 Resolved
               </Badge>
             )}
           </div>
 
-          <div className="p-6 space-y-8">
+          <div className="space-y-8 p-6">
             {/* Primary Meta Grid */}
             <div className="grid grid-cols-2 gap-x-8 gap-y-6">
               <div className="space-y-1.5">
-                <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wide flex items-center gap-1.5">
-                  <Hash className="w-3.5 h-3.5" /> Entry ID
+                <span className="flex items-center gap-1.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
+                  <Hash className="h-3.5 w-3.5" /> Entry ID
                 </span>
-                <div className="font-mono text-sm bg-muted/50 px-2.5 py-1.5 rounded-md border text-foreground w-fit select-all">
+                <div className="w-fit select-all rounded-md border bg-muted/50 px-2.5 py-1.5 font-mono text-foreground text-sm">
                   {entry.id}
                 </div>
               </div>
               <div className="space-y-1.5">
-                <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">
+                <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                   Category
                 </span>
                 <div>
                   <Badge
+                    className="border-border bg-muted/30 font-medium text-foreground hover:bg-muted/40"
                     variant="outline"
-                    className="font-medium bg-muted/30 text-foreground border-border hover:bg-muted/40"
                   >
                     {sectionConfig.name}
                   </Badge>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wide">
+                <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                   Application
                 </span>
-                <div className="text-sm font-medium text-foreground">
+                <div className="font-medium text-foreground text-sm">
                   {entry.application?.applicationName}
-                  <span className="text-muted-foreground ml-1.5 font-normal">
+                  <span className="ml-1.5 font-normal text-muted-foreground">
                     ({entry.application?.tla})
                   </span>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <span className="text-xs font-semibold uppercase text-muted-foreground tracking-wide flex items-center gap-1.5">
+                <span className="flex items-center gap-1.5 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                   {entry.isImportant ? (
-                    <Star className="w-3.5 h-3.5 fill-orange-500 text-orange-500" />
+                    <Star className="h-3.5 w-3.5 fill-orange-500 text-orange-500" />
                   ) : (
-                    <Star className="w-3.5 h-3.5" />
-                  )}{' '}
+                    <Star className="h-3.5 w-3.5" />
+                  )}{" "}
                   Importance
                 </span>
                 <div
                   className={cn(
-                    'text-sm font-medium',
+                    "font-medium text-sm",
                     entry.isImportant
-                      ? 'text-orange-600 dark:text-orange-400'
-                      : 'text-muted-foreground',
+                      ? "text-orange-600 dark:text-orange-400"
+                      : "text-muted-foreground"
                   )}
                 >
                   {entry.isImportant
-                    ? 'Critical Priority'
-                    : 'Standard Priority'}
+                    ? "Critical Priority"
+                    : "Standard Priority"}
                 </div>
               </div>
             </div>
@@ -659,24 +685,24 @@ export function EntryCard({
 
             {/* Audit Trail */}
             <div className="space-y-4">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <Clock className="w-4 h-4 text-primary" /> Lifecycle Audit
+              <h4 className="flex items-center gap-2 font-semibold text-foreground text-sm">
+                <Clock className="h-4 w-4 text-primary" /> Lifecycle Audit
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/20 p-4 rounded-xl border">
+              <div className="grid grid-cols-1 gap-4 rounded-xl border bg-muted/20 p-4 sm:grid-cols-2">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-900">
-                    <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-blue-100 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/40">
+                    <span className="font-bold text-[10px] text-blue-600 dark:text-blue-400">
                       CR
                     </span>
                   </div>
                   <div className="space-y-0.5">
-                    <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wider">
+                    <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                       Created
                     </p>
-                    <p className="text-sm font-medium text-foreground">
+                    <p className="font-medium text-foreground text-sm">
                       {entry.createdBy}
                     </p>
-                    <p className="text-xs text-muted-foreground font-mono">
+                    <p className="font-mono text-muted-foreground text-xs">
                       {new Date(entry.createdAt).toLocaleString()}
                     </p>
                   </div>
@@ -684,41 +710,41 @@ export function EntryCard({
 
                 {entry.updatedBy && (
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center shrink-0 border border-amber-100 dark:border-amber-900">
-                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-amber-100 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/40">
+                      <span className="font-bold text-[10px] text-amber-600 dark:text-amber-400">
                         UP
                       </span>
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wider">
+                      <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                         Last Updated
                       </p>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="font-medium text-foreground text-sm">
                         {entry.updatedBy}
                       </p>
-                      <p className="text-xs text-muted-foreground font-mono">
-                        {new Date(entry.updatedAt!).toLocaleString()}
+                      <p className="font-mono text-muted-foreground text-xs">
+                        {new Date(entry.updatedAt ?? "").toLocaleString()}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {entry.status === 'RESOLVED' && (
-                  <div className="flex items-start gap-3 col-span-1 sm:col-span-2 pt-2 border-t mt-2 border-dashed border-border/60">
-                    <div className="w-8 h-8 rounded-full bg-green-50 dark:bg-green-950/40 flex items-center justify-center shrink-0 border border-green-100 dark:border-green-900">
-                      <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                {entry.status === "RESOLVED" && (
+                  <div className="col-span-1 mt-2 flex items-start gap-3 border-border/60 border-t border-dashed pt-2 sm:col-span-2">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-green-100 bg-green-50 dark:border-green-900 dark:bg-green-950/40">
+                      <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                     </div>
                     <div className="space-y-0.5">
-                      <p className="text-xs uppercase text-muted-foreground font-semibold tracking-wider">
+                      <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                         Resolved
                       </p>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="font-medium text-foreground text-sm">
                         {entry.resolvedBy}
                       </p>
-                      <p className="text-xs text-muted-foreground font-mono">
+                      <p className="font-mono text-muted-foreground text-xs">
                         {entry.resolvedAt
                           ? new Date(entry.resolvedAt).toLocaleString()
-                          : '-'}
+                          : "-"}
                       </p>
                     </div>
                   </div>
@@ -727,13 +753,13 @@ export function EntryCard({
             </div>
           </div>
 
-          <div className="bg-muted/20 px-6 py-4 border-t flex justify-end">
-            <Button variant="outline" onClick={() => setShowInfoDialog(false)}>
+          <div className="flex justify-end border-t bg-muted/20 px-6 py-4">
+            <Button onClick={() => setShowInfoDialog(false)} variant="outline">
               Close Details
             </Button>
           </div>
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

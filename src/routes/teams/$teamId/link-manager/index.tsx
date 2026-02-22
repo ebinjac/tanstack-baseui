@@ -1,5 +1,10 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { z } from 'zod'
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
   Box,
@@ -13,65 +18,53 @@ import {
   RotateCcw,
   Search,
   Table as TableIcon,
-  Tag,
   X,
-} from 'lucide-react'
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query'
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { toast } from 'sonner'
-import { AnimatePresence, motion } from 'framer-motion'
+} from "lucide-react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+import { getTeamApplications } from "@/app/actions/applications";
 import {
   bulkUpdateLinks,
   getLinkCategories,
   getLinks,
-} from '@/app/actions/links'
-import { getTeamApplications } from '@/app/actions/applications'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { CreateLinkDialog } from '@/components/link-manager/create-link-dialog'
+} from "@/app/actions/links";
+import { CreateLinkDialog } from "@/components/link-manager/create-link-dialog";
 import {
   CompactView,
   GridView,
   TableView,
-} from '@/components/link-manager/link-views'
-import { Badge } from '@/components/ui/badge'
+} from "@/components/link-manager/link-views";
+import {
+  LinkManagerPage as PageWrapper,
+  StatsSummaryItem,
+} from "@/components/link-manager/shared";
+import { PageHeader } from "@/components/shared";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { cn } from '@/lib/utils'
-import { Label } from '@/components/ui/label'
-import {
-  LinkManagerPage as PageWrapper,
-  StatsSummaryItem,
-} from '@/components/link-manager/shared'
-import { PageHeader } from '@/components/shared'
-import { EmptyState } from '@/components/shared/empty-state'
-import { linkKeys } from '@/lib/query-keys'
+} from "@/components/ui/select";
+import { linkKeys } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
 
 // Schema for search params
 const linkSearchSchema = z.object({
   search: z.string().optional(),
-  visibility: z.enum(['all', 'private', 'public']).prefault('all').optional(),
+  visibility: z.enum(["all", "private", "public"]).prefault("all").optional(),
   applicationId: z.uuid().optional(),
   categoryId: z.uuid().optional(),
-})
+});
 
-const PAGE_SIZE = 30
+const PAGE_SIZE = 30;
 
-export const Route = createFileRoute('/teams/$teamId/link-manager/')({
+export const Route = createFileRoute("/teams/$teamId/link-manager/")({
   component: LinkManagerIndexPage,
   validateSearch: (search) => linkSearchSchema.parse(search),
   loaderDeps: ({
@@ -86,7 +79,7 @@ export const Route = createFileRoute('/teams/$teamId/link-manager/')({
         data: {
           teamId,
           search,
-          visibility: visibility || 'all',
+          visibility: visibility || "all",
           applicationId,
           categoryId,
           limit: PAGE_SIZE,
@@ -94,25 +87,27 @@ export const Route = createFileRoute('/teams/$teamId/link-manager/')({
       }),
       getLinkCategories({ data: { teamId } }),
       getTeamApplications({ data: { teamId } }),
-    ])
-    return { linksData, categories, applications }
+    ]);
+    return { linksData, categories, applications };
   },
-})
+});
 
 function LinkManagerIndexPage() {
-  const { teamId } = Route.useParams()
+  const { teamId } = Route.useParams();
   const {
     linksData: initialData,
     categories,
     applications,
-  } = Route.useLoaderData()
-  const searchParams = Route.useSearch()
-  const navigate = Route.useNavigate()
-  const queryClient = useQueryClient()
+  } = Route.useLoaderData();
+  const searchParams = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const queryClient = useQueryClient();
 
-  const [viewMode, setViewMode] = useState<'grid' | 'table' | 'compact'>('grid')
-  const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set())
-  const sentinelRef = useRef<HTMLDivElement>(null)
+  const [viewMode, setViewMode] = useState<"grid" | "table" | "compact">(
+    "grid"
+  );
+  const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Infinite query for paginated links
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -128,7 +123,7 @@ function LinkManagerIndexPage() {
           data: {
             teamId,
             search: searchParams.search,
-            visibility: searchParams.visibility || 'all',
+            visibility: searchParams.visibility || "all",
             applicationId: searchParams.applicationId,
             categoryId: searchParams.categoryId,
             limit: PAGE_SIZE,
@@ -138,67 +133,78 @@ function LinkManagerIndexPage() {
       initialPageParam: undefined as string | undefined,
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
       initialData: { pages: [initialData], pageParams: [undefined] },
-    })
+    });
 
   // Flatten all loaded pages into a single array
-  const links = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data])
-  const totalCount = data?.pages[0]?.totalCount ?? 0
+  const links = useMemo(
+    () => data?.pages.flatMap((p) => p.items) ?? [],
+    [data]
+  );
+  const totalCount = data?.pages[0]?.totalCount ?? 0;
 
   // IntersectionObserver for infinite scroll
   useEffect(() => {
-    const el = sentinelRef.current
-    if (!el) return
+    const el = sentinelRef.current;
+    if (!el) {
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage()
+          fetchNextPage();
         }
       },
-      { threshold: 0.1 },
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [hasNextPage, isFetchingNextPage])
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Bulk update mutation
   const bulkUpdateMutation = useMutation({
-    mutationFn: (data: { teamId: string; linkIds: Array<string>; updates: any }) =>
-      bulkUpdateLinks({ data }),
+    mutationFn: (data: {
+      teamId: string;
+      linkIds: string[];
+      updates: Record<string, unknown>;
+    }) => bulkUpdateLinks({ data }),
     onSuccess: (res) => {
-      toast.success(`Updated ${res.count} links`)
-      queryClient.invalidateQueries({ queryKey: linkKeys.team(teamId) })
-      setSelectedLinks(new Set())
+      toast.success(`Updated ${res.count} links`);
+      queryClient.invalidateQueries({ queryKey: linkKeys.team(teamId) });
+      setSelectedLinks(new Set());
     },
-    onError: (err) => toast.error('Failed to update links: ' + err.message),
-  })
+    onError: (err) => toast.error(`Failed to update links: ${err.message}`),
+  });
 
   // Selection handlers
   const toggleSelectLink = useCallback((id: string) => {
     setSelectedLinks((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }, [])
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
 
   const selectAllLinks = useCallback(() => {
-    setSelectedLinks(new Set(links.map((l) => l.id)))
-  }, [links])
+    setSelectedLinks(new Set(links.map((l) => l.id)));
+  }, [links]);
 
-  const clearSelection = useCallback(() => setSelectedLinks(new Set()), [])
+  const clearSelection = useCallback(() => setSelectedLinks(new Set()), []);
 
   // Bulk action handlers
   const handleBulkVisibility = useCallback(
-    (visibility: 'public' | 'private') => {
+    (visibility: "public" | "private") => {
       bulkUpdateMutation.mutate({
         teamId,
         linkIds: Array.from(selectedLinks),
         updates: { visibility },
-      })
+      });
     },
-    [bulkUpdateMutation, teamId, selectedLinks],
-  )
+    [bulkUpdateMutation, teamId, selectedLinks]
+  );
 
   const handleBulkCategory = useCallback(
     (categoryId: string | null) => {
@@ -206,59 +212,69 @@ function LinkManagerIndexPage() {
         teamId,
         linkIds: Array.from(selectedLinks),
         updates: { categoryId },
-      })
+      });
     },
-    [bulkUpdateMutation, teamId, selectedLinks],
-  )
+    [bulkUpdateMutation, teamId, selectedLinks]
+  );
 
   // Filter handlers — debounced search (300ms)
-  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const handleSearch = useCallback(
     (term: string) => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+      if (searchTimerRef.current) {
+        clearTimeout(searchTimerRef.current);
+      }
       searchTimerRef.current = setTimeout(() => {
         navigate({
-          search: (prev: any) => ({ ...prev, search: term || undefined }),
-        })
-      }, 300)
+          search: (prev: Record<string, unknown>) => ({
+            ...prev,
+            search: term || undefined,
+          }),
+        });
+      }, 300);
     },
-    [navigate],
-  )
+    [navigate]
+  );
 
   const handleVisibilityChange = useCallback(
     (val: string | null) => {
-      navigate({ search: (prev: any) => ({ ...prev, visibility: val as any }) })
+      navigate({
+        search: (prev: Record<string, unknown>) => ({
+          ...prev,
+          visibility: val as "all" | "private" | "public" | undefined,
+        }),
+      });
     },
-    [navigate],
-  )
+    [navigate]
+  );
 
   const handleApplicationChange = useCallback(
     (val: string | null) => {
       navigate({
-        search: (prev: any) => ({
+        search: (prev: Record<string, unknown>) => ({
           ...prev,
-          applicationId: !val || val === 'all' ? undefined : val,
+          applicationId: !val || val === "all" ? undefined : val,
         }),
-      })
+      });
     },
-    [navigate],
-  )
+    [navigate]
+  );
 
   const handleCategoryChange = useCallback(
     (val: string | null) => {
       navigate({
-        search: (prev: any) => ({
+        search: (prev: Record<string, unknown>) => ({
           ...prev,
-          categoryId: !val || val === 'all' ? undefined : val,
+          categoryId: !val || val === "all" ? undefined : val,
         }),
-      })
+      });
     },
-    [navigate],
-  )
+    [navigate]
+  );
 
   const clearAllFilters = useCallback(() => {
-    navigate({ search: { visibility: 'all' } })
-  }, [navigate])
+    navigate({ search: { visibility: "all" } });
+  }, [navigate]);
 
   // Computed values
   const activeFilterCount = useMemo(
@@ -267,7 +283,7 @@ function LinkManagerIndexPage() {
         searchParams.applicationId,
         searchParams.categoryId,
         searchParams.search,
-        searchParams.visibility && searchParams.visibility !== 'all'
+        searchParams.visibility && searchParams.visibility !== "all"
           ? searchParams.visibility
           : undefined,
       ].filter(Boolean).length,
@@ -276,75 +292,72 @@ function LinkManagerIndexPage() {
       searchParams.categoryId,
       searchParams.search,
       searchParams.visibility,
-    ],
-  )
+    ]
+  );
   const selectedApp = useMemo(
     () => applications?.find((a) => a.id === searchParams.applicationId),
-    [applications, searchParams.applicationId],
-  )
+    [applications, searchParams.applicationId]
+  );
   const selectedCategory = useMemo(
     () => categories?.find((c) => c.id === searchParams.categoryId),
-    [categories, searchParams.categoryId],
-  )
+    [categories, searchParams.categoryId]
+  );
 
   const stats = useMemo(
     () => ({
       total: totalCount,
-      public: links.filter((l: any) => l.visibility === 'public').length,
-      private: links.filter((l: any) => l.visibility === 'private').length,
-      usage: links.reduce(
-        (acc: number, l: any) => acc + (l.usageCount || 0),
-        0,
-      ),
+      public: links.filter((l) => l.visibility === "public").length,
+      private: links.filter((l) => l.visibility === "private").length,
+      usage: links.reduce((acc: number, l) => acc + (l.usageCount || 0), 0),
     }),
-    [links, totalCount],
-  )
+    [links, totalCount]
+  );
 
   return (
     <PageWrapper>
       <PageHeader
-        title="Link Manager"
         description="Central team repository for bookmarks & tools"
+        title="Link Manager"
       >
         <CreateLinkDialog
           teamId={teamId}
           trigger={
-            <Button variant="secondary" className="gap-2">
-              <Plus className="w-4 h-4" /> Add Link
+            <Button className="gap-2" variant="secondary">
+              <Plus className="h-4 w-4" /> Add Link
             </Button>
           }
         />
       </PageHeader>
 
       {/* Stats Summary Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatsSummaryItem
+          color="primary"
+          icon={Grip}
           label="Total Resources"
           value={stats.total}
-          icon={Grip}
-          color="primary"
         />
         <StatsSummaryItem
+          color="blue"
+          icon={Globe2}
           label="Public Access"
           value={stats.public}
-          icon={Globe2}
-          color="blue"
         />
         <StatsSummaryItem
+          color="amber"
+          icon={Lock}
           label="Team Restricted"
           value={stats.private}
-          icon={Lock}
-          color="amber"
         />
         <StatsSummaryItem
+          color="indigo"
+          icon={Activity}
           label="Total Insights"
           value={
             stats.usage > 1000
               ? `${(stats.usage / 1000).toFixed(1)}k`
               : stats.usage
           }
-          icon={Activity}
-          color="indigo"
         />
       </div>
 
@@ -352,32 +365,32 @@ function LinkManagerIndexPage() {
       <AnimatePresence>
         {selectedLinks.size > 0 && (
           <BulkActionsBar
-            selectedCount={selectedLinks.size}
             categories={categories}
+            isPending={bulkUpdateMutation.isPending}
+            onBulkCategory={handleBulkCategory}
+            onBulkVisibility={handleBulkVisibility}
             onClearSelection={clearSelection}
             onSelectAll={selectAllLinks}
-            onBulkVisibility={handleBulkVisibility}
-            onBulkCategory={handleBulkCategory}
-            isPending={bulkUpdateMutation.isPending}
+            selectedCount={selectedLinks.size}
           />
         )}
       </AnimatePresence>
 
       {/* Filter Cockpit */}
       <FilterCockpit
-        searchParams={searchParams}
-        viewMode={viewMode}
+        activeFilterCount={activeFilterCount}
         applications={applications}
         categories={categories}
-        selectedApp={selectedApp}
-        selectedCategory={selectedCategory}
-        activeFilterCount={activeFilterCount}
-        onSearch={handleSearch}
-        onVisibilityChange={handleVisibilityChange}
         onApplicationChange={handleApplicationChange}
         onCategoryChange={handleCategoryChange}
-        onViewModeChange={setViewMode}
         onClearAllFilters={clearAllFilters}
+        onSearch={handleSearch}
+        onViewModeChange={setViewMode}
+        onVisibilityChange={handleVisibilityChange}
+        searchParams={searchParams}
+        selectedApp={selectedApp}
+        selectedCategory={selectedCategory}
+        viewMode={viewMode}
       />
 
       {/* Main Content Area */}
@@ -385,57 +398,57 @@ function LinkManagerIndexPage() {
         {links.length === 0 ? (
           <EmptyLinksState onClearFilters={clearAllFilters} />
         ) : (
-          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="fade-in slide-in-from-bottom-4 animate-in space-y-6 duration-500">
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center gap-3">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                <p className="text-[11px] font-bold text-muted-foreground">
-                  Showing{' '}
-                  <span className="text-foreground">{links.length}</span> of{' '}
+                <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                <p className="font-bold text-[11px] text-muted-foreground">
+                  Showing{" "}
+                  <span className="text-foreground">{links.length}</span> of{" "}
                   <span className="text-foreground">{totalCount}</span> Verified
                   Resources
                 </p>
               </div>
             </div>
             <div className="transition-all duration-300">
-              {viewMode === 'grid' && (
+              {viewMode === "grid" && (
                 <GridView
                   links={links}
-                  teamId={teamId}
-                  selectedLinks={selectedLinks}
                   onToggleSelect={toggleSelectLink}
+                  selectedLinks={selectedLinks}
+                  teamId={teamId}
                 />
               )}
-              {viewMode === 'table' && (
+              {viewMode === "table" && (
                 <TableView
                   links={links}
-                  teamId={teamId}
-                  selectedLinks={selectedLinks}
                   onToggleSelect={toggleSelectLink}
+                  selectedLinks={selectedLinks}
+                  teamId={teamId}
                 />
               )}
-              {viewMode === 'compact' && (
+              {viewMode === "compact" && (
                 <CompactView
                   links={links}
-                  teamId={teamId}
-                  selectedLinks={selectedLinks}
                   onToggleSelect={toggleSelectLink}
+                  selectedLinks={selectedLinks}
+                  teamId={teamId}
                 />
               )}
             </div>
 
             {/* Infinite scroll sentinel */}
-            <div ref={sentinelRef} className="h-1" />
+            <div className="h-1" ref={sentinelRef} />
             {isFetchingNextPage && (
-              <div className="flex items-center justify-center py-8 gap-3">
+              <div className="flex items-center justify-center gap-3 py-8">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <p className="text-xs font-bold text-muted-foreground">
+                <p className="font-bold text-muted-foreground text-xs">
                   Loading more resources...
                 </p>
               </div>
             )}
             {!hasNextPage && links.length > 0 && links.length >= PAGE_SIZE && (
-              <p className="text-center text-[11px] font-bold text-muted-foreground/50 py-4">
+              <p className="py-4 text-center font-bold text-[11px] text-muted-foreground/50">
                 All {totalCount} resources loaded
               </p>
             )}
@@ -443,20 +456,20 @@ function LinkManagerIndexPage() {
         )}
       </div>
     </PageWrapper>
-  )
+  );
 }
 
 // ============================================================================
 // Bulk Actions Bar Component
 // ============================================================================
 interface BulkActionsBarProps {
-  selectedCount: number
-  categories: Array<any> | undefined
-  onClearSelection: () => void
-  onSelectAll: () => void
-  onBulkVisibility: (visibility: 'public' | 'private') => void
-  onBulkCategory: (categoryId: string | null) => void
-  isPending: boolean
+  categories: { id: string; name: string }[] | undefined;
+  isPending: boolean;
+  onBulkCategory: (categoryId: string | null) => void;
+  onBulkVisibility: (visibility: "public" | "private") => void;
+  onClearSelection: () => void;
+  onSelectAll: () => void;
+  selectedCount: number;
 }
 
 const BulkActionsBar = memo(function BulkActionsBar({
@@ -470,32 +483,34 @@ const BulkActionsBar = memo(function BulkActionsBar({
 }: BulkActionsBarProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: -10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, y: -10 }}
+      initial={{ opacity: 0, scale: 0.95, y: -10 }}
     >
-      <div className="bg-primary shadow-2xl shadow-primary/20 rounded-2xl p-4 border border-primary/20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 -mr-32 -mt-32 opacity-10 bg-white rounded-full blur-3xl pointer-events-none" />
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10 text-primary-foreground">
+      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-primary p-4 shadow-2xl shadow-primary/20">
+        <div className="pointer-events-none absolute top-0 right-0 -mt-32 -mr-32 h-64 w-64 rounded-full bg-white opacity-10 blur-3xl" />
+        <div className="relative z-10 flex flex-col justify-between gap-6 text-primary-foreground lg:flex-row lg:items-center">
           <div className="flex items-center gap-5">
-            <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-xl flex items-center justify-center border border-white/20 shadow-lg">
-              <span className="text-xl font-black">{selectedCount}</span>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/20 bg-white/20 shadow-lg backdrop-blur-xl">
+              <span className="font-black text-xl">{selectedCount}</span>
             </div>
             <div>
-              <p className="text-sm font-bold text-white/90">
+              <p className="font-bold text-sm text-white/90">
                 Multi-Selection Mode
               </p>
-              <div className="flex items-center gap-2 mt-0.5">
+              <div className="mt-0.5 flex items-center gap-2">
                 <button
+                  className="flex items-center gap-1 font-bold text-xs opacity-70 hover:underline hover:opacity-100"
                   onClick={onClearSelection}
-                  className="text-xs font-bold hover:underline opacity-70 hover:opacity-100 flex items-center gap-1"
+                  type="button"
                 >
                   <X className="h-3 w-3" /> Clear Selection
                 </button>
                 <span className="opacity-30">•</span>
                 <button
+                  className="font-bold text-xs opacity-70 hover:underline hover:opacity-100"
                   onClick={onSelectAll}
-                  className="text-xs font-bold hover:underline opacity-70 hover:opacity-100"
+                  type="button"
                 >
                   Select All Page
                 </button>
@@ -504,31 +519,31 @@ const BulkActionsBar = memo(function BulkActionsBar({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center bg-white/10 backdrop-blur-md rounded-xl p-1 border border-white/10">
+            <div className="flex items-center rounded-xl border border-white/10 bg-white/10 p-1 backdrop-blur-md">
               <Button
-                onClick={() => onBulkVisibility('public')}
-                variant="ghost"
-                size="sm"
                 className="h-8 text-white hover:bg-white/20 hover:text-white"
+                onClick={() => onBulkVisibility("public")}
+                size="sm"
+                variant="ghost"
               >
-                <Globe2 className="h-3.5 w-3.5 mr-2" /> Make Public
+                <Globe2 className="mr-2 h-3.5 w-3.5" /> Make Public
               </Button>
               <Button
-                onClick={() => onBulkVisibility('private')}
-                variant="ghost"
-                size="sm"
                 className="h-8 text-white hover:bg-white/20 hover:text-white"
+                onClick={() => onBulkVisibility("private")}
+                size="sm"
+                variant="ghost"
               >
-                <Lock className="h-3.5 w-3.5 mr-2" /> Make Private
+                <Lock className="mr-2 h-3.5 w-3.5" /> Make Private
               </Button>
             </div>
 
             <Select
               onValueChange={(val: string | null) =>
-                onBulkCategory(val === 'none' ? null : val)
+                onBulkCategory(val === "none" ? null : val)
               }
             >
-              <SelectTrigger className="h-10 w-[180px] bg-white/10 border-white/20 text-white hover:bg-white/20 focus:ring-white/30 backdrop-blur-md">
+              <SelectTrigger className="h-10 w-[180px] border-white/20 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 focus:ring-white/30">
                 <SelectValue placeholder="Assign Category" />
               </SelectTrigger>
               <SelectContent>
@@ -547,26 +562,33 @@ const BulkActionsBar = memo(function BulkActionsBar({
         </div>
       </div>
     </motion.div>
-  )
-})
+  );
+});
 
 // ============================================================================
 // Filter Cockpit Component
 // ============================================================================
 interface FilterCockpitProps {
-  searchParams: any
-  viewMode: 'grid' | 'table' | 'compact'
-  applications: Array<any> | undefined
-  categories: Array<any> | undefined
-  selectedApp: any | undefined
-  selectedCategory: any | undefined
-  activeFilterCount: number
-  onSearch: (term: string) => void
-  onVisibilityChange: (val: string | null) => void
-  onApplicationChange: (val: string | null) => void
-  onCategoryChange: (val: string | null) => void
-  onViewModeChange: (mode: 'grid' | 'table' | 'compact') => void
-  onClearAllFilters: () => void
+  activeFilterCount: number;
+  applications:
+    | { id: string; tla: string; applicationName: string }[]
+    | undefined;
+  categories: { id: string; name: string }[] | undefined;
+  onApplicationChange: (val: string | null) => void;
+  onCategoryChange: (val: string | null) => void;
+  onClearAllFilters: () => void;
+  onSearch: (term: string) => void;
+  onViewModeChange: (mode: "grid" | "table" | "compact") => void;
+  onVisibilityChange: (val: string | null) => void;
+  searchParams: {
+    search?: string;
+    visibility?: string;
+    applicationId?: string;
+    categoryId?: string;
+  };
+  selectedApp: { id: string; applicationName: string; tla: string } | undefined;
+  selectedCategory: { id: string; name: string } | undefined;
+  viewMode: "grid" | "table" | "compact";
 }
 
 const FilterCockpit = memo(function FilterCockpit({
@@ -586,57 +608,57 @@ const FilterCockpit = memo(function FilterCockpit({
 }: FilterCockpitProps) {
   return (
     <div className="space-y-3">
-      <div className="flex flex-col xl:flex-row items-stretch xl:items-center gap-2 bg-card border p-1 rounded-xl shadow-sm relative overflow-hidden">
+      <div className="relative flex flex-col items-stretch gap-2 overflow-hidden rounded-xl border bg-card p-1 shadow-sm xl:flex-row xl:items-center">
         {/* Search Container */}
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="relative min-w-[200px] flex-1">
+          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Filter by title, tag, or description..."
-            className="h-10 pl-9 bg-transparent border-0 shadow-none focus-visible:ring-0 w-full text-sm font-medium"
+            className="h-10 w-full border-0 bg-transparent pl-9 font-medium text-sm shadow-none focus-visible:ring-0"
             defaultValue={searchParams.search}
             onChange={(e) => onSearch(e.target.value)}
+            placeholder="Filter by title, tag, or description..."
           />
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap shrink-0 pr-1">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 pr-1 xl:flex-nowrap">
           {/* Visibility Pills */}
           <VisibilityPills
-            value={searchParams.visibility || 'all'}
             onChange={onVisibilityChange}
+            value={searchParams.visibility || "all"}
           />
 
-          <div className="h-6 w-px bg-border mx-1 hidden xl:block" />
+          <div className="mx-1 hidden h-6 w-px bg-border xl:block" />
 
           {/* Application Filter */}
           <Select
-            value={searchParams.applicationId || 'all'}
             onValueChange={onApplicationChange}
+            value={searchParams.applicationId || "all"}
           >
-            <SelectTrigger className="h-10 w-[180px] xl:w-[200px] bg-transparent border-0 shadow-none focus:ring-0 font-medium text-sm group shrink-0">
+            <SelectTrigger className="group h-10 w-[180px] shrink-0 border-0 bg-transparent font-medium text-sm shadow-none focus:ring-0 xl:w-[200px]">
               <div className="flex items-center gap-2 overflow-hidden">
-                <Box className="h-4 w-4 text-blue-500 shrink-0" />
+                <Box className="h-4 w-4 shrink-0 text-blue-500" />
                 <SelectValue
-                  placeholder="All Applications"
                   className="truncate"
+                  placeholder="All Applications"
                 />
               </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem
-                value="all"
                 className="font-medium text-sm italic opacity-70"
+                value="all"
               >
                 All Applications
               </SelectItem>
               {applications?.map((app) => (
                 <SelectItem
+                  className="font-medium text-sm"
                   key={app.id}
                   value={app.id}
-                  className="font-medium text-sm"
                 >
                   <span className="flex items-center gap-2">
-                    <span className="text-primary/60 shrink-0">{app.tla}</span>
-                    <span className="text-muted-foreground/30 shrink-0">•</span>
+                    <span className="shrink-0 text-primary/60">{app.tla}</span>
+                    <span className="shrink-0 text-muted-foreground/30">•</span>
                     <span className="truncate">{app.applicationName}</span>
                   </span>
                 </SelectItem>
@@ -646,30 +668,30 @@ const FilterCockpit = memo(function FilterCockpit({
 
           {/* Category Filter */}
           <Select
-            value={searchParams.categoryId || 'all'}
             onValueChange={onCategoryChange}
+            value={searchParams.categoryId || "all"}
           >
-            <SelectTrigger className="h-10 w-[160px] xl:w-[180px] bg-transparent border-0 shadow-none focus:ring-0 font-medium text-sm group shrink-0">
+            <SelectTrigger className="group h-10 w-[160px] shrink-0 border-0 bg-transparent font-medium text-sm shadow-none focus:ring-0 xl:w-[180px]">
               <div className="flex items-center gap-2 overflow-hidden">
-                <Layers className="h-4 w-4 text-purple-600 shrink-0" />
+                <Layers className="h-4 w-4 shrink-0 text-purple-600" />
                 <SelectValue
-                  placeholder="All Categories"
                   className="truncate"
+                  placeholder="All Categories"
                 />
               </div>
             </SelectTrigger>
             <SelectContent>
               <SelectItem
-                value="all"
                 className="font-medium text-sm italic opacity-70"
+                value="all"
               >
                 All Categories
               </SelectItem>
               {categories?.map((cat) => (
                 <SelectItem
+                  className="font-medium text-sm"
                   key={cat.id}
                   value={cat.id}
-                  className="font-medium text-sm"
                 >
                   {cat.name}
                 </SelectItem>
@@ -677,29 +699,29 @@ const FilterCockpit = memo(function FilterCockpit({
             </SelectContent>
           </Select>
 
-          <div className="h-6 w-px bg-border mx-1 hidden xl:block" />
+          <div className="mx-1 hidden h-6 w-px bg-border xl:block" />
 
           {/* View Mode Toggle */}
-          <ViewModeToggle value={viewMode} onChange={onViewModeChange} />
+          <ViewModeToggle onChange={onViewModeChange} value={viewMode} />
         </div>
       </div>
 
       {/* Active Filters Row */}
       {activeFilterCount > 0 && (
         <ActiveFiltersRow
+          onApplicationChange={onApplicationChange}
+          onCategoryChange={onCategoryChange}
+          onClearAllFilters={onClearAllFilters}
+          onSearch={onSearch}
+          onVisibilityChange={onVisibilityChange}
           searchParams={searchParams}
           selectedApp={selectedApp}
           selectedCategory={selectedCategory}
-          onSearch={onSearch}
-          onApplicationChange={onApplicationChange}
-          onCategoryChange={onCategoryChange}
-          onVisibilityChange={onVisibilityChange}
-          onClearAllFilters={onClearAllFilters}
         />
       )}
     </div>
-  )
-})
+  );
+});
 
 // ============================================================================
 // Visibility Pills Component
@@ -708,54 +730,55 @@ const VisibilityPills = memo(function VisibilityPills({
   value,
   onChange,
 }: {
-  value: string
-  onChange: (val: string) => void
+  value: string;
+  onChange: (val: string) => void;
 }) {
   const options = [
-    { id: 'all', label: 'All', icon: Globe2 },
-    { id: 'public', label: 'Public', icon: Globe2 },
-    { id: 'private', label: 'Private', icon: Lock },
-  ]
+    { id: "all", label: "All", icon: Globe2 },
+    { id: "public", label: "Public", icon: Globe2 },
+    { id: "private", label: "Private", icon: Lock },
+  ];
 
   return (
-    <div className="bg-muted p-1 rounded-lg flex items-center gap-1 h-10 shrink-0 relative">
+    <div className="relative flex h-10 shrink-0 items-center gap-1 rounded-lg bg-muted p-1">
       {options.map((v) => {
-        const isActive = value === v.id
+        const isActive = value === v.id;
         return (
           <button
+            className={cn(
+              "relative z-10 flex h-8 items-center gap-1.5 rounded-md px-3 font-medium text-xs transition-colors",
+              isActive
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
+            )}
             key={v.id}
             onClick={() => onChange(v.id)}
-            className={cn(
-              'relative px-3 h-8 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 z-10',
-              isActive
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-foreground',
-            )}
+            type="button"
           >
-            {v.id !== 'all' && (
+            {v.id !== "all" && (
               <v.icon
                 className={cn(
-                  'h-3.5 w-3.5 transition-colors',
+                  "h-3.5 w-3.5 transition-colors",
                   isActive
-                    ? 'text-primary'
-                    : 'text-muted-foreground group-hover:text-foreground',
+                    ? "text-primary"
+                    : "text-muted-foreground group-hover:text-foreground"
                 )}
               />
             )}
             {v.label}
             {isActive && (
               <motion.div
+                className="absolute inset-0 -z-10 rounded-md border border-border/50 bg-background shadow-sm"
                 layoutId="active-vis-bg"
-                className="absolute inset-0 bg-background rounded-md shadow-sm border border-border/50 -z-10"
-                transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
               />
             )}
           </button>
-        )
+        );
       })}
     </div>
-  )
-})
+  );
+});
 
 // ============================================================================
 // View Mode Toggle Component
@@ -764,34 +787,35 @@ const ViewModeToggle = memo(function ViewModeToggle({
   value,
   onChange,
 }: {
-  value: 'grid' | 'table' | 'compact'
-  onChange: (mode: any) => void
+  value: "grid" | "table" | "compact";
+  onChange: (mode: "grid" | "table" | "compact") => void;
 }) {
   const options = [
-    { id: 'grid', icon: LayoutList },
-    { id: 'table', icon: TableIcon },
-    { id: 'compact', icon: Grip },
-  ]
+    { id: "grid", icon: LayoutList },
+    { id: "table", icon: TableIcon },
+    { id: "compact", icon: Grip },
+  ];
 
   return (
-    <div className="bg-muted p-1 rounded-lg flex items-center gap-1 h-10 shrink-0">
+    <div className="flex h-10 shrink-0 items-center gap-1 rounded-lg bg-muted p-1">
       {options.map((option) => (
         <button
-          key={option.id}
-          onClick={() => onChange(option.id)}
           className={cn(
-            'h-8 w-8 rounded-md flex items-center justify-center transition-all',
+            "flex h-8 w-8 items-center justify-center rounded-md transition-all",
             value === option.id
-              ? 'bg-background shadow-sm text-primary border border-border/50'
-              : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
+              ? "border border-border/50 bg-background text-primary shadow-sm"
+              : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
           )}
+          key={option.id}
+          onClick={() => onChange(option.id as "grid" | "table" | "compact")}
+          type="button"
         >
           <option.icon className="h-4 w-4" />
         </button>
       ))}
     </div>
-  )
-})
+  );
+});
 
 // ============================================================================
 // Active Filters Row Component
@@ -805,21 +829,36 @@ const ActiveFiltersRow = memo(function ActiveFiltersRow({
   onCategoryChange,
   onVisibilityChange,
   onClearAllFilters,
-}: any) {
+}: {
+  searchParams: {
+    search?: string;
+    visibility?: string;
+    applicationId?: string;
+    categoryId?: string;
+  };
+  selectedApp: { id: string; applicationName: string } | undefined;
+  selectedCategory: { id: string; name: string } | undefined;
+  onSearch: (term: string) => void;
+  onApplicationChange: (val: string | null) => void;
+  onCategoryChange: (val: string | null) => void;
+  onVisibilityChange: (val: string | null) => void;
+  onClearAllFilters: () => void;
+}) {
   return (
-    <div className="flex items-center gap-2 px-1 overflow-x-auto pb-1 scrollbar-hide">
-      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider shrink-0 mr-1">
+    <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto px-1 pb-1">
+      <span className="mr-1 shrink-0 font-bold text-[10px] text-muted-foreground/60 uppercase tracking-wider">
         Active Filters:
       </span>
       {searchParams.search && (
         <Badge
+          className="h-6 gap-1 rounded-lg border border-primary/20 bg-primary/5 pr-1 pl-2 font-bold text-[11px] text-primary shadow-sm"
           variant="secondary"
-          className="h-6 gap-1 pr-1 pl-2 rounded-lg text-[11px] font-bold bg-primary/5 text-primary border border-primary/20 shadow-sm"
         >
           "{searchParams.search}"
           <button
-            onClick={() => onSearch('')}
-            className="ml-1 hover:bg-primary/10 rounded-full p-0.5"
+            className="ml-1 rounded-full p-0.5 hover:bg-primary/10"
+            onClick={() => onSearch("")}
+            type="button"
           >
             <X className="h-3 w-3" />
           </button>
@@ -827,13 +866,14 @@ const ActiveFiltersRow = memo(function ActiveFiltersRow({
       )}
       {selectedApp && (
         <Badge
+          className="h-6 gap-1 rounded-lg border border-blue-500/20 bg-blue-500/5 pr-1 pl-2 font-bold text-[11px] text-blue-600 shadow-sm"
           variant="secondary"
-          className="h-6 gap-1 pr-1 pl-2 rounded-lg text-[11px] font-bold bg-blue-500/5 text-blue-600 border border-blue-500/20 shadow-sm"
         >
           <Box className="h-3 w-3" /> {selectedApp.applicationName}
           <button
-            onClick={() => onApplicationChange('all')}
-            className="ml-1 hover:bg-blue-500/10 rounded-full p-0.5"
+            className="ml-1 rounded-full p-0.5 hover:bg-blue-500/10"
+            onClick={() => onApplicationChange("all")}
+            type="button"
           >
             <X className="h-3 w-3" />
           </button>
@@ -841,41 +881,44 @@ const ActiveFiltersRow = memo(function ActiveFiltersRow({
       )}
       {selectedCategory && (
         <Badge
+          className="h-6 gap-1 rounded-lg border border-purple-500/20 bg-purple-500/5 pr-1 pl-2 font-bold text-[11px] text-purple-600 shadow-sm"
           variant="secondary"
-          className="h-6 gap-1 pr-1 pl-2 rounded-lg text-[11px] font-bold bg-purple-500/5 text-purple-600 border border-purple-500/20 shadow-sm"
         >
           <Layers className="h-3 w-3" /> {selectedCategory.name}
           <button
-            onClick={() => onCategoryChange('all')}
-            className="ml-1 hover:bg-purple-500/10 rounded-full p-0.5"
+            className="ml-1 rounded-full p-0.5 hover:bg-purple-500/10"
+            onClick={() => onCategoryChange("all")}
+            type="button"
           >
             <X className="h-3 w-3" />
           </button>
         </Badge>
       )}
-      {searchParams.visibility && searchParams.visibility !== 'all' && (
+      {searchParams.visibility && searchParams.visibility !== "all" && (
         <Badge
+          className="h-6 gap-1 rounded-lg border border-border/20 bg-background/50 pr-1 pl-2 font-bold text-[11px] capitalize shadow-sm"
           variant="secondary"
-          className="h-6 gap-1 pr-1 pl-2 rounded-lg text-[11px] font-bold bg-background/50 border border-border/20 shadow-sm capitalize"
         >
           {searchParams.visibility}
           <button
-            onClick={() => onVisibilityChange('all')}
-            className="ml-1 hover:bg-muted-foreground/10 rounded-full p-0.5"
+            className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/10"
+            onClick={() => onVisibilityChange("all")}
+            type="button"
           >
             <X className="h-3 w-3" />
           </button>
         </Badge>
       )}
       <button
+        className="ml-auto flex items-center gap-1 font-bold text-muted-foreground text-xs hover:text-destructive"
         onClick={onClearAllFilters}
-        className="text-xs font-bold text-muted-foreground hover:text-destructive flex items-center gap-1 ml-auto"
+        type="button"
       >
         <RotateCcw className="h-3 w-3" /> Reset View
       </button>
     </div>
-  )
-})
+  );
+});
 
 // ============================================================================
 // Empty Links State Component
@@ -883,16 +926,16 @@ const ActiveFiltersRow = memo(function ActiveFiltersRow({
 const EmptyLinksState = memo(function EmptyLinksState({
   onClearFilters,
 }: {
-  onClearFilters: () => void
+  onClearFilters: () => void;
 }) {
   return (
     <EmptyState
-      icon={Search}
-      title="No resources found"
-      description="We couldn't find any links matching your current filters. Try adjusting your search criteria."
-      size="lg"
       actionText="Clear Filters"
+      description="We couldn't find any links matching your current filters. Try adjusting your search criteria."
+      icon={Search}
       onAction={onClearFilters}
+      size="lg"
+      title="No resources found"
     />
-  )
-})
+  );
+});

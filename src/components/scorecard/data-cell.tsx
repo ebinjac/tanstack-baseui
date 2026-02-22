@@ -1,21 +1,21 @@
-import { useState } from 'react'
-import { toast } from 'sonner'
-import { ArrowDownRight, ArrowUpRight, Lock } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { cn } from '@/lib/utils'
+import { ArrowDownRight, ArrowUpRight, Lock } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface DataCellProps {
-  value: string
-  isBreach: boolean
-  reason?: string
-  editable: boolean
-  disabled?: boolean
-  onSave: (value: string, reason?: string) => void
-  threshold: number
-  type: 'availability' | 'volume'
-  changeValue?: number | null
+  changeValue?: number | null;
+  disabled?: boolean;
+  editable: boolean;
+  isBreach: boolean;
+  onSave: (value: string, reason?: string) => void;
+  reason?: string;
+  threshold: number;
+  type: "availability" | "volume";
+  value: string;
 }
 
 export function DataCell({
@@ -29,131 +29,136 @@ export function DataCell({
   type,
   changeValue,
 }: DataCellProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(value === '—' ? '' : value)
-  const [editReason, setEditReason] = useState(reason || '')
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value === "—" ? "" : value);
+  const [editReason, setEditReason] = useState(reason || "");
 
   const handleSave = () => {
     if (!editValue) {
-      setIsEditing(false)
-      return
+      setIsEditing(false);
+      return;
     }
 
     // Check if breach requires reason
-    let willBreach = false
-    if (type === 'availability') {
-      const numVal = parseFloat(editValue.replace('%', ''))
-      willBreach = !isNaN(numVal) && numVal < threshold
+    let willBreach = false;
+    if (type === "availability") {
+      const numVal = Number.parseFloat(editValue.replace("%", ""));
+      willBreach = !Number.isNaN(numVal) && numVal < threshold;
     }
 
     if (willBreach && !editReason.trim()) {
-      toast.error('Please provide a reason for the threshold breach')
-      return
+      toast.error("Please provide a reason for the threshold breach");
+      return;
     }
 
-    onSave(editValue, editReason || undefined)
-    setIsEditing(false)
-  }
+    onSave(editValue, editReason || undefined);
+    setIsEditing(false);
+  };
 
   // Display for disabled/locked cells
   if (disabled) {
     return (
       <div
         className={cn(
-          'text-[10px] font-bold px-2 py-1 rounded-md opacity-20 cursor-not-allowed uppercase tracking-wider',
-          'bg-muted/30 text-muted-foreground',
+          "cursor-not-allowed rounded-md px-2 py-1 font-bold text-[10px] uppercase tracking-wider opacity-20",
+          "bg-muted/30 text-muted-foreground"
         )}
         title="Cannot edit future months"
       >
         <Lock className="h-3 w-3" />
       </div>
-    )
+    );
   }
 
   if (!editable) {
     return (
       <div
         className={cn(
-          'text-[11px] font-bold px-2 py-1 rounded-md tabular-nums transition-all border border-transparent',
+          "rounded-md border border-transparent px-2 py-1 font-bold text-[11px] tabular-nums transition-all",
           isBreach
-            ? 'bg-red-500/10 text-red-600 border-red-500/20'
-            : 'text-muted-foreground/80',
+            ? "border-red-500/20 bg-red-500/10 text-red-600"
+            : "text-muted-foreground/80"
         )}
         title={reason || undefined}
       >
         {value}
         {isBreach && (
-          <div className="h-1 w-full bg-red-500 rounded-full mt-0.5" />
+          <div className="mt-0.5 h-1 w-full rounded-full bg-red-500" />
         )}
       </div>
-    )
+    );
   }
 
   if (isEditing) {
     return (
-      <div className="space-y-1.5 p-1 bg-background border border-primary/20 rounded-lg shadow-md animate-in zoom-in-95 duration-200 z-50 min-w-[120px]">
+      <div className="zoom-in-95 z-50 min-w-[120px] animate-in space-y-1.5 rounded-lg border border-primary/20 bg-background p-1 shadow-md duration-200">
         <Input
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          className="h-8 text-[11px] text-center w-full font-bold tabular-nums border-primary/20"
-          placeholder={type === 'availability' ? '99.5%' : '10000'}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') handleSave()
-            if (e.key === 'Escape') setIsEditing(false)
-          }}
           autoFocus
+          className="h-8 w-full border-primary/20 text-center font-bold text-[11px] tabular-nums"
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSave();
+            }
+            if (e.key === "Escape") {
+              setIsEditing(false);
+            }
+          }}
+          placeholder={type === "availability" ? "99.5%" : "10000"}
+          value={editValue}
         />
         <Textarea
-          value={editReason}
+          className="h-16 resize-none border-primary/10 text-[10px]"
           onChange={(e) => setEditReason(e.target.value)}
-          className="h-16 text-[10px] resize-none border-primary/10"
           placeholder="Reason for breach..."
+          value={editReason}
         />
         <div className="flex gap-1.5">
           <Button
-            size="sm"
-            className="h-7 text-[10px] flex-1 font-bold uppercase tracking-widest"
+            className="h-7 flex-1 font-bold text-[10px] uppercase tracking-widest"
             onClick={handleSave}
+            size="sm"
           >
             Apply
           </Button>
           <Button
+            className="h-7 font-bold text-[10px]"
+            onClick={() => setIsEditing(false)}
             size="sm"
             variant="ghost"
-            className="h-7 text-[10px] font-bold"
-            onClick={() => setIsEditing(false)}
           >
             Cancel
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <button
       className={cn(
-        'text-[11px] font-bold px-2 py-1.5 rounded-md w-full transition-all tabular-nums border border-transparent',
-        'hover:bg-primary/10 hover:border-primary/20 cursor-pointer hover:scale-105 active:scale-95 group/cell',
+        "w-full rounded-md border border-transparent px-2 py-1.5 font-bold text-[11px] tabular-nums transition-all",
+        "group/cell cursor-pointer hover:scale-105 hover:border-primary/20 hover:bg-primary/10 active:scale-95",
         isBreach
-          ? 'bg-red-500/10 text-red-600 border-red-500/20 hover:bg-red-500/20'
-          : 'text-foreground group-hover/cell:text-primary',
+          ? "border-red-500/20 bg-red-500/10 text-red-600 hover:bg-red-500/20"
+          : "text-foreground group-hover/cell:text-primary"
       )}
       onClick={() => setIsEditing(true)}
       title={
         reason ||
         (isBreach
-          ? 'Threshold Breach - Click to edit reason'
-          : 'Click to edit data')
+          ? "Threshold Breach - Click to edit reason"
+          : "Click to edit data")
       }
+      type="button"
     >
       <span className="relative">
         {value}
-        {type === 'volume' && changeValue != null && (
+        {type === "volume" && changeValue != null && (
           <span
             className={cn(
-              'absolute -top-2 -right-3 text-[8px] font-bold',
-              changeValue > 0 ? 'text-green-600' : 'text-red-500',
+              "absolute -top-2 -right-3 font-bold text-[8px]",
+              changeValue > 0 ? "text-green-600" : "text-red-500"
             )}
           >
             {changeValue > 0 ? (
@@ -165,8 +170,8 @@ export function DataCell({
         )}
       </span>
       {isBreach && (
-        <div className="h-0.5 w-full bg-red-500 rounded-full mt-1.5" />
+        <div className="mt-1.5 h-0.5 w-full rounded-full bg-red-500" />
       )}
     </button>
-  )
+  );
 }

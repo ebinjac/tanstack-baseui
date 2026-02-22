@@ -1,24 +1,30 @@
-'use client'
+"use client";
 
-import { useMemo, useState } from 'react'
+import type {
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  UniqueIdentifier,
+} from "@dnd-kit/core";
 import {
+  closestCorners,
   DndContext,
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
-  closestCorners,
   useDroppable,
   useSensor,
   useSensors,
-} from '@dnd-kit/core'
+} from "@dnd-kit/core";
 import {
-  SortableContext,
   arrayMove,
+  SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   FolderOpen,
   FolderPlus,
@@ -27,41 +33,36 @@ import {
   Plus,
   Save,
   Trash2,
-} from 'lucide-react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import type {
-  DragEndEvent,
-  DragOverEvent,
-  DragStartEvent,
-  UniqueIdentifier} from '@dnd-kit/core';
-import type { Application } from '@/db/schema/teams'
-import type { ApplicationGroup } from '@/db/schema/application-groups'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { cn } from '@/lib/utils'
-import { syncGroupStructure } from '@/app/actions/application-groups'
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { syncGroupStructure } from "@/app/actions/application-groups";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import type { ApplicationGroup } from "@/db/schema/application-groups";
+import type { Application } from "@/db/schema/teams";
+import { cn } from "@/lib/utils";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-type GroupWithApps = ApplicationGroup & { applications: Array<Application> }
+type GroupWithApps = ApplicationGroup & { applications: Application[] };
 
 interface DndGroup {
-  id: string
-  name: string
-  items: Array<Application>
-  color: string
-  isNew?: boolean
+  color: string;
+  id: string;
+  isNew?: boolean;
+  items: Application[];
+  name: string;
 }
 
 interface GroupManagementDndProps {
-  teamId: string
-  initialGroups: Array<GroupWithApps>
-  initialUngrouped: Array<Application>
-  onClose?: () => void
+  initialGroups: GroupWithApps[];
+  initialUngrouped: Application[];
+  onClose?: () => void;
+  teamId: string;
 }
 
 // ============================================================================
@@ -69,25 +70,27 @@ interface GroupManagementDndProps {
 // ============================================================================
 
 const GROUP_COLORS = [
-  '#6366f1',
-  '#3b82f6',
-  '#06b6d4',
-  '#14b8a6',
-  '#22c55e',
-  '#eab308',
-  '#f97316',
-  '#ef4444',
-  '#ec4899',
-  '#a855f7',
-]
+  "#6366f1",
+  "#3b82f6",
+  "#06b6d4",
+  "#14b8a6",
+  "#22c55e",
+  "#eab308",
+  "#f97316",
+  "#ef4444",
+  "#ec4899",
+  "#a855f7",
+];
 
-function generateGroupName(apps: Array<Application>) {
-  if (apps.length === 0) return 'New Group'
-  return apps.map((a) => a.tla).join('/')
+function generateGroupName(apps: Application[]) {
+  if (apps.length === 0) {
+    return "New Group";
+  }
+  return apps.map((a) => a.tla).join("/");
 }
 
 function getRandomColor() {
-  return GROUP_COLORS[Math.floor(Math.random() * GROUP_COLORS.length)]
+  return GROUP_COLORS[Math.floor(Math.random() * GROUP_COLORS.length)];
 }
 
 // ============================================================================
@@ -95,7 +98,7 @@ function getRandomColor() {
 // ============================================================================
 
 interface SortableAppProps {
-  app: Application
+  app: Application;
 }
 
 function SortableApp({ app }: SortableAppProps) {
@@ -106,13 +109,13 @@ function SortableApp({ app }: SortableAppProps) {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: app.id })
+  } = useSortable({ id: app.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  }
+  };
 
   return (
     <div
@@ -121,19 +124,19 @@ function SortableApp({ app }: SortableAppProps) {
       {...attributes}
       {...listeners}
       className={cn(
-        'flex items-center gap-2 px-3 py-2.5 rounded-lg border bg-card shadow-sm cursor-grab active:cursor-grabbing transition-all hover:border-primary/50',
-        isDragging && 'ring-2 ring-primary shadow-lg',
+        "flex cursor-grab items-center gap-2 rounded-lg border bg-card px-3 py-2.5 shadow-sm transition-all hover:border-primary/50 active:cursor-grabbing",
+        isDragging && "shadow-lg ring-2 ring-primary"
       )}
     >
-      <GripVertical className="h-4 w-4 text-muted-foreground/50 shrink-0" />
-      <Badge variant="secondary" className="font-bold text-xs shrink-0">
+      <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+      <Badge className="shrink-0 font-bold text-xs" variant="secondary">
         {app.tla}
       </Badge>
-      <span className="text-xs text-muted-foreground truncate flex-1">
+      <span className="flex-1 truncate text-muted-foreground text-xs">
         {app.applicationName}
       </span>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -141,9 +144,9 @@ function SortableApp({ app }: SortableAppProps) {
 // ============================================================================
 
 interface DroppableGroupProps {
-  group: DndGroup
-  onRemove: () => void
-  onColorChange: (color: string) => void
+  group: DndGroup;
+  onColorChange: (color: string) => void;
+  onRemove: () => void;
 }
 
 function DroppableGroup({
@@ -153,51 +156,51 @@ function DroppableGroup({
 }: DroppableGroupProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: group.id,
-    data: { type: 'group', group },
-  })
+    data: { type: "group", group },
+  });
 
-  const isInvalid = group.items.length < 2
+  const isInvalid = group.items.length < 2;
 
   return (
     <div
-      ref={setNodeRef}
       className={cn(
-        'rounded-xl border bg-card/50 shadow-sm overflow-hidden transition-all',
-        isOver && 'ring-2 ring-primary border-primary/50 bg-primary/5',
+        "overflow-hidden rounded-xl border bg-card/50 shadow-sm transition-all",
+        isOver && "border-primary/50 bg-primary/5 ring-2 ring-primary",
         isInvalid &&
           !isOver &&
-          'border-amber-400/50 bg-amber-50/10 dark:bg-amber-950/10',
+          "border-amber-400/50 bg-amber-50/10 dark:bg-amber-950/10"
       )}
+      ref={setNodeRef}
       style={{
         borderLeftWidth: 4,
-        borderLeftColor: isInvalid ? '#f59e0b' : group.color,
+        borderLeftColor: isInvalid ? "#f59e0b" : group.color,
       }}
     >
       {/* Group Header */}
       <div
         className={cn(
-          'flex items-center justify-between px-4 py-3 border-b',
-          isInvalid ? 'bg-amber-50/50 dark:bg-amber-950/30' : 'bg-muted/30',
+          "flex items-center justify-between border-b px-4 py-3",
+          isInvalid ? "bg-amber-50/50 dark:bg-amber-950/30" : "bg-muted/30"
         )}
       >
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex min-w-0 items-center gap-3">
           <FolderOpen
             className="h-5 w-5 shrink-0"
-            style={{ color: isInvalid ? '#f59e0b' : group.color }}
+            style={{ color: isInvalid ? "#f59e0b" : group.color }}
           />
           <div className="min-w-0">
-            <h4 className="text-sm font-semibold truncate">{group.name}</h4>
+            <h4 className="truncate font-semibold text-sm">{group.name}</h4>
             <p
               className={cn(
-                'text-xs',
+                "text-xs",
                 isInvalid
-                  ? 'text-amber-600 dark:text-amber-400 font-medium'
-                  : 'text-muted-foreground',
+                  ? "font-medium text-amber-600 dark:text-amber-400"
+                  : "text-muted-foreground"
               )}
             >
               {isInvalid
-                ? `Needs ${2 - group.items.length} more app${2 - group.items.length > 1 ? 's' : ''}`
-                : `${group.items.length} application${group.items.length !== 1 ? 's' : ''}`}
+                ? `Needs ${2 - group.items.length} more app${2 - group.items.length > 1 ? "s" : ""}`
+                : `${group.items.length} application${group.items.length !== 1 ? "s" : ""}`}
             </p>
           </div>
         </div>
@@ -206,22 +209,23 @@ function DroppableGroup({
           <div className="flex items-center gap-1">
             {GROUP_COLORS.slice(0, 5).map((c) => (
               <button
-                key={c}
                 className={cn(
-                  'h-4 w-4 rounded-full hover:scale-110 transition-transform',
-                  group.color === c && 'ring-2 ring-offset-1 ring-foreground',
+                  "h-4 w-4 rounded-full transition-transform hover:scale-110",
+                  group.color === c && "ring-2 ring-foreground ring-offset-1"
                 )}
-                style={{ backgroundColor: c }}
+                key={c}
                 onClick={() => onColorChange(c)}
+                style={{ backgroundColor: c }}
+                type="button"
               />
             ))}
           </div>
-          <Separator orientation="vertical" className="h-5" />
+          <Separator className="h-5" orientation="vertical" />
           <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onRemove}
             className="text-muted-foreground hover:text-destructive"
+            onClick={onRemove}
+            size="icon-sm"
+            variant="ghost"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -233,18 +237,18 @@ function DroppableGroup({
         items={group.items.map((a) => a.id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="p-3 min-h-[100px] space-y-2">
-          {group.items.length === 0 ? (
+        <div className="min-h-[100px] space-y-2 p-3">
+          {group.items.length === 0 && (
             <div
               className={cn(
-                'h-[80px] flex flex-col items-center justify-center border-2 border-dashed rounded-lg text-xs transition-colors',
+                "flex h-[80px] flex-col items-center justify-center rounded-lg border-2 border-dashed text-xs transition-colors",
                 isOver
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-amber-300 bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400',
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-amber-300 bg-amber-50/50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400"
               )}
             >
               {isOver ? (
-                'Drop here!'
+                "Drop here!"
               ) : (
                 <>
                   <span className="font-medium">Drag 2+ apps here</span>
@@ -254,29 +258,30 @@ function DroppableGroup({
                 </>
               )}
             </div>
-          ) : group.items.length === 1 ? (
+          )}
+          {group.items.length === 1 && (
             <>
               {group.items.map((app) => (
-                <SortableApp key={app.id} app={app} />
+                <SortableApp app={app} key={app.id} />
               ))}
               <div
                 className={cn(
-                  'h-[50px] flex items-center justify-center border-2 border-dashed rounded-lg text-xs transition-colors',
+                  "flex h-[50px] items-center justify-center rounded-lg border-2 border-dashed text-xs transition-colors",
                   isOver
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-amber-300 bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400',
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-amber-300 bg-amber-50/50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400"
                 )}
               >
-                {isOver ? 'Drop here!' : 'Add 1 more app'}
+                {isOver ? "Drop here!" : "Add 1 more app"}
               </div>
             </>
-          ) : (
-            group.items.map((app) => <SortableApp key={app.id} app={app} />)
           )}
+          {group.items.length > 1 &&
+            group.items.map((app) => <SortableApp app={app} key={app.id} />)}
         </div>
       </SortableContext>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -284,22 +289,22 @@ function DroppableGroup({
 // ============================================================================
 
 interface DroppableUngroupedProps {
-  items: Array<Application>
+  items: Application[];
 }
 
 function DroppableUngrouped({ items }: DroppableUngroupedProps) {
   const { setNodeRef, isOver } = useDroppable({
-    id: 'ungrouped',
-    data: { type: 'ungrouped' },
-  })
+    id: "ungrouped",
+    data: { type: "ungrouped" },
+  });
 
   return (
     <div
-      ref={setNodeRef}
       className={cn(
-        'rounded-xl border bg-muted/10 p-4 min-h-[200px] space-y-2 transition-all',
-        isOver && 'ring-2 ring-primary border-primary/50 bg-primary/5',
+        "min-h-[200px] space-y-2 rounded-xl border bg-muted/10 p-4 transition-all",
+        isOver && "border-primary/50 bg-primary/5 ring-2 ring-primary"
       )}
+      ref={setNodeRef}
     >
       <SortableContext
         items={items.map((a) => a.id)}
@@ -308,15 +313,15 @@ function DroppableUngrouped({ items }: DroppableUngroupedProps) {
         {items.length === 0 ? (
           <div
             className={cn(
-              'h-full min-h-[150px] flex flex-col items-center justify-center py-8 text-muted-foreground rounded-lg border-2 border-dashed transition-colors',
-              isOver ? 'border-primary bg-primary/10 text-primary' : '',
+              "flex h-full min-h-[150px] flex-col items-center justify-center rounded-lg border-2 border-dashed py-8 text-muted-foreground transition-colors",
+              isOver ? "border-primary bg-primary/10 text-primary" : ""
             )}
           >
             {isOver ? (
-              <p className="text-sm font-medium">Drop here to ungroup</p>
+              <p className="font-medium text-sm">Drop here to ungroup</p>
             ) : (
               <>
-                <p className="text-sm font-medium">
+                <p className="font-medium text-sm">
                   All applications are grouped!
                 </p>
                 <p className="text-xs">🎉</p>
@@ -324,11 +329,11 @@ function DroppableUngrouped({ items }: DroppableUngroupedProps) {
             )}
           </div>
         ) : (
-          items.map((app) => <SortableApp key={app.id} app={app} />)
+          items.map((app) => <SortableApp app={app} key={app.id} />)
         )}
       </SortableContext>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -341,147 +346,162 @@ export function GroupManagementDragDrop({
   initialUngrouped,
   onClose,
 }: GroupManagementDndProps) {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   // State
-  const [groups, setGroups] = useState<Array<DndGroup>>(() =>
+  const [groups, setGroups] = useState<DndGroup[]>(() =>
     initialGroups.map((g) => ({
       id: g.id,
       name: g.name,
       items: g.applications,
       color: g.color || getRandomColor(),
-    })),
-  )
-  const [ungrouped, setUngrouped] = useState<Array<Application>>(initialUngrouped)
-  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
+    }))
+  );
+  const [ungrouped, setUngrouped] = useState<Application[]>(initialUngrouped);
+  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
 
   // Find active app for overlay
   const activeApp = useMemo(() => {
-    if (!activeId) return null
-    const inUngrouped = ungrouped.find((a) => a.id === activeId)
-    if (inUngrouped) return inUngrouped
-    for (const g of groups) {
-      const inGroup = g.items.find((a) => a.id === activeId)
-      if (inGroup) return inGroup
+    if (!activeId) {
+      return null;
     }
-    return null
-  }, [activeId, ungrouped, groups])
+    const inUngrouped = ungrouped.find((a) => a.id === activeId);
+    if (inUngrouped) {
+      return inUngrouped;
+    }
+    for (const g of groups) {
+      const inGroup = g.items.find((a) => a.id === activeId);
+      if (inGroup) {
+        return inGroup;
+      }
+    }
+    return null;
+  }, [activeId, ungrouped, groups]);
 
   // Mutation
   const saveMutation = useMutation({
     mutationFn: (data: {
-      teamId: string
+      teamId: string;
       groups: Array<{
-        id: string
-        name: string
-        applicationIds: Array<string>
-        color?: string
-      }>
+        id: string;
+        name: string;
+        applicationIds: string[];
+        color?: string;
+      }>;
     }) => syncGroupStructure({ data }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['application-groups', teamId],
-      })
-      toast.success('Groups saved successfully!')
-      onClose?.()
+        queryKey: ["application-groups", teamId],
+      });
+      toast.success("Groups saved successfully!");
+      onClose?.();
     },
     onError: () => {
-      toast.error('Failed to save groups')
+      toast.error("Failed to save groups");
     },
-  })
+  });
 
   // Sensors with smaller activation distance for better UX
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  )
+    })
+  );
 
   // Find which container an app belongs to
   const findContainer = (appId: UniqueIdentifier): string | null => {
-    if (ungrouped.find((a) => a.id === appId)) return 'ungrouped'
-    for (const g of groups) {
-      if (g.items.find((a) => a.id === appId)) return g.id
+    if (ungrouped.find((a) => a.id === appId)) {
+      return "ungrouped";
     }
-    return null
-  }
+    for (const g of groups) {
+      if (g.items.find((a) => a.id === appId)) {
+        return g.id;
+      }
+    }
+    return null;
+  };
 
   // Handlers
   const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id)
-  }
+    setActiveId(event.active.id);
+  };
 
   const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event
-    if (!over) return
+    const { active, over } = event;
+    if (!over) {
+      return;
+    }
 
-    const activeContainer = findContainer(active.id)
+    const activeContainer = findContainer(active.id);
 
     // Determine over container - could be the container itself or an item in it
-    let overContainer: string | null = null
+    let overContainer: string | null = null;
 
     // Check if over is a group container
-    if (over.id === 'ungrouped') {
-      overContainer = 'ungrouped'
+    if (over.id === "ungrouped") {
+      overContainer = "ungrouped";
     } else if (groups.find((g) => g.id === over.id)) {
-      overContainer = over.id as string
+      overContainer = over.id as string;
     } else {
       // Over is an app, find its container
-      overContainer = findContainer(over.id)
+      overContainer = findContainer(over.id);
     }
 
     if (
-      !activeContainer ||
-      !overContainer ||
+      !(activeContainer && overContainer) ||
       activeContainer === overContainer
     ) {
-      return
+      return;
     }
 
     // Move the app between containers
-    const app = activeApp
-    if (!app) return
+    const app = activeApp;
+    if (!app) {
+      return;
+    }
 
     // Remove from source container
-    if (activeContainer === 'ungrouped') {
-      setUngrouped((prev) => prev.filter((a) => a.id !== active.id))
+    if (activeContainer === "ungrouped") {
+      setUngrouped((prev) => prev.filter((a) => a.id !== active.id));
     } else {
       setGroups((prev) =>
         prev.map((g) => {
           if (g.id === activeContainer) {
-            const newItems = g.items.filter((a) => a.id !== active.id)
-            return { ...g, items: newItems, name: generateGroupName(newItems) }
+            const newItems = g.items.filter((a) => a.id !== active.id);
+            return { ...g, items: newItems, name: generateGroupName(newItems) };
           }
-          return g
-        }),
-      )
+          return g;
+        })
+      );
     }
 
     // Add to destination container
-    if (overContainer === 'ungrouped') {
-      setUngrouped((prev) => [...prev, app])
+    if (overContainer === "ungrouped") {
+      setUngrouped((prev) => [...prev, app]);
     } else {
       setGroups((prev) =>
         prev.map((g) => {
           if (g.id === overContainer) {
-            const newItems = [...g.items, app]
-            return { ...g, items: newItems, name: generateGroupName(newItems) }
+            const newItems = [...g.items, app];
+            return { ...g, items: newItems, name: generateGroupName(newItems) };
           }
-          return g
-        }),
-      )
+          return g;
+        })
+      );
     }
-  }
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    setActiveId(null)
+    const { active, over } = event;
+    setActiveId(null);
 
-    if (!over) return
+    if (!over) {
+      return;
+    }
 
-    const activeContainer = findContainer(active.id)
-    const overContainer = findContainer(over.id)
+    const activeContainer = findContainer(active.id);
+    const overContainer = findContainer(over.id);
 
     // Reordering within same container
     if (
@@ -490,70 +510,70 @@ export function GroupManagementDragDrop({
       activeContainer === overContainer &&
       active.id !== over.id
     ) {
-      if (activeContainer === 'ungrouped') {
-        const oldIndex = ungrouped.findIndex((a) => a.id === active.id)
-        const newIndex = ungrouped.findIndex((a) => a.id === over.id)
+      if (activeContainer === "ungrouped") {
+        const oldIndex = ungrouped.findIndex((a) => a.id === active.id);
+        const newIndex = ungrouped.findIndex((a) => a.id === over.id);
         if (oldIndex !== -1 && newIndex !== -1) {
-          setUngrouped((prev) => arrayMove(prev, oldIndex, newIndex))
+          setUngrouped((prev) => arrayMove(prev, oldIndex, newIndex));
         }
       } else {
         setGroups((prev) =>
           prev.map((g) => {
             if (g.id === activeContainer) {
-              const oldIndex = g.items.findIndex((a) => a.id === active.id)
-              const newIndex = g.items.findIndex((a) => a.id === over.id)
+              const oldIndex = g.items.findIndex((a) => a.id === active.id);
+              const newIndex = g.items.findIndex((a) => a.id === over.id);
               if (oldIndex !== -1 && newIndex !== -1) {
-                const newItems = arrayMove(g.items, oldIndex, newIndex)
+                const newItems = arrayMove(g.items, oldIndex, newIndex);
                 return {
                   ...g,
                   items: newItems,
                   name: generateGroupName(newItems),
-                }
+                };
               }
             }
-            return g
-          }),
-        )
+            return g;
+          })
+        );
       }
     }
-  }
+  };
 
   const handleCreateGroup = () => {
     const newGroup: DndGroup = {
       id: `new-${crypto.randomUUID()}`,
-      name: 'New Group',
+      name: "New Group",
       items: [],
       color: getRandomColor(),
       isNew: true,
-    }
-    setGroups((prev) => [newGroup, ...prev])
-  }
+    };
+    setGroups((prev) => [newGroup, ...prev]);
+  };
 
   const handleRemoveGroup = (groupId: string) => {
-    const group = groups.find((g) => g.id === groupId)
+    const group = groups.find((g) => g.id === groupId);
     if (group) {
-      setUngrouped((prev) => [...prev, ...group.items])
-      setGroups((prev) => prev.filter((g) => g.id !== groupId))
+      setUngrouped((prev) => [...prev, ...group.items]);
+      setGroups((prev) => prev.filter((g) => g.id !== groupId));
     }
-  }
+  };
 
   const handleColorChange = (groupId: string, color: string) => {
     setGroups((prev) =>
-      prev.map((g) => (g.id === groupId ? { ...g, color } : g)),
-    )
-  }
+      prev.map((g) => (g.id === groupId ? { ...g, color } : g))
+    );
+  };
 
   const handleSave = () => {
     // Validate: groups must have at least 2 applications
-    const validGroups = groups.filter((g) => g.items.length >= 2)
+    const validGroups = groups.filter((g) => g.items.length >= 2);
     const invalidGroups = groups.filter(
-      (g) => g.items.length < 2 && g.items.length > 0,
-    )
+      (g) => g.items.length < 2 && g.items.length > 0
+    );
 
     if (invalidGroups.length > 0) {
       toast.warning(
-        `${invalidGroups.length} group(s) with less than 2 applications will not be saved. A group needs at least 2 applications.`,
-      )
+        `${invalidGroups.length} group(s) with less than 2 applications will not be saved. A group needs at least 2 applications.`
+      );
     }
 
     // Only save valid groups
@@ -565,18 +585,18 @@ export function GroupManagementDragDrop({
         applicationIds: g.items.map((a) => a.id),
         color: g.color,
       })),
-    })
-  }
+    });
+  };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {/* Actions Bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b bg-background shrink-0">
+      <div className="flex shrink-0 items-center justify-between border-b bg-background px-6 py-4">
         <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCreateGroup}
           className="gap-2"
+          onClick={handleCreateGroup}
+          size="sm"
+          variant="outline"
         >
           <FolderPlus className="h-4 w-4" />
           Create New Group
@@ -584,15 +604,15 @@ export function GroupManagementDragDrop({
 
         <div className="flex items-center gap-2">
           {onClose && (
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button onClick={onClose} size="sm" variant="ghost">
               Cancel
             </Button>
           )}
           <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={saveMutation.isPending}
             className="gap-2"
+            disabled={saveMutation.isPending}
+            onClick={handleSave}
+            size="sm"
           >
             {saveMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -607,39 +627,40 @@ export function GroupManagementDragDrop({
       {/* Main Content */}
       <div className="flex-1 overflow-auto p-6">
         <DndContext
-          sensors={sensors}
           collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
           onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+          onDragStart={handleDragStart}
+          sensors={sensors}
         >
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-full">
+          <div className="grid min-h-full grid-cols-1 gap-6 lg:grid-cols-2">
             {/* Groups Column */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              <h3 className="flex items-center gap-2 font-semibold text-muted-foreground text-sm uppercase tracking-wider">
                 <FolderOpen className="h-4 w-4" />
                 Groups ({groups.length})
               </h3>
 
               {groups.length === 0 ? (
-                <div
+                <button
+                  className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed bg-muted/5 p-8 text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary"
                   onClick={handleCreateGroup}
-                  className="cursor-pointer border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors bg-muted/5"
+                  type="button"
                 >
-                  <FolderPlus className="h-12 w-12 mb-3 opacity-50" />
+                  <FolderPlus className="mb-3 h-12 w-12 opacity-50" />
                   <p className="font-medium">No groups yet</p>
                   <p className="text-xs">Click to create your first group</p>
-                </div>
+                </button>
               ) : (
                 <div className="space-y-4">
                   {groups.map((group) => (
                     <DroppableGroup
-                      key={group.id}
                       group={group}
-                      onRemove={() => handleRemoveGroup(group.id)}
+                      key={group.id}
                       onColorChange={(color) =>
                         handleColorChange(group.id, color)
                       }
+                      onRemove={() => handleRemoveGroup(group.id)}
                     />
                   ))}
                 </div>
@@ -648,7 +669,7 @@ export function GroupManagementDragDrop({
 
             {/* Ungrouped Column */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              <h3 className="flex items-center gap-2 font-semibold text-muted-foreground text-sm uppercase tracking-wider">
                 <Plus className="h-4 w-4" />
                 Ungrouped Applications ({ungrouped.length})
               </h3>
@@ -660,15 +681,15 @@ export function GroupManagementDragDrop({
           {/* Drag Overlay */}
           <DragOverlay>
             {activeApp && (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg border bg-card shadow-xl cursor-grabbing ring-2 ring-primary scale-105">
-                <GripVertical className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+              <div className="flex scale-105 cursor-grabbing items-center gap-2 rounded-lg border bg-card px-3 py-2.5 shadow-xl ring-2 ring-primary">
+                <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/50" />
                 <Badge
+                  className="shrink-0 font-bold text-xs"
                   variant="secondary"
-                  className="font-bold text-xs shrink-0"
                 >
                   {activeApp.tla}
                 </Badge>
-                <span className="text-xs text-muted-foreground truncate">
+                <span className="truncate text-muted-foreground text-xs">
                   {activeApp.applicationName}
                 </span>
               </div>
@@ -677,5 +698,5 @@ export function GroupManagementDragDrop({
         </DndContext>
       </div>
     </div>
-  )
+  );
 }

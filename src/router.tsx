@@ -1,14 +1,14 @@
-import { createRouter } from '@tanstack/react-router'
-import { QueryClient } from '@tanstack/react-query'
-import { routeTree } from './routeTree.gen'
-import type { SessionData } from '@/lib/auth/config'
+import { QueryClient } from "@tanstack/react-query";
+import { createRouter } from "@tanstack/react-router";
+import type { SessionData } from "@/lib/auth/config";
+import { routeTree } from "./routeTree.gen";
 
 // Import the generated route tree
 
 // Router context type — available to all routes via beforeLoad/loader
 export interface RouterContext {
-  queryClient: QueryClient
-  session: SessionData | null
+  queryClient: QueryClient;
+  session: SessionData | null;
 }
 
 // Create a new router instance with context
@@ -19,25 +19,25 @@ export const getRouter = () => {
         staleTime: 1000 * 60, // 1 minute default
       },
     },
-  })
+  });
 
   const router = createRouter({
     routeTree,
     scrollRestoration: true,
-    defaultPreload: 'intent',
+    defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     context: {
       queryClient,
       session: null, // Will be populated by __root.tsx beforeLoad
     },
-  })
+  });
 
-  return router
-}
+  return router;
+};
 
 // Type registration for full type safety across the app
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface Register {
-    router: ReturnType<typeof getRouter>
+    router: ReturnType<typeof getRouter>;
   }
 }

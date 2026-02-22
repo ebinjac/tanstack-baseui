@@ -1,8 +1,11 @@
-'use client'
+"use client";
 
-import { useMemo } from 'react'
-import { ChevronDown, Eye } from 'lucide-react'
-import { ApplicationCard } from './application-card'
+import { ChevronDown, Eye } from "lucide-react";
+import { useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ApplicationCard } from "./application-card";
 import type {
   Application,
   AvailabilityRecord,
@@ -11,25 +14,22 @@ import type {
   Team,
   VisibleMonth,
   VolumeRecord,
-} from './types'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+} from "./types";
 
 interface TeamSectionProps {
-  team: Team
-  isExpanded: boolean
-  onToggle: () => void
-  applications: Array<Application>
-  entriesByApp: Record<string, Array<ScorecardEntry>>
-  availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>
-  volumeByEntry: Record<string, Record<string, VolumeRecord>>
-  expandedApps: Set<string>
-  onToggleApp: (appId: string) => void
-  selectedYear: number
-  getLeadershipDisplay: (app: Application) => Array<LeadershipDisplay>
-  onViewFull: () => void
-  visibleMonths?: Array<VisibleMonth>
+  applications: Application[];
+  availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>;
+  entriesByApp: Record<string, ScorecardEntry[]>;
+  expandedApps: Set<string>;
+  getLeadershipDisplay: (app: Application) => LeadershipDisplay[];
+  isExpanded: boolean;
+  onToggle: () => void;
+  onToggleApp: (appId: string) => void;
+  onViewFull: () => void;
+  selectedYear: number;
+  team: Team;
+  visibleMonths?: VisibleMonth[];
+  volumeByEntry: Record<string, Record<string, VolumeRecord>>;
 }
 
 export function TeamSection({
@@ -50,77 +50,78 @@ export function TeamSection({
   const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({
     month: i + 1,
     year: selectedYear,
-  }))
-  const monthsToShow = visibleMonths || ALL_MONTHS
+  }));
+  const monthsToShow = visibleMonths || ALL_MONTHS;
 
   // Calculate team-level stats
   const teamStats = useMemo(() => {
-    let totalEntries = 0
-    let breaches = 0
+    let totalEntries = 0;
+    let breaches = 0;
 
-    applications.forEach((app) => {
-      const entries = entriesByApp[app.id] || []
-      totalEntries += entries.length
+    for (const app of applications) {
+      const entries = entriesByApp[app.id] || [];
+      totalEntries += entries.length;
 
-      entries.forEach((entry) => {
-        const threshold = parseFloat(entry.availabilityThreshold)
-        const entryAvail = availabilityByEntry[entry.id] || {}
-        monthsToShow.forEach(({ month, year }) => {
-          const av = entryAvail[`${year}-${month}`]
-          if (av && parseFloat(av.availability) < threshold) {
-            breaches++
+      for (const entry of entries) {
+        const threshold = Number.parseFloat(entry.availabilityThreshold);
+        const entryAvail = availabilityByEntry[entry.id] || {};
+        for (const { month, year } of monthsToShow) {
+          const av = entryAvail[`${year}-${month}`];
+          if (av && Number.parseFloat(av.availability) < threshold) {
+            breaches++;
           }
-        })
-      })
-    })
+        }
+      }
+    }
 
-    return { apps: applications.length, entries: totalEntries, breaches }
-  }, [applications, entriesByApp, availabilityByEntry, monthsToShow])
+    return { apps: applications.length, entries: totalEntries, breaches };
+  }, [applications, entriesByApp, availabilityByEntry, monthsToShow]);
 
   return (
     <div>
       {/* Team Header */}
-      <div
+      <button
         className={cn(
-          'group flex items-center justify-between py-2.5 px-4 transition-all cursor-pointer border-b border-transparent',
-          isExpanded ? 'bg-muted/30 border-border/50' : 'hover:bg-muted/40',
+          "group flex w-full cursor-pointer items-center justify-between border-transparent border-b px-4 py-2.5 text-left transition-all focus:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+          isExpanded ? "border-border/50 bg-muted/30" : "hover:bg-muted/40"
         )}
         onClick={onToggle}
+        type="button"
       >
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex min-w-0 items-center gap-4">
           {/* Circled arrow indicator */}
           <div
             className={cn(
-              'w-8 h-8 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300',
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
               isExpanded
-                ? 'bg-primary/10 border-primary/30 text-primary'
-                : 'bg-muted/30 border-border/50 text-muted-foreground',
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-border/50 bg-muted/30 text-muted-foreground"
             )}
           >
             <ChevronDown
               className={cn(
-                'h-4 w-4 transition-transform duration-300',
-                isExpanded ? 'rotate-0' : '-rotate-90',
+                "h-4 w-4 transition-transform duration-300",
+                isExpanded ? "rotate-0" : "-rotate-90"
               )}
             />
           </div>
 
           <div className="flex flex-col">
-            <span className="font-bold text-base tracking-tight group-hover:text-primary transition-colors">
+            <span className="font-bold text-base tracking-tight transition-colors group-hover:text-primary">
               {team.teamName}
             </span>
             <div className="flex items-center gap-3 text-muted-foreground">
-              <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
+              <span className="font-bold text-[10px] uppercase tracking-widest opacity-60">
                 {teamStats.apps} Applications
               </span>
               <span className="text-muted-foreground/30">•</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
+              <span className="font-bold text-[10px] uppercase tracking-widest opacity-60">
                 {teamStats.entries} Metrics
               </span>
               {teamStats.breaches > 0 && (
                 <>
                   <span className="text-muted-foreground/30">•</span>
-                  <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[9px] font-bold uppercase tracking-widest h-4 px-1.5">
+                  <Badge className="h-4 border-red-500/20 bg-red-500/10 px-1.5 font-bold text-[9px] text-red-600 uppercase tracking-widest">
                     {teamStats.breaches} Breaches
                   </Badge>
                 </>
@@ -131,39 +132,40 @@ export function TeamSection({
 
         <div className="flex items-center gap-3">
           <Button
-            size="sm"
-            variant="ghost"
-            className="gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
+            className="gap-2 opacity-0 transition-opacity group-hover:opacity-100"
             onClick={(e) => {
-              e.stopPropagation()
-              onViewFull()
+              e.stopPropagation();
+              onViewFull();
             }}
+            size="sm"
+            type="button"
+            variant="ghost"
           >
             <Eye className="h-4 w-4" />
             View Report
           </Button>
         </div>
-      </div>
+      </button>
 
       {/* Team Content */}
       {isExpanded && (
-        <div className="pl-6 pr-3 py-2 space-y-2">
+        <div className="space-y-2 py-2 pr-3 pl-6">
           {applications.map((app) => (
             <ApplicationCard
-              key={app.id}
               app={app}
-              isExpanded={expandedApps.has(app.id)}
-              onToggle={() => onToggleApp(app.id)}
-              entries={entriesByApp[app.id] || []}
               availabilityByEntry={availabilityByEntry}
-              volumeByEntry={volumeByEntry}
-              selectedYear={selectedYear}
+              entries={entriesByApp[app.id] || []}
+              isExpanded={expandedApps.has(app.id)}
+              key={app.id}
               leadership={getLeadershipDisplay(app)}
+              onToggle={() => onToggleApp(app.id)}
+              selectedYear={selectedYear}
               visibleMonths={monthsToShow}
+              volumeByEntry={volumeByEntry}
             />
           ))}
         </div>
       )}
     </div>
-  )
+  );
 }

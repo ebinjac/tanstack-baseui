@@ -1,6 +1,4 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-
+import { useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
   Bell,
@@ -12,36 +10,40 @@ import {
   Plus,
   Star,
   Zap,
-} from 'lucide-react'
-import { EntryCard } from './entry-card'
-import { EntryDialog } from './entry-dialog'
-import type { TurnoverEntryWithDetails } from '@/db/schema/turnover'
-import type { Application } from '@/db/schema/teams'
-import type {TurnoverSection} from '@/lib/zod/turnover.schema';
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
-import { getTurnoverEntries } from '@/app/actions/turnover'
-import { SECTION_CONFIG  } from '@/lib/zod/turnover.schema'
+} from "lucide-react";
+import { useState } from "react";
+import { getTurnoverEntries } from "@/app/actions/turnover";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Application } from "@/db/schema/teams";
+import type { TurnoverEntryWithDetails } from "@/db/schema/turnover";
+import { cn } from "@/lib/utils";
+import type { TurnoverSection } from "@/lib/zod/turnover.schema";
+import { SECTION_CONFIG } from "@/lib/zod/turnover.schema";
+import { EntryCard } from "./entry-card";
+import { EntryDialog } from "./entry-dialog";
 
-const SECTION_ICONS: Record<TurnoverSection, any> = {
+const SECTION_ICONS: Record<
+  TurnoverSection,
+  React.ComponentType<{ className?: string }>
+> = {
   RFC: CheckCircle2,
   INC: AlertCircle,
   ALERTS: Bell,
   MIM: Zap,
   COMMS: MessageSquare,
   FYI: HelpCircle,
-}
+};
 
 interface SectionTableProps {
-  teamId: string
-  applicationId: string
-  section: TurnoverSection
+  applicationId: string;
+  groupApplications?: Application[];
   // Group-related props - for showing application selector in entry dialog
-  isGrouped?: boolean
-  groupApplications?: Array<Application>
+  isGrouped?: boolean;
+  section: TurnoverSection;
+  teamId: string;
 }
 
 export function SectionTable({
@@ -51,27 +53,27 @@ export function SectionTable({
   isGrouped = false,
   groupApplications = [],
 }: SectionTableProps) {
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<TurnoverEntryWithDetails | null>(
-    null,
-  )
+    null
+  );
 
-  const sectionConfig = SECTION_CONFIG[section]
-  const SectionIcon = SECTION_ICONS[section]
+  const sectionConfig = SECTION_CONFIG[section];
+  const SectionIcon = SECTION_ICONS[section];
 
   // Fetch entries for all applications in the group or just the single app
   const applicationIds =
     isGrouped && groupApplications.length > 0
       ? groupApplications.map((a) => a.id)
-      : [applicationId]
+      : [applicationId];
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: [
-      'turnover-entries',
+      "turnover-entries",
       teamId,
       applicationIds,
       section,
-      'with-resolved',
+      "with-resolved",
     ],
     queryFn: async () => {
       // Fetch entries for all applications
@@ -83,98 +85,98 @@ export function SectionTable({
             section,
             includeRecentlyResolved: true,
           },
-        }),
-      )
-      const results = await Promise.all(entriesPromises)
+        })
+      );
+      const results = await Promise.all(entriesPromises);
 
       // Combine all entries and sort by createdAt
-      const allEntries = results.flatMap((r) => r.entries)
+      const allEntries = results.flatMap((r) => r.entries);
       allEntries.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      )
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
 
-      return { entries: allEntries, total: allEntries.length }
+      return { entries: allEntries, total: allEntries.length };
     },
-    staleTime: 30000,
-  })
+    staleTime: 30_000,
+  });
 
-  const entries = data?.entries || []
+  const entries = data?.entries || [];
   const importantCount = entries.filter(
-    (e: TurnoverEntryWithDetails) => e.isImportant,
-  ).length
+    (e: TurnoverEntryWithDetails) => e.isImportant
+  ).length;
 
   const handleEdit = (entry: TurnoverEntryWithDetails) => {
-    setEditEntry(entry)
-    setDialogOpen(true)
-  }
+    setEditEntry(entry);
+    setDialogOpen(true);
+  };
 
   const handleAdd = () => {
-    setEditEntry(null)
-    setDialogOpen(true)
-  }
+    setEditEntry(null);
+    setDialogOpen(true);
+  };
 
   return (
     <>
       <div>
-        <Card className="overflow-hidden p-0 gap-0">
+        <Card className="gap-0 overflow-hidden p-0">
           {/* Header */}
           <CardHeader
             className={cn(
-              'flex flex-row items-center justify-between py-4',
+              "flex flex-row items-center justify-between py-4",
               sectionConfig.bgClass,
               sectionConfig.borderClass,
-              'border-b',
+              "border-b"
             )}
           >
             <div className="flex items-center gap-3">
               <div
                 className={cn(
-                  'w-10 h-10 rounded-xl flex items-center justify-center bg-background shadow-sm',
+                  "flex h-10 w-10 items-center justify-center rounded-xl bg-background shadow-sm"
                 )}
               >
                 <SectionIcon
-                  className={cn('w-5 h-5', sectionConfig.colorClass)}
+                  className={cn("h-5 w-5", sectionConfig.colorClass)}
                 />
               </div>
               <div>
                 <h3 className="font-bold text-base">{sectionConfig.name}</h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   {sectionConfig.shortName}
                 </p>
               </div>
 
               {/* Loading spinner */}
               {isFetching && (
-                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               )}
 
               {/* Entry count badge */}
               {!isLoading && (
-                <Badge variant="secondary" className="ml-2">
-                  {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
+                <Badge className="ml-2" variant="secondary">
+                  {entries.length} {entries.length === 1 ? "entry" : "entries"}
                 </Badge>
               )}
 
               {/* Important count badge */}
               {importantCount > 0 && (
                 <Badge
-                  variant="secondary"
                   className="gap-1 bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+                  variant="secondary"
                 >
-                  <Star className="w-3 h-3 fill-current" />
+                  <Star className="h-3 w-3 fill-current" />
                   {importantCount}
                 </Badge>
               )}
             </div>
 
             <Button
+              className="h-9 gap-2 rounded-xl border-white/10 border-t bg-gradient-to-br from-primary via-primary to-primary/90 px-4 font-semibold text-primary-foreground shadow-[0_8px_16px_-6px_rgba(59,130,246,0.3)] transition-all duration-300 hover:to-primary hover:shadow-[0_12px_20px_-8px_rgba(59,130,246,0.4)] active:scale-95"
               onClick={handleAdd}
               size="sm"
-              className="bg-gradient-to-br from-primary via-primary to-primary/90 hover:to-primary text-primary-foreground shadow-[0_8px_16px_-6px_rgba(59,130,246,0.3)] hover:shadow-[0_12px_20px_-8px_rgba(59,130,246,0.4)] transition-all duration-300 active:scale-95 rounded-xl border-t border-white/10 gap-2 px-4 h-9 font-semibold"
             >
-              <div className="bg-white/20 rounded-md p-0.5 group-hover:bg-white/30 transition-colors">
-                <Plus className="w-3.5 h-3.5" />
+              <div className="rounded-md bg-white/20 p-0.5 transition-colors group-hover:bg-white/30">
+                <Plus className="h-3.5 w-3.5" />
               </div>
               Add Entry
             </Button>
@@ -186,7 +188,7 @@ export function SectionTable({
             {isLoading && (
               <div className="space-y-3">
                 {[1, 2].map((i) => (
-                  <div key={i} className="space-y-2">
+                  <div className="space-y-2" key={i}>
                     <Skeleton className="h-4 w-3/4" />
                     <Skeleton className="h-4 w-1/2" />
                   </div>
@@ -196,20 +198,20 @@ export function SectionTable({
 
             {/* Empty State */}
             {!isLoading && entries.length === 0 && (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                  <FolderOpen className="w-8 h-8 text-muted-foreground" />
+              <div className="py-12 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/50">
+                  <FolderOpen className="h-8 w-8 text-muted-foreground" />
                 </div>
-                <h4 className="font-semibold text-lg mb-1">No entries yet</h4>
-                <p className="text-sm text-muted-foreground mb-4">
+                <h4 className="mb-1 font-semibold text-lg">No entries yet</h4>
+                <p className="mb-4 text-muted-foreground text-sm">
                   Get started by adding a new entry to this section.
                 </p>
                 <Button
+                  className="group h-11 rounded-xl border-2 border-dashed px-8 font-semibold transition-all duration-300 hover:border-solid hover:bg-muted/50"
                   onClick={handleAdd}
                   variant="outline"
-                  className="border-dashed border-2 hover:border-solid hover:bg-muted/50 transition-all duration-300 rounded-xl px-8 h-11 font-semibold group"
                 >
-                  <Plus className="w-4 h-4 mr-2 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <Plus className="mr-2 h-4 w-4 text-muted-foreground transition-colors group-hover:text-primary" />
                   Add First Entry
                 </Button>
               </div>
@@ -222,11 +224,11 @@ export function SectionTable({
                   <div key={entry.id}>
                     <EntryCard
                       entry={entry}
-                      teamId={teamId}
+                      groupApplications={groupApplications}
                       onEdit={handleEdit}
                       // Show app badge when grouped to identify which app the entry belongs to
                       showApplicationBadge={isGrouped}
-                      groupApplications={groupApplications}
+                      teamId={teamId}
                     />
                   </div>
                 ))}
@@ -238,19 +240,21 @@ export function SectionTable({
 
       {/* Entry Dialog */}
       <EntryDialog
-        open={dialogOpen}
-        onOpenChange={(open) => {
-          setDialogOpen(open)
-          if (!open) setEditEntry(null)
-        }}
-        teamId={teamId}
         applicationId={applicationId}
-        section={section}
         editEntry={editEntry}
-        // Pass group info for application selector
-        isGrouped={isGrouped}
         groupApplications={groupApplications}
+        isGrouped={isGrouped}
+        onOpenChange={(open) => {
+          setDialogOpen(open);
+          if (!open) {
+            setEditEntry(null);
+          }
+        }}
+        open={dialogOpen}
+        // Pass group info for application selector
+        section={section}
+        teamId={teamId}
       />
     </>
-  )
+  );
 }

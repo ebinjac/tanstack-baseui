@@ -1,9 +1,8 @@
-import React from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { toast } from 'sonner'
-import { Loader2, Trash2 } from 'lucide-react'
-import type { ScorecardEntry } from './types'
-import { Button } from '@/components/ui/button'
+import { useMutation } from "@tanstack/react-query";
+import { Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { deleteScorecardEntry } from "@/app/actions/scorecard";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,14 +10,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { deleteScorecardEntry } from '@/app/actions/scorecard'
+} from "@/components/ui/dialog";
+import type { ScorecardEntry } from "./types";
 
 interface DeleteEntryDialogProps {
-  entry: ScorecardEntry
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+  entry: ScorecardEntry;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+  open: boolean;
 }
 
 export function DeleteEntryDialog({
@@ -30,16 +29,16 @@ export function DeleteEntryDialog({
   const deleteMutation = useMutation({
     mutationFn: deleteScorecardEntry,
     onSuccess: () => {
-      toast.success('Entry deleted successfully')
-      onSuccess()
+      toast.success("Entry deleted successfully");
+      onSuccess();
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'Failed to delete entry')
+      toast.error(err.message || "Failed to delete entry");
     },
-  })
+  });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
@@ -47,22 +46,22 @@ export function DeleteEntryDialog({
             Delete Entry
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete{' '}
+            Are you sure you want to delete{" "}
             <span className="font-semibold">{entry.name}</span>? This will also
             delete all associated availability and volume data. This action
             cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button onClick={() => onOpenChange(false)} variant="outline">
             Cancel
           </Button>
           <Button
-            variant="destructive"
+            disabled={deleteMutation.isPending}
             onClick={() =>
               deleteMutation.mutate({ data: { entryId: entry.id } })
             }
-            disabled={deleteMutation.isPending}
+            variant="destructive"
           >
             {deleteMutation.isPending && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -72,5 +71,5 @@ export function DeleteEntryDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

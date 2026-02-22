@@ -1,83 +1,83 @@
 // Enterprise Scorecard Type Definitions
 
 export interface Team {
-  id: string
-  teamName: string
+  id: string;
+  teamName: string;
 }
 
 export interface Application {
-  id: string
-  teamId: string
-  applicationName: string
-  tla: string
-  tier: string | null
-  assetId: number
-  ownerSvpName: string | null
-  vpName: string | null
-  directorName: string | null
-  applicationOwnerName: string | null
-  applicationManagerName: string | null
-  unitCioName: string | null
+  applicationManagerName: string | null;
+  applicationName: string;
+  applicationOwnerName: string | null;
+  assetId: number;
+  directorName: string | null;
+  id: string;
+  ownerSvpName: string | null;
+  teamId: string;
+  tier: string | null;
+  tla: string;
+  unitCioName: string | null;
+  vpName: string | null;
 }
 
 export interface ScorecardEntry {
-  id: string
-  applicationId: string
-  scorecardIdentifier: string
-  name: string
-  availabilityThreshold: string
-  volumeChangeThreshold: string
+  applicationId: string;
+  availabilityThreshold: string;
+  id: string;
+  name: string;
+  scorecardIdentifier: string;
+  volumeChangeThreshold: string;
 }
 
 export interface AvailabilityRecord {
-  id: string
-  scorecardEntryId: string
-  year: number
-  month: number
-  availability: string
-  reason: string | null
+  availability: string;
+  id: string;
+  month: number;
+  reason: string | null;
+  scorecardEntryId: string;
+  year: number;
 }
 
 export interface VolumeRecord {
-  id: string
-  scorecardEntryId: string
-  year: number
-  month: number
-  volume: number
-  reason: string | null
+  id: string;
+  month: number;
+  reason: string | null;
+  scorecardEntryId: string;
+  volume: number;
+  year: number;
 }
 
 export interface LeadershipOptions {
-  svp?: Array<string | null>
-  vp?: Array<string | null>
-  director?: Array<string | null>
-  appOwner?: Array<string | null>
-  appManager?: Array<string | null>
-  unitCio?: Array<string | null>
+  appManager?: Array<string | null>;
+  appOwner?: Array<string | null>;
+  director?: Array<string | null>;
+  svp?: Array<string | null>;
+  unitCio?: Array<string | null>;
+  vp?: Array<string | null>;
 }
 
 export interface ScorecardData {
-  teams: Array<Team>
-  applications: Array<Application>
-  entries: Array<ScorecardEntry>
-  availability: Array<AvailabilityRecord>
-  volume: Array<VolumeRecord>
-  leadershipOptions: LeadershipOptions
+  applications: Application[];
+  availability: AvailabilityRecord[];
+  entries: ScorecardEntry[];
+  leadershipOptions: LeadershipOptions;
+  teams: Team[];
+  volume: VolumeRecord[];
 }
 
 export interface ScorecardStats {
-  teams: number
-  apps: number
-  entries: number
-  availBreaches: number
+  apps: number;
+  availBreaches: number;
+  entries: number;
+  teams: number;
 }
 
 export interface LeadershipDisplay {
-  role: string
-  name: string
+  name: string;
+  role: string;
 }
 
 export interface VisibleMonth {
-  month: number
-  year: number
+  month: number;
+  year: number;
 }

@@ -1,6 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   Activity,
   Building2,
@@ -8,19 +7,38 @@ import {
   Loader2,
   RotateCcw,
   X,
-} from 'lucide-react'
-import type {Application, AvailabilityRecord, ScorecardEntry, ScorecardStats, Team, VolumeRecord} from '@/components/enterprise-scorecard';
-import { PageHeader } from '@/components/shared'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { getGlobalScorecardData } from "@/app/actions/scorecard";
+import type {
+  Application,
+  AvailabilityRecord,
+  ScorecardEntry,
+  ScorecardStats,
+  Team,
+  VolumeRecord,
+} from "@/components/enterprise-scorecard";
+// Import enterprise scorecard components
+import {
+  CURRENT_MONTH,
+  CURRENT_YEAR,
+  EnterpriseFilters,
+  EntryRows,
+  MONTHS,
+  StatsSummary,
+  TeamSection,
+} from "@/components/enterprise-scorecard";
+import { PageHeader } from "@/components/shared";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
-} from '@/components/ui/drawer'
+} from "@/components/ui/drawer";
 import {
   Table,
   TableBody,
@@ -28,84 +46,70 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { cn } from '@/lib/utils'
-import { getGlobalScorecardData } from '@/app/actions/scorecard'
-import { EmptyState } from '@/components/shared/empty-state'
-import { scorecardKeys } from '@/lib/query-keys'
+} from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { scorecardKeys } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
 
-// Import enterprise scorecard components
-import {
-  
-  
-  CURRENT_MONTH,
-  CURRENT_YEAR,
-  EnterpriseFilters,
-  EntryRows,
-  MONTHS,
-  
-  
-  StatsSummary,
-  
-  TeamSection
-  
-} from '@/components/enterprise-scorecard'
-
-export const Route = createFileRoute('/scorecard')({
+export const Route = createFileRoute("/scorecard")({
   component: GlobalScorecardPage,
-})
+});
 
 function GlobalScorecardPage() {
-  const [selectedYear, setSelectedYear] = useState<number>(CURRENT_YEAR)
-  const [leadershipType, setLeadershipType] = useState<string>('all')
-  const [leadershipSearch, setLeadershipSearch] = useState<string>('')
-  const [teamSearch, setTeamSearch] = useState<string>('')
-  const [appSearch, setAppSearch] = useState<string>('')
-  const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set())
-  const [expandedApps, setExpandedApps] = useState<Set<string>>(new Set())
-  const [viewTeam, setViewTeam] = useState<Team | null>(null)
-  const [drawerRange, setDrawerRange] = useState<string>('full')
+  const [selectedYear, setSelectedYear] = useState<number>(CURRENT_YEAR);
+  const [leadershipType, setLeadershipType] = useState<string>("all");
+  const [leadershipSearch, setLeadershipSearch] = useState<string>("");
+  const [teamSearch, setTeamSearch] = useState<string>("");
+  const [appSearch, setAppSearch] = useState<string>("");
+  const [expandedTeams, setExpandedTeams] = useState<Set<string>>(new Set());
+  const [expandedApps, setExpandedApps] = useState<Set<string>>(new Set());
+  const [viewTeam, setViewTeam] = useState<Team | null>(null);
+  const [drawerRange, setDrawerRange] = useState<string>("full");
 
   // Calculate visible months for the drawer/detail view
   const visibleMonths = useMemo(() => {
-    if (drawerRange === 'full') {
-      return MONTHS.map((_, i) => ({ month: i + 1, year: selectedYear }))
+    if (drawerRange === "full") {
+      return MONTHS.map((_, i) => ({ month: i + 1, year: selectedYear }));
     }
 
-    const isCurrentYear = selectedYear === CURRENT_YEAR
-    const endMonth = isCurrentYear ? CURRENT_MONTH : 12
+    const isCurrentYear = selectedYear === CURRENT_YEAR;
+    const endMonth = isCurrentYear ? CURRENT_MONTH : 12;
 
-    if (drawerRange === 'ytd') {
+    if (drawerRange === "ytd") {
       return Array.from({ length: endMonth }, (_, i) => ({
         month: i + 1,
         year: selectedYear,
-      }))
+      }));
     }
 
-    let count = 3
-    if (drawerRange === 'last6') count = 6
-    if (drawerRange === 'last12') count = 12
+    let count = 3;
+    if (drawerRange === "last6") {
+      count = 6;
+    }
+    if (drawerRange === "last12") {
+      count = 12;
+    }
 
-    const result: Array<{ month: number; year: number }> = []
-    let currM = endMonth
-    let currY = selectedYear
+    const result: Array<{ month: number; year: number }> = [];
+    let currM = endMonth;
+    let currY = selectedYear;
 
     for (let i = 0; i < count; i++) {
-      result.unshift({ month: currM, year: currY })
-      currM--
+      result.unshift({ month: currM, year: currY });
+      currM--;
       if (currM < 1) {
-        currM = 12
-        currY--
+        currM = 12;
+        currY--;
       }
     }
-    return result
-  }, [drawerRange, selectedYear])
+    return result;
+  }, [drawerRange, selectedYear]);
 
   // Fetch global scorecard data
   const { data: scorecardData, isLoading } = useQuery({
     queryKey: scorecardKeys.global.filtered({
       year: selectedYear,
-      leadershipType: leadershipType !== 'all' ? leadershipType : undefined,
+      leadershipType: leadershipType !== "all" ? leadershipType : undefined,
       leadershipSearch: leadershipSearch || undefined,
     }),
     queryFn: () =>
@@ -113,228 +117,239 @@ function GlobalScorecardPage() {
         data: {
           year: selectedYear,
           leadershipFilter: leadershipSearch || undefined,
-          leadershipType: leadershipType !== 'all' ? leadershipType : undefined,
+          leadershipType: leadershipType !== "all" ? leadershipType : undefined,
         },
       }),
-  })
+  });
 
   // Build lookup maps and apply client-side team/app filtering
   const { appsByTeam, entriesByApp, availabilityByEntry, volumeByEntry } =
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: builds multiple lookup maps from scorecard data
     useMemo(() => {
-      const appsByTeam: Record<string, Array<Application>> = {}
-      const entriesByApp: Record<string, Array<ScorecardEntry>> = {}
+      const appsByTeam: Record<string, Application[]> = {};
+      const entriesByApp: Record<string, ScorecardEntry[]> = {};
       const availabilityByEntry: Record<
         string,
         Record<string, AvailabilityRecord>
-      > = {}
-      const volumeByEntry: Record<string, Record<string, VolumeRecord>> = {}
+      > = {};
+      const volumeByEntry: Record<string, Record<string, VolumeRecord>> = {};
 
       // Filter apps by name if search is active
       const filteredApps = (scorecardData?.applications || []).filter(
         (app: Application) => {
           const matchesApp =
             !appSearch ||
-            app.applicationName.toLowerCase().includes(appSearch.toLowerCase())
+            app.applicationName.toLowerCase().includes(appSearch.toLowerCase());
           const team = (scorecardData?.teams || []).find(
-            (t: Team) => t.id === app.teamId,
-          )
+            (t: Team) => t.id === app.teamId
+          );
           const matchesTeam =
             !teamSearch ||
-            team?.teamName.toLowerCase().includes(teamSearch.toLowerCase())
-          return matchesApp && matchesTeam
-        },
-      )
+            team?.teamName.toLowerCase().includes(teamSearch.toLowerCase());
+          return matchesApp && matchesTeam;
+        }
+      );
 
-      filteredApps.forEach((app: Application) => {
+      for (const app of filteredApps) {
         if (!appsByTeam[app.teamId]) {
-          appsByTeam[app.teamId] = []
+          appsByTeam[app.teamId] = [];
         }
-        appsByTeam[app.teamId].push(app)
-      })
+        appsByTeam[app.teamId].push(app);
+      }
 
-      scorecardData?.entries?.forEach((entry: ScorecardEntry) => {
+      for (const entry of scorecardData?.entries || []) {
         if (!entriesByApp[entry.applicationId]) {
-          entriesByApp[entry.applicationId] = []
+          entriesByApp[entry.applicationId] = [];
         }
-        entriesByApp[entry.applicationId].push(entry)
-      })
+        entriesByApp[entry.applicationId].push(entry);
+      }
 
-      scorecardData?.availability?.forEach((av: AvailabilityRecord) => {
+      for (const av of scorecardData?.availability || []) {
         if (!availabilityByEntry[av.scorecardEntryId]) {
-          availabilityByEntry[av.scorecardEntryId] = {}
+          availabilityByEntry[av.scorecardEntryId] = {};
         }
-        availabilityByEntry[av.scorecardEntryId][`${av.year}-${av.month}`] = av
-      })
+        availabilityByEntry[av.scorecardEntryId][`${av.year}-${av.month}`] = av;
+      }
 
-      scorecardData?.volume?.forEach((vol: VolumeRecord) => {
+      for (const vol of scorecardData?.volume || []) {
         if (!volumeByEntry[vol.scorecardEntryId]) {
-          volumeByEntry[vol.scorecardEntryId] = {}
+          volumeByEntry[vol.scorecardEntryId] = {};
         }
-        volumeByEntry[vol.scorecardEntryId][`${vol.year}-${vol.month}`] = vol
-      })
+        volumeByEntry[vol.scorecardEntryId][`${vol.year}-${vol.month}`] = vol;
+      }
 
-      return { appsByTeam, entriesByApp, availabilityByEntry, volumeByEntry }
-    }, [scorecardData, teamSearch, appSearch])
+      return { appsByTeam, entriesByApp, availabilityByEntry, volumeByEntry };
+    }, [scorecardData, teamSearch, appSearch]);
 
   // Teams with data after filtering
   const teamsWithApps = useMemo(() => {
     return (scorecardData?.teams || [])
       .filter((team: Team) => appsByTeam[team.id]?.length > 0)
-      .sort((a: Team, b: Team) => a.teamName.localeCompare(b.teamName))
-  }, [scorecardData, appsByTeam])
+      .sort((a: Team, b: Team) => a.teamName.localeCompare(b.teamName));
+  }, [scorecardData, appsByTeam]);
 
   // Auto-expand all teams when data loads
   useEffect(() => {
     if (teamsWithApps.length > 0) {
-      setExpandedTeams(new Set(teamsWithApps.map((t: Team) => t.id)))
+      setExpandedTeams(new Set(teamsWithApps.map((t: Team) => t.id)));
     }
-  }, [teamsWithApps])
+  }, [teamsWithApps]);
 
   // Stats
   const stats: ScorecardStats = useMemo(() => {
-    const teams = teamsWithApps.length
-    const apps = scorecardData?.applications?.length || 0
-    const entries = scorecardData?.entries?.length || 0
+    const teams = teamsWithApps.length;
+    const apps = scorecardData?.applications?.length || 0;
+    const entries = scorecardData?.entries?.length || 0;
 
-    let availBreaches = 0
-    scorecardData?.entries?.forEach((entry: ScorecardEntry) => {
-      const threshold = parseFloat(entry.availabilityThreshold)
-      const entryAvail = availabilityByEntry[entry.id] || {}
-      Object.values(entryAvail).forEach((av: AvailabilityRecord) => {
-        if (parseFloat(av.availability) < threshold) {
-          availBreaches++
+    let availBreaches = 0;
+    for (const entry of scorecardData?.entries || []) {
+      const threshold = Number.parseFloat(entry.availabilityThreshold);
+      const entryAvail = availabilityByEntry[entry.id] || {};
+      for (const av of Object.values(entryAvail)) {
+        if (Number.parseFloat(av.availability) < threshold) {
+          availBreaches++;
         }
-      })
-    })
+      }
+    }
 
-    return { teams, apps, entries, availBreaches }
-  }, [teamsWithApps, scorecardData, availabilityByEntry])
+    return { teams, apps, entries, availBreaches };
+  }, [teamsWithApps, scorecardData, availabilityByEntry]);
 
   const toggleTeam = (teamId: string) => {
     setExpandedTeams((prev) => {
-      const next = new Set(prev)
+      const next = new Set(prev);
       if (next.has(teamId)) {
-        next.delete(teamId)
+        next.delete(teamId);
       } else {
-        next.add(teamId)
+        next.add(teamId);
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   const toggleApp = (appId: string) => {
     setExpandedApps((prev) => {
-      const next = new Set(prev)
+      const next = new Set(prev);
       if (next.has(appId)) {
-        next.delete(appId)
+        next.delete(appId);
       } else {
-        next.add(appId)
+        next.add(appId);
       }
-      return next
-    })
-  }
+      return next;
+    });
+  };
 
   // Get leadership display for an application
   const getLeadershipDisplay = (app: Application) => {
-    const leaders: Array<{ role: string; name: string }> = []
-    if (app.ownerSvpName) leaders.push({ role: 'SVP', name: app.ownerSvpName })
-    if (app.vpName) leaders.push({ role: 'VP', name: app.vpName })
-    if (app.directorName) leaders.push({ role: 'Dir', name: app.directorName })
-    if (app.applicationOwnerName)
-      leaders.push({ role: 'Owner', name: app.applicationOwnerName })
-    return leaders.slice(0, 3)
-  }
+    const leaders: Array<{ role: string; name: string }> = [];
+    if (app.ownerSvpName) {
+      leaders.push({ role: "SVP", name: app.ownerSvpName });
+    }
+    if (app.vpName) {
+      leaders.push({ role: "VP", name: app.vpName });
+    }
+    if (app.directorName) {
+      leaders.push({ role: "Dir", name: app.directorName });
+    }
+    if (app.applicationOwnerName) {
+      leaders.push({ role: "Owner", name: app.applicationOwnerName });
+    }
+    return leaders.slice(0, 3);
+  };
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: CSV export requires nested iteration
   const handleExportCSV = (team: Team) => {
-    const apps = appsByTeam[team.id] || []
-    let csv = 'Ensemble Scorecard Report\n'
-    csv += `Team: ${team.teamName}\n`
-    csv += `Year: ${selectedYear}\n`
-    csv += `Range: ${drawerRange.toUpperCase()}\n\n`
+    const apps = appsByTeam[team.id] || [];
+    let csv = "Ensemble Scorecard Report\n";
+    csv += `Team: ${team.teamName}\n`;
+    csv += `Year: ${selectedYear}\n`;
+    csv += `Range: ${drawerRange.toUpperCase()}\n\n`;
 
     csv +=
-      'Application,Asset ID,Metric,Identifier,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec,Average/Total\n'
+      "Application,Asset ID,Metric,Identifier,Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec,Average/Total\n";
 
-    apps.forEach((app) => {
-      const entries = entriesByApp[app.id] || []
-      entries.forEach((entry) => {
+    for (const app of apps) {
+      const entries = entriesByApp[app.id] || [];
+      for (const entry of entries) {
         // Availability row
-        let availRow = `"${app.applicationName}",${app.assetId},"${entry.name} (Availability)","${entry.scorecardIdentifier}"`
-        let sumAvail = 0
-        let countAvail = 0
+        let availRow = `"${app.applicationName}",${app.assetId},"${entry.name} (Availability)","${entry.scorecardIdentifier}"`;
+        let sumAvail = 0;
+        let countAvail = 0;
         for (let m = 1; m <= 12; m++) {
-          const key = `${selectedYear}-${m}`
-          const val = availabilityByEntry[entry.id]?.[key]?.availability
-          availRow += `,${val ? parseFloat(val).toFixed(2) : ''}`
+          const key = `${selectedYear}-${m}`;
+          const val = availabilityByEntry[entry.id]?.[key]?.availability;
+          availRow += `,${val ? Number.parseFloat(val).toFixed(2) : ""}`;
           if (val) {
-            sumAvail += parseFloat(val)
-            countAvail++
+            sumAvail += Number.parseFloat(val);
+            countAvail++;
           }
         }
         csv +=
           availRow +
-          `,${countAvail > 0 ? (sumAvail / countAvail).toFixed(2) : ''}\n`
+          `,${countAvail > 0 ? (sumAvail / countAvail).toFixed(2) : ""}\n`;
 
         // Volume row
-        let volRow = `"",,,"${entry.name} (Volume)",""`
-        let totalVol = 0
+        let volRow = `"",,,"${entry.name} (Volume)",""`;
+        let totalVol = 0;
         for (let m = 1; m <= 12; m++) {
-          const key = `${selectedYear}-${m}`
-          const val = volumeByEntry[entry.id]?.[key]?.volume
-          volRow += `,${val || ''}`
-          if (val) totalVol += val
+          const key = `${selectedYear}-${m}`;
+          const val = volumeByEntry[entry.id]?.[key]?.volume;
+          volRow += `,${val || ""}`;
+          if (val) {
+            totalVol += val;
+          }
         }
-        csv += volRow + `,${totalVol}\n`
-      })
-    })
+        csv += `${volRow},${totalVol}\n`;
+      }
+    }
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.setAttribute('href', url)
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
     link.setAttribute(
-      'download',
-      `${team.teamName.replace(/\s+/g, '_')}_Scorecard_${selectedYear}.csv`,
-    )
-    link.style.visibility = 'hidden'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+      "download",
+      `${team.teamName.replace(/\s+/g, "_")}_Scorecard_${selectedYear}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleClearAllFilters = () => {
-    setLeadershipType('all')
-    setLeadershipSearch('')
-    setTeamSearch('')
-    setAppSearch('')
-  }
+    setLeadershipType("all");
+    setLeadershipSearch("");
+    setTeamSearch("");
+    setAppSearch("");
+  };
 
   return (
-    <div className="container mx-auto py-8 px-6 max-w-7xl space-y-8 animate-in fade-in duration-500">
+    <div className="fade-in container mx-auto max-w-7xl animate-in space-y-8 px-6 py-8 duration-500">
       {/* Premium Admin Header Banner */}
       <PageHeader
-        title="Enterprise Scorecard"
         description={
           <>
-            Global performance metrics and compliance across{' '}
-            <span className="text-white font-bold">{teamsWithApps.length}</span>{' '}
+            Global performance metrics and compliance across{" "}
+            <span className="font-bold text-white">{teamsWithApps.length}</span>{" "}
             active teams.
           </>
         }
+        title="Enterprise Scorecard"
       >
         <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white"
-          onClick={handleClearAllFilters}
+          className="gap-2 border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white"
           disabled={
             !isLoading &&
             teamsWithApps.length === scorecardData?.teams?.length &&
-            leadershipType === 'all' &&
+            leadershipType === "all" &&
             !leadershipSearch &&
             !teamSearch &&
             !appSearch
           }
+          onClick={handleClearAllFilters}
+          size="sm"
+          variant="outline"
         >
           <RotateCcw className="h-4 w-4" />
           Reset All
@@ -347,98 +362,100 @@ function GlobalScorecardPage() {
       {/* Structured Search & Filters */}
       <div>
         <EnterpriseFilters
-          selectedYear={selectedYear}
-          leadershipType={leadershipType}
-          leadershipSearch={leadershipSearch}
-          teamSearch={teamSearch}
+          applications={scorecardData?.applications || []}
           appSearch={appSearch}
-          onYearChange={setSelectedYear}
-          onLeadershipTypeChange={setLeadershipType}
-          onLeadershipSearchChange={setLeadershipSearch}
-          onTeamSearchChange={setTeamSearch}
+          leadershipOptions={scorecardData?.leadershipOptions}
+          leadershipSearch={leadershipSearch}
+          leadershipType={leadershipType}
           onAppSearchChange={setAppSearch}
           onClearAll={handleClearAllFilters}
+          onLeadershipSearchChange={setLeadershipSearch}
+          onLeadershipTypeChange={setLeadershipType}
+          onTeamSearchChange={setTeamSearch}
+          onYearChange={setSelectedYear}
+          selectedYear={selectedYear}
+          teamSearch={teamSearch}
           teams={scorecardData?.teams || []}
-          applications={scorecardData?.applications || []}
-          leadershipOptions={scorecardData?.leadershipOptions}
         />
       </div>
 
       {/* Team Scorecards List */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 font-semibold text-foreground text-sm">
             <Building2 className="h-4 w-4 text-muted-foreground" />
             Teams ({teamsWithApps.length})
           </h2>
         </div>
 
-        <div className="border rounded-lg divide-y">
-          {isLoading ? (
+        <div className="divide-y rounded-lg border">
+          {isLoading && (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : teamsWithApps.length === 0 ? (
+          )}
+          {!isLoading && teamsWithApps.length === 0 && (
             <EmptyState
-              icon={Activity}
-              title="No teams match your filters"
               description="Try adjusting your search criteria or clear filters."
-              variant="search"
+              icon={Activity}
               size="md"
+              title="No teams match your filters"
+              variant="search"
             />
-          ) : (
+          )}
+          {!isLoading &&
+            teamsWithApps.length > 0 &&
             teamsWithApps.map((team: Team) => (
               <TeamSection
-                key={team.id}
-                team={team}
-                isExpanded={expandedTeams.has(team.id)}
-                onToggle={() => toggleTeam(team.id)}
                 applications={appsByTeam[team.id] || []}
-                entriesByApp={entriesByApp}
                 availabilityByEntry={availabilityByEntry}
-                volumeByEntry={volumeByEntry}
+                entriesByApp={entriesByApp}
                 expandedApps={expandedApps}
-                onToggleApp={toggleApp}
-                selectedYear={selectedYear}
                 getLeadershipDisplay={getLeadershipDisplay}
+                isExpanded={expandedTeams.has(team.id)}
+                key={team.id}
+                onToggle={() => toggleTeam(team.id)}
+                onToggleApp={toggleApp}
                 onViewFull={() => setViewTeam(team)}
+                selectedYear={selectedYear}
+                team={team}
+                volumeByEntry={volumeByEntry}
               />
-            ))
-          )}
+            ))}
         </div>
       </div>
 
       {/* Team Scorecard Drawer */}
       <Drawer
-        open={!!viewTeam}
-        onOpenChange={(open) => !open && setViewTeam(null)}
         direction="right"
+        onOpenChange={(open) => !open && setViewTeam(null)}
+        open={!!viewTeam}
       >
-        <DrawerContent className="h-full w-screen !max-w-full p-0 flex flex-col focus:outline-none rounded-none border-none shadow-none">
+        <DrawerContent className="!max-w-full flex h-full w-screen flex-col rounded-none border-none p-0 shadow-none focus:outline-none">
           {viewTeam && (
-            <div className="flex flex-col h-full bg-background rounded-l-3xl overflow-hidden">
-              <DrawerHeader className="p-6 border-b bg-muted/20 shrink-0">
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex h-full flex-col overflow-hidden rounded-l-3xl bg-background">
+              <DrawerHeader className="shrink-0 border-b bg-muted/20 p-6">
+                <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
                   <div className="flex items-center gap-6">
-                    <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/20 shadow-sm">
+                    <div className="rounded-2xl border border-primary/20 bg-primary/10 p-3 text-primary shadow-sm">
                       <Building2 className="h-7 w-7" />
                     </div>
                     <div>
-                      <DrawerTitle className="text-2xl font-bold tracking-tight flex items-center gap-3">
+                      <DrawerTitle className="flex items-center gap-3 font-bold text-2xl tracking-tight">
                         {viewTeam.teamName}
                       </DrawerTitle>
-                      <DrawerDescription className="text-sm font-medium text-muted-foreground mt-1">
-                        Enterprise Performance Report •{' '}
-                        <span className="text-foreground font-bold">
+                      <DrawerDescription className="mt-1 font-medium text-muted-foreground text-sm">
+                        Enterprise Performance Report •{" "}
+                        <span className="font-bold text-foreground">
                           {selectedYear}
                         </span>
                       </DrawerDescription>
                     </div>
 
-                    <div className="h-10 w-px bg-border mx-2 hidden md:block" />
+                    <div className="mx-2 hidden h-10 w-px bg-border md:block" />
 
                     {/* Range Selector */}
-                    <Tabs value={drawerRange} onValueChange={setDrawerRange}>
+                    <Tabs onValueChange={setDrawerRange} value={drawerRange}>
                       <TabsList>
                         <TabsTrigger value="full">Full Year</TabsTrigger>
                         <TabsTrigger value="ytd">YTD</TabsTrigger>
@@ -450,19 +467,19 @@ function GlobalScorecardPage() {
 
                   <div className="flex items-center gap-3">
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExportCSV(viewTeam)}
                       className="gap-2"
+                      onClick={() => handleExportCSV(viewTeam)}
+                      size="sm"
+                      variant="outline"
                     >
                       <FileSpreadsheet className="h-4 w-4 text-green-600" />
                       CSV Export
                     </Button>
 
                     <Button
-                      variant="ghost"
-                      size="icon"
                       onClick={() => setViewTeam(null)}
+                      size="icon"
+                      variant="ghost"
                     >
                       <X className="h-5 w-5" />
                     </Button>
@@ -470,54 +487,54 @@ function GlobalScorecardPage() {
                 </div>
               </DrawerHeader>
 
-              <div className="flex-1 overflow-y-auto p-8 space-y-10 pb-20 max-w-7xl mx-auto w-full">
+              <div className="mx-auto w-full max-w-7xl flex-1 space-y-10 overflow-y-auto p-8 pb-20">
                 {(appsByTeam[viewTeam.id] || []).map((app) => (
-                  <div key={app.id} className="space-y-6">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border/50 pb-4">
+                  <div className="space-y-6" key={app.id}>
+                    <div className="flex flex-col justify-between gap-6 border-border/50 border-b pb-4 md:flex-row md:items-center">
                       <div className="flex items-center gap-5">
-                        <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-sm">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 shadow-sm">
                           <Activity className="h-6 w-6 text-primary" />
                         </div>
                         <div>
                           <div className="flex items-center gap-3">
-                            <h3 className="text-xl font-bold tracking-tight">
+                            <h3 className="font-bold text-xl tracking-tight">
                               {app.applicationName}
                             </h3>
                             <Badge
+                              className="h-5 px-2 font-bold text-[10px] uppercase tracking-widest"
                               variant="outline"
-                              className="text-[10px] font-bold uppercase tracking-widest px-2 h-5"
                             >
                               {app.tla}
                             </Badge>
                             {app.tier &&
-                              ['0', '1', '2'].includes(String(app.tier)) && (
-                                <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[10px] font-bold h-5 px-2">
+                              ["0", "1", "2"].includes(String(app.tier)) && (
+                                <Badge className="h-5 border-red-500/20 bg-red-500/10 px-2 font-bold text-[10px] text-red-600">
                                   Tier {app.tier}
                                 </Badge>
                               )}
                           </div>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
-                            {getLeadershipDisplay(app).map((l, i) => (
+                          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                            {getLeadershipDisplay(app).map((l) => (
                               <div
-                                key={i}
-                                className="flex items-center gap-1.5 grayscale opacity-70"
+                                className="flex items-center gap-1.5 opacity-70 grayscale"
+                                key={`${l.role}-${l.name}`}
                               >
-                                <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">
+                                <span className="font-bold text-[10px] uppercase tracking-wider opacity-60">
                                   {l.role}:
                                 </span>
-                                <span className="text-[11px] font-bold text-foreground">
+                                <span className="font-bold text-[11px] text-foreground">
                                   {l.name}
                                 </span>
                               </div>
                             ))}
-                            <span className="text-muted-foreground/30 hidden md:block">
+                            <span className="hidden text-muted-foreground/30 md:block">
                               •
                             </span>
                             <div className="flex items-center gap-1.5 opacity-60">
-                              <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">
+                              <span className="font-bold text-[10px] uppercase tracking-wider opacity-60">
                                 Asset ID:
                               </span>
-                              <span className="text-[11px] font-mono font-bold text-foreground">
+                              <span className="font-bold font-mono text-[11px] text-foreground">
                                 {app.assetId}
                               </span>
                             </div>
@@ -526,40 +543,40 @@ function GlobalScorecardPage() {
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-border/50 shadow-xl overflow-hidden bg-card/30 backdrop-blur-md">
+                    <div className="overflow-hidden rounded-2xl border border-border/50 bg-card/30 shadow-xl backdrop-blur-md">
                       <Table>
                         <TableHeader className="bg-muted/50">
-                          <TableRow className="hover:bg-transparent border-b-border/30">
-                            <TableHead className="w-[240px] font-bold text-[10px] uppercase tracking-wider py-3 pl-6">
+                          <TableRow className="border-b-border/30 hover:bg-transparent">
+                            <TableHead className="w-[240px] py-3 pl-6 font-bold text-[10px] uppercase tracking-wider">
                               Metric Configuration
                             </TableHead>
-                            <TableHead className="w-[60px] font-bold text-[10px] uppercase tracking-wider py-3">
+                            <TableHead className="w-[60px] py-3 font-bold text-[10px] uppercase tracking-wider">
                               Core
                             </TableHead>
                             {visibleMonths.map((vm) => {
                               const isFutureMonth =
                                 vm.year === CURRENT_YEAR &&
-                                vm.month > CURRENT_MONTH
+                                vm.month > CURRENT_MONTH;
                               return (
                                 <TableHead
-                                  key={`${vm.year}-${vm.month}`}
                                   className={cn(
-                                    'text-center font-bold text-[10px] uppercase tracking-wider py-3',
-                                    isFutureMonth && 'text-muted-foreground/40',
+                                    "py-3 text-center font-bold text-[10px] uppercase tracking-wider",
+                                    isFutureMonth && "text-muted-foreground/40"
                                   )}
+                                  key={`${vm.year}-${vm.month}`}
                                 >
                                   <div className="flex flex-col leading-none">
                                     <span>{MONTHS[vm.month - 1]}</span>
                                     {vm.year !== selectedYear && (
-                                      <span className="text-[8px] opacity-60 mt-1">
+                                      <span className="mt-1 text-[8px] opacity-60">
                                         {vm.year}
                                       </span>
                                     )}
                                   </div>
                                 </TableHead>
-                              )
+                              );
                             })}
-                            <TableHead className="text-center font-bold text-[10px] uppercase tracking-wider py-3 bg-primary/5 text-primary pr-6">
+                            <TableHead className="bg-primary/5 py-3 pr-6 text-center font-bold text-[10px] text-primary uppercase tracking-wider">
                               Performance
                             </TableHead>
                           </TableRow>
@@ -567,20 +584,20 @@ function GlobalScorecardPage() {
                         <TableBody>
                           {(entriesByApp[app.id] || []).map((entry) => (
                             <EntryRows
-                              key={entry.id}
-                              entry={entry}
                               availability={availabilityByEntry[entry.id] || {}}
-                              volume={volumeByEntry[entry.id] || {}}
+                              entry={entry}
+                              key={entry.id}
                               selectedYear={selectedYear}
                               visibleMonths={visibleMonths}
+                              volume={volumeByEntry[entry.id] || {}}
                             />
                           ))}
                           {(!entriesByApp[app.id] ||
                             entriesByApp[app.id].length === 0) && (
                             <TableRow>
                               <TableCell
+                                className="h-32 text-center font-medium text-muted-foreground italic"
                                 colSpan={visibleMonths.length + 3}
-                                className="h-32 text-center text-muted-foreground italic font-medium"
                               >
                                 No active metrics registered for this
                                 application
@@ -598,5 +615,5 @@ function GlobalScorecardPage() {
         </DrawerContent>
       </Drawer>
     </div>
-  )
+  );
 }

@@ -7,16 +7,23 @@
  * @see skills/react-best-practices/rules/hook-extract-logic.md
  */
 
-import { useCallback, useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { toast } from 'sonner'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { publishScorecard, unpublishScorecard } from "@/app/actions/scorecard";
+import { useYearSelection } from "@/hooks/use-date-range";
+import { useExpandState } from "@/hooks/use-expand-state";
+import { scorecardKeys } from "@/lib/query-keys";
 import {
-  MONTH_NAMES,
-  TIME_PERIOD_OPTIONS,
+  scorecardDataOptions,
+  scorecardPublishStatusOptions,
+} from "@/lib/query-options";
+import {
   currentYear,
   getMonthsForPeriod,
   getMonthsForYear,
-} from './constants'
+  TIME_PERIOD_OPTIONS,
+} from "./constants";
 import type {
   Application,
   AvailabilityRecord,
@@ -25,363 +32,389 @@ import type {
   TimePeriod,
   ViewMode,
   VolumeRecord,
-} from './types'
-import { useExpandState } from '@/hooks/use-expand-state'
-import { useYearSelection } from '@/hooks/use-date-range'
-import { scorecardKeys } from '@/lib/query-keys'
-import {
-  scorecardDataOptions,
-  scorecardPublishStatusOptions,
-} from '@/lib/query-options'
-import {
-  getPublishStatus,
-  getScorecardData,
-  publishScorecard,
-  unpublishScorecard,
-} from '@/app/actions/scorecard'
+} from "./types";
 
 export interface UseScorecardOptions {
-  teamId: string
-  isAdmin: boolean
+  isAdmin: boolean;
+  teamId: string;
 }
 
 export interface ScorecardData {
-  applications: Array<Application>
-  entries: Array<ScorecardEntry>
-  availability: Array<AvailabilityRecord>
-  volume: Array<VolumeRecord>
+  applications: Application[];
+  availability: AvailabilityRecord[];
+  entries: ScorecardEntry[];
+  volume: VolumeRecord[];
 }
 
 export interface UseScorecardReturn {
-  // View state
-  viewMode: ViewMode
-  setViewMode: (mode: ViewMode) => void
-  selectedPeriod: TimePeriod
-  setSelectedPeriod: (period: TimePeriod) => void
-  selectedYear: number
-  setSelectedYear: (year: number) => void
+  // Dialog state
+  addEntryAppId: string | null;
+  availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>;
+  confirmPublishAction: () => void;
+  deletingEntry: ScorecardEntry | null;
 
   // Display months
-  displayMonths: Array<MonthInfo>
-  filterLabel: string
-  yearsToFetch: Array<number>
+  displayMonths: MonthInfo[];
+  editingEntry: ScorecardEntry | null;
 
-  // Data
-  scorecardData: ScorecardData
-  isLoading: boolean
+  // Lookup maps
+  entriesByApp: Record<string, ScorecardEntry[]>;
+
+  // Expand state
+  expandedApps: ReturnType<typeof useExpandState<Application>>;
+  filterLabel: string;
+  handlePublishClick: (year: number, month: number) => void;
+  handleUnpublishClick: (year: number, month: number) => void;
+
+  // Actions
+  invalidateData: () => void;
+  isLoading: boolean;
+  isPublishing: boolean;
+  pendingChangesMonths: MonthInfo[];
+  publishAction: "publish" | "unpublish";
+  publishMonth: { year: number; month: number } | null;
   publishStatusByMonth: Record<
     string,
     {
-      isPublished: boolean
-      publishedBy: string | null
-      publishedAt: Date | null
+      isPublished: boolean;
+      publishedBy: string | null;
+      publishedAt: Date | null;
     }
-  >
+  >;
 
-  // Lookup maps
-  entriesByApp: Record<string, Array<ScorecardEntry>>
-  availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>
-  volumeByEntry: Record<string, Record<string, VolumeRecord>>
+  // Data
+  scorecardData: ScorecardData;
+  selectedPeriod: TimePeriod;
+  selectedYear: number;
+  setAddEntryAppId: (id: string | null) => void;
+  setDeletingEntry: (entry: ScorecardEntry | null) => void;
+  setEditingEntry: (entry: ScorecardEntry | null) => void;
+  setSelectedPeriod: (period: TimePeriod) => void;
+  setSelectedYear: (year: number) => void;
+  setShowChart: (show: boolean) => void;
+  setShowPublishDialog: (show: boolean) => void;
+  setViewMode: (mode: ViewMode) => void;
 
-  // Expand state
-  expandedApps: ReturnType<typeof useExpandState<Application>>
+  // Chart state
+  showChart: boolean;
+  showPublishDialog: boolean;
 
   // Stats
   stats: {
-    apps: number
-    entries: number
-    availRecords: number
-    volRecords: number
-    availBreaches: number
-  }
+    apps: number;
+    entries: number;
+    availRecords: number;
+    volRecords: number;
+    availBreaches: number;
+  };
 
   // Publish state
-  unpublishedMonths: Array<MonthInfo>
-  pendingChangesMonths: Array<MonthInfo>
-  showPublishDialog: boolean
-  publishMonth: { year: number; month: number } | null
-  publishAction: 'publish' | 'unpublish'
-  handlePublishClick: (year: number, month: number) => void
-  handleUnpublishClick: (year: number, month: number) => void
-  confirmPublishAction: () => void
-  isPublishing: boolean
-  setShowPublishDialog: (show: boolean) => void
+  unpublishedMonths: MonthInfo[];
+  // View state
+  viewMode: ViewMode;
+  volumeByEntry: Record<string, Record<string, VolumeRecord>>;
+  yearsToFetch: number[];
+}
 
-  // Dialog state
-  addEntryAppId: string | null
-  setAddEntryAppId: (id: string | null) => void
-  editingEntry: ScorecardEntry | null
-  setEditingEntry: (entry: ScorecardEntry | null) => void
-  deletingEntry: ScorecardEntry | null
-  setDeletingEntry: (entry: ScorecardEntry | null) => void
+function getLatestDate(
+  updatedAt: string | Date | null | undefined,
+  createdAt: string | Date | null | undefined
+): Date | null {
+  if (updatedAt) {
+    return new Date(updatedAt);
+  }
+  if (createdAt) {
+    return new Date(createdAt);
+  }
+  return null;
+}
 
-  // Chart state
-  showChart: boolean
-  setShowChart: (show: boolean) => void
+function hasDataChangedSince(
+  key: string,
+  publishedAt: Date,
+  availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>,
+  volumeByEntry: Record<string, Record<string, VolumeRecord>>
+): boolean {
+  for (const entryAvail of Object.values(availabilityByEntry)) {
+    const av = entryAvail[key];
+    if (av) {
+      const dataUpdatedAt = getLatestDate(av.updatedAt, av.createdAt);
+      if (dataUpdatedAt && dataUpdatedAt > publishedAt) {
+        return true;
+      }
+    }
+  }
+  for (const entryVol of Object.values(volumeByEntry)) {
+    const vol = entryVol[key];
+    if (vol) {
+      const dataUpdatedAt = getLatestDate(vol.updatedAt, vol.createdAt);
+      if (dataUpdatedAt && dataUpdatedAt > publishedAt) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
-  // Actions
-  invalidateData: () => void
+function countStatsForEntry(
+  entry: ScorecardEntry,
+  availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>,
+  volumeByEntry: Record<string, Record<string, VolumeRecord>>,
+  pastMonths: MonthInfo[]
+): { availRecords: number; volRecords: number; availBreaches: number } {
+  const threshold = Number.parseFloat(entry.availabilityThreshold);
+  const entryAvailability = availabilityByEntry[entry.id] || {};
+  const entryVolume = volumeByEntry[entry.id] || {};
+  let availRecords = 0;
+  let volRecords = 0;
+  let availBreaches = 0;
+
+  for (const { year, month } of pastMonths) {
+    const key = `${year}-${month}`;
+    if (entryAvailability[key]) {
+      availRecords++;
+      if (Number.parseFloat(entryAvailability[key].availability) < threshold) {
+        availBreaches++;
+      }
+    }
+    if (entryVolume[key]) {
+      volRecords++;
+    }
+  }
+
+  return { availRecords, volRecords, availBreaches };
 }
 
 export function useScorecard({
   teamId,
-  isAdmin,
 }: UseScorecardOptions): UseScorecardReturn {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   // View state
-  const [viewMode, setViewMode] = useState<ViewMode>('period')
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('ytd')
-  const yearSelection = useYearSelection({ initialYear: currentYear })
+  const [viewMode, setViewMode] = useState<ViewMode>("period");
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>("ytd");
+  const yearSelection = useYearSelection({ initialYear: currentYear });
 
   // Dialog state
-  const [addEntryAppId, setAddEntryAppId] = useState<string | null>(null)
-  const [editingEntry, setEditingEntry] = useState<ScorecardEntry | null>(null)
+  const [addEntryAppId, setAddEntryAppId] = useState<string | null>(null);
+  const [editingEntry, setEditingEntry] = useState<ScorecardEntry | null>(null);
   const [deletingEntry, setDeletingEntry] = useState<ScorecardEntry | null>(
-    null,
-  )
+    null
+  );
 
   // Chart state
-  const [showChart, setShowChart] = useState(false)
+  const [showChart, setShowChart] = useState(false);
 
   // Publish dialog state
-  const [showPublishDialog, setShowPublishDialog] = useState(false)
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [publishMonth, setPublishMonth] = useState<{
-    year: number
-    month: number
-  } | null>(null)
-  const [publishAction, setPublishAction] = useState<'publish' | 'unpublish'>(
-    'publish',
-  )
+    year: number;
+    month: number;
+  } | null>(null);
+  const [publishAction, setPublishAction] = useState<"publish" | "unpublish">(
+    "publish"
+  );
 
   // Expand state for applications
   const expandedApps = useExpandState<Application>({
     getItemId: (app) => app.id,
-    initialExpanded: 'none',
-  })
+    initialExpanded: "none",
+  });
 
   // Get the months to display based on view mode
   const displayMonths = useMemo(() => {
-    if (viewMode === 'year') {
-      return getMonthsForYear(yearSelection.year)
+    if (viewMode === "year") {
+      return getMonthsForYear(yearSelection.year);
     }
-    return getMonthsForPeriod(selectedPeriod)
-  }, [viewMode, selectedPeriod, yearSelection.year])
+    return getMonthsForPeriod(selectedPeriod);
+  }, [viewMode, selectedPeriod, yearSelection.year]);
 
   // Determine which years we need to fetch data for
   const yearsToFetch = useMemo(() => {
-    const years = new Set<number>()
-    displayMonths.forEach((m) => years.add(m.year))
-    return Array.from(years)
-  }, [displayMonths])
+    const years = new Set<number>();
+    for (const m of displayMonths) {
+      years.add(m.year);
+    }
+    return Array.from(years);
+  }, [displayMonths]);
 
   // Fetch scorecard data for current year
   const { data: currentYearData, isLoading: isLoadingCurrent } = useQuery(
-    scorecardDataOptions({ teamId, year: currentYear }),
-  )
+    scorecardDataOptions({ teamId, year: currentYear })
+  );
 
   // Fetch scorecard data for previous year (if needed)
   const { data: prevYearData, isLoading: isLoadingPrev } = useQuery({
     ...scorecardDataOptions({ teamId, year: currentYear - 1 }),
     enabled: yearsToFetch.includes(currentYear - 1),
-  })
+  });
 
   const isLoading =
     isLoadingCurrent ||
-    (yearsToFetch.includes(currentYear - 1) && isLoadingPrev)
+    (yearsToFetch.includes(currentYear - 1) && isLoadingPrev);
 
   // Merge data from both years
   const scorecardData: ScorecardData = useMemo(() => {
-    const apps = currentYearData?.applications || []
-    const entries = currentYearData?.entries || []
+    const apps = currentYearData?.applications || [];
+    const entries = currentYearData?.entries || [];
 
     const availability = [
       ...(currentYearData?.availability || []),
       ...(prevYearData?.availability || []),
-    ]
+    ];
 
     const volume = [
       ...(currentYearData?.volume || []),
       ...(prevYearData?.volume || []),
-    ]
+    ];
 
-    return { applications: apps, entries, availability, volume }
-  }, [currentYearData, prevYearData])
+    return { applications: apps, entries, availability, volume };
+  }, [currentYearData, prevYearData]);
 
   // Fetch publish status for current year
   const { data: publishStatusCurrentYear } = useQuery(
-    scorecardPublishStatusOptions({ teamId, year: currentYear }),
-  )
+    scorecardPublishStatusOptions({ teamId, year: currentYear })
+  );
 
   // Fetch publish status for previous year (if needed)
   const { data: publishStatusPrevYear } = useQuery({
     ...scorecardPublishStatusOptions({ teamId, year: currentYear - 1 }),
     enabled: yearsToFetch.includes(currentYear - 1),
-  })
+  });
 
   // Combine publish status from both years
   const publishStatusByMonth = useMemo(() => {
     const status: Record<
       string,
       {
-        isPublished: boolean
-        publishedBy: string | null
-        publishedAt: Date | null
+        isPublished: boolean;
+        publishedBy: string | null;
+        publishedAt: Date | null;
       }
-    > = {}
+    > = {};
 
     if (publishStatusCurrentYear?.statusByMonth) {
-      Object.entries(publishStatusCurrentYear.statusByMonth).forEach(
-        ([month, data]) => {
-          status[`${currentYear}-${month}`] = data
-        },
-      )
+      for (const [month, data] of Object.entries(
+        publishStatusCurrentYear.statusByMonth
+      )) {
+        status[`${currentYear}-${month}`] = data;
+      }
     }
 
     if (publishStatusPrevYear?.statusByMonth) {
-      Object.entries(publishStatusPrevYear.statusByMonth).forEach(
-        ([month, data]) => {
-          status[`${currentYear - 1}-${month}`] = data
-        },
-      )
+      for (const [month, data] of Object.entries(
+        publishStatusPrevYear.statusByMonth
+      )) {
+        status[`${currentYear - 1}-${month}`] = data;
+      }
     }
 
-    return status
-  }, [publishStatusCurrentYear, publishStatusPrevYear])
+    return status;
+  }, [publishStatusCurrentYear, publishStatusPrevYear]);
 
   // Build lookup maps with year-month composite key
   const { entriesByApp, availabilityByEntry, volumeByEntry } = useMemo(() => {
-    const entriesByApp: Record<string, Array<ScorecardEntry>> = {}
+    const entriesByApp: Record<string, ScorecardEntry[]> = {};
     const availabilityByEntry: Record<
       string,
       Record<string, AvailabilityRecord>
-    > = {}
-    const volumeByEntry: Record<string, Record<string, VolumeRecord>> = {}
+    > = {};
+    const volumeByEntry: Record<string, Record<string, VolumeRecord>> = {};
 
-    scorecardData.entries.forEach((entry) => {
+    for (const entry of scorecardData.entries) {
       if (!entriesByApp[entry.applicationId]) {
-        entriesByApp[entry.applicationId] = []
+        entriesByApp[entry.applicationId] = [];
       }
-      entriesByApp[entry.applicationId].push(entry)
-    })
+      entriesByApp[entry.applicationId].push(entry);
+    }
 
-    scorecardData.availability.forEach((av) => {
+    for (const av of scorecardData.availability) {
       if (!availabilityByEntry[av.scorecardEntryId]) {
-        availabilityByEntry[av.scorecardEntryId] = {}
+        availabilityByEntry[av.scorecardEntryId] = {};
       }
-      const key = `${av.year}-${av.month}`
-      availabilityByEntry[av.scorecardEntryId][key] = av
-    })
+      const key = `${av.year}-${av.month}`;
+      availabilityByEntry[av.scorecardEntryId][key] = av;
+    }
 
-    scorecardData.volume.forEach((vol) => {
+    for (const vol of scorecardData.volume) {
       if (!volumeByEntry[vol.scorecardEntryId]) {
-        volumeByEntry[vol.scorecardEntryId] = {}
+        volumeByEntry[vol.scorecardEntryId] = {};
       }
-      const key = `${vol.year}-${vol.month}`
-      volumeByEntry[vol.scorecardEntryId][key] = vol
-    })
+      const key = `${vol.year}-${vol.month}`;
+      volumeByEntry[vol.scorecardEntryId][key] = vol;
+    }
 
-    return { entriesByApp, availabilityByEntry, volumeByEntry }
-  }, [scorecardData])
+    return { entriesByApp, availabilityByEntry, volumeByEntry };
+  }, [scorecardData]);
 
   // Calculate months requiring publishing
   const { unpublishedMonths, pendingChangesMonths } = useMemo(() => {
-    const unpublished: typeof displayMonths = []
-    const pendingChanges: typeof displayMonths = []
+    const unpublished: typeof displayMonths = [];
+    const pendingChanges: typeof displayMonths = [];
 
-    displayMonths.forEach(({ year, month, isFuture, label }) => {
-      if (isFuture) return
+    for (const { year, month, isFuture, label } of displayMonths) {
+      if (isFuture) {
+        continue;
+      }
 
-      const key = `${year}-${month}`
-      const status = publishStatusByMonth[key]
+      const key = `${year}-${month}`;
+      const status = publishStatusByMonth[key];
 
       if (!status?.isPublished) {
-        unpublished.push({ year, month, isFuture, label })
-        return
+        unpublished.push({ year, month, isFuture, label });
+        continue;
       }
 
       const publishedAt = status.publishedAt
         ? new Date(status.publishedAt)
-        : null
+        : null;
       if (!publishedAt) {
-        unpublished.push({ year, month, isFuture, label })
-        return
+        unpublished.push({ year, month, isFuture, label });
+        continue;
       }
 
-      let hasPendingChanges = false
-
-      Object.values(availabilityByEntry).forEach((entryAvail) => {
-        const av = entryAvail[key]
-        if (av) {
-          const dataUpdatedAt = av.updatedAt
-            ? new Date(av.updatedAt)
-            : av.createdAt
-              ? new Date(av.createdAt)
-              : null
-          if (dataUpdatedAt && dataUpdatedAt > publishedAt) {
-            hasPendingChanges = true
-          }
-        }
-      })
-
-      if (!hasPendingChanges) {
-        Object.values(volumeByEntry).forEach((entryVol) => {
-          const vol = entryVol[key]
-          if (vol) {
-            const dataUpdatedAt = vol.updatedAt
-              ? new Date(vol.updatedAt)
-              : vol.createdAt
-                ? new Date(vol.createdAt)
-                : null
-            if (dataUpdatedAt && dataUpdatedAt > publishedAt) {
-              hasPendingChanges = true
-            }
-          }
-        })
-      }
+      const hasPendingChanges = hasDataChangedSince(
+        key,
+        publishedAt,
+        availabilityByEntry,
+        volumeByEntry
+      );
 
       if (hasPendingChanges) {
-        pendingChanges.push({ year, month, isFuture, label })
+        pendingChanges.push({ year, month, isFuture, label });
       }
-    })
+    }
 
     return {
       unpublishedMonths: unpublished,
       pendingChangesMonths: pendingChanges,
-    }
-  }, [displayMonths, publishStatusByMonth, availabilityByEntry, volumeByEntry])
+    };
+  }, [displayMonths, publishStatusByMonth, availabilityByEntry, volumeByEntry]);
 
   // Stats calculation
   const stats = useMemo(() => {
-    const apps = scorecardData.applications.length
-    const entries = scorecardData.entries.length
+    const apps = scorecardData.applications.length;
+    const entries = scorecardData.entries.length;
+    const pastMonths = displayMonths.filter((m) => !m.isFuture);
 
-    let availRecords = 0
-    let volRecords = 0
-    let availBreaches = 0
+    let availRecords = 0;
+    let volRecords = 0;
+    let availBreaches = 0;
 
-    scorecardData.entries.forEach((entry) => {
-      const threshold = parseFloat(entry.availabilityThreshold)
-      const entryAvailability = availabilityByEntry[entry.id] || {}
-      const entryVolume = volumeByEntry[entry.id] || {}
+    for (const entry of scorecardData.entries) {
+      const result = countStatsForEntry(
+        entry,
+        availabilityByEntry,
+        volumeByEntry,
+        pastMonths
+      );
+      availRecords += result.availRecords;
+      volRecords += result.volRecords;
+      availBreaches += result.availBreaches;
+    }
 
-      displayMonths.forEach(({ year, month, isFuture }) => {
-        if (isFuture) return
-        const key = `${year}-${month}`
-        if (entryAvailability[key]) {
-          availRecords++
-          if (parseFloat(entryAvailability[key].availability) < threshold) {
-            availBreaches++
-          }
-        }
-        if (entryVolume[key]) {
-          volRecords++
-        }
-      })
-    })
-
-    return { apps, entries, availRecords, volRecords, availBreaches }
-  }, [scorecardData, availabilityByEntry, volumeByEntry, displayMonths])
+    return { apps, entries, availRecords, volRecords, availBreaches };
+  }, [scorecardData, availabilityByEntry, volumeByEntry, displayMonths]);
 
   // Publish mutation
   const publishMutation = useMutation({
@@ -390,21 +423,21 @@ export function useScorecard({
         data: { teamId, year: params.year, month: params.month },
       }),
     onSuccess: () => {
-      toast.success('Scorecard published successfully', {
-        description: 'Data is now visible in the Enterprise Scorecard.',
-      })
+      toast.success("Scorecard published successfully", {
+        description: "Data is now visible in the Enterprise Scorecard.",
+      });
       queryClient.invalidateQueries({
         queryKey: scorecardKeys.publishStatus.all(teamId),
-      })
-      setShowPublishDialog(false)
-      setPublishMonth(null)
+      });
+      setShowPublishDialog(false);
+      setPublishMonth(null);
     },
     onError: (error: Error) => {
-      toast.error('Failed to publish scorecard', {
+      toast.error("Failed to publish scorecard", {
         description: error.message,
-      })
+      });
     },
-  })
+  });
 
   // Unpublish mutation
   const unpublishMutation = useMutation({
@@ -413,54 +446,57 @@ export function useScorecard({
         data: { teamId, year: params.year, month: params.month },
       }),
     onSuccess: () => {
-      toast.success('Scorecard unpublished', {
-        description: 'Data is no longer visible in the Enterprise Scorecard.',
-      })
+      toast.success("Scorecard unpublished", {
+        description: "Data is no longer visible in the Enterprise Scorecard.",
+      });
       queryClient.invalidateQueries({
         queryKey: scorecardKeys.publishStatus.all(teamId),
-      })
-      setShowPublishDialog(false)
-      setPublishMonth(null)
+      });
+      setShowPublishDialog(false);
+      setPublishMonth(null);
     },
     onError: (error: Error) => {
-      toast.error('Failed to unpublish scorecard', {
+      toast.error("Failed to unpublish scorecard", {
         description: error.message,
-      })
+      });
     },
-  })
+  });
 
   // Publish handlers
   const handlePublishClick = useCallback((year: number, month: number) => {
-    setPublishMonth({ year, month })
-    setPublishAction('publish')
-    setShowPublishDialog(true)
-  }, [])
+    setPublishMonth({ year, month });
+    setPublishAction("publish");
+    setShowPublishDialog(true);
+  }, []);
 
   const handleUnpublishClick = useCallback((year: number, month: number) => {
-    setPublishMonth({ year, month })
-    setPublishAction('unpublish')
-    setShowPublishDialog(true)
-  }, [])
+    setPublishMonth({ year, month });
+    setPublishAction("unpublish");
+    setShowPublishDialog(true);
+  }, []);
 
   const confirmPublishAction = useCallback(() => {
-    if (!publishMonth) return
-    if (publishAction === 'publish') {
-      publishMutation.mutate(publishMonth)
-    } else {
-      unpublishMutation.mutate(publishMonth)
+    if (!publishMonth) {
+      return;
     }
-  }, [publishMonth, publishAction, publishMutation, unpublishMutation])
+    if (publishAction === "publish") {
+      publishMutation.mutate(publishMonth);
+    } else {
+      unpublishMutation.mutate(publishMonth);
+    }
+  }, [publishMonth, publishAction, publishMutation, unpublishMutation]);
 
   // Invalidate data helper
   const invalidateData = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: scorecardKeys.team(teamId) })
-  }, [queryClient, teamId])
+    queryClient.invalidateQueries({ queryKey: scorecardKeys.team(teamId) });
+  }, [queryClient, teamId]);
 
   // Get the period/year description
   const filterLabel =
-    viewMode === 'year'
+    viewMode === "year"
       ? `Year ${yearSelection.year}`
-      : TIME_PERIOD_OPTIONS.find((p) => p.value === selectedPeriod)?.label || ''
+      : TIME_PERIOD_OPTIONS.find((p) => p.value === selectedPeriod)?.label ||
+        "";
 
   return {
     // View state
@@ -518,5 +554,5 @@ export function useScorecard({
 
     // Actions
     invalidateData,
-  }
+  };
 }

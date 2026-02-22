@@ -1,8 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import { format, subDays } from 'date-fns'
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { format, subDays } from "date-fns";
+import { motion } from "framer-motion";
 import {
   Activity,
   AlertCircle,
@@ -13,7 +12,9 @@ import {
   PieChart,
   Star,
   TrendingUp,
-} from 'lucide-react'
+} from "lucide-react";
+import { useMemo, useState } from "react";
+import type { DateRange } from "react-day-picker";
 import {
   Area,
   AreaChart,
@@ -23,55 +24,54 @@ import {
   PieChart as RechartsPieChart,
   XAxis,
   YAxis,
-} from 'recharts'
-import type { DateRange } from 'react-day-picker'
-import type {TurnoverSection} from '@/lib/zod/turnover.schema';
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+} from "recharts";
+import { getTurnoverMetrics } from "@/app/actions/turnover";
+import { StatsSummaryItem } from "@/components/link-manager/shared";
+import { PageHeader } from "@/components/shared";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Calendar as CalendarComponent } from '@/components/ui/calendar'
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from '@/components/ui/chart'
-import { cn } from '@/lib/utils'
-import { getTurnoverMetrics } from '@/app/actions/turnover'
-import { SECTION_CONFIG  } from '@/lib/zod/turnover.schema'
-import { EmptyState } from '@/components/shared/empty-state'
-import { StatsSummaryItem } from '@/components/link-manager/shared'
-import { PageHeader } from '@/components/shared'
+} from "@/components/ui/chart";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import type { TurnoverSection } from "@/lib/zod/turnover.schema";
+import { SECTION_CONFIG } from "@/lib/zod/turnover.schema";
 
 export const Route = createFileRoute(
-  '/teams/$teamId/turnover/turnover-metrics',
+  "/teams/$teamId/turnover/turnover-metrics"
 )({
   component: TurnoverMetricsPage,
-})
+});
 
 function TurnoverMetricsPage() {
-  const { teamId } = Route.useParams()
+  const { teamId } = Route.useParams();
 
   // Default to last 30 days
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: subDays(new Date(), 30),
     to: new Date(),
-  })
+  });
 
   // Fetch metrics
   const { data: metrics } = useQuery({
-    queryKey: ['turnover-metrics', teamId, dateRange?.from, dateRange?.to],
+    queryKey: ["turnover-metrics", teamId, dateRange?.from, dateRange?.to],
     queryFn: () =>
       getTurnoverMetrics({
         data: {
@@ -81,118 +81,130 @@ function TurnoverMetricsPage() {
         },
       }),
     enabled: !!dateRange?.from && !!dateRange?.to,
-  })
+  });
 
   // Export CSV
   const handleExport = () => {
-    if (!metrics?.activityTrend) return
+    if (!metrics?.activityTrend) {
+      return;
+    }
 
     const csvContent = [
-      ['Date', 'Total Created', 'Resolved', 'Open'].join(','),
-      ...metrics.activityTrend.map((d: any) =>
-        [d.date, d.created, d.resolved, d.created - d.resolved].join(','),
+      ["Date", "Total Created", "Resolved", "Open"].join(","),
+      ...metrics.activityTrend.map(
+        (d: { date: string; created: number; resolved: number }) =>
+          [d.date, d.created, d.resolved, d.created - d.resolved].join(",")
       ),
-    ].join('\n')
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `turnover-metrics-${format(new Date(), 'yyyy-MM-dd')}.csv`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `turnover-metrics-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Prepare pie chart data
   const pieData = useMemo(() => {
-    if (!metrics?.sectionDistribution) return []
-    return metrics.sectionDistribution.map((item: any) => ({
-      name: item.section,
-      value: item.count,
-      // Color is now handled by ChartContainer via CSS variables mapped in chartConfig
-    }))
-  }, [metrics])
+    if (!metrics?.sectionDistribution) {
+      return [];
+    }
+    return metrics.sectionDistribution.map(
+      (item: { section: string; count: number }) => ({
+        name: item.section,
+        value: item.count,
+        // Color is now handled by ChartContainer via CSS variables mapped in chartConfig
+      })
+    );
+  }, [metrics]);
 
   // Chart config - using direct HSL values for proper color rendering
   const chartConfig = {
     created: {
-      label: 'Created',
-      color: 'hsl(221.2 83.2% 53.3%)', // Blue
+      label: "Created",
+      color: "hsl(221.2 83.2% 53.3%)", // Blue
     },
     resolved: {
-      label: 'Resolved',
-      color: 'hsl(142.1 76.2% 36.3%)', // Green
+      label: "Resolved",
+      color: "hsl(142.1 76.2% 36.3%)", // Green
     },
     RFC: {
       label: SECTION_CONFIG.RFC.shortName,
-      color: 'hsl(221.2 83.2% 53.3%)', // Chart 1 like blue
+      color: "hsl(221.2 83.2% 53.3%)", // Chart 1 like blue
     },
     INC: {
       label: SECTION_CONFIG.INC.shortName,
-      color: 'hsl(0 84.2% 60.2%)', // Red
+      color: "hsl(0 84.2% 60.2%)", // Red
     },
     ALERTS: {
       label: SECTION_CONFIG.ALERTS.shortName,
-      color: 'hsl(24.6 95% 53.1%)', // Orange
+      color: "hsl(24.6 95% 53.1%)", // Orange
     },
     MIM: {
       label: SECTION_CONFIG.MIM.shortName,
-      color: 'hsl(262.1 83.3% 57.8%)', // Purple
+      color: "hsl(262.1 83.3% 57.8%)", // Purple
     },
     COMMS: {
       label: SECTION_CONFIG.COMMS.shortName,
-      color: 'hsl(142.1 76.2% 36.3%)', // Green
+      color: "hsl(142.1 76.2% 36.3%)", // Green
     },
     FYI: {
       label: SECTION_CONFIG.FYI.shortName,
-      color: 'hsl(215.4 16.3% 46.9%)', // Slate
+      color: "hsl(215.4 16.3% 46.9%)", // Slate
     },
-  }
+  };
 
   return (
-    <div className="p-8 mx-auto space-y-8">
+    <div className="mx-auto space-y-8 p-8">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: -20 }}
       >
         <PageHeader
-          title="Turnover Intelligence"
-          description="Comprehensive analysis of handover activities and resolution performance."
           className="w-full"
+          description="Comprehensive analysis of handover activities and resolution performance."
+          title="Turnover Intelligence"
         >
           {/* Date Range Picker */}
           <Popover>
             <PopoverTrigger>
-              <Button variant="outline" className="gap-2 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white">
-                <Calendar className="w-4 h-4" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, 'MMM dd')} -{' '}
-                      {format(dateRange.to, 'MMM dd, yyyy')}
-                    </>
-                  ) : (
-                    format(dateRange.from, 'MMM dd, yyyy')
-                  )
-                ) : (
-                  'Select date range'
+              <Button
+                className="gap-2 border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                variant="outline"
+              >
+                <Calendar className="h-4 w-4" />
+                {!dateRange?.from && "Select date range"}
+                {dateRange?.from &&
+                  !dateRange.to &&
+                  format(dateRange.from, "MMM dd, yyyy")}
+                {dateRange?.from && dateRange.to && (
+                  <>
+                    {format(dateRange.from, "MMM dd")} -{" "}
+                    {format(dateRange.to, "MMM dd, yyyy")}
+                  </>
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
+            <PopoverContent align="end" className="w-auto p-0">
               <CalendarComponent
-                mode="range"
-                selected={dateRange}
-                onSelect={setDateRange}
-                numberOfMonths={2}
                 initialFocus
+                mode="range"
+                numberOfMonths={2}
+                onSelect={setDateRange}
+                selected={dateRange}
               />
             </PopoverContent>
           </Popover>
 
-          <Button onClick={handleExport} variant="outline" className="gap-2 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white">
-            <Download className="w-4 h-4" />
+          <Button
+            className="gap-2 border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+            onClick={handleExport}
+            variant="outline"
+          >
+            <Download className="h-4 w-4" />
             Export CSV
           </Button>
         </PageHeader>
@@ -200,49 +212,49 @@ function TurnoverMetricsPage() {
 
       {/* KPI Cards */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4"
+        initial={{ opacity: 0, y: 20 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
       >
         <StatsSummaryItem
+          color="primary"
+          icon={Activity}
           label="Total Entries"
           value={metrics?.kpis.totalEntries || 0}
-          icon={Activity}
-          color="primary"
         />
         <StatsSummaryItem
+          color="blue"
+          icon={CheckCircle2}
           label="Resolved"
           value={metrics?.kpis.resolvedEntries || 0}
-          icon={CheckCircle2}
-          color="blue"
         />
         <StatsSummaryItem
+          color="amber"
+          icon={AlertCircle}
           label="Open Issues"
           value={metrics?.kpis.openEntries || 0}
-          icon={AlertCircle}
-          color="amber"
         />
         <StatsSummaryItem
+          color="indigo"
+          icon={Star}
           label="Critical Items"
           value={metrics?.kpis.criticalItems || 0}
-          icon={Star}
-          color="indigo"
         />
       </motion.div>
 
       {/* Charts */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        className="grid grid-cols-1 gap-6 lg:grid-cols-7"
+        initial={{ opacity: 0, y: 20 }}
         transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 lg:grid-cols-7 gap-6"
       >
         {/* Activity Trend */}
         <Card className="lg:col-span-4">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
+              <TrendingUp className="h-5 w-5 text-primary" />
               Activity Trend
             </CardTitle>
             <CardDescription>
@@ -251,14 +263,14 @@ function TurnoverMetricsPage() {
           </CardHeader>
           <CardContent>
             {metrics?.activityTrend && metrics.activityTrend.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[300px] w-full">
+              <ChartContainer className="h-[300px] w-full" config={chartConfig}>
                 <AreaChart data={metrics.activityTrend}>
                   <defs>
                     <linearGradient
                       id="colorCreated"
                       x1="0"
-                      y1="0"
                       x2="0"
+                      y1="0"
                       y2="1"
                     >
                       <stop
@@ -275,8 +287,8 @@ function TurnoverMetricsPage() {
                     <linearGradient
                       id="colorResolved"
                       x1="0"
-                      y1="0"
                       x2="0"
+                      y1="0"
                       y2="1"
                     >
                       <stop
@@ -292,48 +304,48 @@ function TurnoverMetricsPage() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid
+                    stroke="hsl(var(--border))"
                     strokeDasharray="3 3"
                     vertical={false}
-                    stroke="hsl(var(--border))"
                   />
                   <XAxis
-                    dataKey="date"
-                    tickFormatter={(val) => format(new Date(val), 'MMM dd')}
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tickLine={false}
                     axisLine={false}
+                    dataKey="date"
+                    fontSize={12}
+                    stroke="hsl(var(--muted-foreground))"
+                    tickFormatter={(val) => format(new Date(val), "MMM dd")}
+                    tickLine={false}
                     tickMargin={8}
                   />
                   <YAxis
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tickLine={false}
                     axisLine={false}
+                    fontSize={12}
+                    stroke="hsl(var(--muted-foreground))"
+                    tickLine={false}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Area
-                    type="monotone"
                     dataKey="created"
-                    stroke="var(--color-created)"
                     fill="url(#colorCreated)"
+                    stroke="var(--color-created)"
                     strokeWidth={2}
+                    type="monotone"
                   />
                   <Area
-                    type="monotone"
                     dataKey="resolved"
-                    stroke="var(--color-resolved)"
                     fill="url(#colorResolved)"
+                    stroke="var(--color-resolved)"
                     strokeWidth={2}
+                    type="monotone"
                   />
                 </AreaChart>
               </ChartContainer>
             ) : (
               <EmptyState
-                icon={BarChart3}
-                title="No activity data"
                 description="No activity data available for the selected period."
+                icon={BarChart3}
                 size="sm"
+                title="No activity data"
               />
             )}
           </CardContent>
@@ -343,7 +355,7 @@ function TurnoverMetricsPage() {
         <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PieChart className="w-5 h-5 text-primary" />
+              <PieChart className="h-5 w-5 text-primary" />
               Section Distribution
             </CardTitle>
             <CardDescription>Breakdown of entries by category.</CardDescription>
@@ -351,37 +363,39 @@ function TurnoverMetricsPage() {
           <CardContent>
             {pieData.length > 0 ? (
               <ChartContainer
-                config={chartConfig}
                 className="mx-auto aspect-square max-h-[300px]"
+                config={chartConfig}
               >
                 <RechartsPieChart>
                   <ChartTooltip
-                    cursor={false}
                     content={<ChartTooltipContent hideLabel />}
+                    cursor={false}
                   />
                   <Pie
-                    data={pieData.map((item: any) => ({
-                      ...item,
-                      fill: `var(--color-${item.name})`, // Use CSS variable from config
-                    }))}
+                    data={pieData.map(
+                      (item: { name: string; value: number }) => ({
+                        ...item,
+                        fill: `var(--color-${item.name})`, // Use CSS variable from config
+                      })
+                    )}
                     dataKey="value"
-                    nameKey="name"
                     innerRadius={60}
+                    nameKey="name"
                     strokeWidth={5}
                   />
                   <Legend
                     content={<ChartLegendContent nameKey="name" />}
-                    verticalAlign="bottom"
                     height={36}
+                    verticalAlign="bottom"
                   />
                 </RechartsPieChart>
               </ChartContainer>
             ) : (
               <EmptyState
-                icon={PieChart}
-                title="No section data"
                 description="No section data available."
+                icon={PieChart}
                 size="sm"
+                title="No section data"
               />
             )}
           </CardContent>
@@ -392,8 +406,8 @@ function TurnoverMetricsPage() {
       {metrics?.sectionDistribution &&
         metrics.sectionDistribution.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
             transition={{ delay: 0.3 }}
           >
             <Card>
@@ -404,37 +418,41 @@ function TurnoverMetricsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                  {metrics.sectionDistribution.map((item: any) => {
-                    const sConfig =
-                      SECTION_CONFIG[item.section as TurnoverSection]
-                    return (
-                      <div
-                        key={item.section}
-                        className={cn(
-                          'p-4 rounded-xl border',
-                          sConfig?.bgClass,
-                          sConfig?.borderClass,
-                        )}
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <Badge
-                            variant="secondary"
-                            className={cn(sConfig?.colorClass, 'font-bold')}
-                          >
-                            {sConfig?.shortName || item.section}
-                          </Badge>
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+                  {metrics.sectionDistribution.map(
+                    (item: { section: string; count: number }) => {
+                      const sConfig =
+                        SECTION_CONFIG[item.section as TurnoverSection];
+                      return (
+                        <div
+                          className={cn(
+                            "rounded-xl border p-4",
+                            sConfig?.bgClass,
+                            sConfig?.borderClass
+                          )}
+                          key={item.section}
+                        >
+                          <div className="mb-2 flex items-center gap-2">
+                            <Badge
+                              className={cn(sConfig?.colorClass, "font-bold")}
+                              variant="secondary"
+                            >
+                              {sConfig?.shortName || item.section}
+                            </Badge>
+                          </div>
+                          <p className="font-black text-3xl">{item.count}</p>
+                          <p className="text-muted-foreground text-xs">
+                            entries
+                          </p>
                         </div>
-                        <p className="text-3xl font-black">{item.count}</p>
-                        <p className="text-xs text-muted-foreground">entries</p>
-                      </div>
-                    )
-                  })}
+                      );
+                    }
+                  )}
                 </div>
               </CardContent>
             </Card>
           </motion.div>
         )}
     </div>
-  )
+  );
 }

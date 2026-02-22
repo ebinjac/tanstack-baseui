@@ -1,15 +1,15 @@
-export { SettingsNav, type NavItem } from './settings-nav'
-export { OverviewTab } from './overview-tab'
-export { ApplicationsTab } from './applications-tab'
-export { MembersTab } from './members-tab'
-export { ResourcesTab } from './resources-tab'
-export { SupportTab } from './support-tab'
-export { ApplicationActions } from './application-actions'
-export { StatsCard, InfoItem, ToolItem } from './shared'
-export { EditTeamDialog } from './team-dialogs'
-export { AddApplicationDialog } from './add-application-dialog'
+export { AddApplicationDialog } from "./add-application-dialog";
+export { ApplicationActions } from "./application-actions";
 export {
-  ViewApplicationDialog,
-  EditApplicationDialog,
   DeleteConfirmationDialog,
-} from './application-details-dialogs'
+  EditApplicationDialog,
+  ViewApplicationDialog,
+} from "./application-details-dialogs";
+export { ApplicationsTab } from "./applications-tab";
+export { MembersTab } from "./members-tab";
+export { OverviewTab } from "./overview-tab";
+export { ResourcesTab } from "./resources-tab";
+export { type NavItem, SettingsNav } from "./settings-nav";
+export { InfoItem, StatsCard, ToolItem } from "./shared";
+export { SupportTab } from "./support-tab";
+export { EditTeamDialog } from "./team-dialogs";

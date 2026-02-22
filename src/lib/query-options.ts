@@ -8,39 +8,39 @@
  * @see skills/tanstack-router/rules/load-ensure-query-data.md
  */
 
-import { infiniteQueryOptions, queryOptions } from '@tanstack/react-query'
+import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
+import { getApplicationGroups } from "@/app/actions/application-groups";
+import { getTeamApplications } from "@/app/actions/applications";
+import { getSystemHealth } from "@/app/actions/health";
+import { getLinkCategories, getLinkStats, getLinks } from "@/app/actions/links";
+import {
+  getGlobalScorecardData,
+  getPublishStatus,
+  getScorecardData,
+} from "@/app/actions/scorecard";
+import { getRegistrationRequests } from "@/app/actions/team-registration";
+import { getTeamById, getTeams } from "@/app/actions/teams";
+import {
+  getDispatchEntries,
+  getFinalizedTurnovers,
+  getTurnoverEntries,
+  getTurnoverMetrics,
+} from "@/app/actions/turnover";
 import {
   adminKeys,
   linkKeys,
   scorecardKeys,
   teamKeys,
   turnoverKeys,
-} from './query-keys'
-import {
-  getGlobalScorecardData,
-  getPublishStatus,
-  getScorecardData,
-} from '@/app/actions/scorecard'
-import {
-  getDispatchEntries,
-  getFinalizedTurnovers,
-  getTurnoverEntries,
-  getTurnoverMetrics,
-} from '@/app/actions/turnover'
-import { getLinkCategories, getLinkStats, getLinks } from '@/app/actions/links'
-import { getTeamById, getTeams } from '@/app/actions/teams'
-import { getSystemHealth } from '@/app/actions/health'
-import { getApplicationGroups } from '@/app/actions/application-groups'
-import { getTeamApplications } from '@/app/actions/applications'
-import { getRegistrationRequests } from '@/app/actions/team-registration'
+} from "./query-keys";
 
 // ==========================================
 // Scorecard Query Options
 // ==========================================
 
 export interface ScorecardDataOptions {
-  teamId: string
-  year: number
+  teamId: string;
+  year: number;
 }
 
 /**
@@ -51,7 +51,7 @@ export const scorecardDataOptions = ({ teamId, year }: ScorecardDataOptions) =>
     queryKey: scorecardKeys.year(teamId, year),
     queryFn: () => getScorecardData({ data: { teamId, year } }),
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
 
 /**
  * Query options for fetching publish status for a specific team and year.
@@ -64,7 +64,7 @@ export const scorecardPublishStatusOptions = ({
     queryKey: scorecardKeys.publishStatus.year(teamId, year),
     queryFn: () => getPublishStatus({ data: { teamId, year } }),
     staleTime: 1000 * 60 * 2, // 2 minutes (more frequent updates needed)
-  })
+  });
 
 /**
  * Query options for fetching global scorecard data.
@@ -74,15 +74,15 @@ export const globalScorecardOptions = (year: number) =>
     queryKey: scorecardKeys.global.filtered({ year }),
     queryFn: () => getGlobalScorecardData({ data: { year } }),
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
 
 // ==========================================
 // Turnover Query Options
 // ==========================================
 
 export interface TurnoverDataOptions {
-  teamId: string
-  year: number
+  teamId: string;
+  year: number;
 }
 
 /**
@@ -90,19 +90,19 @@ export interface TurnoverDataOptions {
  */
 export const turnoverEntriesOptions = (
   teamId: string,
-  applicationIds?: Array<string>,
-  section?: string,
+  applicationIds?: string[],
+  section?: string
 ) =>
   queryOptions({
     queryKey: turnoverKeys.entries.section(
       teamId,
       applicationIds || [],
-      section || '',
+      section || ""
     ),
     queryFn: () =>
       getTurnoverEntries({ data: { teamId, applicationIds, section } }),
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
 
 /**
  * Query options for fetching dispatch entries (current turnover).
@@ -112,7 +112,7 @@ export const dispatchEntriesOptions = (teamId: string) =>
     queryKey: turnoverKeys.dispatch(teamId),
     queryFn: () => getDispatchEntries({ data: { teamId } }),
     staleTime: 1000 * 60 * 2, // 2 minutes
-  })
+  });
 
 /**
  * Query options for fetching turnover metrics.
@@ -120,13 +120,13 @@ export const dispatchEntriesOptions = (teamId: string) =>
 export const turnoverMetricsOptions = (
   teamId: string,
   startDate?: Date,
-  endDate?: Date,
+  endDate?: Date
 ) =>
   queryOptions({
     queryKey: turnoverKeys.metrics(teamId, { from: startDate, to: endDate }),
     queryFn: () => getTurnoverMetrics({ data: { teamId, startDate, endDate } }),
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
 
 /**
  * Query options for fetching finalized turnovers.
@@ -136,21 +136,21 @@ export const finalizedTurnoversOptions = (
   page?: number,
   startDate?: Date,
   endDate?: Date,
-  search?: string,
+  search?: string
 ) =>
   queryOptions({
     queryKey: turnoverKeys.finalized.filtered(
       teamId,
       { from: startDate, to: endDate },
       search,
-      page,
+      page
     ),
     queryFn: () =>
       getFinalizedTurnovers({
         data: { teamId, page, startDate, endDate, search },
       }),
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
 
 /**
  * Query options for fetching application groups for turnover.
@@ -160,15 +160,15 @@ export const turnoverGroupsOptions = (teamId: string) =>
     queryKey: turnoverKeys.groups(teamId),
     queryFn: () => getApplicationGroups({ data: { teamId } }),
     staleTime: 1000 * 60 * 10, // 10 minutes (groups change less frequently)
-  })
+  });
 
 // ==========================================
 // Links Query Options
 // ==========================================
 
 export interface LinksOptions {
-  teamId: string
-  pageSize?: number
+  pageSize?: number;
+  teamId: string;
 }
 
 /**
@@ -183,11 +183,13 @@ export const linksInfiniteOptions = ({ teamId, pageSize = 20 }: LinksOptions) =>
       }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => {
-      if (!lastPage.nextCursor) return undefined
-      return lastPage.nextCursor
+      if (!lastPage.nextCursor) {
+        return undefined;
+      }
+      return lastPage.nextCursor;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
 
 /**
  * Query options for fetching link statistics.
@@ -197,7 +199,7 @@ export const linkStatsOptions = (teamId: string) =>
     queryKey: linkKeys.stats(teamId),
     queryFn: () => getLinkStats({ data: { teamId } }),
     staleTime: 1000 * 60 * 5, // 5 minutes
-  })
+  });
 
 /**
  * Query options for fetching link categories.
@@ -207,7 +209,7 @@ export const linkCategoriesOptions = (teamId: string) =>
     queryKey: linkKeys.categories(teamId),
     queryFn: () => getLinkCategories({ data: { teamId } }),
     staleTime: 1000 * 60 * 10, // 10 minutes
-  })
+  });
 
 // ==========================================
 // Teams Query Options
@@ -221,7 +223,7 @@ export const teamOptions = (teamId: string) =>
     queryKey: teamKeys.detail(teamId),
     queryFn: () => getTeamById({ data: { teamId } }),
     staleTime: 1000 * 60 * 10, // 10 minutes
-  })
+  });
 
 /**
  * Query options for fetching all teams the user has access to.
@@ -231,7 +233,7 @@ export const teamsOptions = () =>
     queryKey: teamKeys.list(),
     queryFn: () => getTeams(),
     staleTime: 1000 * 60 * 10, // 10 minutes
-  })
+  });
 
 /**
  * Query options for fetching team applications.
@@ -241,7 +243,7 @@ export const teamApplicationsOptions = (teamId: string) =>
     queryKey: teamKeys.applications(teamId),
     queryFn: () => getTeamApplications({ data: { teamId } }),
     staleTime: 1000 * 60 * 10, // 10 minutes
-  })
+  });
 
 // ==========================================
 // Admin Query Options
@@ -255,7 +257,7 @@ export const registrationRequestsOptions = () =>
     queryKey: adminKeys.registrationRequests(),
     queryFn: () => getRegistrationRequests(),
     staleTime: 1000 * 60 * 2, // 2 minutes
-  })
+  });
 
 /**
  * Query options for fetching system health status.
@@ -266,4 +268,4 @@ export const healthOptions = () =>
     queryFn: () => getSystemHealth(),
     staleTime: 1000 * 30, // 30 seconds (health status changes frequently)
     refetchInterval: 1000 * 60, // Refetch every minute
-  })
+  });

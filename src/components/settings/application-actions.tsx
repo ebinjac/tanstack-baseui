@@ -5,9 +5,8 @@ import {
   Pencil,
   RefreshCw,
   Trash2,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button'
+} from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,15 +15,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 interface ApplicationActionsProps {
-  isAdmin: boolean
-  isSyncing?: boolean
-  onView: () => void
-  onEdit: () => void
-  onSync: () => void
-  onDelete: () => void
+  isAdmin: boolean;
+  isSyncing?: boolean;
+  onDelete: () => void;
+  onEdit: () => void;
+  onSync: () => void;
+  onView: () => void;
 }
 
 export function ApplicationActions({
@@ -39,8 +39,8 @@ export function ApplicationActions({
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          buttonVariants({ variant: 'ghost', size: 'icon' }),
-          'h-8 w-8 p-0',
+          buttonVariants({ variant: "ghost", size: "icon" }),
+          "h-8 w-8 p-0"
         )}
       >
         <span className="sr-only">Open menu</span>
@@ -62,11 +62,11 @@ export function ApplicationActions({
             </DropdownMenuItem>
           )}
           {isAdmin && (
-            <DropdownMenuItem onClick={onSync} disabled={isSyncing}>
+            <DropdownMenuItem disabled={isSyncing} onClick={onSync}>
               <RefreshCw
-                className={cn('mr-2 h-4 w-4', isSyncing && 'animate-spin')}
-              />{' '}
-              {isSyncing ? 'Syncing...' : 'Sync Registry'}
+                className={cn("mr-2 h-4 w-4", isSyncing && "animate-spin")}
+              />{" "}
+              {isSyncing ? "Syncing..." : "Sync Registry"}
             </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
@@ -74,8 +74,8 @@ export function ApplicationActions({
         {isAdmin && (
           <DropdownMenuGroup>
             <DropdownMenuItem
-              onClick={onDelete}
               className="text-red-600 focus:text-red-600"
+              onClick={onDelete}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Delete
             </DropdownMenuItem>
@@ -83,5 +83,5 @@ export function ApplicationActions({
         )}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

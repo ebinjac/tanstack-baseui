@@ -1,4 +1,3 @@
-import * as React from 'react'
 import {
   Button,
   Column,
@@ -6,45 +5,45 @@ import {
   Row,
   Section,
   Text,
-} from '@react-email/components'
-import { EnsembleLayout } from './ensemble-layout'
+} from "@react-email/components";
+import { EnsembleLayout } from "./ensemble-layout";
 
 interface TeamApprovalEmailProps {
-  contactName: string
-  teamName: string
-  reviewedBy: string
-  comments?: string
-  approvedOn?: string
-  dashboardUrl?: string
+  approvedOn?: string;
+  comments?: string;
+  contactName: string;
+  dashboardUrl?: string;
+  reviewedBy: string;
+  teamName: string;
 }
 
 export const TeamApprovalEmail = ({
-  contactName = 'User',
-  teamName = 'Voyager Operations',
-  reviewedBy = 'Admin',
+  contactName = "User",
+  teamName = "Voyager Operations",
+  reviewedBy = "Admin",
   comments,
   approvedOn = new Date().toLocaleDateString(),
-  dashboardUrl = 'https://ensemble.amex.com',
+  dashboardUrl = "https://ensemble.amex.com",
 }: TeamApprovalEmailProps) => {
-  const previewText = `✅ Team Registration Approved - ${teamName}`
+  const previewText = `✅ Team Registration Approved - ${teamName}`;
 
   return (
     <EnsembleLayout preview={previewText}>
       <Section className="mt-[20px]">
-        <div className="w-full h-2 bg-gradient-to-r from-emerald-400 to-green-600 rounded-lg mb-6" />
-        <Heading className="text-[24px] font-bold text-gray-900 p-0 my-[10px] mx-0">
+        <div className="mb-6 h-2 w-full rounded-lg bg-gradient-to-r from-emerald-400 to-green-600" />
+        <Heading className="mx-0 my-[10px] p-0 font-bold text-[24px] text-gray-900">
           Team Registration Approved
         </Heading>
-        <Text className="text-[16px] leading-[24px] text-gray-700">
+        <Text className="text-[16px] text-gray-700 leading-[24px]">
           Dear <strong>{contactName}</strong>,
         </Text>
-        <Text className="text-[16px] leading-[24px] text-gray-700">
-          Great news! Your team registration request has been{' '}
+        <Text className="text-[16px] text-gray-700 leading-[24px]">
+          Great news! Your team registration request has been{" "}
           <strong className="text-emerald-600">approved</strong>.
         </Text>
 
-        <Section className="bg-slate-50 border-l-4 border-emerald-500 rounded p-6 my-6">
-          <Text className="uppercase text-xs font-bold text-slate-500 tracking-wider mb-2 m-0">
+        <Section className="my-6 rounded border-emerald-500 border-l-4 bg-slate-50 p-6">
+          <Text className="m-0 mb-2 font-bold text-slate-500 text-xs uppercase tracking-wider">
             Approved Details
           </Text>
           <Row className="mb-2">
@@ -67,7 +66,7 @@ export const TeamApprovalEmail = ({
               <Text className="m-0 text-slate-900">{reviewedBy}</Text>
             </Column>
           </Row>
-          <Row className={comments ? 'mb-2' : ''}>
+          <Row className={comments ? "mb-2" : ""}>
             <Column className="w-[120px]">
               <Text className="m-0 font-semibold text-slate-700">
                 Approved On:
@@ -91,27 +90,27 @@ export const TeamApprovalEmail = ({
           )}
         </Section>
 
-        <Text className="text-[16px] leading-[24px] text-gray-700">
+        <Text className="text-[16px] text-gray-700 leading-[24px]">
           You can now start using the Ensemble platform with your team.
         </Text>
 
-        <Section className="text-center my-[30px]">
+        <Section className="my-[30px] text-center">
           <Button
-            className="bg-emerald-600 text-white font-bold px-6 py-3 rounded-md hover:bg-emerald-700 no-underline"
+            className="rounded-md bg-emerald-600 px-6 py-3 font-bold text-white no-underline hover:bg-emerald-700"
             href={dashboardUrl}
           >
             Go to Dashboard
           </Button>
         </Section>
 
-        <Text className="text-[16px] leading-[24px] text-gray-700 mt-[30px]">
+        <Text className="mt-[30px] text-[16px] text-gray-700 leading-[24px]">
           Best regards,
           <br />
           <strong>The Ensemble Team</strong>
         </Text>
       </Section>
     </EnsembleLayout>
-  )
-}
+  );
+};
 
-export default TeamApprovalEmail
+export default TeamApprovalEmail;

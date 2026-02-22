@@ -1,30 +1,28 @@
-import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
-import { desc, eq } from 'drizzle-orm'
-import { db } from '@/db'
-import { teams } from '@/db/schema/teams'
-import { UpdateTeamSchema } from '@/lib/zod/team.schema'
-import { assertTeamAdmin, requireAuth } from '@/lib/middleware/auth.middleware'
+import { createServerFn } from "@tanstack/react-start";
+import { desc, eq } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/db";
+import { teams } from "@/db/schema/teams";
+import { assertTeamAdmin, requireAuth } from "@/lib/middleware/auth.middleware";
+import { UpdateTeamSchema } from "@/lib/zod/team.schema";
 
-export const getTeams = createServerFn({ method: 'GET' })
+export const getTeams = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .handler(async () => {
     try {
       const allTeams = await db
         .select()
         .from(teams)
-        .orderBy(desc(teams.createdAt))
-      return allTeams
+        .orderBy(desc(teams.createdAt));
+      return allTeams;
     } catch (error: unknown) {
-      console.error('Failed to fetch teams:', error)
-      throw new Error('Failed to fetch teams')
+      console.error("Failed to fetch teams:", error);
+      throw new Error("Failed to fetch teams");
     }
-  })
+  });
 
-export const getTeamById = createServerFn({ method: 'GET' })
-  .inputValidator((data: unknown) =>
-    z.object({ teamId: z.uuid() }).parse(data),
-  )
+export const getTeamById = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => z.object({ teamId: z.uuid() }).parse(data))
   .handler(async ({ data }) => {
     try {
       const team = await db.query.teams.findFirst({
@@ -32,19 +30,19 @@ export const getTeamById = createServerFn({ method: 'GET' })
         with: {
           applications: true,
         },
-      })
-      return team
+      });
+      return team;
     } catch (error: unknown) {
-      console.error('Failed to fetch team:', error)
-      throw new Error('Failed to fetch team')
+      console.error("Failed to fetch team:", error);
+      throw new Error("Failed to fetch team");
     }
-  })
+  });
 
-export const updateTeam = createServerFn({ method: 'POST' })
+export const updateTeam = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => UpdateTeamSchema.parse(data))
   .handler(async ({ data, context }) => {
-    assertTeamAdmin(context.session, data.id)
+    assertTeamAdmin(context.session, data.id);
 
     try {
       const updatedTeam = await db
@@ -60,11 +58,11 @@ export const updateTeam = createServerFn({ method: 'POST' })
           updatedAt: new Date(),
         })
         .where(eq(teams.id, data.id))
-        .returning()
+        .returning();
 
-      return updatedTeam[0]
+      return updatedTeam[0];
     } catch (error: unknown) {
-      console.error('Failed to update team:', error)
-      throw new Error('Failed to update team')
+      console.error("Failed to update team:", error);
+      throw new Error("Failed to update team");
     }
-  })
+  });

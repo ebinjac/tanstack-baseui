@@ -1,6 +1,4 @@
 {
-    "title": "Settings",
-    "pages": [
-        "index"
-    ]
+  "title": "Settings",
+  "pages": ["index"]
 }

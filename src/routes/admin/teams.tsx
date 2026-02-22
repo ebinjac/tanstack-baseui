@@ -1,4 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { formatDistanceToNow } from "date-fns";
 import {
   Building2,
   CheckCircle2,
@@ -10,26 +12,24 @@ import {
   UserCheck,
   Users,
   XCircle,
-} from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
-import type { Team } from '@/db/schema/teams'
-import { getTeams } from '@/app/actions/teams'
+} from "lucide-react";
+import type { ComponentType } from "react";
+import { useState } from "react";
+import { getTeams } from "@/app/actions/teams";
+import { PageHeader } from "@/components/shared";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { PageHeader } from '@/components/shared'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { EmptyState } from '@/components/shared/empty-state'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,104 +38,105 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Separator } from '@/components/ui/separator'
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from "@/components/ui/tooltip";
+import type { Team } from "@/db/schema/teams";
 
-export const Route = createFileRoute('/admin/teams')({
+export const Route = createFileRoute("/admin/teams")({
   component: AdminTeams,
-})
+});
 
 function AdminTeams() {
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const { data: teams, isLoading } = useQuery({
-    queryKey: ['teams'],
+    queryKey: ["teams"],
     queryFn: () => getTeams(),
-  })
+  });
 
   const filteredTeams = teams?.filter((team) => {
     const matchesSearch =
       team.teamName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       team.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      team.contactEmail.toLowerCase().includes(searchTerm.toLowerCase())
+      team.contactEmail.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
-      statusFilter === 'all' ||
-      (statusFilter === 'active' && team.isActive) ||
-      (statusFilter === 'inactive' && !team.isActive)
-    return matchesSearch && matchesStatus
-  })
+      statusFilter === "all" ||
+      (statusFilter === "active" && team.isActive) ||
+      (statusFilter === "inactive" && !team.isActive);
+    return matchesSearch && matchesStatus;
+  });
 
   const stats = {
     total: teams?.length || 0,
     active: teams?.filter((t) => t.isActive).length || 0,
     inactive: teams?.filter((t) => !t.isActive).length || 0,
     withAdminGroup: teams?.filter((t) => t.adminGroup).length || 0,
-  }
+  };
 
   return (
     <div className="space-y-6">
       {/* Premium Admin Header Banner */}
       <PageHeader
-        title="Active Teams"
         description="Manage and overview all registered engineering teams in the system."
+        title="Active Teams"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <MiniStatCard
+          color="blue"
+          icon={Building2}
           title="Total Teams"
           value={stats.total}
-          icon={Building2}
-          color="blue"
         />
         <MiniStatCard
+          color="emerald"
+          icon={CheckCircle2}
           title="Active"
           value={stats.active}
-          icon={CheckCircle2}
-          color="emerald"
         />
         <MiniStatCard
+          color="red"
+          icon={XCircle}
           title="Inactive"
           value={stats.inactive}
-          icon={XCircle}
-          color="red"
         />
         <MiniStatCard
+          color="amber"
+          icon={UserCheck}
           title="With Admins"
           value={stats.withAdminGroup}
-          icon={UserCheck}
-          color="amber"
         />
       </div>
 
       <Card className="border-none shadow-xl ring-1 ring-gray-200 dark:ring-gray-800">
         <CardHeader className="pb-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
             <div className="flex items-center gap-2">
               <div className="relative w-full md:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="Search by team, contact or email..."
-                  className="pl-10 h-10 bg-muted/50 border-none ring-1 ring-border"
-                  value={searchTerm}
+                  className="h-10 border-none bg-muted/50 pl-10 ring-1 ring-border"
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by team, contact or email..."
+                  value={searchTerm}
                 />
               </div>
               <TooltipProvider>
@@ -146,9 +147,9 @@ function AdminTeams() {
                         <DropdownMenuTrigger
                           render={
                             <Button
-                              variant="outline"
-                              size="icon"
                               className="h-10 w-10"
+                              size="icon"
+                              variant="outline"
                             >
                               <Filter className="h-4 w-4" />
                             </Button>
@@ -163,29 +164,29 @@ function AdminTeams() {
                       <DropdownMenuLabel>Status Filter</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
-                        onClick={() => setStatusFilter('all')}
                         className="flex items-center justify-between"
+                        onClick={() => setStatusFilter("all")}
                       >
-                        All{' '}
-                        {statusFilter === 'all' && (
+                        All{" "}
+                        {statusFilter === "all" && (
                           <CheckCircle2 className="h-4 w-4 text-primary" />
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => setStatusFilter('active')}
                         className="flex items-center justify-between"
+                        onClick={() => setStatusFilter("active")}
                       >
-                        Active{' '}
-                        {statusFilter === 'active' && (
+                        Active{" "}
+                        {statusFilter === "active" && (
                           <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                         )}
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => setStatusFilter('inactive')}
                         className="flex items-center justify-between"
+                        onClick={() => setStatusFilter("inactive")}
                       >
-                        Inactive{' '}
-                        {statusFilter === 'inactive' && (
+                        Inactive{" "}
+                        {statusFilter === "inactive" && (
                           <CheckCircle2 className="h-4 w-4 text-red-500" />
                         )}
                       </DropdownMenuItem>
@@ -197,7 +198,7 @@ function AdminTeams() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-xl border border-border shadow-sm overflow-hidden bg-background">
+          <div className="overflow-hidden rounded-xl border border-border bg-background shadow-sm">
             <Table>
               <TableHeader className="bg-muted/50">
                 <TableRow className="hover:bg-transparent">
@@ -209,15 +210,15 @@ function AdminTeams() {
                   </TableHead>
                   <TableHead className="font-semibold">Created</TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="text-right font-semibold pr-6">
+                  <TableHead className="pr-6 text-right font-semibold">
                     Management
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {isLoading ? (
+                {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-64 text-center">
+                    <TableCell className="h-64 text-center" colSpan={5}>
                       <div className="flex flex-col items-center gap-2">
                         <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                         <span className="text-muted-foreground text-sm">
@@ -226,32 +227,35 @@ function AdminTeams() {
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : (filteredTeams?.length ?? 0) === 0 ? (
+                )}
+                {!isLoading && (filteredTeams?.length ?? 0) === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-64 text-center">
+                    <TableCell className="h-64 text-center" colSpan={5}>
                       <EmptyState
-                        icon={Search}
-                        title="No teams found"
-                        description="No teams match your current filters."
-                        variant="search"
-                        size="md"
                         actionText="Clear filters"
+                        description="No teams match your current filters."
+                        icon={Search}
                         onAction={() => {
-                          setSearchTerm('')
-                          setStatusFilter('all')
+                          setSearchTerm("");
+                          setStatusFilter("all");
                         }}
+                        size="md"
+                        title="No teams found"
+                        variant="search"
                       />
                     </TableCell>
                   </TableRow>
-                ) : (
+                )}
+                {!isLoading &&
+                  (filteredTeams?.length ?? 0) > 0 &&
                   filteredTeams?.map((team) => (
                     <TableRow
+                      className="group transition-colors hover:bg-muted/30"
                       key={team.id}
-                      className="group hover:bg-muted/30 transition-colors"
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
                             <Shield className="h-5 w-5" />
                           </div>
                           <div className="flex flex-col gap-0.5">
@@ -260,14 +264,14 @@ function AdminTeams() {
                             </span>
                             <div className="flex items-center gap-2">
                               <Badge
+                                className="h-4 bg-accent/50 font-normal text-[10px]"
                                 variant="outline"
-                                className="text-[10px] h-4 font-normal bg-accent/50"
                               >
                                 U: {team.userGroup}
                               </Badge>
                               <Badge
+                                className="h-4 bg-accent/50 font-normal text-[10px]"
                                 variant="outline"
-                                className="text-[10px] h-4 font-normal bg-accent/50"
                               >
                                 A: {team.adminGroup}
                               </Badge>
@@ -277,12 +281,12 @@ function AdminTeams() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8 ring-1 ring-border shadow-sm">
-                            <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
+                          <Avatar className="h-8 w-8 shadow-sm ring-1 ring-border">
+                            <AvatarFallback className="bg-primary/5 font-bold text-primary text-xs">
                               {team.contactName
-                                .split(' ')
+                                .split(" ")
                                 .map((n) => n[0])
-                                .join('')
+                                .join("")
                                 .toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
@@ -290,7 +294,7 @@ function AdminTeams() {
                             <span className="font-medium leading-none">
                               {team.contactName}
                             </span>
-                            <span className="text-xs text-muted-foreground mt-1">
+                            <span className="mt-1 text-muted-foreground text-xs">
                               {team.contactEmail}
                             </span>
                           </div>
@@ -298,10 +302,10 @@ function AdminTeams() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium">
+                          <span className="font-medium text-sm">
                             {new Date(team.createdAt).toLocaleDateString()}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-muted-foreground text-xs">
                             {formatDistanceToNow(new Date(team.createdAt), {
                               addSuffix: true,
                             })}
@@ -311,20 +315,20 @@ function AdminTeams() {
                       <TableCell>
                         <StatusBadge active={team.isActive} />
                       </TableCell>
-                      <TableCell className="text-right pr-6">
-                        <div className="flex justify-end items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <TableCell className="pr-6 text-right">
+                        <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger
                                 render={
                                   <Button
+                                    className="h-9 w-9 text-primary hover:bg-primary/5 hover:text-primary"
+                                    onClick={() => {
+                                      setSelectedTeam(team);
+                                      setIsDetailsOpen(true);
+                                    }}
                                     size="icon"
                                     variant="ghost"
-                                    className="h-9 w-9 text-primary hover:text-primary hover:bg-primary/5"
-                                    onClick={() => {
-                                      setSelectedTeam(team)
-                                      setIsDetailsOpen(true)
-                                    }}
                                   >
                                     <ExternalLink className="h-5 w-5" />
                                   </Button>
@@ -337,9 +341,9 @@ function AdminTeams() {
                             <DropdownMenuTrigger
                               render={
                                 <Button
-                                  variant="ghost"
-                                  size="icon"
                                   className="h-9 w-9"
+                                  size="icon"
+                                  variant="ghost"
                                 >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
@@ -349,8 +353,8 @@ function AdminTeams() {
                               <DropdownMenuItem
                                 className="gap-2"
                                 onClick={() => {
-                                  setSelectedTeam(team)
-                                  setIsDetailsOpen(true)
+                                  setSelectedTeam(team);
+                                  setIsDetailsOpen(true);
                                 }}
                               >
                                 <ExternalLink className="h-4 w-4" /> View
@@ -364,8 +368,7 @@ function AdminTeams() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
+                  ))}
               </TableBody>
             </Table>
           </div>
@@ -373,11 +376,11 @@ function AdminTeams() {
       </Card>
 
       {/* Details Dialog */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+      <Dialog onOpenChange={setIsDetailsOpen} open={isDetailsOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary/10 text-primary">
+            <div className="mb-2 flex items-center gap-3">
+              <div className="rounded-lg bg-primary/10 p-2 text-primary">
                 <Shield className="h-5 w-5" />
               </div>
               <div>
@@ -392,13 +395,13 @@ function AdminTeams() {
             <div className="grid gap-6 py-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Team Name
                   </span>
-                  <p className="text-sm font-bold">{selectedTeam.teamName}</p>
+                  <p className="font-bold text-sm">{selectedTeam.teamName}</p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Status
                   </span>
                   <StatusBadge active={selectedTeam.isActive} />
@@ -407,41 +410,41 @@ function AdminTeams() {
               <Separator />
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Ads User Group
                   </span>
-                  <p className="text-sm font-mono bg-muted/50 px-2 py-0.5 rounded border border-border w-fit">
+                  <p className="w-fit rounded border border-border bg-muted/50 px-2 py-0.5 font-mono text-sm">
                     {selectedTeam.userGroup}
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Ads Admin Group
                   </span>
-                  <p className="text-sm font-mono bg-muted/50 px-2 py-0.5 rounded border border-border w-fit">
+                  <p className="w-fit rounded border border-border bg-muted/50 px-2 py-0.5 font-mono text-sm">
                     {selectedTeam.adminGroup}
                   </p>
                 </div>
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                   Primary Contact
                 </span>
-                <div className="p-3 rounded-lg border border-border bg-muted/20 flex flex-col gap-1">
-                  <span className="text-sm font-bold">
+                <div className="flex flex-col gap-1 rounded-lg border border-border bg-muted/20 p-3">
+                  <span className="font-bold text-sm">
                     {selectedTeam.contactName}
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {selectedTeam.contactEmail}
                   </span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Created
                   </span>
-                  <p className="text-sm font-medium">
+                  <p className="font-medium text-sm">
                     {new Date(selectedTeam.createdAt).toLocaleDateString()}
                   </p>
                   <p className="text-[10px] text-muted-foreground italic">
@@ -452,10 +455,10 @@ function AdminTeams() {
                 </div>
                 {selectedTeam.updatedAt && (
                   <div className="space-y-1">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                       Last Updated
                     </span>
-                    <p className="text-sm font-medium">
+                    <p className="font-medium text-sm">
                       {new Date(selectedTeam.updatedAt).toLocaleDateString()}
                     </p>
                     <p className="text-[10px] text-muted-foreground italic">
@@ -467,24 +470,24 @@ function AdminTeams() {
                 )}
               </div>
               <div className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <span className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                   Internal Identifiers
                 </span>
-                <p className="text-[10px] font-mono text-muted-foreground break-all bg-muted/30 p-2 rounded">
+                <p className="break-all rounded bg-muted/30 p-2 font-mono text-[10px] text-muted-foreground">
                   ID: {selectedTeam.id}
                 </p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setIsDetailsOpen(false)}>
+            <Button onClick={() => setIsDetailsOpen(false)} variant="secondary">
               Close
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }
 
 function MiniStatCard({
@@ -493,48 +496,48 @@ function MiniStatCard({
   icon: Icon,
   color,
 }: {
-  title: string
-  value: number
-  icon: any
-  color: 'blue' | 'amber' | 'emerald' | 'red'
+  title: string;
+  value: number;
+  icon: ComponentType<{ className?: string }>;
+  color: "blue" | "amber" | "emerald" | "red";
 }) {
   const colors = {
-    blue: 'text-blue-600 bg-blue-100 dark:bg-blue-900/20',
-    amber: 'text-amber-600 bg-amber-100 dark:bg-amber-900/20',
-    emerald: 'text-emerald-600 bg-emerald-100 dark:bg-emerald-900/20',
-    red: 'text-red-600 bg-red-100 dark:bg-red-900/20',
-  }
+    blue: "text-blue-600 bg-blue-100 dark:bg-blue-900/20",
+    amber: "text-amber-600 bg-amber-100 dark:bg-amber-900/20",
+    emerald: "text-emerald-600 bg-emerald-100 dark:bg-emerald-900/20",
+    red: "text-red-600 bg-red-100 dark:bg-red-900/20",
+  };
 
   return (
-    <Card className="border-none shadow-sm ring-1 ring-border group overflow-hidden bg-background">
-      <CardContent className="p-4 flex items-center justify-between">
+    <Card className="group overflow-hidden border-none bg-background shadow-sm ring-1 ring-border">
+      <CardContent className="flex items-center justify-between p-4">
         <div className="space-y-0.5">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          <p className="font-semibold text-muted-foreground text-xs uppercase tracking-wider">
             {title}
           </p>
-          <p className="text-2xl font-bold tracking-tight">{value}</p>
+          <p className="font-bold text-2xl tracking-tight">{value}</p>
         </div>
         <div
-          className={`p-2 rounded-lg transition-transform group-hover:scale-110 duration-300 ${colors[color]}`}
+          className={`rounded-lg p-2 transition-transform duration-300 group-hover:scale-110 ${colors[color]}`}
         >
           <Icon className="h-5 w-5" />
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function StatusBadge({ active }: { active: boolean }) {
   if (active) {
     return (
-      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-800/50 gap-1.5 flex w-fit items-center">
+      <Badge className="flex w-fit items-center gap-1.5 border-emerald-200/50 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:border-emerald-800/50 dark:bg-emerald-900/30 dark:text-emerald-400">
         <CheckCircle2 className="h-3 w-3" /> Active
       </Badge>
-    )
+    );
   }
   return (
-    <Badge className="bg-red-100 text-red-700 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 border-red-200/50 dark:border-red-800/50 gap-1.5 flex w-fit items-center">
+    <Badge className="flex w-fit items-center gap-1.5 border-red-200/50 bg-red-100 text-red-700 hover:bg-red-100 dark:border-red-800/50 dark:bg-red-900/30 dark:text-red-400">
       <XCircle className="h-3 w-3" /> Inactive
     </Badge>
-  )
+  );
 }

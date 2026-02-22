@@ -1,7 +1,4 @@
 {
-    "title": "Scorecard",
-    "pages": [
-        "index",
-        "metrics"
-    ]
+  "title": "Scorecard",
+  "pages": ["index", "metrics"]
 }

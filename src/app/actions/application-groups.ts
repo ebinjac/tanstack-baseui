@@ -1,27 +1,30 @@
-import { asc, eq, inArray, sql } from 'drizzle-orm'
-import { createServerFn } from '@tanstack/react-start'
-import { z } from 'zod'
-import { db } from '@/db'
+import { createServerFn } from "@tanstack/react-start";
+import { asc, eq, inArray, sql } from "drizzle-orm";
+import { z } from "zod";
+import { db } from "@/db";
 import {
   applicationGroupMemberships,
   applicationGroups,
-} from '@/db/schema/application-groups'
-import { applications, teams } from '@/db/schema/teams'
-import { requireAuth } from '@/lib/middleware/auth.middleware'
+} from "@/db/schema/application-groups";
+import { applications, teams } from "@/db/schema/teams";
+import { requireAuth } from "@/lib/middleware/auth.middleware";
 
 // ============================================================================
 // Schemas
 // ============================================================================
+const VALID_UUID_REGEX =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const GetApplicationGroupsSchema = z.object({
   teamId: z.uuid(),
-})
+});
 
 const CreateApplicationGroupSchema = z.object({
   teamId: z.uuid(),
   name: z.string().min(1).max(100),
   description: z.string().optional(),
   color: z.string().optional(),
-})
+});
 
 const UpdateApplicationGroupSchema = z.object({
   groupId: z.uuid(),
@@ -29,29 +32,29 @@ const UpdateApplicationGroupSchema = z.object({
   description: z.string().optional(),
   color: z.string().optional(),
   displayOrder: z.number().optional(),
-})
+});
 
 const DeleteApplicationGroupSchema = z.object({
   groupId: z.uuid(),
-})
+});
 
 const AddApplicationsToGroupSchema = z.object({
   groupId: z.uuid(),
   applicationIds: z.array(z.uuid()),
-})
+});
 
 const RemoveApplicationFromGroupSchema = z.object({
   applicationId: z.uuid(),
-})
+});
 
 const ReorderGroupsSchema = z.object({
   groupIds: z.array(z.uuid()),
-})
+});
 
 const ToggleTurnoverGroupingSchema = z.object({
   teamId: z.uuid(),
   enabled: z.boolean(),
-})
+});
 
 const SyncGroupStructureSchema = z.object({
   teamId: z.uuid(),
@@ -61,14 +64,14 @@ const SyncGroupStructureSchema = z.object({
       name: z.string(),
       applicationIds: z.array(z.uuid()),
       color: z.string().optional(),
-    }),
+    })
   ),
-})
+});
 
 // ============================================================================
 // Get Application Groups for a Team
 // ============================================================================
-export const getApplicationGroups = createServerFn({ method: 'GET' })
+export const getApplicationGroups = createServerFn({ method: "GET" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => GetApplicationGroupsSchema.parse(data))
   .handler(async ({ data }) => {
@@ -77,22 +80,22 @@ export const getApplicationGroups = createServerFn({ method: 'GET' })
       const team = await db.query.teams.findFirst({
         where: (t, { eq }) => eq(t.id, data.teamId),
         columns: { turnoverGroupingEnabled: true },
-      })
+      });
 
       // Get all groups for the team
       const groups = await db.query.applicationGroups.findMany({
         where: (g, { eq }) => eq(g.teamId, data.teamId),
         orderBy: (g, { asc }) => [asc(g.displayOrder), asc(g.createdAt)],
-      })
+      });
 
       // Get all group memberships with applications
-      const groupIds = groups.map((g) => g.id)
+      const groupIds = groups.map((g) => g.id);
       let membershipsWithApps: Array<{
-        groupId: string
-        applicationId: string
-        displayOrder: number
-        application: typeof applications.$inferSelect
-      }> = []
+        groupId: string;
+        applicationId: string;
+        displayOrder: number;
+        application: typeof applications.$inferSelect;
+      }> = [];
 
       if (groupIds.length > 0) {
         membershipsWithApps = await db
@@ -105,24 +108,24 @@ export const getApplicationGroups = createServerFn({ method: 'GET' })
           .from(applicationGroupMemberships)
           .innerJoin(
             applications,
-            eq(applicationGroupMemberships.applicationId, applications.id),
+            eq(applicationGroupMemberships.applicationId, applications.id)
           )
           .where(inArray(applicationGroupMemberships.groupId, groupIds))
-          .orderBy(asc(applicationGroupMemberships.displayOrder))
+          .orderBy(asc(applicationGroupMemberships.displayOrder));
       }
 
       // Get all applications for the team
       const allApps = await db.query.applications.findMany({
         where: (a, { eq }) => eq(a.teamId, data.teamId),
-      })
+      });
 
       // Build grouped applications map
       const groupedAppIds = new Set(
-        membershipsWithApps.map((m) => m.applicationId),
-      )
+        membershipsWithApps.map((m) => m.applicationId)
+      );
       const ungroupedApplications = allApps.filter(
-        (a) => !groupedAppIds.has(a.id),
-      )
+        (a) => !groupedAppIds.has(a.id)
+      );
 
       // Attach applications to groups
       const groupsWithApps = groups.map((group) => ({
@@ -130,27 +133,27 @@ export const getApplicationGroups = createServerFn({ method: 'GET' })
         applications: membershipsWithApps
           .filter((m) => m.groupId === group.id)
           .map((m) => m.application),
-      }))
+      }));
 
       return {
         groups: groupsWithApps,
         ungroupedApplications,
         groupingEnabled: team?.turnoverGroupingEnabled ?? false,
-      }
+      };
     } catch (error: unknown) {
-      console.error('Failed to fetch application groups:', error)
-      throw new Error('Failed to fetch application groups')
+      console.error("Failed to fetch application groups:", error);
+      throw new Error("Failed to fetch application groups");
     }
-  })
+  });
 
 // ============================================================================
 // Create Application Group
 // ============================================================================
-export const createApplicationGroup = createServerFn({ method: 'POST' })
+export const createApplicationGroup = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => CreateApplicationGroupSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const userEmail = context.userEmail
+    const userEmail = context.userEmail;
 
     try {
       // Get max display order
@@ -159,9 +162,9 @@ export const createApplicationGroup = createServerFn({ method: 'POST' })
           maxOrder: sql<number>`COALESCE(MAX(${applicationGroups.displayOrder}), 0)`,
         })
         .from(applicationGroups)
-        .where(eq(applicationGroups.teamId, data.teamId))
+        .where(eq(applicationGroups.teamId, data.teamId));
 
-      const nextOrder = (maxOrderResult[0]?.maxOrder ?? 0) + 1
+      const nextOrder = (maxOrderResult[0]?.maxOrder ?? 0) + 1;
 
       const [newGroup] = await db
         .insert(applicationGroups)
@@ -169,54 +172,60 @@ export const createApplicationGroup = createServerFn({ method: 'POST' })
           teamId: data.teamId,
           name: data.name,
           description: data.description,
-          color: data.color || '#6366f1',
+          color: data.color || "#6366f1",
           displayOrder: nextOrder,
           createdBy: userEmail,
         })
-        .returning()
+        .returning();
 
-      return { success: true, group: newGroup }
+      return { success: true, group: newGroup };
     } catch (error: unknown) {
-      console.error('Failed to create application group:', error)
-      throw new Error('Failed to create application group')
+      console.error("Failed to create application group:", error);
+      throw new Error("Failed to create application group");
     }
-  })
+  });
 
 // ============================================================================
 // Update Application Group
 // ============================================================================
-export const updateApplicationGroup = createServerFn({ method: 'POST' })
+export const updateApplicationGroup = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => UpdateApplicationGroupSchema.parse(data))
   .handler(async ({ data }) => {
     try {
-      const updateData: Partial<typeof applicationGroups.$inferInsert> = {}
+      const updateData: Partial<typeof applicationGroups.$inferInsert> = {};
 
-      if (data.name !== undefined) updateData.name = data.name
-      if (data.description !== undefined)
-        updateData.description = data.description
-      if (data.color !== undefined) updateData.color = data.color
-      if (data.displayOrder !== undefined)
-        updateData.displayOrder = data.displayOrder
-      updateData.updatedAt = new Date()
+      if (data.name !== undefined) {
+        updateData.name = data.name;
+      }
+      if (data.description !== undefined) {
+        updateData.description = data.description;
+      }
+      if (data.color !== undefined) {
+        updateData.color = data.color;
+      }
+      if (data.displayOrder !== undefined) {
+        updateData.displayOrder = data.displayOrder;
+      }
+      updateData.updatedAt = new Date();
 
       const [updated] = await db
         .update(applicationGroups)
         .set(updateData)
         .where(eq(applicationGroups.id, data.groupId))
-        .returning()
+        .returning();
 
-      return { success: true, group: updated }
+      return { success: true, group: updated };
     } catch (error: unknown) {
-      console.error('Failed to update application group:', error)
-      throw new Error('Failed to update application group')
+      console.error("Failed to update application group:", error);
+      throw new Error("Failed to update application group");
     }
-  })
+  });
 
 // ============================================================================
 // Delete Application Group
 // ============================================================================
-export const deleteApplicationGroup = createServerFn({ method: 'POST' })
+export const deleteApplicationGroup = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => DeleteApplicationGroupSchema.parse(data))
   .handler(async ({ data }) => {
@@ -224,24 +233,24 @@ export const deleteApplicationGroup = createServerFn({ method: 'POST' })
       // Delete memberships first (cascade should handle this, but be explicit)
       await db
         .delete(applicationGroupMemberships)
-        .where(eq(applicationGroupMemberships.groupId, data.groupId))
+        .where(eq(applicationGroupMemberships.groupId, data.groupId));
 
       // Delete the group
       await db
         .delete(applicationGroups)
-        .where(eq(applicationGroups.id, data.groupId))
+        .where(eq(applicationGroups.id, data.groupId));
 
-      return { success: true }
+      return { success: true };
     } catch (error: unknown) {
-      console.error('Failed to delete application group:', error)
-      throw new Error('Failed to delete application group')
+      console.error("Failed to delete application group:", error);
+      throw new Error("Failed to delete application group");
     }
-  })
+  });
 
 // ============================================================================
 // Add Applications to Group
 // ============================================================================
-export const addApplicationsToGroup = createServerFn({ method: 'POST' })
+export const addApplicationsToGroup = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => AddApplicationsToGroupSchema.parse(data))
   .handler(async ({ data }) => {
@@ -252,9 +261,9 @@ export const addApplicationsToGroup = createServerFn({ method: 'POST' })
           maxOrder: sql<number>`COALESCE(MAX(${applicationGroupMemberships.displayOrder}), 0)`,
         })
         .from(applicationGroupMemberships)
-        .where(eq(applicationGroupMemberships.groupId, data.groupId))
+        .where(eq(applicationGroupMemberships.groupId, data.groupId));
 
-      const nextOrder = (maxOrderResult[0]?.maxOrder ?? 0) + 1
+      const nextOrder = (maxOrderResult[0]?.maxOrder ?? 0) + 1;
 
       // Remove existing memberships for these applications (they can only be in one group)
       await db
@@ -262,9 +271,9 @@ export const addApplicationsToGroup = createServerFn({ method: 'POST' })
         .where(
           inArray(
             applicationGroupMemberships.applicationId,
-            data.applicationIds,
-          ),
-        )
+            data.applicationIds
+          )
+        );
 
       // Add new memberships
       const memberships = data.applicationIds.map(
@@ -272,45 +281,45 @@ export const addApplicationsToGroup = createServerFn({ method: 'POST' })
           groupId: data.groupId,
           applicationId: appId,
           displayOrder: nextOrder + index,
-        }),
-      )
+        })
+      );
 
-      await db.insert(applicationGroupMemberships).values(memberships)
+      await db.insert(applicationGroupMemberships).values(memberships);
 
-      return { success: true }
+      return { success: true };
     } catch (error: unknown) {
-      console.error('Failed to add applications to group:', error)
-      throw new Error('Failed to add applications to group')
+      console.error("Failed to add applications to group:", error);
+      throw new Error("Failed to add applications to group");
     }
-  })
+  });
 
 // ============================================================================
 // Remove Application from Group
 // ============================================================================
-export const removeApplicationFromGroup = createServerFn({ method: 'POST' })
+export const removeApplicationFromGroup = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) =>
-    RemoveApplicationFromGroupSchema.parse(data),
+    RemoveApplicationFromGroupSchema.parse(data)
   )
   .handler(async ({ data }) => {
     try {
       await db
         .delete(applicationGroupMemberships)
         .where(
-          eq(applicationGroupMemberships.applicationId, data.applicationId),
-        )
+          eq(applicationGroupMemberships.applicationId, data.applicationId)
+        );
 
-      return { success: true }
+      return { success: true };
     } catch (error: unknown) {
-      console.error('Failed to remove application from group:', error)
-      throw new Error('Failed to remove application from group')
+      console.error("Failed to remove application from group:", error);
+      throw new Error("Failed to remove application from group");
     }
-  })
+  });
 
 // ============================================================================
 // Reorder Groups
 // ============================================================================
-export const reorderGroups = createServerFn({ method: 'POST' })
+export const reorderGroups = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => ReorderGroupsSchema.parse(data))
   .handler(async ({ data }) => {
@@ -321,21 +330,21 @@ export const reorderGroups = createServerFn({ method: 'POST' })
           db
             .update(applicationGroups)
             .set({ displayOrder: index, updatedAt: new Date() })
-            .where(eq(applicationGroups.id, groupId)),
-        ),
-      )
+            .where(eq(applicationGroups.id, groupId))
+        )
+      );
 
-      return { success: true }
+      return { success: true };
     } catch (error: unknown) {
-      console.error('Failed to reorder groups:', error)
-      throw new Error('Failed to reorder groups')
+      console.error("Failed to reorder groups:", error);
+      throw new Error("Failed to reorder groups");
     }
-  })
+  });
 
 // ============================================================================
 // Toggle Turnover Grouping
 // ============================================================================
-export const toggleTurnoverGrouping = createServerFn({ method: 'POST' })
+export const toggleTurnoverGrouping = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => ToggleTurnoverGroupingSchema.parse(data))
   .handler(async ({ data }) => {
@@ -343,69 +352,54 @@ export const toggleTurnoverGrouping = createServerFn({ method: 'POST' })
       await db
         .update(teams)
         .set({ turnoverGroupingEnabled: data.enabled })
-        .where(eq(teams.id, data.teamId))
+        .where(eq(teams.id, data.teamId));
 
-      return { success: true, enabled: data.enabled }
+      return { success: true, enabled: data.enabled };
     } catch (error: unknown) {
-      console.error('Failed to toggle turnover grouping:', error)
-      throw new Error('Failed to toggle turnover grouping')
+      console.error("Failed to toggle turnover grouping:", error);
+      throw new Error("Failed to toggle turnover grouping");
     }
-  })
+  });
 
 // ============================================================================
 // Sync Group Structure (Drag and Drop Updates)
 // ============================================================================
-export const syncGroupStructure = createServerFn({ method: 'POST' })
+export const syncGroupStructure = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => SyncGroupStructureSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const userEmail = context.userEmail
+    const userEmail = context.userEmail;
 
     try {
       await db.transaction(async (tx) => {
         // 1. Get existing groups
         const existingGroups = await tx.query.applicationGroups.findMany({
           where: (g, { eq }) => eq(g.teamId, data.teamId),
-        })
+        });
 
-        const submittedGroupIds = new Set(data.groups.map((g) => g.id))
-        const validUuidRegex =
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+        const submittedGroupIds = new Set(data.groups.map((g) => g.id));
 
         // 2. Delete removed groups
         const groupsToDelete = existingGroups.filter(
-          (g) => !submittedGroupIds.has(g.id),
-        )
+          (g) => !submittedGroupIds.has(g.id)
+        );
 
         if (groupsToDelete.length > 0) {
           await tx.delete(applicationGroups).where(
             inArray(
               applicationGroups.id,
-              groupsToDelete.map((g) => g.id),
-            ),
-          )
+              groupsToDelete.map((g) => g.id)
+            )
+          );
         }
 
         // 3. Process each group in order
         for (let i = 0; i < data.groups.length; i++) {
-          const groupData = data.groups[i]
-          let groupId = groupData.id
+          const groupData = data.groups[i];
+          let groupId = groupData.id;
 
           // If temporary ID, create new group
-          if (!validUuidRegex.test(groupId)) {
-            const [newGroup] = await tx
-              .insert(applicationGroups)
-              .values({
-                teamId: data.teamId,
-                name: groupData.name,
-                description: '',
-                color: groupData.color || '#6366f1',
-                displayOrder: i,
-                createdBy: userEmail,
-              })
-              .returning()
-            groupId = newGroup.id
-          } else {
+          if (VALID_UUID_REGEX.test(groupId)) {
             // Update existing group
             await tx
               .update(applicationGroups)
@@ -414,14 +408,27 @@ export const syncGroupStructure = createServerFn({ method: 'POST' })
                 displayOrder: i,
                 updatedAt: new Date(),
               })
-              .where(eq(applicationGroups.id, groupId))
+              .where(eq(applicationGroups.id, groupId));
+          } else {
+            const [newGroup] = await tx
+              .insert(applicationGroups)
+              .values({
+                teamId: data.teamId,
+                name: groupData.name,
+                description: "",
+                color: groupData.color || "#6366f1",
+                displayOrder: i,
+                createdBy: userEmail,
+              })
+              .returning();
+            groupId = newGroup.id;
           }
 
           // 4. Update memberships
           // Remove existing memberships for this group
           await tx
             .delete(applicationGroupMemberships)
-            .where(eq(applicationGroupMemberships.groupId, groupId))
+            .where(eq(applicationGroupMemberships.groupId, groupId));
 
           // Add new memberships
           if (groupData.applicationIds.length > 0) {
@@ -429,16 +436,16 @@ export const syncGroupStructure = createServerFn({ method: 'POST' })
               groupId,
               applicationId: appId,
               displayOrder: idx,
-            }))
-            await tx.insert(applicationGroupMemberships).values(memberships)
+            }));
+            await tx.insert(applicationGroupMemberships).values(memberships);
           }
         }
-      })
+      });
 
-      return { success: true }
+      return { success: true };
     } catch (error: unknown) {
-      console.error('Failed to sync group structure:', error)
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      throw new Error('Failed to sync group structure: ' + message)
+      console.error("Failed to sync group structure:", error);
+      const message = error instanceof Error ? error.message : "Unknown error";
+      throw new Error(`Failed to sync group structure: ${message}`);
     }
-  })
+  });

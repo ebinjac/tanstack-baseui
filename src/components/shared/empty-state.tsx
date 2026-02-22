@@ -8,11 +8,10 @@
  * @see skills/code-quality/rules/dry-no-copy-paste.md
  */
 
-import { FileX, FolderOpen, Inbox,  Search } from 'lucide-react'
-import { memo } from 'react'
-import type {LucideIcon} from 'lucide-react';
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import type { LucideIcon } from "lucide-react";
+import { FileX, FolderOpen, Inbox, Search } from "lucide-react";
+import { memo } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Empty,
   EmptyContent,
@@ -20,50 +19,51 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from '@/components/ui/empty'
+} from "@/components/ui/empty";
+import { cn } from "@/lib/utils";
 
-export type EmptyStateVariant = 'default' | 'search' | 'error' | 'folder'
+export type EmptyStateVariant = "default" | "search" | "error" | "folder";
 
 export interface EmptyStateProps {
-  /** Title text */
-  title: string
-  /** Description text */
-  description?: string
-  /** Icon to display (defaults based on variant) */
-  icon?: LucideIcon
-  /** Variant style */
-  variant?: EmptyStateVariant
   /** Action button text */
-  actionText?: string
-  /** Action button click handler */
-  onAction?: () => void
+  actionText?: string;
   /** Additional className */
-  className?: string
+  className?: string;
+  /** Description text */
+  description?: string;
+  /** Icon to display (defaults based on variant) */
+  icon?: LucideIcon;
+  /** Action button click handler */
+  onAction?: () => void;
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg'
+  size?: "sm" | "md" | "lg";
+  /** Title text */
+  title: string;
+  /** Variant style */
+  variant?: EmptyStateVariant;
 }
 
 const variantDefaults: Record<
   EmptyStateVariant,
   { icon: LucideIcon; title: string }
 > = {
-  default: { icon: Inbox, title: 'No Data' },
-  search: { icon: Search, title: 'No Results Found' },
-  error: { icon: FileX, title: 'Something Went Wrong' },
-  folder: { icon: FolderOpen, title: 'Folder is Empty' },
-}
+  default: { icon: Inbox, title: "No Data" },
+  search: { icon: Search, title: "No Results Found" },
+  error: { icon: FileX, title: "Something Went Wrong" },
+  folder: { icon: FolderOpen, title: "Folder is Empty" },
+};
 
 const sizeClasses = {
-  sm: 'py-8',
-  md: 'py-16',
-  lg: 'py-24',
-}
+  sm: "py-8",
+  md: "py-16",
+  lg: "py-24",
+};
 
 const iconSizes = {
-  sm: 'size-8',
-  md: 'size-10',
-  lg: 'size-12',
-}
+  sm: "size-8",
+  md: "size-10",
+  lg: "size-12",
+};
 
 /**
  * An empty state component for displaying when there's no data.
@@ -83,22 +83,22 @@ export const EmptyState = memo(function EmptyState({
   title,
   description,
   icon: Icon,
-  variant = 'default',
+  variant = "default",
   actionText,
   onAction,
   className,
-  size = 'md',
+  size = "md",
 }: EmptyStateProps) {
-  const defaults = variantDefaults[variant]
-  const DisplayIcon = Icon || defaults.icon
-  const displayTitle = title || defaults.title
+  const defaults = variantDefaults[variant];
+  const DisplayIcon = Icon || defaults.icon;
+  const displayTitle = title || defaults.title;
 
   return (
     <Empty className={cn(sizeClasses[size], className)}>
       <EmptyHeader>
         <EmptyMedia
+          className={cn(iconSizes[size], "bg-muted/50")}
           variant="icon"
-          className={cn(iconSizes[size], 'bg-muted/50')}
         >
           <DisplayIcon className={iconSizes[size]} />
         </EmptyMedia>
@@ -111,41 +111,42 @@ export const EmptyState = memo(function EmptyState({
         </EmptyContent>
       )}
     </Empty>
-  )
-})
+  );
+});
 
 /**
  * EmptyStateCard - Empty state with card-like styling
  */
 export const EmptyStateCard = memo(function EmptyStateCard(
-  props: EmptyStateProps,
+  props: EmptyStateProps
 ) {
   return (
     <EmptyState
       {...props}
       className={cn(
-        'bg-card/10 backdrop-blur-sm border border-dashed border-border/50 rounded-3xl',
-        props.className,
+        "rounded-3xl border border-border/50 border-dashed bg-card/10 backdrop-blur-sm",
+        props.className
       )}
     />
-  )
-})
+  );
+});
 
 /**
  * EmptyStateInline - Inline empty state for tables/lists
  */
 export const EmptyStateInline = memo(function EmptyStateInline(
-  props: EmptyStateProps,
+  props: EmptyStateProps
 ) {
-  return <EmptyState {...props} size="sm" />
-})
+  return <EmptyState {...props} size="sm" />;
+});
 
 // Re-export the shadcn Empty components for direct use
+// biome-ignore lint/performance/noBarrelFile: intentional re-export of UI primitives
 export {
   Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
   EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
   EmptyMedia,
-}
+  EmptyTitle,
+} from "@/components/ui/empty";

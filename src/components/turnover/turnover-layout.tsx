@@ -1,6 +1,5 @@
-import { useState } from 'react'
-import { Link, useLocation, useParams } from '@tanstack/react-router'
-import { AnimatePresence, motion } from 'framer-motion'
+import { Link, useLocation, useParams } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowRightLeft,
   BarChart3,
@@ -9,104 +8,105 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Send,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+} from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   {
-    title: 'Pass the Baton',
-    path: 'pass-the-baton',
+    title: "Pass the Baton",
+    path: "pass-the-baton",
     icon: ArrowRightLeft,
-    description: 'Create and manage turnover entries',
+    description: "Create and manage turnover entries",
   },
   {
-    title: 'Dispatch Turnover',
-    path: 'dispatch-turnover',
+    title: "Dispatch Turnover",
+    path: "dispatch-turnover",
     icon: Send,
-    description: 'Shift briefing and finalization',
+    description: "Shift briefing and finalization",
   },
   {
-    title: 'Transition History',
-    path: 'transition-history',
+    title: "Transition History",
+    path: "transition-history",
     icon: History,
-    description: 'View archived turnovers',
+    description: "View archived turnovers",
   },
   {
-    title: 'Turnover Metrics',
-    path: 'turnover-metrics',
+    title: "Turnover Metrics",
+    path: "turnover-metrics",
     icon: BarChart3,
-    description: 'Analytics and performance',
+    description: "Analytics and performance",
   },
-] as const
+] as const;
 
 export function TurnoverSidebar() {
-  const { teamId } = useParams({ strict: false })
-  const location = useLocation()
-  const [isCollapsed, setIsCollapsed] = useState(true)
+  const { teamId } = useParams({ strict: false });
+  const location = useLocation();
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   return (
     <TooltipProvider>
       <motion.aside
-        initial={false}
         animate={{ width: isCollapsed ? 80 : 288 }}
-        className="border-r bg-background flex flex-col h-full overflow-hidden relative"
+        className="relative flex h-full flex-col overflow-hidden border-r bg-background"
+        initial={false}
       >
         {/* Header */}
-        <div className="p-4 border-b bg-gradient-to-br from-primary/5 to-transparent relative">
+        <div className="relative border-b bg-gradient-to-br from-primary/5 to-transparent p-4">
           <div
             className={cn(
-              'flex items-center mb-4 transition-all',
-              isCollapsed ? 'justify-center' : 'justify-between',
+              "mb-4 flex items-center transition-all",
+              isCollapsed ? "justify-center" : "justify-between"
             )}
           >
             {!isCollapsed && (
               <Link
+                className="flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
+                params={{ teamId: teamId ?? "" }}
                 to="/teams/$teamId/settings"
-                params={{ teamId: teamId! }}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="h-4 w-4" />
                 Back
               </Link>
             )}
             <Button
-              variant="ghost"
-              size="icon"
               className="h-8 w-8 text-muted-foreground"
               onClick={() => setIsCollapsed(!isCollapsed)}
+              size="icon"
+              variant="ghost"
             >
               {isCollapsed ? (
-                <PanelLeftOpen className="w-4 h-4" />
+                <PanelLeftOpen className="h-4 w-4" />
               ) : (
-                <PanelLeftClose className="w-4 h-4" />
+                <PanelLeftClose className="h-4 w-4" />
               )}
             </Button>
           </div>
 
           <div
-            className={cn('flex items-center gap-3', isCollapsed && 'flex-col')}
+            className={cn("flex items-center gap-3", isCollapsed && "flex-col")}
           >
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-              <ArrowRightLeft className="w-6 h-6 text-primary-foreground" />
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-lg shadow-primary/20">
+              <ArrowRightLeft className="h-6 w-6 text-primary-foreground" />
             </div>
             {!isCollapsed && (
               <motion.div
-                initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
                 className="min-w-0"
+                exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
               >
-                <h1 className="text-xl font-bold tracking-tight truncate">
+                <h1 className="truncate font-bold text-xl tracking-tight">
                   TO - HUB
                 </h1>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="truncate text-muted-foreground text-xs">
                   Shift handover management
                 </p>
               </motion.div>
@@ -117,34 +117,34 @@ export function TurnoverSidebar() {
         {/* Navigation */}
         <nav
           className={cn(
-            'flex-1 space-y-2 flex flex-col',
-            isCollapsed ? 'items-center px-2 py-4' : 'p-4 w-full',
+            "flex flex-1 flex-col space-y-2",
+            isCollapsed ? "items-center px-2 py-4" : "w-full p-4"
           )}
         >
           {navItems.map((item) => {
-            const isActive = location.pathname.includes(item.path)
-            const Icon = item.icon
+            const isActive = location.pathname.includes(item.path);
+            const Icon = item.icon;
 
             const LinkComponent = (
               <Link
-                to={`/teams/$teamId/turnover/${item.path}`}
-                params={{ teamId: teamId! }}
                 className={cn(
-                  'group relative flex items-center rounded-lg transition-all duration-200 select-none',
+                  "group relative flex select-none items-center rounded-lg transition-all duration-200",
                   isActive
-                    ? 'text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60',
+                    ? "text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                   isCollapsed
-                    ? 'w-10 h-10 justify-center p-0'
-                    : 'w-full gap-3 px-4 py-3',
+                    ? "h-10 w-10 justify-center p-0"
+                    : "w-full gap-3 px-4 py-3"
                 )}
+                params={{ teamId: teamId ?? "" }}
+                to={`/teams/$teamId/turnover/${item.path}`}
               >
                 {isActive && (
                   <motion.div
+                    className="absolute inset-0 rounded-lg bg-primary shadow-md"
                     layoutId="activeTurnoverTab"
-                    className="absolute inset-0 bg-primary rounded-lg shadow-md"
                     transition={{
-                      type: 'spring',
+                      type: "spring",
                       stiffness: 500,
                       damping: 30,
                     }}
@@ -152,28 +152,28 @@ export function TurnoverSidebar() {
                 )}
                 <Icon
                   className={cn(
-                    'w-5 h-5 shrink-0 transition-colors relative z-10',
+                    "relative z-10 h-5 w-5 shrink-0 transition-colors",
                     isActive
-                      ? 'text-primary-foreground'
-                      : 'text-muted-foreground group-hover:text-foreground',
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground group-hover:text-foreground"
                   )}
                 />
                 {!isCollapsed && (
                   <motion.div
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    className="relative z-10 min-w-0 flex-1"
                     exit={{ opacity: 0, width: 0 }}
-                    className="flex-1 min-w-0 relative z-10"
+                    initial={{ opacity: 0, width: 0 }}
                   >
-                    <p className="font-semibold text-sm leading-none mb-1">
+                    <p className="mb-1 font-semibold text-sm leading-none">
                       {item.title}
                     </p>
                     <p
                       className={cn(
-                        'text-xs truncate transition-opacity',
+                        "truncate text-xs transition-opacity",
                         isActive
-                          ? 'text-primary-foreground/80'
-                          : 'text-muted-foreground group-hover:text-foreground/70',
+                          ? "text-primary-foreground/80"
+                          : "text-muted-foreground group-hover:text-foreground/70"
                       )}
                     >
                       {item.description}
@@ -181,41 +181,41 @@ export function TurnoverSidebar() {
                   </motion.div>
                 )}
               </Link>
-            )
+            );
 
             if (isCollapsed) {
               return (
                 <Tooltip key={item.path}>
                   <TooltipTrigger>{LinkComponent}</TooltipTrigger>
                   <TooltipContent
-                    side="right"
                     className="font-semibold"
+                    side="right"
                     sideOffset={10}
                   >
                     {item.title}
                   </TooltipContent>
                 </Tooltip>
-              )
+              );
             }
 
             return (
-              <div key={item.path} className="w-full">
+              <div className="w-full" key={item.path}>
                 {LinkComponent}
               </div>
-            )
+            );
           })}
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t">
+        <div className="border-t p-4">
           {!isCollapsed && (
             <motion.div
-              initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              className="rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 to-transparent p-4"
               exit={{ opacity: 0 }}
-              className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20"
+              initial={{ opacity: 0 }}
             >
-              <p className="text-xs font-medium text-primary mb-1">Quick Tip</p>
+              <p className="mb-1 font-medium text-primary text-xs">Quick Tip</p>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
                 Mark critical items as important to ensure they're highlighted
                 during shift handovers.
@@ -225,29 +225,29 @@ export function TurnoverSidebar() {
         </div>
       </motion.aside>
     </TooltipProvider>
-  )
+  );
 }
 
 export function TurnoverLayout({ children }: { children: React.ReactNode }) {
-  const location = useLocation()
+  const location = useLocation();
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
       <TurnoverSidebar />
-      <main className="flex-1 overflow-auto bg-background w-full">
+      <main className="w-full flex-1 overflow-auto bg-background">
         <AnimatePresence mode="wait">
           <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
             className="h-full"
+            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: 10 }}
+            key={location.pathname}
+            transition={{ duration: 0.2 }}
           >
             {children}
           </motion.div>
         </AnimatePresence>
       </main>
     </div>
-  )
+  );
 }

@@ -1,8 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-
-import { format } from 'date-fns'
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { format } from "date-fns";
 import {
   AlertCircle,
   Bell,
@@ -21,91 +19,131 @@ import {
   Star,
   X,
   Zap,
-} from 'lucide-react'
-import type { DateRange } from 'react-day-picker'
-import type { TurnoverSection } from '@/lib/zod/turnover.schema';
-import type { FinalizedTurnover } from '@/db/schema/turnover'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import type { DateRange } from "react-day-picker";
+import { getFinalizedTurnovers } from "@/app/actions/turnover";
+import { PageHeader } from "@/components/shared";
+import { EntryCard } from "@/components/turnover/entry-card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover'
-import { Calendar as CalendarComponent } from '@/components/ui/calendar'
-import { Separator } from '@/components/ui/separator'
-import { ScrollArea } from '@/components/ui/scroll-area'
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import type {
+  FinalizedTurnover,
+  TurnoverEntryWithDetails,
+} from "@/db/schema/turnover";
+import { cn } from "@/lib/utils";
+import type { TurnoverSection } from "@/lib/zod/turnover.schema";
+import { SECTION_CONFIG } from "@/lib/zod/turnover.schema";
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import { cn } from '@/lib/utils'
-import { getFinalizedTurnovers } from '@/app/actions/turnover'
-import { SECTION_CONFIG } from '@/lib/zod/turnover.schema'
-import { EntryCard } from '@/components/turnover/entry-card'
-import { PageHeader } from '@/components/shared'
+interface SnapshotEntry {
+  application?: { applicationName?: string; tla?: string; tier?: string };
+  applicationId: string;
+  comments?: string;
+  commsDetails?: { emailSubject?: string };
+  createdBy?: string;
+  description?: string;
+  id: string;
+  incDetails?: { incidentNumber?: string };
+  isImportant?: boolean;
+  mimDetails?: { mimLink?: string };
+  rfcDetails?: { rfcNumber?: string };
+  section: string;
+  title?: string;
+}
+
+function getSectionBgClass(colorClass: string): string {
+  if (colorClass.includes("blue")) {
+    return "bg-blue-100";
+  }
+  if (colorClass.includes("red")) {
+    return "bg-red-100";
+  }
+  if (colorClass.includes("amber")) {
+    return "bg-amber-100";
+  }
+  if (colorClass.includes("purple")) {
+    return "bg-purple-100";
+  }
+  if (colorClass.includes("green")) {
+    return "bg-green-100";
+  }
+  return "bg-muted";
+}
 
 export const Route = createFileRoute(
-  '/teams/$teamId/turnover/transition-history',
+  "/teams/$teamId/turnover/transition-history"
 )({
   component: TransitionHistoryPage,
-})
+});
 
-const SECTION_ICONS: Record<TurnoverSection, any> = {
+const SECTION_ICONS: Record<TurnoverSection, React.ElementType> = {
   RFC: CheckCircle2,
   INC: AlertCircle,
   ALERTS: Bell,
   MIM: Zap,
   COMMS: MessageSquare,
   FYI: HelpCircle,
-}
+};
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: complex history page with filters, pagination, grid/list views, and snapshot dialog
 function TransitionHistoryPage() {
-  const { teamId } = Route.useParams()
+  const { teamId } = Route.useParams();
 
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [dateRange, setDateRange] = useState<DateRange | undefined>()
-  const [page, setPage] = useState(0)
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [page, setPage] = useState(0);
   const [selectedSnapshot, setSelectedSnapshot] =
-    useState<FinalizedTurnover | null>(null)
-  const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false)
-  const [debouncedSearch, setDebouncedSearch] = useState('')
+    useState<FinalizedTurnover | null>(null);
+  const [snapshotDialogOpen, setSnapshotDialogOpen] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const limit = 20
+  const limit = 20;
 
   // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery)
-    }, 400)
-    return () => clearTimeout(timer)
-  }, [searchQuery])
+      setDebouncedSearch(searchQuery);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Reset page when search changes using inline state
-  const [prevDebouncedSearch, setPrevDebouncedSearch] = useState(debouncedSearch)
-  const [prevDateRange, setPrevDateRange] = useState(dateRange)
+  const [prevDebouncedSearch, setPrevDebouncedSearch] =
+    useState(debouncedSearch);
+  const [prevDateRange, setPrevDateRange] = useState(dateRange);
 
   if (debouncedSearch !== prevDebouncedSearch || dateRange !== prevDateRange) {
-    setPrevDebouncedSearch(debouncedSearch)
-    setPrevDateRange(dateRange)
-    setPage(0)
+    setPrevDebouncedSearch(debouncedSearch);
+    setPrevDateRange(dateRange);
+    setPage(0);
   }
 
   // Fetch turnovers
   const { data } = useQuery({
     queryKey: [
-      'finalized-turnovers',
+      "finalized-turnovers",
       teamId,
       dateRange?.from,
       dateRange?.to,
@@ -123,96 +161,106 @@ function TransitionHistoryPage() {
           offset: page * limit,
         },
       }),
-  })
+  });
 
   // Type-safe access to data
   const queryResult = data as
-    | { turnovers: Array<FinalizedTurnover>; total: number }
-    | undefined
-  const turnovers = queryResult?.turnovers || []
-  const total = queryResult?.total || 0
-  const totalPages = Math.ceil(total / limit)
+    | { turnovers: FinalizedTurnover[]; total: number }
+    | undefined;
+  const turnovers = queryResult?.turnovers || [];
+  const total = queryResult?.total || 0;
+  const totalPages = Math.ceil(total / limit);
 
   // Use turnovers directly (they are already filtered by server)
-  const filteredTurnovers = turnovers
+  const filteredTurnovers = turnovers;
 
   // Add missing snapshotFilter state
-  const [snapshotFilter, setSnapshotFilter] = useState('')
-  const [expandedApps, setExpandedApps] = useState<Record<string, boolean>>({})
+  const [snapshotFilter, setSnapshotFilter] = useState("");
+  const [expandedApps, setExpandedApps] = useState<Record<string, boolean>>({});
 
   // Toggle app expansion
   const toggleApp = (appId: string) => {
     setExpandedApps((prev) => ({
       ...prev,
       [appId]: !prev[appId],
-    }))
-  }
+    }));
+  };
 
   // Open snapshot detail
-  const openSnapshot = async (turnover: FinalizedTurnover) => {
-    setSelectedSnapshot(turnover)
-    setSnapshotDialogOpen(true)
-    setExpandedApps({})
-  }
+  const openSnapshot = (turnover: FinalizedTurnover) => {
+    setSelectedSnapshot(turnover);
+    setSnapshotDialogOpen(true);
+    setExpandedApps({});
+  };
 
   // Get initials
   const getInitials = (name: string) => {
     return name
-      .split(' ')
+      .split(" ")
       .map((n) => n[0])
-      .join('')
+      .join("")
       .toUpperCase()
-      .substring(0, 2)
-  }
+      .substring(0, 2);
+  };
 
   // Clear filters
   const clearFilters = () => {
-    setSearchQuery('')
-    setDateRange(undefined)
-    setPage(0)
-  }
+    setSearchQuery("");
+    setDateRange(undefined);
+    setPage(0);
+  };
 
-  const hasFilters = searchQuery || dateRange?.from || dateRange?.to
+  const hasFilters = searchQuery || dateRange?.from || dateRange?.to;
 
   return (
-    <div className="flex-1 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
+    <div className="min-h-screen flex-1 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
       <div className="space-y-8 p-8 pt-6">
         {/* Header */}
         <PageHeader
-          title="Transition History"
-          description="Browse all finalized shift handovers and transitions."
           className="w-full"
+          description="Browse all finalized shift handovers and transitions."
+          title="Transition History"
         >
           {/* View Toggle */}
-          <div className="flex items-center gap-1 p-1 bg-white/10 rounded-xl border border-white/20">
+          <div className="flex items-center gap-1 rounded-xl border border-white/20 bg-white/10 p-1">
             <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              className={cn(
+                "h-9 gap-2 rounded-lg text-white hover:text-white",
+                viewMode === "grid"
+                  ? "bg-white/20 hover:bg-white/30"
+                  : "hover:bg-white/10"
+              )}
+              onClick={() => setViewMode("grid")}
               size="sm"
-              onClick={() => setViewMode('grid')}
-              className={cn("gap-2 h-9 rounded-lg text-white hover:text-white", viewMode === 'grid' ? "bg-white/20 hover:bg-white/30" : "hover:bg-white/10")}
+              variant={viewMode === "grid" ? "default" : "ghost"}
             >
-              <Grid3X3 className="w-4 h-4" />
+              <Grid3X3 className="h-4 w-4" />
               Grid
             </Button>
             <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              className={cn(
+                "h-9 gap-2 rounded-lg text-white hover:text-white",
+                viewMode === "list"
+                  ? "bg-white/20 hover:bg-white/30"
+                  : "hover:bg-white/10"
+              )}
+              onClick={() => setViewMode("list")}
               size="sm"
-              onClick={() => setViewMode('list')}
-              className={cn("gap-2 h-9 rounded-lg text-white hover:text-white", viewMode === 'list' ? "bg-white/20 hover:bg-white/30" : "hover:bg-white/10")}
+              variant={viewMode === "list" ? "default" : "ghost"}
             >
-              <List className="w-4 h-4" />
+              <List className="h-4 w-4" />
               List
             </Button>
           </div>
 
           {/* Search */}
-          <div className="relative group w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/70 group-focus-within:text-white transition-colors" />
+          <div className="group relative w-80">
+            <Search className="absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-primary/70 transition-colors group-focus-within:text-white" />
             <Input
-              placeholder="Search by notes, user..."
-              className="h-11 pl-12 rounded-xl bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:ring-2 focus:ring-white/40 focus:bg-white/20 transition-all font-medium text-sm hover:bg-white/15"
-              value={searchQuery}
+              className="h-11 rounded-xl border-white/20 bg-white/10 pl-12 font-medium text-sm text-white transition-all placeholder:text-white/60 hover:bg-white/15 focus:bg-white/20 focus:ring-2 focus:ring-white/40"
               onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by notes, user..."
+              value={searchQuery}
             />
           </div>
         </PageHeader>
@@ -223,36 +271,34 @@ function TransitionHistoryPage() {
           <Popover>
             <PopoverTrigger>
               <Button
+                className={cn(
+                  "h-11 justify-start gap-2 rounded-xl px-4 text-left font-normal text-sm",
+                  !dateRange && "text-muted-foreground"
+                )}
                 id="date"
                 variant="outline"
-                className={cn(
-                  'justify-start text-left font-normal gap-2 h-11 px-4 text-sm rounded-xl',
-                  !dateRange && 'text-muted-foreground',
-                )}
               >
-                <CalendarIcon className="w-4 h-4" />
-                {dateRange?.from ? (
-                  dateRange.to ? (
-                    <>
-                      {format(dateRange.from, 'LLL dd, y')} -{' '}
-                      {format(dateRange.to, 'LLL dd, y')}
-                    </>
-                  ) : (
-                    format(dateRange.from, 'LLL dd, y')
-                  )
-                ) : (
-                  <span>Pick a date range</span>
+                <CalendarIcon className="h-4 w-4" />
+                {!dateRange?.from && <span>Pick a date range</span>}
+                {dateRange?.from &&
+                  !dateRange.to &&
+                  format(dateRange.from, "LLL dd, y")}
+                {dateRange?.from && dateRange.to && (
+                  <>
+                    {format(dateRange.from, "LLL dd, y")} -{" "}
+                    {format(dateRange.to, "LLL dd, y")}
+                  </>
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent align="start" className="w-auto p-0">
               <CalendarComponent
+                defaultMonth={dateRange?.from}
                 initialFocus
                 mode="range"
-                defaultMonth={dateRange?.from}
-                selected={dateRange}
-                onSelect={setDateRange}
                 numberOfMonths={2}
+                onSelect={setDateRange}
+                selected={dateRange}
               />
             </PopoverContent>
           </Popover>
@@ -260,12 +306,12 @@ function TransitionHistoryPage() {
           {/* Clear */}
           {hasFilters && (
             <Button
-              variant="ghost"
-              size="sm"
+              className="h-11 gap-2 rounded-xl text-muted-foreground"
               onClick={clearFilters}
-              className="gap-2 text-muted-foreground h-11 rounded-xl"
+              size="sm"
+              variant="ghost"
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
               Clear filters
             </Button>
           )}
@@ -273,138 +319,139 @@ function TransitionHistoryPage() {
 
         {/* Results */}
         {filteredTurnovers.length === 0 ? (
-          <div className="text-center py-16 bg-muted/10 rounded-xl border border-dashed">
-            <div className="h-12 w-12 rounded-xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
-              <History className="w-6 h-6 text-muted-foreground" />
+          <div className="rounded-xl border border-dashed bg-muted/10 py-16 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-muted/50">
+              <History className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-1">No History Found</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="mb-1 font-semibold text-lg">No History Found</h3>
+            <p className="text-muted-foreground text-sm">
               {hasFilters
-                ? 'No turnovers match your filters.'
-                : 'No finalized turnovers yet.'}
+                ? "No turnovers match your filters."
+                : "No finalized turnovers yet."}
             </p>
           </div>
         ) : (
           <>
-            {viewMode === 'grid' ? (
+            {viewMode === "grid" && (
               <div
+                className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
                 key="grid"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
               >
                 {filteredTurnovers.map((turnover: FinalizedTurnover) => (
                   <Card
-                    key={turnover.id}
                     className={cn(
-                      'cursor-pointer hover:shadow-md transition-all duration-200 border-l-[3px]',
+                      "cursor-pointer border-l-[3px] transition-all duration-200 hover:shadow-md",
                       Number(turnover.importantCount) > 0
-                        ? 'border-l-orange-400 hover:border-l-orange-500'
-                        : 'border-l-primary/40 hover:border-l-primary',
+                        ? "border-l-orange-400 hover:border-l-orange-500"
+                        : "border-l-primary/40 hover:border-l-primary"
                     )}
+                    key={turnover.id}
                     onClick={() => openSnapshot(turnover)}
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center">
-                            <History className="w-5 h-5 text-muted-foreground" />
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted/50">
+                            <History className="h-5 w-5 text-muted-foreground" />
                           </div>
                           <div>
-                            <p className="text-base font-semibold">
+                            <p className="font-semibold text-base">
                               {format(
                                 new Date(turnover.finalizedAt),
-                                'MMM dd, yyyy',
+                                "MMM dd, yyyy"
                               )}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {format(new Date(turnover.finalizedAt), 'h:mm a')}
+                            <p className="text-muted-foreground text-xs">
+                              {format(new Date(turnover.finalizedAt), "h:mm a")}
                             </p>
                           </div>
                         </div>
                         {Number(turnover.importantCount) > 0 && (
                           <Badge
+                            className="gap-1 border-orange-200 bg-orange-50 text-orange-600 text-xs"
                             variant="outline"
-                            className="gap-1 text-orange-600 border-orange-200 bg-orange-50 text-xs"
                           >
-                            <Star className="w-3 h-3 fill-current" />
+                            <Star className="h-3 w-3 fill-current" />
                             {turnover.importantCount}
                           </Badge>
                         )}
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0">
-                      <div className="flex items-center gap-4 mb-3 text-sm text-muted-foreground">
+                      <div className="mb-3 flex items-center gap-4 text-muted-foreground text-sm">
                         <span className="flex items-center gap-1.5">
-                          <FileText className="w-3.5 h-3.5" />
+                          <FileText className="h-3.5 w-3.5" />
                           {turnover.totalApplications} Apps
                         </span>
                         <span className="flex items-center gap-1.5">
-                          <Layers className="w-3.5 h-3.5" />
+                          <Layers className="h-3.5 w-3.5" />
                           {turnover.totalEntries} Entries
                         </span>
                       </div>
-                      <div className="flex items-center justify-between pt-3 border-t">
+                      <div className="flex items-center justify-between border-t pt-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 font-bold text-[10px] text-primary">
                             {getInitials(turnover.finalizedBy)}
                           </div>
-                          <span className="text-sm text-muted-foreground">
+                          <span className="text-muted-foreground text-sm">
                             {turnover.finalizedBy}
                           </span>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
-            ) : (
-              <div key="list" className="space-y-2">
+            )}
+            {viewMode === "list" && (
+              <div className="space-y-2" key="list">
                 {filteredTurnovers.map((turnover: FinalizedTurnover) => (
                   <Card
-                    key={turnover.id}
                     className={cn(
-                      'cursor-pointer hover:bg-muted/20 transition-colors border-l-[3px]',
+                      "cursor-pointer border-l-[3px] transition-colors hover:bg-muted/20",
                       Number(turnover.importantCount) > 0
-                        ? 'border-l-orange-400'
-                        : 'border-l-primary/40',
+                        ? "border-l-orange-400"
+                        : "border-l-primary/40"
                     )}
+                    key={turnover.id}
                     onClick={() => openSnapshot(turnover)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-5">
-                          <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                            <History className="w-4 h-4 text-muted-foreground" />
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/50">
+                            <History className="h-4 w-4 text-muted-foreground" />
                           </div>
                           <div className="min-w-[100px]">
                             <p className="font-semibold text-sm">
                               {format(
                                 new Date(turnover.finalizedAt),
-                                'MMM dd, yyyy',
+                                "MMM dd, yyyy"
                               )}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {format(new Date(turnover.finalizedAt), 'h:mm a')}
+                            <p className="text-muted-foreground text-xs">
+                              {format(new Date(turnover.finalizedAt), "h:mm a")}
                             </p>
                           </div>
-                          <Separator orientation="vertical" className="h-8" />
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <Separator className="h-8" orientation="vertical" />
+                          <div className="flex items-center gap-4 text-muted-foreground text-sm">
                             <span className="flex items-center gap-1.5">
-                              <FileText className="w-3.5 h-3.5" />
+                              <FileText className="h-3.5 w-3.5" />
                               {turnover.totalApplications} Apps
                             </span>
                             <span className="flex items-center gap-1.5">
-                              <Layers className="w-3.5 h-3.5" />
+                              <Layers className="h-3.5 w-3.5" />
                               {turnover.totalEntries} Entries
                             </span>
                           </div>
                           {turnover.notes && (
                             <>
                               <Separator
-                                orientation="vertical"
                                 className="h-8"
+                                orientation="vertical"
                               />
-                              <p className="text-sm text-muted-foreground line-clamp-1 max-w-xs">
+                              <p className="line-clamp-1 max-w-xs text-muted-foreground text-sm">
                                 {turnover.notes}
                               </p>
                             </>
@@ -413,22 +460,22 @@ function TransitionHistoryPage() {
                         <div className="flex items-center gap-3">
                           {Number(turnover.importantCount) > 0 && (
                             <Badge
+                              className="gap-1 border-orange-200 bg-orange-50 text-orange-600 text-xs"
                               variant="outline"
-                              className="gap-1 text-orange-600 border-orange-200 bg-orange-50 text-xs"
                             >
-                              <Star className="w-3 h-3 fill-current" />
+                              <Star className="h-3 w-3 fill-current" />
                               {turnover.importantCount}
                             </Badge>
                           )}
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 font-bold text-[10px] text-primary">
                               {getInitials(turnover.finalizedBy)}
                             </div>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-muted-foreground text-sm">
                               {turnover.finalizedBy}
                             </span>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
                         </div>
                       </div>
                     </CardContent>
@@ -443,50 +490,50 @@ function TransitionHistoryPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 pt-4">
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              disabled={page === 0}
               className="gap-1"
+              disabled={page === 0}
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              size="sm"
+              variant="outline"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="h-4 w-4" />
               Previous
             </Button>
-            <div className="px-3 py-1.5 bg-muted/50 rounded-md text-sm text-muted-foreground">
+            <div className="rounded-md bg-muted/50 px-3 py-1.5 text-muted-foreground text-sm">
               {page + 1} / {totalPages}
             </div>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={page >= totalPages - 1}
               className="gap-1"
+              disabled={page >= totalPages - 1}
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              size="sm"
+              variant="outline"
             >
               Next
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         )}
 
         {/* Snapshot Detail Dialog - Full Screen */}
-        <Dialog open={snapshotDialogOpen} onOpenChange={setSnapshotDialogOpen}>
-          <DialogContent className="min-w-[100vw] h-[100vh] max-w-[100vw] max-h-[100vh] rounded-none p-0 gap-0 flex flex-col overflow-y-scroll">
+        <Dialog onOpenChange={setSnapshotDialogOpen} open={snapshotDialogOpen}>
+          <DialogContent className="flex h-[100vh] max-h-[100vh] min-w-[100vw] max-w-[100vw] flex-col gap-0 overflow-y-scroll rounded-none p-0">
             {/* Fixed Header */}
-            <DialogHeader className="px-6 py-4 border-b shrink-0">
+            <DialogHeader className="shrink-0 border-b px-6 py-4">
               <DialogTitle className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                  <History className="w-5 h-5" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <History className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-lg font-bold">Turnover Snapshot</p>
+                  <p className="font-bold text-lg">Turnover Snapshot</p>
                   {selectedSnapshot && (
-                    <p className="text-sm font-normal text-muted-foreground">
+                    <p className="font-normal text-muted-foreground text-sm">
                       {format(
                         new Date(selectedSnapshot.finalizedAt),
-                        "MMMM dd, yyyy 'at' h:mm a",
+                        "MMMM dd, yyyy 'at' h:mm a"
                       )}
                       <span className="mx-2">•</span>
-                      Finalized by{' '}
+                      Finalized by{" "}
                       <span className="font-medium text-foreground">
                         {selectedSnapshot.finalizedBy}
                       </span>
@@ -499,27 +546,27 @@ function TransitionHistoryPage() {
             {/* Scrollable Content */}
             {selectedSnapshot && (
               <ScrollArea className="flex-1">
-                <div className="p-6 space-y-6">
+                <div className="space-y-6 p-6">
                   {/* Filter & Notes Row */}
-                  <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="flex flex-col gap-4 lg:flex-row">
                     <div className="relative w-full lg:max-w-md">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        placeholder="Filter entries..."
                         className="pl-10"
-                        value={snapshotFilter}
                         onChange={(e) => setSnapshotFilter(e.target.value)}
+                        placeholder="Filter entries..."
+                        value={snapshotFilter}
                       />
                     </div>
                     {selectedSnapshot.notes && (
-                      <div className="flex-1 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                      <div className="flex-1 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3">
                         <div className="flex gap-2">
-                          <FileText className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                          <FileText className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                           <div>
-                            <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+                            <p className="font-semibold text-amber-600 text-xs dark:text-amber-400">
                               Shift Notes
                             </p>
-                            <p className="text-sm text-foreground/80">
+                            <p className="text-foreground/80 text-sm">
                               {selectedSnapshot.notes}
                             </p>
                           </div>
@@ -532,16 +579,18 @@ function TransitionHistoryPage() {
                   <div className="space-y-6">
                     {(() => {
                       const snapshotData =
-                        selectedSnapshot.snapshotData as Array<any>
+                        selectedSnapshot.snapshotData as SnapshotEntry[];
 
                       // Group by application
-                      const groupedByApp: Record<string, Array<any>> = {}
-                      snapshotData.forEach((entry) => {
-                        const appId = entry.applicationId
-                        if (!groupedByApp[appId]) groupedByApp[appId] = []
+                      const groupedByApp: Record<string, SnapshotEntry[]> = {};
+                      for (const entry of snapshotData) {
+                        const appId = entry.applicationId;
+                        if (!groupedByApp[appId]) {
+                          groupedByApp[appId] = [];
+                        }
 
                         if (snapshotFilter) {
-                          const searchLower = snapshotFilter.toLowerCase()
+                          const searchLower = snapshotFilter.toLowerCase();
                           const matchesFilter =
                             entry.title?.toLowerCase().includes(searchLower) ||
                             entry.description
@@ -570,99 +619,109 @@ function TransitionHistoryPage() {
                               .includes(searchLower) ||
                             entry.commsDetails?.emailSubject
                               ?.toLowerCase()
-                              .includes(searchLower)
+                              .includes(searchLower);
 
-                          if (!matchesFilter) return
+                          if (!matchesFilter) {
+                            return;
+                          }
                         }
 
-                        groupedByApp[appId].push(entry)
-                      })
+                        groupedByApp[appId].push(entry);
+                      }
 
                       const appGroups = Object.entries(groupedByApp).filter(
-                        ([, entries]) => entries.length > 0,
-                      )
+                        ([, entries]) => entries.length > 0
+                      );
 
                       if (appGroups.length === 0) {
                         return (
-                          <div className="text-center py-12 text-muted-foreground">
-                            <History className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                          <div className="py-12 text-center text-muted-foreground">
+                            <History className="mx-auto mb-3 h-10 w-10 opacity-30" />
                             <p>No entries match your filter.</p>
                           </div>
-                        )
+                        );
                       }
 
                       return appGroups.map(([appId, appEntries]) => {
-                        const app = appEntries[0]?.application
+                        const app = appEntries[0]?.application;
                         const criticalCount = appEntries.filter(
-                          (e) => e.isImportant,
-                        ).length
-                        const isExpanded = expandedApps[appId]
+                          (e) => e.isImportant
+                        ).length;
+                        const isExpanded = expandedApps[appId];
 
                         // Group by section
-                        const groupedBySection: Record<string, Array<any>> = {}
-                        appEntries.forEach((entry) => {
-                          if (!groupedBySection[entry.section])
-                            groupedBySection[entry.section] = []
-                          groupedBySection[entry.section].push(entry)
-                        })
+                        const groupedBySection: Record<
+                          string,
+                          SnapshotEntry[]
+                        > = {};
+                        for (const entry of appEntries) {
+                          if (!groupedBySection[entry.section]) {
+                            groupedBySection[entry.section] = [];
+                          }
+                          groupedBySection[entry.section].push(entry);
+                        }
 
-                        const sectionOrder: Array<TurnoverSection> = [
-                          'MIM',
-                          'INC',
-                          'RFC',
-                          'ALERTS',
-                          'COMMS',
-                          'FYI',
-                        ]
+                        const sectionOrder: TurnoverSection[] = [
+                          "MIM",
+                          "INC",
+                          "RFC",
+                          "ALERTS",
+                          "COMMS",
+                          "FYI",
+                        ];
                         const sortedSections = sectionOrder
                           .filter((s) => groupedBySection[s])
                           .map(
-                            (s) => [s, groupedBySection[s]] as [string, Array<any>],
-                          )
+                            (s) =>
+                              [s, groupedBySection[s]] as [
+                                string,
+                                SnapshotEntry[],
+                              ]
+                          );
 
                         return (
                           <div key={appId}>
                             <Collapsible
-                              open={isExpanded}
                               onOpenChange={() => toggleApp(appId)}
+                              open={isExpanded}
                             >
                               <Card
                                 className={cn(
-                                  'overflow-hidden border-l-[3px] transition-colors mb-4',
+                                  "mb-4 overflow-hidden border-l-[3px] transition-colors",
                                   criticalCount > 0
-                                    ? 'border-l-orange-400'
-                                    : 'border-l-primary/40',
+                                    ? "border-l-orange-400"
+                                    : "border-l-primary/40"
                                 )}
                               >
                                 <CollapsibleTrigger className="w-full text-left outline-none">
-                                  <div className="px-4 py-3 cursor-pointer flex items-center justify-between hover:bg-muted/40 transition-colors">
+                                  <div className="flex cursor-pointer items-center justify-between px-4 py-3 transition-colors hover:bg-muted/40">
                                     <div className="flex items-center gap-3">
                                       <div
                                         className={cn(
-                                          'h-7 w-7 rounded-md flex items-center justify-center',
+                                          "flex h-7 w-7 items-center justify-center rounded-md",
                                           criticalCount > 0
-                                            ? 'bg-orange-100 text-orange-600'
-                                            : 'bg-primary/10 text-primary',
+                                            ? "bg-orange-100 text-orange-600"
+                                            : "bg-primary/10 text-primary"
                                         )}
                                       >
                                         <Layers className="h-3.5 w-3.5" />
                                       </div>
                                       <div className="flex items-center gap-2">
-                                        <h3 className="text-sm font-semibold text-foreground">
+                                        <h3 className="font-semibold text-foreground text-sm">
                                           {app?.applicationName ||
-                                            'Unknown Application'}
+                                            "Unknown Application"}
                                         </h3>
                                         {app?.tla && (
                                           <Badge
+                                            className="px-1.5 py-0 font-medium text-[10px]"
                                             variant="secondary"
-                                            className="text-[10px] font-medium px-1.5 py-0"
                                           >
                                             {app.tla}
                                           </Badge>
                                         )}
-                                        <span className="text-xs text-muted-foreground">
-                                          · {appEntries.length} items · Tier{' '}
-                                          {app?.tier || 'N/A'}
+                                        <span className="text-muted-foreground text-xs">
+                                          · {appEntries.length} items · Tier{" "}
+                                          {app?.tier || "N/A"}
                                         </span>
                                       </div>
                                     </div>
@@ -670,17 +729,17 @@ function TransitionHistoryPage() {
                                     <div className="flex items-center gap-2">
                                       {criticalCount > 0 && (
                                         <Badge
+                                          className="border-orange-200 bg-orange-50 font-medium text-[10px] text-orange-600"
                                           variant="outline"
-                                          className="text-[10px] font-medium text-orange-600 border-orange-200 bg-orange-50"
                                         >
                                           {criticalCount} Critical
                                         </Badge>
                                       )}
-                                      <div className="h-6 w-6 rounded-md flex items-center justify-center hover:bg-muted/50 transition-colors">
+                                      <div className="flex h-6 w-6 items-center justify-center rounded-md transition-colors hover:bg-muted/50">
                                         <ChevronRight
                                           className={cn(
-                                            'h-4 w-4 text-muted-foreground transition-transform duration-200',
-                                            isExpanded && 'rotate-90',
+                                            "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                                            isExpanded && "rotate-90"
                                           )}
                                         />
                                       </div>
@@ -688,86 +747,71 @@ function TransitionHistoryPage() {
                                   </div>
                                 </CollapsibleTrigger>
 
-                                <CollapsibleContent className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-1 data-[state=open]:slide-in-from-top-1 duration-200 overflow-hidden">
-                                  <div className="px-4 pb-4 pt-3 space-y-4 border-t bg-muted/5">
+                                <CollapsibleContent className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-1 data-[state=open]:slide-in-from-top-1 overflow-hidden duration-200 data-[state=closed]:animate-out data-[state=open]:animate-in">
+                                  <div className="space-y-4 border-t bg-muted/5 px-4 pt-3 pb-4">
                                     {sortedSections.map(
+                                      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: section rendering with config lookups
                                       ([section, entries]) => {
                                         const sConfig =
                                           SECTION_CONFIG[
-                                          section as TurnoverSection
-                                          ]
+                                            section as TurnoverSection
+                                          ];
                                         const SectionIcon =
                                           SECTION_ICONS[
-                                          section as TurnoverSection
-                                          ]
+                                            section as TurnoverSection
+                                          ];
 
                                         return (
                                           <div
-                                            key={section}
                                             className="space-y-2"
+                                            key={section}
                                           >
                                             <div className="flex items-center gap-2">
                                               <div
                                                 className={cn(
-                                                  'h-5 w-5 rounded flex items-center justify-center',
-                                                  sConfig.colorClass.includes(
-                                                    'blue',
+                                                  "flex h-5 w-5 items-center justify-center rounded",
+                                                  getSectionBgClass(
+                                                    sConfig.colorClass
                                                   )
-                                                    ? 'bg-blue-100'
-                                                    : sConfig.colorClass.includes(
-                                                      'red',
-                                                    )
-                                                      ? 'bg-red-100'
-                                                      : sConfig.colorClass.includes(
-                                                        'amber',
-                                                      )
-                                                        ? 'bg-amber-100'
-                                                        : sConfig.colorClass.includes(
-                                                          'purple',
-                                                        )
-                                                          ? 'bg-purple-100'
-                                                          : sConfig.colorClass.includes(
-                                                            'green',
-                                                          )
-                                                            ? 'bg-green-100'
-                                                            : 'bg-muted',
                                                 )}
                                               >
                                                 <SectionIcon
                                                   className={cn(
-                                                    'h-3 w-3',
-                                                    sConfig.colorClass,
+                                                    "h-3 w-3",
+                                                    sConfig.colorClass
                                                   )}
                                                 />
                                               </div>
-                                              <span className="text-xs font-medium text-muted-foreground">
+                                              <span className="font-medium text-muted-foreground text-xs">
                                                 {sConfig.name}
                                               </span>
-                                              <span className="text-[10px] text-muted-foreground/60 bg-muted/50 px-1.5 py-0.5 rounded-full">
+                                              <span className="rounded-full bg-muted/50 px-1.5 py-0.5 text-[10px] text-muted-foreground/60">
                                                 {entries.length}
                                               </span>
                                             </div>
                                             <div className="space-y-2 pl-7">
                                               {entries.map((entry) => (
                                                 <EntryCard
+                                                  entry={
+                                                    entry as unknown as TurnoverEntryWithDetails
+                                                  }
                                                   key={entry.id}
-                                                  entry={entry}
-                                                  teamId={teamId}
                                                   readOnly
+                                                  teamId={teamId}
                                                 />
                                               ))}
                                             </div>
                                           </div>
-                                        )
-                                      },
+                                        );
+                                      }
                                     )}
                                   </div>
                                 </CollapsibleContent>
                               </Card>
                             </Collapsible>
                           </div>
-                        )
-                      })
+                        );
+                      });
                     })()}
                   </div>
 
@@ -780,5 +824,5 @@ function TransitionHistoryPage() {
         </Dialog>
       </div>
     </div>
-  )
+  );
 }

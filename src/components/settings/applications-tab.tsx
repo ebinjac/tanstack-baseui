@@ -1,15 +1,15 @@
-import { useState } from 'react'
-import { Boxes, Loader2, Search } from 'lucide-react'
-import { ApplicationActions } from './application-actions'
+import { Boxes, Loader2, Search } from "lucide-react";
+import { useState } from "react";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -17,25 +17,45 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
-import { cn } from '@/lib/utils'
-import { EmptyState } from '@/components/shared/empty-state'
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { ApplicationActions } from "./application-actions";
+
+interface ApplicationRecord {
+  applicationName: string;
+  assetId: number;
+  id: string;
+  lifeCycleStatus?: string | null;
+  teamId: string;
+  tier?: string | null;
+  tla: string;
+}
+
+interface SyncMutationLike {
+  isPending: boolean;
+  mutate: (app: ApplicationRecord) => void;
+  variables?: { id: string } | null;
+}
+
+interface TeamRecord {
+  teamName: string;
+}
 
 interface ApplicationsTabProps {
-  team: any
-  applications: Array<any> | undefined
-  isLoadingApps: boolean
-  isAdmin: boolean
-  syncMutation: any
-  onViewApp: (app: any) => void
-  onEditApp: (app: any) => void
-  onDeleteApp: (app: any) => void
-  onAddSuccess: () => void
-  teamId: string
   AddApplicationDialog: React.ComponentType<{
-    teamId: string
-    onSuccess: () => void
-  }>
+    teamId: string;
+    onSuccess: () => void;
+  }>;
+  applications: ApplicationRecord[] | undefined;
+  isAdmin: boolean;
+  isLoadingApps: boolean;
+  onAddSuccess: () => void;
+  onDeleteApp: (app: ApplicationRecord) => void;
+  onEditApp: (app: ApplicationRecord) => void;
+  onViewApp: (app: ApplicationRecord) => void;
+  syncMutation: SyncMutationLike;
+  team: TeamRecord;
+  teamId: string;
 }
 
 export function ApplicationsTab({
@@ -51,21 +71,21 @@ export function ApplicationsTab({
   teamId,
   AddApplicationDialog,
 }: ApplicationsTabProps) {
-  const [appSearch, setAppSearch] = useState('')
+  const [appSearch, setAppSearch] = useState("");
 
   const filteredApps = applications?.filter(
     (app) =>
       app.applicationName.toLowerCase().includes(appSearch.toLowerCase()) ||
       app.tla.toLowerCase().includes(appSearch.toLowerCase()) ||
-      String(app.assetId).includes(appSearch),
-  )
+      String(app.assetId).includes(appSearch)
+  );
 
   return (
     <Card>
       <CardHeader className="pb-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div className="space-y-1">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Boxes className="h-4 w-4 text-primary" /> Managed Applications
             </CardTitle>
             <CardDescription>
@@ -74,16 +94,16 @@ export function ApplicationsTab({
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search apps..."
-                className="pl-9 w-56 h-9 text-sm"
-                value={appSearch}
+                className="h-9 w-56 pl-9 text-sm"
                 onChange={(e) => setAppSearch(e.target.value)}
+                placeholder="Search apps..."
+                value={appSearch}
               />
             </div>
             {isAdmin && (
-              <AddApplicationDialog teamId={teamId} onSuccess={onAddSuccess} />
+              <AddApplicationDialog onSuccess={onAddSuccess} teamId={teamId} />
             )}
           </div>
         </div>
@@ -92,22 +112,22 @@ export function ApplicationsTab({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[300px] text-xs font-bold uppercase tracking-wider py-3 px-6">
+              <TableHead className="w-[300px] px-6 py-3 font-bold text-xs uppercase tracking-wider">
                 Application
               </TableHead>
-              <TableHead className="text-xs font-bold uppercase tracking-wider py-3">
+              <TableHead className="py-3 font-bold text-xs uppercase tracking-wider">
                 TNA
               </TableHead>
-              <TableHead className="text-xs font-bold uppercase tracking-wider py-3">
+              <TableHead className="py-3 font-bold text-xs uppercase tracking-wider">
                 Asset ID
               </TableHead>
-              <TableHead className="text-xs font-bold uppercase tracking-wider py-3 text-center">
+              <TableHead className="py-3 text-center font-bold text-xs uppercase tracking-wider">
                 Lifecycle
               </TableHead>
-              <TableHead className="text-xs font-bold uppercase tracking-wider py-3 text-center">
+              <TableHead className="py-3 text-center font-bold text-xs uppercase tracking-wider">
                 Tier
               </TableHead>
-              <TableHead className="text-xs font-bold uppercase tracking-wider py-3 text-right px-6">
+              <TableHead className="px-6 py-3 text-right font-bold text-xs uppercase tracking-wider">
                 Actions
               </TableHead>
             </TableRow>
@@ -115,100 +135,108 @@ export function ApplicationsTab({
           <TableBody>
             {isLoadingApps ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center">
+                <TableCell className="h-32 text-center" colSpan={6}>
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Loading applications...
                     </p>
                   </div>
                 </TableCell>
               </TableRow>
-            ) : filteredApps?.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="h-32">
-                  <EmptyState
-                    icon={Boxes}
-                    title="No applications found"
-                    description="No applications match your search."
-                    size="sm"
-                  />
-                </TableCell>
-              </TableRow>
             ) : (
-              filteredApps?.map((app) => (
-                <TableRow
-                  key={app.id}
-                  className="group hover:bg-muted/30 transition-colors"
-                >
-                  <TableCell className="py-3 px-6">
-                    <div className="flex flex-col">
-                      <span className="font-medium">{app.applicationName}</span>
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-tight">
-                        {app.id.split('-')[0]}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-semibold text-primary text-sm">
-                    {app.tla}
-                  </TableCell>
-                  <TableCell className="text-sm tabular-nums">
-                    {app.assetId}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        'uppercase text-[9px] px-2 py-0 h-5 font-bold border',
-                        app.lifeCycleStatus?.toLowerCase() === 'production'
-                          ? 'bg-green-500/10 text-green-600 border-green-500/20'
-                          : app.lifeCycleStatus?.toLowerCase() === 'development'
-                            ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                            : '',
-                      )}
+              <>
+                {filteredApps?.length === 0 && (
+                  <TableRow>
+                    <TableCell className="h-32" colSpan={6}>
+                      <EmptyState
+                        description="No applications match your search."
+                        icon={Boxes}
+                        size="sm"
+                        title="No applications found"
+                      />
+                    </TableCell>
+                  </TableRow>
+                )}
+                {filteredApps &&
+                  filteredApps.length > 0 &&
+                  filteredApps.map((app) => (
+                    <TableRow
+                      className="group transition-colors hover:bg-muted/30"
+                      key={app.id}
                     >
-                      {app.lifeCycleStatus || 'Undeclared'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      variant={
-                        ['0', '1', '2'].includes(String(app.tier))
-                          ? 'destructive'
-                          : 'secondary'
-                      }
-                      className={cn(
-                        'text-[10px] font-bold',
-                        ['0', '1', '2'].includes(String(app.tier))
-                          ? 'bg-red-500/10 text-red-600 border-red-500/20'
-                          : '',
-                      )}
-                    >
-                      {app.tier || 'Not Core'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right py-3 px-6">
-                    <ApplicationActions
-                      isAdmin={isAdmin}
-                      isSyncing={
-                        syncMutation.isPending &&
-                        syncMutation.variables?.id === app.id
-                      }
-                      onView={() => onViewApp(app)}
-                      onEdit={() => onEditApp(app)}
-                      onSync={() => syncMutation.mutate(app)}
-                      onDelete={() => onDeleteApp(app)}
-                    />
-                  </TableCell>
-                </TableRow>
-              ))
+                      <TableCell className="px-6 py-3">
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {app.applicationName}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground uppercase tracking-tight">
+                            {app.id.split("-")[0]}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-semibold text-primary text-sm">
+                        {app.tla}
+                      </TableCell>
+                      <TableCell className="text-sm tabular-nums">
+                        {app.assetId}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
+                          className={cn(
+                            "h-5 border px-2 py-0 font-bold text-[9px] uppercase",
+                            app.lifeCycleStatus?.toLowerCase() ===
+                              "production" &&
+                              "border-green-500/20 bg-green-500/10 text-green-600",
+                            app.lifeCycleStatus?.toLowerCase() ===
+                              "development" &&
+                              "border-blue-500/20 bg-blue-500/10 text-blue-600"
+                          )}
+                          variant="secondary"
+                        >
+                          {app.lifeCycleStatus || "Undeclared"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
+                          className={cn(
+                            "font-bold text-[10px]",
+                            ["0", "1", "2"].includes(String(app.tier))
+                              ? "border-red-500/20 bg-red-500/10 text-red-600"
+                              : ""
+                          )}
+                          variant={
+                            ["0", "1", "2"].includes(String(app.tier))
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {app.tier || "Not Core"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-6 py-3 text-right">
+                        <ApplicationActions
+                          isAdmin={isAdmin}
+                          isSyncing={
+                            syncMutation.isPending &&
+                            syncMutation.variables?.id === app.id
+                          }
+                          onDelete={() => onDeleteApp(app)}
+                          onEdit={() => onEditApp(app)}
+                          onSync={() => syncMutation.mutate(app)}
+                          onView={() => onViewApp(app)}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </>
             )}
           </TableBody>
         </Table>
       </CardContent>
-      <div className="px-6 py-3 border-t flex items-center justify-between text-xs text-muted-foreground">
+      <div className="flex items-center justify-between border-t px-6 py-3 text-muted-foreground text-xs">
         <span>
-          Showing {filteredApps?.length || 0} of {applications?.length || 0}{' '}
+          Showing {filteredApps?.length || 0} of {applications?.length || 0}{" "}
           applications
         </span>
         <div className="flex items-center gap-4">
@@ -221,5 +249,5 @@ export function ApplicationsTab({
         </div>
       </div>
     </Card>
-  )
+  );
 }

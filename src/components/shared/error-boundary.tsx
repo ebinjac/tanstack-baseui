@@ -7,33 +7,33 @@
  * @see skills/react-best-practices/rules/err-boundaries.md
  */
 
-import { Component   } from 'react'
-import { AlertTriangle, ArrowLeft, Home, RefreshCw } from 'lucide-react'
-import type {ErrorInfo, ReactNode} from 'react';
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { AlertTriangle, ArrowLeft, Home, RefreshCw } from "lucide-react";
+import type { ErrorInfo, ReactNode } from "react";
+import { Component } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface ErrorBoundaryProps {
-  children: ReactNode
-  fallback?: ReactNode
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
-  onReset?: () => void
-  resetKeys?: Array<unknown>
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  onReset?: () => void;
+  resetKeys?: Array<unknown>;
 }
 
 export interface ErrorFallbackProps {
-  error: Error
-  resetErrorBoundary: () => void
-  title?: string
-  message?: string
-  showHomeLink?: boolean
-  showBackLink?: boolean
-  className?: string
+  className?: string;
+  error: Error;
+  message?: string;
+  resetErrorBoundary: () => void;
+  showBackLink?: boolean;
+  showHomeLink?: boolean;
+  title?: string;
 }
 
 // ============================================================================
@@ -43,51 +43,51 @@ export interface ErrorFallbackProps {
 export function ErrorFallback({
   error,
   resetErrorBoundary,
-  title = 'Something went wrong',
+  title = "Something went wrong",
   message,
   showHomeLink = false,
   showBackLink = true,
   className,
 }: ErrorFallbackProps) {
   const displayMessage =
-    message || error.message || 'An unexpected error occurred'
+    message || error.message || "An unexpected error occurred";
 
   return (
-    <div className={cn('flex items-center justify-center p-8', className)}>
-      <Card className="max-w-lg w-full bg-card/50 backdrop-blur-sm border-destructive/20">
+    <div className={cn("flex items-center justify-center p-8", className)}>
+      <Card className="w-full max-w-lg border-destructive/20 bg-card/50 backdrop-blur-sm">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
             <AlertTriangle className="h-8 w-8 text-destructive" />
           </div>
           <CardTitle className="text-xl">{title}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="text-center text-muted-foreground text-sm">
             {displayMessage}
           </p>
 
-          {process.env.NODE_ENV === 'development' && (
-            <details className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
+          {process.env.NODE_ENV === "development" && (
+            <details className="rounded-lg bg-muted/50 p-3 text-muted-foreground text-xs">
               <summary className="cursor-pointer font-medium">
                 Error Details
               </summary>
-              <pre className="mt-2 whitespace-pre-wrap overflow-auto">
+              <pre className="mt-2 overflow-auto whitespace-pre-wrap">
                 {error.stack}
               </pre>
             </details>
           )}
 
-          <div className="flex flex-col sm:flex-row gap-2 justify-center">
-            <Button onClick={resetErrorBoundary} className="gap-2">
+          <div className="flex flex-col justify-center gap-2 sm:flex-row">
+            <Button className="gap-2" onClick={resetErrorBoundary}>
               <RefreshCw className="h-4 w-4" />
               Try Again
             </Button>
 
             {showBackLink && (
               <Button
-                variant="outline"
-                onClick={() => window.history.back()}
                 className="gap-2"
+                onClick={() => window.history.back()}
+                variant="outline"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Go Back
@@ -96,8 +96,8 @@ export function ErrorFallback({
 
             {showHomeLink && (
               <a
+                className="inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-input bg-background px-4 py-2 font-medium text-sm ring-offset-background transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                 href="/"
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
               >
                 <Home className="h-4 w-4" />
                 Home
@@ -107,7 +107,7 @@ export function ErrorFallback({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -115,8 +115,8 @@ export function ErrorFallback({
 // ============================================================================
 
 interface ErrorBoundaryState {
-  hasError: boolean
-  error: Error | null
+  error: Error | null;
+  hasError: boolean;
 }
 
 export class ErrorBoundary extends Component<
@@ -124,52 +124,55 @@ export class ErrorBoundary extends Component<
   ErrorBoundaryState
 > {
   constructor(props: ErrorBoundaryProps) {
-    super(props)
-    this.state = { hasError: false, error: null }
+    super(props);
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    this.props.onError?.(error, errorInfo)
+    this.props.onError?.(error, errorInfo);
 
     // Log error in development
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Error caught by boundary:', error, errorInfo)
+    if (process.env.NODE_ENV === "development") {
+      console.error("Error caught by boundary:", error, errorInfo);
     }
   }
 
   componentDidUpdate(prevProps: ErrorBoundaryProps) {
-    const { resetKeys } = this.props
-    const { hasError } = this.state
+    const { resetKeys } = this.props;
+    const { hasError } = this.state;
 
-    if (hasError && resetKeys && prevProps.resetKeys) {
-      if (resetKeys.some((key, i) => key !== prevProps.resetKeys?.[i])) {
-        this.reset()
-      }
+    if (
+      hasError &&
+      resetKeys &&
+      prevProps.resetKeys &&
+      resetKeys.some((key, i) => key !== prevProps.resetKeys?.[i])
+    ) {
+      this.reset();
     }
   }
 
   reset = () => {
-    this.props.onReset?.()
-    this.setState({ hasError: false, error: null })
-  }
+    this.props.onReset?.();
+    this.setState({ hasError: false, error: null });
+  };
 
   render() {
-    const { hasError, error } = this.state
-    const { children, fallback } = this.props
+    const { hasError, error } = this.state;
+    const { children, fallback } = this.props;
 
     if (hasError && error) {
       if (fallback) {
-        return fallback
+        return fallback;
       }
 
-      return <ErrorFallback error={error} resetErrorBoundary={this.reset} />
+      return <ErrorFallback error={error} resetErrorBoundary={this.reset} />;
     }
 
-    return children
+    return children;
   }
 }
 
@@ -185,17 +188,17 @@ export function ScorecardErrorBoundary({ children }: { children: ReactNode }) {
     <ErrorBoundary
       fallback={
         <ErrorFallback
-          error={new Error('Failed to load scorecard')}
-          resetErrorBoundary={() => window.location.reload()}
-          title="Scorecard Error"
+          error={new Error("Failed to load scorecard")}
           message="Unable to load scorecard data. Please try again."
+          resetErrorBoundary={() => window.location.reload()}
           showHomeLink
+          title="Scorecard Error"
         />
       }
     >
       {children}
     </ErrorBoundary>
-  )
+  );
 }
 
 /**
@@ -206,17 +209,17 @@ export function TurnoverErrorBoundary({ children }: { children: ReactNode }) {
     <ErrorBoundary
       fallback={
         <ErrorFallback
-          error={new Error('Failed to load turnover')}
-          resetErrorBoundary={() => window.location.reload()}
-          title="Turnover Error"
+          error={new Error("Failed to load turnover")}
           message="Unable to load turnover data. Please try again."
+          resetErrorBoundary={() => window.location.reload()}
           showHomeLink
+          title="Turnover Error"
         />
       }
     >
       {children}
     </ErrorBoundary>
-  )
+  );
 }
 
 /**
@@ -225,23 +228,23 @@ export function TurnoverErrorBoundary({ children }: { children: ReactNode }) {
 export function LinkManagerErrorBoundary({
   children,
 }: {
-  children: ReactNode
+  children: ReactNode;
 }) {
   return (
     <ErrorBoundary
       fallback={
         <ErrorFallback
-          error={new Error('Failed to load links')}
-          resetErrorBoundary={() => window.location.reload()}
-          title="Link Manager Error"
+          error={new Error("Failed to load links")}
           message="Unable to load link data. Please try again."
+          resetErrorBoundary={() => window.location.reload()}
           showHomeLink
+          title="Link Manager Error"
         />
       }
     >
       {children}
     </ErrorBoundary>
-  )
+  );
 }
 
 /**
@@ -252,15 +255,15 @@ export function AdminErrorBoundary({ children }: { children: ReactNode }) {
     <ErrorBoundary
       fallback={
         <ErrorFallback
-          error={new Error('Failed to load admin data')}
-          resetErrorBoundary={() => window.location.reload()}
-          title="Admin Error"
+          error={new Error("Failed to load admin data")}
           message="Unable to load admin data. Please try again."
+          resetErrorBoundary={() => window.location.reload()}
           showHomeLink
+          title="Admin Error"
         />
       }
     >
       {children}
     </ErrorBoundary>
-  )
+  );
 }

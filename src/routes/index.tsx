@@ -1,6 +1,5 @@
-import { Link, createFileRoute, useRouteContext } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { createFileRoute, Link, useRouteContext } from "@tanstack/react-router";
+import { motion, useScroll, useTransform } from "framer-motion";
 import {
   Activity,
   AlertCircle,
@@ -11,124 +10,149 @@ import {
   Link2,
   RefreshCcw,
   Shield,
-  User,
   Users,
-} from 'lucide-react'
-import { HeroSection } from '../components/landing/hero-section'
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { HeroSection } from "../components/landing/hero-section";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   component: RouteComponent,
-})
+});
 
 function RouteComponent() {
-  const { session } = useRouteContext({ from: '__root__' })
-  const [activeTeamId, setActiveTeamId] = useState<string | null>(null)
+  const { session } = useRouteContext({ from: "__root__" });
+  const [activeTeamId, setActiveTeamId] = useState<string | null>(null);
 
-  const { scrollYProgress } = useScroll()
-  const y = useTransform(scrollYProgress, [0, 1], [0, -50])
-  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0])
+  const { scrollYProgress } = useScroll();
+  const _y = useTransform(scrollYProgress, [0, 1], [0, -50]);
+  const _opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
 
   // Active team ID effect
   useEffect(() => {
-    if (!session) return
-    const savedTeamId = localStorage.getItem('ensemble-last-team-id')
+    if (!session) {
+      return;
+    }
+    const savedTeamId = localStorage.getItem("ensemble-last-team-id");
     if (
       savedTeamId &&
       session.permissions.find((t) => t.teamId === savedTeamId)
     ) {
-      setActiveTeamId(savedTeamId)
+      setActiveTeamId(savedTeamId);
     } else if (session.permissions.length > 0) {
-      setActiveTeamId(session.permissions[0].teamId)
+      setActiveTeamId(session.permissions[0].teamId);
     }
-  }, [session])
+  }, [session]);
 
   const scorecardHref = activeTeamId
     ? `/teams/${activeTeamId}/scorecard`
-    : '/scorecard'
+    : "/scorecard";
   const turnoverHref = activeTeamId
     ? `/teams/${activeTeamId}/turnover`
-    : '/turnover'
+    : "/turnover";
   const linkManagerHref = activeTeamId
     ? `/teams/${activeTeamId}/link-manager`
-    : '/link-manager'
+    : "/link-manager";
+
+  const getStatusTextColor = (status: string): string => {
+    if (status === "Healthy") {
+      return "text-success";
+    }
+    if (status === "Degraded") {
+      return "text-warning";
+    }
+    if (status === "Offline") {
+      return "text-destructive";
+    }
+    return "text-primary";
+  };
+
+  const getStatusDotClass = (status: string): string => {
+    if (status === "Healthy") {
+      return "animate-pulse bg-success shadow-success/50";
+    }
+    if (status === "Degraded") {
+      return "bg-warning shadow-warning/50";
+    }
+    return "bg-destructive shadow-destructive/50";
+  };
 
   return (
-    <div className="min-h-screen bg-background text-foreground relative selection:bg-primary/20">
+    <div className="relative min-h-screen bg-background text-foreground selection:bg-primary/20">
       <HeroSection
-        session={session}
-        scorecardHref={scorecardHref}
-        turnoverHref={turnoverHref}
         linkManagerHref={linkManagerHref}
+        scorecardHref={scorecardHref}
+        session={session}
+        turnoverHref={turnoverHref}
       />
 
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
+      <main className="container mx-auto max-w-7xl px-4 py-8">
         {/* Tools Section - Premium Bento Grid */}
-        <section className="py-24 space-y-20 relative z-20">
+        <section className="relative z-20 space-y-20 py-24">
           <motion.div
+            className="relative space-y-6 text-center"
             initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            viewport={{ once: true, margin: '-100px' }}
-            className="text-center space-y-6 relative"
+            viewport={{ once: true, margin: "-100px" }}
+            whileInView={{ opacity: 1, y: 0 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 shadow-sm">
-              <span className="text-xs font-bold tracking-widest uppercase text-primary">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 shadow-sm">
+              <span className="font-bold text-primary text-xs uppercase tracking-widest">
                 Core Capabilities
               </span>
             </div>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tight drop-shadow-sm text-foreground">
+            <h2 className="font-black text-4xl text-foreground tracking-tight drop-shadow-sm md:text-6xl">
               Your Instrumental Toolkit
             </h2>
-            <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-2xl mx-auto">
+            <p className="mx-auto max-w-2xl font-medium text-muted-foreground text-xl md:text-2xl">
               Everything you need to keep operations in perfect harmony.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-12 lg:gap-8">
             {/* Tool 1: Scorecard (7 Cols) */}
             <Link
-              to={scorecardHref as any}
-              className="col-span-1 md:col-span-7 group block transform-gpu transition-all duration-300 hover:-translate-y-1"
+              className="group col-span-1 block transform-gpu transition-all duration-300 hover:-translate-y-1 md:col-span-7"
+              to={scorecardHref as string}
             >
-              <div className="relative h-full min-h-[450px] rounded-[2.5rem] overflow-hidden bg-primary text-primary-foreground shadow-lg ring-1 ring-border flex flex-col justify-between p-10">
+              <div className="relative flex h-full min-h-[450px] flex-col justify-between overflow-hidden rounded-[2.5rem] bg-primary p-10 text-primary-foreground shadow-lg ring-1 ring-border">
                 {/* Background Pattern */}
                 <div
-                  className="absolute inset-0 opacity-20 pointer-events-none mix-blend-color-dodge transition-transform duration-700 group-hover:scale-105"
+                  className="pointer-events-none absolute inset-0 opacity-20 mix-blend-color-dodge transition-transform duration-700 group-hover:scale-105"
                   style={{
                     backgroundImage: `url('/patterns/amex-1.png')`,
-                    backgroundSize: '400px',
-                    backgroundPosition: 'center right',
+                    backgroundSize: "400px",
+                    backgroundPosition: "center right",
                   }}
                 />
 
                 {/* Content Top */}
                 <div className="relative z-10 max-w-sm">
-                  <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mb-6 shadow-sm border border-white/20 group-hover:bg-white group-hover:text-primary transition-colors">
-                    <LayoutDashboard className="w-7 h-7" />
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/20 bg-white/10 shadow-sm transition-colors group-hover:bg-white group-hover:text-primary">
+                    <LayoutDashboard className="h-7 w-7" />
                   </div>
-                  <h3 className="text-3xl font-black tracking-tight mb-3">
+                  <h3 className="mb-3 font-black text-3xl tracking-tight">
                     Scorecard Metrics
                   </h3>
-                  <p className="text-white/80 text-lg font-medium leading-relaxed">
+                  <p className="font-medium text-lg text-white/80 leading-relaxed">
                     Visualize reliability, availability, and performance trends
                     in real-time. Know your score before the meeting starts.
                   </p>
                 </div>
 
                 {/* Bottom visual mocked UI */}
-                <div className="relative z-10 w-full mt-12 bg-white/10 border border-white/20 rounded-2xl p-6 h-[180px] overflow-hidden backdrop-blur-sm group-hover:bg-white/20 transition-colors duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 top-10 flex items-end justify-between px-6 gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                <div className="relative z-10 mt-12 h-[180px] w-full overflow-hidden rounded-2xl border border-white/20 bg-white/10 p-6 backdrop-blur-sm transition-colors duration-300 group-hover:bg-white/20">
+                  <div className="absolute top-10 right-0 bottom-0 left-0 flex items-end justify-between gap-2 px-6 opacity-80 transition-opacity group-hover:opacity-100">
                     {[40, 70, 50, 90, 65, 85, 45, 60, 80].map((h, i) => (
                       <div
-                        key={i}
-                        className="w-full bg-white/20 rounded-t-sm relative overflow-hidden h-full"
+                        className="relative h-full w-full overflow-hidden rounded-t-sm bg-white/20"
+                        key={`bar-${String(h)}`}
                       >
                         <motion.div
-                          initial={{ height: '0%' }}
-                          whileInView={{ height: `${h}%` }}
+                          className="absolute bottom-0 left-0 w-full rounded-t-sm bg-white transition-all duration-500"
+                          initial={{ height: "0%" }}
                           transition={{ duration: 1, delay: i * 0.1 }}
                           viewport={{ once: true }}
-                          className="absolute bottom-0 left-0 w-full bg-white transition-all duration-500 rounded-t-sm"
+                          whileInView={{ height: `${h}%` }}
                         />
                       </div>
                     ))}
@@ -139,47 +163,47 @@ function RouteComponent() {
 
             {/* Tool 2: Turnover (5 Cols) */}
             <Link
-              to={turnoverHref as any}
-              className="col-span-1 md:col-span-5 group block transform-gpu transition-all duration-300 hover:-translate-y-1"
+              className="group col-span-1 block transform-gpu transition-all duration-300 hover:-translate-y-1 md:col-span-5"
+              to={turnoverHref as string}
             >
-              <div className="relative h-full min-h-[450px] rounded-[2.5rem] overflow-hidden bg-card text-foreground shadow-lg ring-1 ring-border flex flex-col justify-between p-10">
+              <div className="relative flex h-full min-h-[450px] flex-col justify-between overflow-hidden rounded-[2.5rem] bg-card p-10 text-foreground shadow-lg ring-1 ring-border">
                 {/* Pattern Background overlay */}
                 <div
-                  className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] transition-all duration-1000 transform-gpu group-hover:scale-105 pointer-events-none"
+                  className="pointer-events-none absolute inset-0 transform-gpu opacity-[0.03] transition-all duration-1000 group-hover:scale-105 dark:opacity-[0.05]"
                   style={{
                     backgroundImage: `url('/patterns/amex-1.png')`,
-                    backgroundSize: '400px',
-                    backgroundPosition: 'top left',
+                    backgroundSize: "400px",
+                    backgroundPosition: "top left",
                   }}
                 />
 
                 <div className="relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-6 border border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-300">
-                    <RefreshCcw className="w-7 h-7" />
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
+                    <RefreshCcw className="h-7 w-7" />
                   </div>
-                  <h3 className="text-3xl font-black tracking-tight mb-3">
+                  <h3 className="mb-3 font-black text-3xl tracking-tight">
                     Seamless Turnover
                   </h3>
-                  <p className="text-muted-foreground text-lg font-medium leading-relaxed">
+                  <p className="font-medium text-lg text-muted-foreground leading-relaxed">
                     Pass the baton with confidence. Log incidents, tickets, and
                     critical updates seamlessly.
                   </p>
                 </div>
 
-                <div className="relative z-10 mt-12 bg-muted/30 border border-border rounded-2xl p-4 space-y-3 shadow-inner group-hover:bg-muted/50 transition-colors duration-300">
-                  {[1, 2, 3].map((_, i) => (
+                <div className="relative z-10 mt-12 space-y-3 rounded-2xl border border-border bg-muted/30 p-4 shadow-inner transition-colors duration-300 group-hover:bg-muted/50">
+                  {[1, 2, 3].map((item, i) => (
                     <div
-                      key={i}
-                      className="flex items-center gap-3 p-3 rounded-xl bg-background border border-border/50 shadow-sm"
+                      className="flex items-center gap-3 rounded-xl border border-border/50 bg-background p-3 shadow-sm"
+                      key={`turnover-item-${String(item)}`}
                     >
                       <div
-                        className={`w-8 h-8 rounded-full flex-shrink-0 shadow-inner flex items-center justify-center text-[10px] font-bold ${i === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted border border-border text-muted-foreground'}`}
+                        className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full font-bold text-[10px] shadow-inner ${i === 0 ? "bg-primary text-primary-foreground" : "border border-border bg-muted text-muted-foreground"}`}
                       >
-                        {i === 0 ? 'L' : 'P'}
+                        {i === 0 ? "L" : "P"}
                       </div>
-                      <div className="space-y-1.5 flex-1">
-                        <div className="h-2 w-3/4 bg-muted-foreground/30 rounded-full" />
-                        <div className="h-2 w-1/2 bg-muted-foreground/20 rounded-full" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-2 w-3/4 rounded-full bg-muted-foreground/30" />
+                        <div className="h-2 w-1/2 rounded-full bg-muted-foreground/20" />
                       </div>
                     </div>
                   ))}
@@ -189,21 +213,21 @@ function RouteComponent() {
 
             {/* Tool 3: Link Manager (12 Cols wide block) */}
             <Link
-              to={linkManagerHref as any}
-              className="col-span-1 md:col-span-12 group relative min-h-[350px] rounded-[2.5rem] bg-card shadow-lg ring-1 ring-border overflow-hidden block transform-gpu transition-all duration-300 hover:-translate-y-1"
+              className="group relative col-span-1 block min-h-[350px] transform-gpu overflow-hidden rounded-[2.5rem] bg-card shadow-lg ring-1 ring-border transition-all duration-300 hover:-translate-y-1 md:col-span-12"
+              to={linkManagerHref as string}
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/5 to-transparent opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
 
-              <div className="flex flex-col lg:flex-row h-full">
+              <div className="flex h-full flex-col lg:flex-row">
                 {/* Text Section */}
-                <div className="p-10 lg:w-1/2 flex flex-col justify-center relative z-10 border-b lg:border-b-0 lg:border-r border-border/50 bg-card">
-                  <div className="w-14 h-14 rounded-2xl bg-secondary/20 text-secondary-foreground flex items-center justify-center mb-6 border border-border group-hover:bg-secondary transition-colors duration-300 shadow-sm">
-                    <Link2 className="w-7 h-7" />
+                <div className="relative z-10 flex flex-col justify-center border-border/50 border-b bg-card p-10 lg:w-1/2 lg:border-r lg:border-b-0">
+                  <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-border bg-secondary/20 text-secondary-foreground shadow-sm transition-colors duration-300 group-hover:bg-secondary">
+                    <Link2 className="h-7 w-7" />
                   </div>
-                  <h3 className="text-3xl font-black tracking-tight mb-3">
+                  <h3 className="mb-3 font-black text-3xl tracking-tight">
                     Link Manager
                   </h3>
-                  <p className="text-muted-foreground text-lg font-medium leading-relaxed max-w-md">
+                  <p className="max-w-md font-medium text-lg text-muted-foreground leading-relaxed">
                     Your team's central repository for documentation,
                     dashboards, and critical URLs. Never lose a bookmark again
                     with powerful categories and tags.
@@ -211,45 +235,45 @@ function RouteComponent() {
                 </div>
 
                 {/* Animated Mock Section */}
-                <div className="lg:w-1/2 bg-muted/10 p-10 relative overflow-hidden flex items-center justify-center min-h-[250px]">
+                <div className="relative flex min-h-[250px] items-center justify-center overflow-hidden bg-muted/10 p-10 lg:w-1/2">
                   {/* Pattern Background overlay */}
                   <div
-                    className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] group-hover:opacity-[0.08] transition-all duration-1000 transform-gpu group-hover:scale-110 pointer-events-none"
+                    className="pointer-events-none absolute inset-0 transform-gpu opacity-[0.03] transition-all duration-1000 group-hover:scale-110 group-hover:opacity-[0.08] dark:opacity-[0.05]"
                     style={{
                       backgroundImage: `url('/patterns/amex-1.png')`,
-                      backgroundSize: '400px',
-                      backgroundPosition: 'center',
+                      backgroundSize: "400px",
+                      backgroundPosition: "center",
                     }}
                   />
 
                   {/* Floating Cards mock */}
-                  <div className="w-full max-w-sm space-y-4 relative z-10 group-hover:-translate-y-2 transition-transform duration-500">
+                  <div className="relative z-10 w-full max-w-sm space-y-4 transition-transform duration-500 group-hover:-translate-y-2">
                     {[
                       {
-                        title: 'Production AWS Console',
-                        cat: 'Infrastructure',
+                        title: "Production AWS Console",
+                        cat: "Infrastructure",
                       },
-                      { title: 'Splunk Dashboard', cat: 'Monitoring' },
-                      { title: 'Service Repository', cat: 'Source Code' },
-                    ].map((item, i) => (
+                      { title: "Splunk Dashboard", cat: "Monitoring" },
+                      { title: "Service Repository", cat: "Source Code" },
+                    ].map((item) => (
                       <div
-                        key={i}
-                        className="w-full bg-background rounded-2xl shadow-sm border border-border p-4 flex items-center justify-between transition-colors hover:bg-muted/50"
+                        className="flex w-full items-center justify-between rounded-2xl border border-border bg-background p-4 shadow-sm transition-colors hover:bg-muted/50"
+                        key={item.title}
                       >
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                            <Link2 className="w-5 h-5 text-primary" />
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                            <Link2 className="h-5 w-5 text-primary" />
                           </div>
                           <div>
-                            <p className="font-bold text-foreground overflow-hidden text-ellipsis whitespace-nowrap max-w-[150px] sm:max-w-[200px]">
+                            <p className="max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap font-bold text-foreground sm:max-w-[200px]">
                               {item.title}
                             </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
+                            <p className="mt-0.5 text-muted-foreground text-xs">
                               {item.cat}
                             </p>
                           </div>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-muted-foreground opacity-50" />
+                        <ArrowRight className="h-4 w-4 text-muted-foreground opacity-50" />
                       </div>
                     ))}
                   </div>
@@ -260,59 +284,59 @@ function RouteComponent() {
         </section>
 
         {/* Onboarding - Premium Step Grid */}
-        <section className="py-32 relative overflow-hidden">
+        <section className="relative overflow-hidden py-32">
           <motion.div
+            className="relative z-10 mb-20 text-center"
             initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-20 relative z-10"
+            whileInView={{ opacity: 1, y: 0 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 shadow-sm mb-8">
-              <span className="text-xs font-bold tracking-widest uppercase text-primary">
+            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 shadow-sm">
+              <span className="font-bold text-primary text-xs uppercase tracking-widest">
                 How It Works
               </span>
             </div>
-            <h2 className="text-4xl md:text-5xl md:text-6xl font-black text-foreground tracking-tight drop-shadow-sm">
+            <h2 className="font-black text-4xl text-foreground tracking-tight drop-shadow-sm md:text-5xl md:text-6xl">
               Onboard in 3 simple steps.
             </h2>
           </motion.div>
 
           {/* Easy Onboarding Flow */}
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 relative">
+          <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
             {/* Connecting Line (Desktop) */}
-            <div className="absolute top-10 left-[15%] right-[15%] h-1 bg-border/40 hidden md:block rounded-full z-0 overflow-hidden">
+            <div className="absolute top-10 right-[15%] left-[15%] z-0 hidden h-1 overflow-hidden rounded-full bg-border/40 md:block">
               <motion.div
-                initial={{ width: '0%' }}
-                whileInView={{ width: '100%' }}
-                transition={{ duration: 1.5, delay: 0.2 }}
                 className="h-full bg-primary/30"
+                initial={{ width: "0%" }}
+                transition={{ duration: 1.5, delay: 0.2 }}
+                whileInView={{ width: "100%" }}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16 relative z-10">
+            <div className="relative z-10 grid grid-cols-1 gap-12 md:grid-cols-3 lg:gap-16">
               {/* Step 1 */}
               <motion.div
+                className="group flex flex-col items-center text-center"
                 initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="flex flex-col items-center text-center group"
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 <div className="relative mb-6">
-                  <div className="w-20 h-20 rounded-3xl bg-card border-2 border-border shadow-xl flex items-center justify-center relative overflow-hidden group-hover:border-primary/40 transition-colors z-10">
-                    <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
-                    <Users className="w-8 h-8 text-primary drop-shadow-sm" />
+                  <div className="relative z-10 flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border-2 border-border bg-card shadow-xl transition-colors group-hover:border-primary/40">
+                    <div className="absolute inset-0 bg-primary/5 transition-colors group-hover:bg-primary/10" />
+                    <Users className="h-8 w-8 text-primary drop-shadow-sm" />
                   </div>
                   {/* Step Number Badge */}
-                  <div className="absolute -top-3 -right-3 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center font-black text-sm border-[3px] border-background z-20 shadow-sm">
+                  <div className="absolute -top-3 -right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-background bg-black font-black text-sm text-white shadow-sm">
                     1
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <h3 className="text-2xl font-black text-foreground tracking-tight drop-shadow-sm">
+                <div className="mb-6 space-y-3">
+                  <h3 className="font-black text-2xl text-foreground tracking-tight drop-shadow-sm">
                     Define Your Team
                   </h3>
-                  <p className="text-muted-foreground font-medium text-sm leading-relaxed px-2 lg:px-4">
+                  <p className="px-2 font-medium text-muted-foreground text-sm leading-relaxed lg:px-4">
                     Provide a name, enter a brief description, and assign
                     primary contacts in seconds. No complex paperwork or
                     tickets.
@@ -320,32 +344,32 @@ function RouteComponent() {
                 </div>
 
                 {/* Mini Mockup Visual */}
-                <div className="w-full bg-card rounded-[1.5rem] border border-border shadow-sm p-5 relative overflow-hidden text-left hover:shadow-md transition-shadow cursor-default mt-auto">
-                  <div className="space-y-4 relative z-10">
+                <div className="relative mt-auto w-full cursor-default overflow-hidden rounded-[1.5rem] border border-border bg-card p-5 text-left shadow-sm transition-shadow hover:shadow-md">
+                  <div className="relative z-10 space-y-4">
                     <div className="space-y-1.5">
-                      <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                      <div className="font-black text-[9px] text-muted-foreground uppercase tracking-widest">
                         Team Name
                       </div>
-                      <div className="h-10 w-full rounded-xl bg-background border border-border flex items-center px-3 shadow-inner">
-                        <span className="text-xs font-bold text-foreground">
+                      <div className="flex h-10 w-full items-center rounded-xl border border-border bg-background px-3 shadow-inner">
+                        <span className="font-bold text-foreground text-xs">
                           Platform Trading Systems
                         </span>
                         <motion.div
+                          className="ml-auto flex h-5 w-5 items-center justify-center rounded-full border border-success/20 bg-success/10 text-success"
                           initial={{ scale: 0 }}
-                          whileInView={{ scale: 1 }}
                           transition={{ delay: 0.4 }}
-                          className="ml-auto flex h-5 w-5 rounded-full bg-success/10 border border-success/20 items-center justify-center text-success"
+                          whileInView={{ scale: 1 }}
                         >
-                          <Check className="w-3 h-3" />
+                          <Check className="h-3 w-3" />
                         </motion.div>
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                      <div className="font-black text-[9px] text-muted-foreground uppercase tracking-widest">
                         Description
                       </div>
-                      <div className="h-14 w-full rounded-xl bg-background border border-border flex p-3 shadow-inner">
-                        <span className="text-[10px] text-muted-foreground font-medium italic">
+                      <div className="flex h-14 w-full rounded-xl border border-border bg-background p-3 shadow-inner">
+                        <span className="font-medium text-[10px] text-muted-foreground italic">
                           Core trading infrastructure...
                         </span>
                       </div>
@@ -356,54 +380,54 @@ function RouteComponent() {
 
               {/* Step 2 */}
               <motion.div
+                className="group flex flex-col items-center text-center"
                 initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="flex flex-col items-center text-center group"
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 <div className="relative mb-6">
-                  <div className="w-20 h-20 rounded-3xl bg-card border-2 border-border shadow-xl flex items-center justify-center relative overflow-hidden group-hover:border-primary/40 transition-colors z-10">
-                    <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
-                    <Shield className="w-8 h-8 text-primary drop-shadow-sm" />
+                  <div className="relative z-10 flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border-2 border-border bg-card shadow-xl transition-colors group-hover:border-primary/40">
+                    <div className="absolute inset-0 bg-primary/5 transition-colors group-hover:bg-primary/10" />
+                    <Shield className="h-8 w-8 text-primary drop-shadow-sm" />
                   </div>
                   {/* Step Number Badge */}
-                  <div className="absolute -top-3 -right-3 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center font-black text-sm border-[3px] border-background z-20 shadow-sm">
+                  <div className="absolute -top-3 -right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-background bg-black font-black text-sm text-white shadow-sm">
                     2
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <h3 className="text-2xl font-black text-foreground tracking-tight drop-shadow-sm">
+                <div className="mb-6 space-y-3">
+                  <h3 className="font-black text-2xl text-foreground tracking-tight drop-shadow-sm">
                     Secure Access
                   </h3>
-                  <p className="text-muted-foreground font-medium text-sm leading-relaxed px-2 lg:px-4">
+                  <p className="px-2 font-medium text-muted-foreground text-sm leading-relaxed lg:px-4">
                     Configure permissions instantly by linking your existing
                     Active Directory groups. Zero friction, enterprise security.
                   </p>
                 </div>
 
                 {/* Mini Mockup Visual */}
-                <div className="w-full bg-card rounded-[1.5rem] border border-border shadow-sm p-5 relative overflow-hidden text-left hover:shadow-md transition-shadow cursor-default mt-auto">
-                  <div className="space-y-4 relative z-10">
-                    <div className="relative bg-background rounded-xl border border-border p-3 shadow-inner group/item hover:border-primary/40 transition-colors">
-                      <div className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1.5 flex items-center gap-1.5">
-                        <Users className="w-3 h-3" /> User Access Group
+                <div className="relative mt-auto w-full cursor-default overflow-hidden rounded-[1.5rem] border border-border bg-card p-5 text-left shadow-sm transition-shadow hover:shadow-md">
+                  <div className="relative z-10 space-y-4">
+                    <div className="group/item relative rounded-xl border border-border bg-background p-3 shadow-inner transition-colors hover:border-primary/40">
+                      <div className="mb-1.5 flex items-center gap-1.5 pl-1 font-bold text-[8px] text-muted-foreground uppercase tracking-widest">
+                        <Users className="h-3 w-3" /> User Access Group
                       </div>
                       <div className="flex items-center gap-2 px-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-success" />
-                        <span className="text-xs font-black tracking-tight truncate">
+                        <div className="h-1.5 w-1.5 rounded-full bg-success" />
+                        <span className="truncate font-black text-xs tracking-tight">
                           ENSEMBLE-PTS-USERS
                         </span>
                       </div>
                     </div>
-                    <div className="relative bg-background rounded-xl border border-border p-3 shadow-inner group/item hover:border-primary/40 transition-colors">
-                      <div className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest pl-1 mb-1.5 flex items-center gap-1.5">
-                        <Shield className="w-3 h-3 text-secondary" /> Admin
+                    <div className="group/item relative rounded-xl border border-border bg-background p-3 shadow-inner transition-colors hover:border-primary/40">
+                      <div className="mb-1.5 flex items-center gap-1.5 pl-1 font-bold text-[8px] text-muted-foreground uppercase tracking-widest">
+                        <Shield className="h-3 w-3 text-secondary" /> Admin
                         Access Group
                       </div>
                       <div className="flex items-center gap-2 px-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-success" />
-                        <span className="text-xs font-black tracking-tight truncate">
+                        <div className="h-1.5 w-1.5 rounded-full bg-success" />
+                        <span className="truncate font-black text-xs tracking-tight">
                           ENSEMBLE-PTS-ADMINS
                         </span>
                       </div>
@@ -414,27 +438,27 @@ function RouteComponent() {
 
               {/* Step 3 */}
               <motion.div
+                className="group flex flex-col items-center text-center"
                 initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex flex-col items-center text-center group"
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 <div className="relative mb-6">
-                  <div className="w-20 h-20 rounded-3xl bg-card border-2 border-border shadow-xl flex items-center justify-center relative overflow-hidden group-hover:border-primary/40 transition-colors z-10">
-                    <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
-                    <Activity className="w-8 h-8 text-primary drop-shadow-sm" />
+                  <div className="relative z-10 flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border-2 border-border bg-card shadow-xl transition-colors group-hover:border-primary/40">
+                    <div className="absolute inset-0 bg-primary/5 transition-colors group-hover:bg-primary/10" />
+                    <Activity className="h-8 w-8 text-primary drop-shadow-sm" />
                   </div>
                   {/* Step Number Badge */}
-                  <div className="absolute -top-3 -right-3 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center font-black text-sm border-[3px] border-background z-20 shadow-sm">
+                  <div className="absolute -top-3 -right-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border-[3px] border-background bg-black font-black text-sm text-white shadow-sm">
                     3
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <h3 className="text-2xl font-black text-foreground tracking-tight drop-shadow-sm">
+                <div className="mb-6 space-y-3">
+                  <h3 className="font-black text-2xl text-foreground tracking-tight drop-shadow-sm">
                     Instant Launch
                   </h3>
-                  <p className="text-muted-foreground font-medium text-sm leading-relaxed px-2 lg:px-4">
+                  <p className="px-2 font-medium text-muted-foreground text-sm leading-relaxed lg:px-4">
                     Hit submit and your robust suite is provisioned
                     automatically. Scorecards, Turnover logs, and more—ready
                     immediately.
@@ -442,25 +466,25 @@ function RouteComponent() {
                 </div>
 
                 {/* Mini Mockup Visual */}
-                <div className="w-full bg-card rounded-[1.5rem] border border-border shadow-sm p-5 relative overflow-hidden text-left hover:shadow-md transition-shadow cursor-default mt-auto min-h-[160px] flex items-center justify-center">
-                  <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03] group-hover:opacity-[0.06] transition-opacity pointer-events-none" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative mt-auto flex min-h-[160px] w-full cursor-default items-center justify-center overflow-hidden rounded-[1.5rem] border border-border bg-card p-5 text-left shadow-sm transition-shadow hover:shadow-md">
+                  <div className="pointer-events-none absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03] transition-opacity group-hover:opacity-[0.06]" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
 
-                  <div className="flex flex-col items-center justify-center relative z-10 space-y-4">
+                  <div className="relative z-10 flex flex-col items-center justify-center space-y-4">
                     <motion.div
+                      className="relative flex h-16 w-16 items-center justify-center rounded-full border border-success/30 bg-success/15 text-success shadow-lg shadow-success/20"
                       initial={{ scale: 0.5, opacity: 0 }}
+                      transition={{ delay: 0.8, type: "spring" }}
                       whileInView={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.8, type: 'spring' }}
-                      className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center text-success relative border border-success/30 shadow-lg shadow-success/20"
                     >
-                      <Check className="w-8 h-8 drop-shadow-sm relative z-10" />
-                      <div className="absolute inset-0 rounded-full border-2 border-success animate-ping opacity-30" />
+                      <Check className="relative z-10 h-8 w-8 drop-shadow-sm" />
+                      <div className="absolute inset-0 animate-ping rounded-full border-2 border-success opacity-30" />
                     </motion.div>
                     <div className="text-center">
-                      <div className="text-sm font-black drop-shadow-sm">
+                      <div className="font-black text-sm drop-shadow-sm">
                         Workspace Automated!
                       </div>
-                      <div className="text-[10px] text-muted-foreground font-black uppercase tracking-widest mt-1.5 py-1 px-3 rounded-md bg-muted/30 border border-border">
+                      <div className="mt-1.5 rounded-md border border-border bg-muted/30 px-3 py-1 font-black text-[10px] text-muted-foreground uppercase tracking-widest">
                         Tools Initialized
                       </div>
                     </div>
@@ -470,13 +494,13 @@ function RouteComponent() {
             </div>
           </div>
 
-          <div className="text-center mt-20">
+          <div className="mt-20 text-center">
             {!session && (
               <Link
+                className="inline-flex items-center gap-2 rounded-full bg-primary px-10 py-4 font-bold text-lg text-primary-foreground shadow-md transition-colors hover:bg-primary/90"
                 to="/teams/register"
-                className="inline-flex px-10 py-4 rounded-full bg-primary text-primary-foreground text-lg font-bold items-center gap-2 hover:bg-primary/90 transition-colors shadow-md"
               >
-                Start the Wizard <ArrowRight className="w-5 h-5" />
+                Start the Wizard <ArrowRight className="h-5 w-5" />
               </Link>
             )}
           </div>
@@ -484,54 +508,54 @@ function RouteComponent() {
       </main>
 
       {/* === PREMIUM CTA SECTION === */}
-      <section className="relative w-full py-32 mt-20 bg-primary overflow-hidden">
+      <section className="relative mt-20 w-full overflow-hidden bg-primary py-32">
         {/* Deep AmEx Blue Base with rich gradients */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#000] via-primary to-[#000] opacity-90" />
 
         {/* Cinematic Pattern Background */}
         <div
-          className="absolute inset-0 mix-blend-overlay opacity-50 transform-gpu rotate-[-2deg] scale-110"
+          className="absolute inset-0 rotate-[-2deg] scale-110 transform-gpu opacity-50 mix-blend-overlay"
           style={{
             backgroundImage: `url('/patterns/amex-2.jpg')`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'contrast(1.5) brightness(0.8)',
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            filter: "contrast(1.5) brightness(0.8)",
           }}
         />
 
         {/* Dynamic Glow Intersections - Removed per user request */}
 
         <motion.div
+          className="container relative z-10 mx-auto max-w-5xl px-4"
           initial={{ opacity: 0, y: 50, scale: 0.95 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          viewport={{ once: true, margin: "-100px" }}
           whileInView={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 1, ease: 'easeOut' }}
-          viewport={{ once: true, margin: '-100px' }}
-          className="container mx-auto px-4 relative z-10 max-w-5xl"
         >
-          <div className="bg-black/20 rounded-[3rem] border border-white/20 p-12 md:p-20 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-12 overflow-hidden relative">
+          <div className="relative flex flex-col items-center justify-between gap-12 overflow-hidden rounded-[3rem] border border-white/20 bg-black/20 p-12 shadow-2xl md:flex-row md:p-20">
             {/* Inner Pattern Accent */}
-            <div className="absolute top-0 right-0 w-1/2 h-full opacity-10 bg-[url('/patterns/amex-3.avif')] bg-cover mix-blend-plus-lighter pointer-events-none" />
+            <div className="pointer-events-none absolute top-0 right-0 h-full w-1/2 bg-[url('/patterns/amex-3.avif')] bg-cover opacity-10 mix-blend-plus-lighter" />
 
             {/* Left Content */}
-            <div className="space-y-6 md:w-2/3 text-center md:text-left relative z-10">
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-white drop-shadow-md leading-[1.1]">
+            <div className="relative z-10 space-y-6 text-center md:w-2/3 md:text-left">
+              <h2 className="font-black text-4xl text-white leading-[1.1] tracking-tighter drop-shadow-md md:text-6xl">
                 Ready to modernize <br className="hidden md:block" /> your
                 operations?
               </h2>
-              <p className="text-xl md:text-2xl text-white/80 font-medium max-w-xl mx-auto md:mx-0 drop-shadow-sm leading-relaxed">
+              <p className="mx-auto max-w-xl font-medium text-white/80 text-xl leading-relaxed drop-shadow-sm md:mx-0 md:text-2xl">
                 Join the high-performance teams already using Ensemble to
                 streamline their workflow.
               </p>
             </div>
 
             {/* Right Action */}
-            <div className="md:w-1/3 flex justify-center md:justify-end relative z-10">
-              <Link to="/teams/register" className="group">
-                <div className="relative inline-flex h-20 px-10 rounded-full bg-white text-primary text-xl font-black items-center gap-4 transition-all duration-500 hover:scale-105 shadow-2xl hover:shadow-white/30 overflow-hidden">
-                  <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative z-10 flex justify-center md:w-1/3 md:justify-end">
+              <Link className="group" to="/teams/register">
+                <div className="relative inline-flex h-20 items-center gap-4 overflow-hidden rounded-full bg-white px-10 font-black text-primary text-xl shadow-2xl transition-all duration-500 hover:scale-105 hover:shadow-white/30">
+                  <div className="absolute inset-0 bg-primary/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   <span className="relative z-10">Enroll Today</span>
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center relative z-10 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 transition-colors duration-300 group-hover:bg-primary group-hover:text-white">
+                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </div>
                 </div>
               </Link>
@@ -541,22 +565,22 @@ function RouteComponent() {
       </section>
 
       {/* Deep Dive Tool Showcase / Premium Suite Detail */}
-      <section className="bg-background py-32 border-t border-border/10 relative overflow-hidden">
+      <section className="relative overflow-hidden border-border/10 border-t bg-background py-32">
         {/* Subtle background glow */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-muted/20 blur-[150px] rounded-full pointer-events-none" />
+        <div className="pointer-events-none absolute top-0 right-0 h-[500px] w-[500px] rounded-full bg-primary/5 blur-[120px]" />
+        <div className="pointer-events-none absolute bottom-0 left-0 h-[600px] w-[600px] rounded-full bg-muted/20 blur-[150px]" />
 
-        <div className="container mx-auto px-4 max-w-7xl space-y-32 md:space-y-40 relative z-10">
-          <div className="text-center max-w-3xl mx-auto space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 shadow-sm mb-4">
-              <span className="text-xs font-bold tracking-widest uppercase text-primary">
+        <div className="container relative z-10 mx-auto max-w-7xl space-y-32 px-4 md:space-y-40">
+          <div className="mx-auto max-w-3xl space-y-6 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 shadow-sm">
+              <span className="font-bold text-primary text-xs uppercase tracking-widest">
                 Explore the Platform
               </span>
             </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-foreground drop-shadow-sm">
+            <h2 className="font-black text-4xl text-foreground tracking-tight drop-shadow-sm md:text-5xl lg:text-6xl">
               Built for High Performance.
             </h2>
-            <p className="text-xl md:text-2xl text-muted-foreground font-medium leading-relaxed">
+            <p className="font-medium text-muted-foreground text-xl leading-relaxed md:text-2xl">
               Every tool in Ensemble is purpose-built to eliminate friction.
               <br className="hidden md:block" />
               Discover the capabilities powering modern engineering teams.
@@ -564,20 +588,20 @@ function RouteComponent() {
           </div>
 
           {/* Tool 1: Scorecard - High Fidelity Dashboard UI */}
-          <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24">
-            <div className="md:w-1/2 space-y-8">
-              <div className="w-20 h-20 rounded-[1.5rem] bg-primary/10 flex items-center justify-center text-primary shadow-sm ring-1 ring-primary/20 relative overflow-hidden group mb-6">
-                <LayoutDashboard className="w-10 h-10 relative z-10" />
+          <div className="flex flex-col items-center gap-12 md:flex-row md:gap-24">
+            <div className="space-y-8 md:w-1/2">
+              <div className="group relative mb-6 flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.5rem] bg-primary/10 text-primary shadow-sm ring-1 ring-primary/20">
+                <LayoutDashboard className="relative z-10 h-10 w-10" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
+                <h3 className="font-black text-4xl text-foreground tracking-tight md:text-5xl">
                   Scorecard.
                   <br />
-                  <span className="text-muted-foreground font-medium md:text-4xl">
+                  <span className="font-medium text-muted-foreground md:text-4xl">
                     Know your health.
                   </span>
                 </h3>
-                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-medium">
+                <p className="font-medium text-lg text-muted-foreground leading-relaxed md:text-xl">
                   The Scorecard aggregates data from multiple monitoring sources
                   to provide a single, weighted health score for your
                   application. Eliminate ambiguity during leadership reviews.
@@ -586,27 +610,27 @@ function RouteComponent() {
               <ul className="space-y-4 pt-4">
                 {[
                   {
-                    title: 'Real-time Availability',
-                    desc: 'Live integration with monitoring tools',
+                    title: "Real-time Availability",
+                    desc: "Live integration with monitoring tools",
                   },
                   {
-                    title: 'Weighted Health Scoring',
-                    desc: 'Custom algorithms for business impact',
+                    title: "Weighted Health Scoring",
+                    desc: "Custom algorithms for business impact",
                   },
                   {
-                    title: 'Trend Analysis',
-                    desc: 'Historical tracking of performance',
+                    title: "Trend Analysis",
+                    desc: "Historical tracking of performance",
                   },
-                ].map((feat, i) => (
-                  <li key={i} className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                      <Activity className="w-4 h-4" />
+                ].map((feat) => (
+                  <li className="flex items-start gap-4" key={feat.title}>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Activity className="h-4 w-4" />
                     </div>
                     <div>
                       <span className="font-bold text-foreground text-sm">
                         {feat.title}
                       </span>
-                      <p className="text-sm text-muted-foreground font-medium">
+                      <p className="font-medium text-muted-foreground text-sm">
                         {feat.desc}
                       </p>
                     </div>
@@ -615,42 +639,42 @@ function RouteComponent() {
               </ul>
             </div>
 
-            <div className="md:w-1/2 w-full">
+            <div className="w-full md:w-1/2">
               <motion.div
+                className="group relative flex h-[450px] transform-gpu flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl transition-shadow duration-500 hover:shadow-primary/10"
                 initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ margin: '-100px' }}
                 transition={{ duration: 0.8 }}
-                className="rounded-3xl bg-card border border-border shadow-2xl relative overflow-hidden group transform-gpu hover:shadow-primary/10 transition-shadow duration-500 h-[450px] flex flex-col"
+                viewport={{ margin: "-100px" }}
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 {/* Subtle Pattern Background in App Window */}
                 <div
-                  className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-multiply"
+                  className="pointer-events-none absolute inset-0 opacity-[0.03] mix-blend-multiply"
                   style={{
                     backgroundImage: `url('/patterns/amex-1.png')`,
-                    backgroundSize: 'cover',
+                    backgroundSize: "cover",
                   }}
                 />
 
                 {/* Mock Browser Header */}
-                <div className="bg-muted/30 border-b border-border p-3 flex items-center justify-between relative z-10">
+                <div className="relative z-10 flex items-center justify-between border-border border-b bg-muted/30 p-3">
                   <div className="flex gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-warning/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-success/60" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-warning/60" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-success/60" />
                   </div>
                 </div>
 
                 {/* Dashboard Content matching Screenshot */}
-                <div className="p-4 space-y-4 relative z-10 flex-1 flex flex-col justify-start overflow-hidden bg-background">
+                <div className="relative z-10 flex flex-1 flex-col justify-start space-y-4 overflow-hidden bg-background p-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-black text-lg text-foreground tracking-tight">
+                      <h4 className="font-black text-foreground text-lg tracking-tight">
                         Performance Scorecard
                       </h4>
-                      <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                        <Activity className="w-3 h-3 text-primary/70" />{' '}
-                        Tracking for{' '}
+                      <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <Activity className="h-3 w-3 text-primary/70" />{" "}
+                        Tracking for{" "}
                         <span className="font-bold text-foreground">
                           enterprise-security
                         </span>
@@ -661,60 +685,60 @@ function RouteComponent() {
                   <div className="grid grid-cols-4 gap-2">
                     {[
                       {
-                        val: '3',
-                        label: 'APPLICATIONS',
-                        icon: <Activity className="w-3 h-3 text-primary" />,
-                        iconBg: 'bg-primary/10',
+                        val: "3",
+                        label: "APPLICATIONS",
+                        icon: <Activity className="h-3 w-3 text-primary" />,
+                        iconBg: "bg-primary/10",
                       },
                       {
-                        val: '6',
-                        label: 'TRACKED TECH',
+                        val: "6",
+                        label: "TRACKED TECH",
                         icon: (
-                          <span className="text-secondary text-xs font-black">
+                          <span className="font-black text-secondary text-xs">
                             #
                           </span>
                         ),
-                        iconBg: 'bg-secondary/10',
+                        iconBg: "bg-secondary/10",
                       },
                       {
-                        val: '5',
-                        label: 'AVAILABILITY',
+                        val: "5",
+                        label: "AVAILABILITY",
                         icon: (
-                          <span className="text-success text-xs font-black">
+                          <span className="font-black text-success text-xs">
                             %
                           </span>
                         ),
-                        iconBg: 'bg-success/10',
+                        iconBg: "bg-success/10",
                       },
                       {
-                        val: '0',
-                        label: 'SLA BREACHES',
+                        val: "0",
+                        label: "SLA BREACHES",
                         icon: (
-                          <span className="text-destructive text-xs font-black">
+                          <span className="font-black text-destructive text-xs">
                             !
                           </span>
                         ),
-                        iconBg: 'bg-destructive/10',
+                        iconBg: "bg-destructive/10",
                       },
                     ].map((stat, i) => (
                       <motion.div
-                        key={i}
+                        className="flex flex-col rounded-2xl border border-border bg-card p-3 shadow-sm transition-colors hover:border-primary/50"
                         initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
+                        key={stat.label}
                         transition={{ delay: 0.2 + i * 0.05 }}
-                        className="p-3 rounded-2xl bg-card border border-border shadow-sm flex flex-col hover:border-primary/50 transition-colors"
+                        whileInView={{ opacity: 1, scale: 1 }}
                       >
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="mb-2 flex items-center gap-2">
                           <div
-                            className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${stat.iconBg}`}
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${stat.iconBg}`}
                           >
                             {stat.icon}
                           </div>
-                          <span className="text-xl font-black tracking-tighter text-foreground leading-none">
+                          <span className="font-black text-foreground text-xl leading-none tracking-tighter">
                             {stat.val}
                           </span>
                         </div>
-                        <span className="text-[7.5px] font-bold text-muted-foreground tracking-wider uppercase">
+                        <span className="font-bold text-[7.5px] text-muted-foreground uppercase tracking-wider">
                           {stat.label}
                         </span>
                       </motion.div>
@@ -722,103 +746,103 @@ function RouteComponent() {
                   </div>
 
                   <motion.div
+                    className="flex w-full items-center rounded-md border border-success/30 bg-success/5 px-3 py-1.5 font-bold text-[10px] text-success"
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
-                    className="w-full py-1.5 px-3 rounded-md border border-success/30 bg-success/5 flex items-center text-success text-[10px] font-bold"
+                    whileInView={{ opacity: 1 }}
                   >
-                    <Activity className="w-3 h-3 mr-2" /> FULLY SYNCHRONIZED
+                    <Activity className="mr-2 h-3 w-3" /> FULLY SYNCHRONIZED
                   </motion.div>
 
-                  <div className="flex-1 rounded-2xl bg-card border border-border shadow-sm overflow-hidden flex flex-col">
-                    <div className="p-3 border-b border-border/50 bg-muted/20 flex flex-col">
+                  <div className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <div className="flex flex-col border-border/50 border-b bg-muted/20 p-3">
                       <div className="flex items-center gap-1.5 text-foreground">
-                        <Activity className="w-4 h-4 text-primary" />
-                        <span className="text-sm font-black tracking-tight">
+                        <Activity className="h-4 w-4 text-primary" />
+                        <span className="font-black text-sm tracking-tight">
                           Application Health
                         </span>
                       </div>
-                      <span className="text-[9px] text-muted-foreground mt-0.5">
+                      <span className="mt-0.5 text-[9px] text-muted-foreground">
                         Performance tracking and reliability metrics across your
                         portfolio.
                       </span>
                     </div>
-                    <div className="flex-1 overflow-hidden flex flex-col p-3 space-y-2">
+                    <div className="flex flex-1 flex-col space-y-2 overflow-hidden p-3">
                       {[
                         {
-                          name: 'Key Management Services',
-                          tag: 'KMS',
-                          comp: '3',
-                          avail: '99.49%',
-                          vol: '9023.1B',
+                          name: "Key Management Services",
+                          tag: "KMS",
+                          comp: "3",
+                          avail: "99.49%",
+                          vol: "9023.1B",
                           ok: true,
                         },
                         {
-                          name: 'Key Management Services',
-                          tag: 'AIF',
-                          comp: '0',
-                          avail: '-',
-                          vol: '0',
+                          name: "Key Management Services",
+                          tag: "AIF",
+                          comp: "0",
+                          avail: "-",
+                          vol: "0",
                           ok: true,
                         },
                         {
-                          name: 'Token Services',
-                          tag: 'TKS',
-                          comp: '3',
-                          avail: '96.50%',
-                          vol: '558.9B',
+                          name: "Token Services",
+                          tag: "TKS",
+                          comp: "3",
+                          avail: "96.50%",
+                          vol: "558.9B",
                           ok: false,
                         },
                       ].map((app, i) => (
                         <motion.div
-                          key={i}
+                          className="flex items-center justify-between rounded-xl border border-border bg-background p-2 transition-colors hover:bg-muted/10"
                           initial={{ opacity: 0, x: -10 }}
-                          whileInView={{ opacity: 1, x: 0 }}
+                          key={app.name}
                           transition={{ delay: 0.5 + i * 0.1 }}
-                          className="flex items-center justify-between p-2 rounded-xl border border-border hover:bg-muted/10 transition-colors bg-background"
+                          whileInView={{ opacity: 1, x: 0 }}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-5 h-5 rounded-full border border-border bg-card flex items-center justify-center shadow-sm shrink-0">
-                              <ArrowRight className="w-2.5 h-2.5 text-muted-foreground" />
+                            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border bg-card shadow-sm">
+                              <ArrowRight className="h-2.5 w-2.5 text-muted-foreground" />
                             </div>
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
-                                <span className="text-[11px] font-black tracking-tight">
+                                <span className="font-black text-[11px] tracking-tight">
                                   {app.name}
                                 </span>
-                                <span className="text-[8px] px-1.5 py-0.5 rounded-md border border-primary/20 bg-primary/10 text-primary font-bold uppercase">
+                                <span className="rounded-md border border-primary/20 bg-primary/10 px-1.5 py-0.5 font-bold text-[8px] text-primary uppercase">
                                   {app.tag}
                                 </span>
                               </div>
-                              <div className="text-[8px] text-muted-foreground flex items-center gap-1 font-semibold">
-                                # 200004789{' '}
-                                <span className="opacity-50">•</span>{' '}
-                                <Activity className="w-2 h-2" /> {app.comp}{' '}
+                              <div className="flex items-center gap-1 font-semibold text-[8px] text-muted-foreground">
+                                # 200004789{" "}
+                                <span className="opacity-50">•</span>{" "}
+                                <Activity className="h-2 w-2" /> {app.comp}{" "}
                                 COMPONENTS
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-6 text-right shrink-0">
-                            {app.avail !== '-' && (
+                          <div className="flex shrink-0 items-center gap-6 text-right">
+                            {app.avail !== "-" && (
                               <div className="w-16">
-                                <div className="text-[7.5px] text-muted-foreground font-bold tracking-widest uppercase mb-0.5">
+                                <div className="mb-0.5 font-bold text-[7.5px] text-muted-foreground uppercase tracking-widest">
                                   AVAILABILITY
                                 </div>
                                 <div
-                                  className={`text-xs font-black flex items-center justify-end gap-1 ${app.ok ? 'text-success' : 'text-destructive'}`}
+                                  className={`flex items-center justify-end gap-1 font-black text-xs ${app.ok ? "text-success" : "text-destructive"}`}
                                 >
                                   <div
-                                    className={`w-1.5 h-1.5 rounded-full ${app.ok ? 'bg-success' : 'bg-destructive'}`}
-                                  />{' '}
+                                    className={`h-1.5 w-1.5 rounded-full ${app.ok ? "bg-success" : "bg-destructive"}`}
+                                  />{" "}
                                   {app.avail}
                                 </div>
                               </div>
                             )}
                             <div className="w-16">
-                              <div className="text-[7.5px] text-muted-foreground font-bold tracking-widest uppercase mb-0.5">
+                              <div className="mb-0.5 font-bold text-[7.5px] text-muted-foreground uppercase tracking-widest">
                                 ANNUAL VOLUME
                               </div>
-                              <div className="text-[11px] font-black text-primary tracking-tight">
+                              <div className="font-black text-[11px] text-primary tracking-tight">
                                 # {app.vol}
                               </div>
                             </div>
@@ -833,20 +857,20 @@ function RouteComponent() {
           </div>
 
           {/* Tool 2: Turnover - High Fidelity UI */}
-          <div className="flex flex-col md:flex-row-reverse items-center gap-12 md:gap-24">
-            <div className="md:w-1/2 space-y-8">
-              <div className="w-20 h-20 rounded-[1.5rem] bg-card flex items-center justify-center text-foreground shadow-sm ring-1 ring-border relative overflow-hidden group mb-6">
-                <RefreshCcw className="w-10 h-10 relative z-10" />
+          <div className="flex flex-col items-center gap-12 md:flex-row-reverse md:gap-24">
+            <div className="space-y-8 md:w-1/2">
+              <div className="group relative mb-6 flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.5rem] bg-card text-foreground shadow-sm ring-1 ring-border">
+                <RefreshCcw className="relative z-10 h-10 w-10" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
+                <h3 className="font-black text-4xl text-foreground tracking-tight md:text-5xl">
                   Turnover.
                   <br />
-                  <span className="text-muted-foreground font-medium md:text-4xl">
+                  <span className="font-medium text-muted-foreground md:text-4xl">
                     Zero dropped balls.
                   </span>
                 </h3>
-                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-medium">
+                <p className="font-medium text-lg text-muted-foreground leading-relaxed md:text-xl">
                   A structured shift handover process that forces acknowledgment
                   of critical issues. Never let a Sev-1 slip through the cracks
                   during a shift change.
@@ -855,27 +879,27 @@ function RouteComponent() {
               <ul className="space-y-4 pt-4">
                 {[
                   {
-                    title: 'Structured Handsets',
-                    desc: 'Standardized templates for consistency',
+                    title: "Structured Handsets",
+                    desc: "Standardized templates for consistency",
                   },
                   {
-                    title: 'Mandatory Acknowledgement',
-                    desc: 'Ensure incoming engineers accept items',
+                    title: "Mandatory Acknowledgement",
+                    desc: "Ensure incoming engineers accept items",
                   },
                   {
-                    title: 'Audit Trail',
-                    desc: 'Full history of every shift transition',
+                    title: "Audit Trail",
+                    desc: "Full history of every shift transition",
                   },
-                ].map((feat, i) => (
-                  <li key={i} className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-xl bg-card border border-border flex items-center justify-center text-foreground shrink-0 shadow-sm">
-                      <Shield className="w-4 h-4" />
+                ].map((feat) => (
+                  <li className="flex items-start gap-4" key={feat.title}>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-foreground shadow-sm">
+                      <Shield className="h-4 w-4" />
                     </div>
                     <div>
                       <span className="font-bold text-foreground text-sm">
                         {feat.title}
                       </span>
-                      <p className="text-sm text-muted-foreground font-medium">
+                      <p className="font-medium text-muted-foreground text-sm">
                         {feat.desc}
                       </p>
                     </div>
@@ -884,192 +908,198 @@ function RouteComponent() {
               </ul>
             </div>
 
-            <div className="md:w-1/2 w-full">
+            <div className="w-full md:w-1/2">
               <motion.div
-                initial={{ transform: 'scale(0.95)', opacity: 0 }}
-                whileInView={{ transform: 'scale(1)', opacity: 1 }}
-                viewport={{ margin: '-100px' }}
+                className="group relative flex h-[450px] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
+                initial={{ transform: "scale(0.95)", opacity: 0 }}
                 transition={{ duration: 0.8 }}
-                className="rounded-3xl bg-card border border-border shadow-2xl relative overflow-hidden group h-[450px] flex flex-col"
+                viewport={{ margin: "-100px" }}
+                whileInView={{ transform: "scale(1)", opacity: 1 }}
               >
                 {/* Subtle Pattern Background */}
-                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03] pointer-events-none" />
+                <div className="pointer-events-none absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03]" />
 
                 {/* Mock Browser Header */}
-                <div className="bg-muted/30 border-b border-border p-3 flex items-center justify-between relative z-10">
+                <div className="relative z-10 flex items-center justify-between border-border border-b bg-muted/30 p-3">
                   <div className="flex gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-warning/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-success/60" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-warning/60" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-success/60" />
                   </div>
                 </div>
 
                 {/* Dashboard Content matching Screenshot */}
-                <div className="bg-background border-b border-border p-3 flex flex-col gap-2 relative z-10 shadow-sm">
+                <div className="relative z-10 flex flex-col gap-2 border-border border-b bg-background p-3 shadow-sm">
                   <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center shadow-md shadow-primary/20">
-                      <RefreshCcw className="w-3 h-3 text-primary-foreground" />
+                    <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-primary shadow-md shadow-primary/20">
+                      <RefreshCcw className="h-3 w-3 text-primary-foreground" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-black tracking-tight text-foreground leading-none mb-1">
+                      <span className="mb-1 font-black text-foreground text-sm leading-none tracking-tight">
                         KMS/TKS
                       </span>
-                      <span className="text-[8.5px] font-bold text-muted-foreground tracking-wide">
+                      <span className="font-bold text-[8.5px] text-muted-foreground tracking-wide">
                         Manage turnover entries for 2 grouped applications
                       </span>
                     </div>
                     <div className="ml-auto flex items-center gap-2">
-                      <span className="text-[8px] font-bold text-muted-foreground tracking-widest uppercase">
+                      <span className="font-bold text-[8px] text-muted-foreground uppercase tracking-widest">
                         KMS
                       </span>
-                      <span className="text-[8px] font-bold text-muted-foreground tracking-widest uppercase">
+                      <span className="font-bold text-[8px] text-muted-foreground uppercase tracking-widest">
                         TKS
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 relative z-10 flex-1 flex flex-col overflow-hidden bg-muted/10">
+                <div className="relative z-10 flex flex-1 flex-col overflow-hidden bg-muted/10 p-4">
                   <motion.div
+                    className="mb-4 flex items-start gap-3 rounded-xl border border-warning/30 bg-warning/5 p-3 text-warning shadow-sm"
                     initial={{ opacity: 0, y: -5 }}
-                    whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="flex items-start gap-3 p-3 rounded-xl border border-warning/30 bg-warning/5 text-warning mb-4 shadow-sm"
+                    whileInView={{ opacity: 1, y: 0 }}
                   >
-                    <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                     <div className="flex flex-col space-y-0.5">
-                      <span className="text-xs font-black tracking-tight flex items-center gap-2">
-                        Critical Turnover Items{' '}
-                        <span className="px-1.5 py-0.5 rounded-md text-[8px] bg-warning text-warning-foreground">
+                      <span className="flex items-center gap-2 font-black text-xs tracking-tight">
+                        Critical Turnover Items{" "}
+                        <span className="rounded-md bg-warning px-1.5 py-0.5 text-[8px] text-warning-foreground">
                           1 items
                         </span>
                       </span>
-                      <p className="text-[10px] text-warning/80 font-medium">
+                      <p className="font-medium text-[10px] text-warning/80">
                         Action required: These items have been flagged for
                         immediate attention.
                       </p>
                     </div>
                   </motion.div>
 
-                  <div className="grid grid-cols-2 gap-3 flex-1 overflow-hidden">
+                  <div className="grid flex-1 grid-cols-2 gap-3 overflow-hidden">
                     {[
                       {
-                        title: 'Request for Change',
-                        subtitle: 'RFC',
+                        title: "Request for Change",
+                        subtitle: "RFC",
                         count: 2,
-                        entries: ['TEST', 'CHG34552662'],
-                        color: 'text-primary',
-                        bg: 'bg-primary',
-                        icon: <Shield className="w-3 h-3 text-primary" />,
+                        entries: ["TEST", "CHG34552662"],
+                        color: "text-primary",
+                        bg: "bg-primary",
+                        icon: <Shield className="h-3 w-3 text-primary" />,
                       },
                       {
-                        title: 'Incidents',
-                        subtitle: 'INC',
+                        title: "Incidents",
+                        subtitle: "INC",
                         count: 0,
                         entries: [],
-                        color: 'text-destructive',
-                        bg: 'bg-destructive',
+                        color: "text-destructive",
+                        bg: "bg-destructive",
                         icon: (
-                          <AlertCircle className="w-3 h-3 text-destructive" />
+                          <AlertCircle className="h-3 w-3 text-destructive" />
                         ),
                       },
                       {
-                        title: 'Alerts/Issues',
-                        subtitle: 'Alerts',
+                        title: "Alerts/Issues",
+                        subtitle: "Alerts",
                         count: 1,
                         entries: [
-                          'Bridging the gap between engineering excellence... ',
+                          "Bridging the gap between engineering excellence... ",
                         ],
-                        color: 'text-warning',
-                        bg: 'bg-warning',
-                        icon: <AlertCircle className="w-3 h-3 text-warning" />,
+                        color: "text-warning",
+                        bg: "bg-warning",
+                        icon: <AlertCircle className="h-3 w-3 text-warning" />,
                       },
                       {
-                        title: 'Major Incident Management',
-                        subtitle: 'MIM',
+                        title: "Major Incident Management",
+                        subtitle: "MIM",
                         count: 0,
                         entries: [],
-                        color: 'text-secondary',
-                        bg: 'bg-secondary',
-                        icon: <Activity className="w-3 h-3 text-secondary" />,
+                        color: "text-secondary",
+                        bg: "bg-secondary",
+                        icon: <Activity className="h-3 w-3 text-secondary" />,
                       },
                     ].map((section, i) => (
                       <motion.div
-                        key={i}
+                        className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
                         initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
+                        key={section.subtitle}
                         transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
-                        className="rounded-2xl border border-border bg-card shadow-sm flex flex-col overflow-hidden hover:shadow-md transition-shadow"
+                        whileInView={{ opacity: 1, scale: 1 }}
                       >
-                        <div className="p-3 border-b border-border/50 flex items-center justify-between">
+                        <div className="flex items-center justify-between border-border/50 border-b p-3">
                           <div className="flex items-center gap-2">
                             <div
-                              className={`w-6 h-6 rounded-full flex items-center justify-center border border-border bg-background shadow-sm`}
+                              className={
+                                "flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm"
+                              }
                             >
                               {section.icon}
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-[11px] font-black tracking-tight">
+                              <span className="font-black text-[11px] tracking-tight">
                                 {section.title}
                               </span>
-                              <span className="text-[8px] text-muted-foreground uppercase font-semibold">
-                                {section.subtitle}{' '}
-                                <span className="lowercase normal-case pl-1">
+                              <span className="font-semibold text-[8px] text-muted-foreground uppercase">
+                                {section.subtitle}{" "}
+                                <span className="pl-1 lowercase normal-case">
                                   {section.count} entries
                                 </span>
                               </span>
                             </div>
                           </div>
-                          <div className="px-2 py-1 rounded-full bg-primary text-primary-foreground text-[8px] font-bold shadow-sm flex items-center gap-1 cursor-pointer">
-                            <div className="w-2 h-2 rounded-full bg-primary-foreground/20 flex items-center justify-center">
+                          <div className="flex cursor-pointer items-center gap-1 rounded-full bg-primary px-2 py-1 font-bold text-[8px] text-primary-foreground shadow-sm">
+                            <div className="flex h-2 w-2 items-center justify-center rounded-full bg-primary-foreground/20">
                               +
-                            </div>{' '}
+                            </div>{" "}
                             Add Entry
                           </div>
                         </div>
-                        <div className="flex-1 p-3 flex flex-col gap-2 overflow-hidden items-stretch">
+                        <div className="flex flex-1 flex-col items-stretch gap-2 overflow-hidden p-3">
                           {section.entries.length > 0 ? (
-                            section.entries.map((ent, j) => (
+                            section.entries.map((ent) => (
                               <div
-                                key={j}
-                                className="p-2.5 rounded-xl border border-border bg-background shadow-sm hover:border-primary/40 transition-colors flex flex-col gap-1.5 items-start"
+                                className="flex flex-col items-start gap-1.5 rounded-xl border border-border bg-background p-2.5 shadow-sm transition-colors hover:border-primary/40"
+                                key={ent}
                               >
-                                <div className="flex items-center gap-1.5 w-full">
-                                  {ent.includes('CHG') && (
-                                    <span className="text-warning text-[10px]">
+                                <div className="flex w-full items-center gap-1.5">
+                                  {ent.includes("CHG") && (
+                                    <span className="text-[10px] text-warning">
                                       ★
                                     </span>
                                   )}
-                                  <span className="text-[10px] font-black tracking-tight truncate flex-1">
+                                  <span className="flex-1 truncate font-black text-[10px] tracking-tight">
                                     {ent}
                                   </span>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-1.5">
-                                  <span className="text-[7.5px] font-bold px-1.5 py-0.5 text-muted-foreground rounded-md border border-border bg-muted/30">
+                                  <span className="rounded-md border border-border bg-muted/30 px-1.5 py-0.5 font-bold text-[7.5px] text-muted-foreground">
                                     KMS
                                   </span>
                                   <div
-                                    className={`flex items-center gap-1 text-[7.5px] px-1.5 py-0.5 rounded-md font-bold text-warning border border-warning/20 bg-warning/10`}
+                                    className={
+                                      "flex items-center gap-1 rounded-md border border-warning/20 bg-warning/10 px-1.5 py-0.5 font-bold text-[7.5px] text-warning"
+                                    }
                                   >
                                     <div
-                                      className={`w-1.5 h-1.5 rounded-full bg-warning`}
+                                      className={
+                                        "h-1.5 w-1.5 rounded-full bg-warning"
+                                      }
                                     />
-                                    {ent.includes('CHG')
-                                      ? 'In Progress'
-                                      : 'Pending Approval'}
+                                    {ent.includes("CHG")
+                                      ? "In Progress"
+                                      : "Pending Approval"}
                                   </div>
                                 </div>
                               </div>
                             ))
                           ) : (
-                            <div className="flex-1 flex flex-col items-center justify-center opacity-40">
-                              <div className="w-8 h-8 rounded-xl bg-muted border border-border flex items-center justify-center mb-2">
-                                <Shield className="w-4 h-4 text-muted-foreground" />
+                            <div className="flex flex-1 flex-col items-center justify-center opacity-40">
+                              <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-xl border border-border bg-muted">
+                                <Shield className="h-4 w-4 text-muted-foreground" />
                               </div>
-                              <span className="text-[10px] font-black text-foreground">
+                              <span className="font-black text-[10px] text-foreground">
                                 No entries yet
                               </span>
-                              <span className="text-[8px] font-medium text-muted-foreground mt-0.5">
+                              <span className="mt-0.5 font-medium text-[8px] text-muted-foreground">
                                 Get started by adding a new entry.
                               </span>
                             </div>
@@ -1084,20 +1114,20 @@ function RouteComponent() {
           </div>
 
           {/* Tool 3: Link Manager - High Fidelity UI */}
-          <div className="flex flex-col md:flex-row items-center gap-12 md:gap-24">
-            <div className="md:w-1/2 space-y-8">
-              <div className="w-20 h-20 rounded-[1.5rem] bg-secondary/20 flex items-center justify-center text-secondary-foreground shadow-sm ring-1 ring-border relative overflow-hidden group mb-6">
-                <Link2 className="w-10 h-10 relative z-10" />
+          <div className="flex flex-col items-center gap-12 md:flex-row md:gap-24">
+            <div className="space-y-8 md:w-1/2">
+              <div className="group relative mb-6 flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.5rem] bg-secondary/20 text-secondary-foreground shadow-sm ring-1 ring-border">
+                <Link2 className="relative z-10 h-10 w-10" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
+                <h3 className="font-black text-4xl text-foreground tracking-tight md:text-5xl">
                   Link Manager.
                   <br />
-                  <span className="text-muted-foreground font-medium md:text-4xl">
+                  <span className="font-medium text-muted-foreground md:text-4xl">
                     The team brain.
                   </span>
                 </h3>
-                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-medium">
+                <p className="font-medium text-lg text-muted-foreground leading-relaxed md:text-xl">
                   Stop asking "Where is the confluence page for that?". The Link
                   Manager centralizes every URL your team needs, categorized,
                   searchable, and shared.
@@ -1106,27 +1136,27 @@ function RouteComponent() {
               <ul className="space-y-4 pt-4">
                 {[
                   {
-                    title: 'Centralized Repository',
-                    desc: 'One place for all team knowledge',
+                    title: "Centralized Repository",
+                    desc: "One place for all team knowledge",
                   },
                   {
-                    title: 'Smart Categorization',
-                    desc: 'Tag and filter resources instantly',
+                    title: "Smart Categorization",
+                    desc: "Tag and filter resources instantly",
                   },
                   {
-                    title: 'One-Click Access',
-                    desc: 'Launch tools directly from the dashboard',
+                    title: "One-Click Access",
+                    desc: "Launch tools directly from the dashboard",
                   },
-                ].map((feat, i) => (
-                  <li key={i} className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary-foreground shrink-0">
-                      <ArrowRight className="w-4 h-4" />
+                ].map((feat) => (
+                  <li className="flex items-start gap-4" key={feat.title}>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-secondary/10 text-secondary-foreground">
+                      <ArrowRight className="h-4 w-4" />
                     </div>
                     <div>
                       <span className="font-bold text-foreground text-sm">
                         {feat.title}
                       </span>
-                      <p className="text-sm text-muted-foreground font-medium">
+                      <p className="font-medium text-muted-foreground text-sm">
                         {feat.desc}
                       </p>
                     </div>
@@ -1135,94 +1165,94 @@ function RouteComponent() {
               </ul>
             </div>
 
-            <div className="md:w-1/2 w-full">
+            <div className="w-full md:w-1/2">
               <motion.div
+                className="group relative flex h-[450px] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
                 initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ margin: '-100px' }}
                 transition={{ duration: 0.8 }}
-                className="rounded-3xl bg-card border border-border shadow-2xl relative overflow-hidden group h-[450px] flex flex-col"
+                viewport={{ margin: "-100px" }}
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 {/* Subtle Pattern Background */}
-                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03] pointer-events-none" />
+                <div className="pointer-events-none absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03]" />
 
                 {/* Mock Browser Header */}
-                <div className="bg-muted/30 border-b border-border p-3 flex items-center justify-between relative z-10">
+                <div className="relative z-10 flex items-center justify-between border-border border-b bg-muted/30 p-3">
                   <div className="flex gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-destructive/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-warning/60" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-success/60" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-warning/60" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-success/60" />
                   </div>
                 </div>
 
-                <div className="p-5 relative z-10 flex flex-col h-full bg-muted/5 overflow-hidden">
-                  <div className="flex flex-col mb-4 bg-background p-4 rounded-2xl border border-border shadow-sm">
-                    <div className="flex items-center gap-2 text-[8px] font-bold text-muted-foreground tracking-widest uppercase mb-1">
+                <div className="relative z-10 flex h-full flex-col overflow-hidden bg-muted/5 p-5">
+                  <div className="mb-4 flex flex-col rounded-2xl border border-border bg-background p-4 shadow-sm">
+                    <div className="mb-1 flex items-center gap-2 font-bold text-[8px] text-muted-foreground uppercase tracking-widest">
                       <span className="text-primary">Link Manager</span> / ALL
                       RESOURCES
                     </div>
                     <div className="flex items-center justify-between">
-                      <h4 className="font-black text-xl text-foreground tracking-tight">
+                      <h4 className="font-black text-foreground text-xl tracking-tight">
                         Link Manager
                       </h4>
-                      <div className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold shadow-sm flex items-center gap-1 cursor-pointer">
+                      <div className="flex cursor-pointer items-center gap-1 rounded-full bg-primary px-3 py-1.5 font-bold text-[10px] text-primary-foreground shadow-sm">
                         + Add Link
                       </div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground font-medium mt-1">
+                    <p className="mt-1 font-medium text-[10px] text-muted-foreground">
                       Central team repository for bookmarks & tools
                     </p>
                   </div>
 
                   {/* Top Stats */}
-                  <div className="grid grid-cols-4 gap-3 mb-5">
+                  <div className="mb-5 grid grid-cols-4 gap-3">
                     {[
                       {
-                        val: '13',
-                        label: 'Total Resources',
-                        icon: <Layers className="w-4 h-4 text-primary" />,
-                        iconBg: 'bg-primary/10',
-                        border: 'border-primary/20',
+                        val: "13",
+                        label: "Total Resources",
+                        icon: <Layers className="h-4 w-4 text-primary" />,
+                        iconBg: "bg-primary/10",
+                        border: "border-primary/20",
                       },
                       {
-                        val: '7',
-                        label: 'Public Access',
-                        icon: <Shield className="w-4 h-4 text-success" />,
-                        iconBg: 'bg-success/10',
-                        border: 'border-success/20',
+                        val: "7",
+                        label: "Public Access",
+                        icon: <Shield className="h-4 w-4 text-success" />,
+                        iconBg: "bg-success/10",
+                        border: "border-success/20",
                       },
                       {
-                        val: '6',
-                        label: 'Team Restricted',
-                        icon: <Shield className="w-4 h-4 text-warning" />,
-                        iconBg: 'bg-warning/10',
-                        border: 'border-warning/20',
+                        val: "6",
+                        label: "Team Restricted",
+                        icon: <Shield className="h-4 w-4 text-warning" />,
+                        iconBg: "bg-warning/10",
+                        border: "border-warning/20",
                       },
                       {
-                        val: '1',
-                        label: 'Total Insights',
-                        icon: <Activity className="w-4 h-4 text-secondary" />,
-                        iconBg: 'bg-secondary/10',
-                        border: 'border-secondary/20',
+                        val: "1",
+                        label: "Total Insights",
+                        icon: <Activity className="h-4 w-4 text-secondary" />,
+                        iconBg: "bg-secondary/10",
+                        border: "border-secondary/20",
                       },
                     ].map((stat, i) => (
                       <motion.div
-                        key={i}
+                        className={`rounded-2xl border p-3 ${stat.border} group relative flex items-center gap-3 overflow-hidden bg-card shadow-sm`}
                         initial={{ opacity: 0, y: -5 }}
-                        whileInView={{ opacity: 1, y: 0 }}
+                        key={stat.label}
                         transition={{ delay: 0.2 + i * 0.05 }}
-                        className={`p-3 rounded-2xl border ${stat.border} bg-card shadow-sm flex items-center gap-3 relative overflow-hidden group`}
+                        whileInView={{ opacity: 1, y: 0 }}
                       >
                         <div
-                          className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${stat.iconBg}`}
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${stat.iconBg}`}
                         >
                           {stat.icon}
                         </div>
                         <div className="flex flex-col">
-                          <div className="text-lg font-black text-primary leading-none tracking-tight group-hover:scale-105 transition-transform origin-left">
+                          <div className="origin-left font-black text-lg text-primary leading-none tracking-tight transition-transform group-hover:scale-105">
                             {stat.val}
                           </div>
-                          <div className="text-[7.5px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+                          <div className="mt-1 font-bold text-[7.5px] text-muted-foreground uppercase tracking-widest">
                             {stat.label}
                           </div>
                         </div>
@@ -1231,82 +1261,82 @@ function RouteComponent() {
                   </div>
 
                   {/* Cards Grid */}
-                  <div className="grid grid-cols-2 gap-3 flex-1 overflow-hidden pr-1">
+                  <div className="grid flex-1 grid-cols-2 gap-3 overflow-hidden pr-1">
                     {[
                       {
-                        title: 'Monitoring Dashboard',
-                        type: 'Private',
+                        title: "Monitoring Dashboard",
+                        type: "Private",
                         tags: [],
                         global: true,
                       },
                       {
-                        title: 'Internal Docs',
-                        type: 'Private',
+                        title: "Internal Docs",
+                        type: "Private",
                         tags: [],
                         global: true,
                       },
                       {
-                        title: 'Engineering Docs',
-                        type: 'Public',
-                        tags: ['#docs', '#eng'],
+                        title: "Engineering Docs",
+                        type: "Public",
+                        tags: ["#docs", "#eng"],
                         global: false,
-                        app: 'KMS',
+                        app: "KMS",
                       },
                       {
-                        title: 'Grafana',
-                        type: 'Public',
+                        title: "Grafana",
+                        type: "Public",
                         tags: [],
                         global: false,
-                        app: 'KMS',
+                        app: "KMS",
                       },
                     ].map((card, i) => (
                       <motion.div
-                        key={i}
+                        className="group flex cursor-pointer flex-col rounded-2xl border border-border bg-card p-4 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
                         initial={{ opacity: 0, scale: 0.95 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
+                        key={card.title}
                         transition={{ duration: 0.4, delay: 0.4 + i * 0.1 }}
-                        className="rounded-2xl border border-border bg-card shadow-sm p-4 flex flex-col group hover:shadow-md hover:border-primary/40 transition-all cursor-pointer"
+                        whileInView={{ opacity: 1, scale: 1 }}
                       >
-                        <div className="text-[8px] text-muted-foreground flex items-center gap-1 mb-2 font-bold tracking-wide">
-                          <Layers className="w-3 h-3 text-primary" />{' '}
-                          {card.global ? 'Global' : card.app}{' '}
-                          <span className="opacity-50">•</span>{' '}
-                          {card.global ? 'Uncategorized' : 'Documentation'}
+                        <div className="mb-2 flex items-center gap-1 font-bold text-[8px] text-muted-foreground tracking-wide">
+                          <Layers className="h-3 w-3 text-primary" />{" "}
+                          {card.global ? "Global" : card.app}{" "}
+                          <span className="opacity-50">•</span>{" "}
+                          {card.global ? "Uncategorized" : "Documentation"}
                         </div>
-                        <h5 className="font-black text-sm text-foreground tracking-tight group-hover:text-primary transition-colors">
+                        <h5 className="font-black text-foreground text-sm tracking-tight transition-colors group-hover:text-primary">
                           {card.title}
                         </h5>
-                        <p className="text-[9px] text-muted-foreground/80 mt-1 mb-3 leading-relaxed font-medium">
+                        <p className="mt-1 mb-3 font-medium text-[9px] text-muted-foreground/80 leading-relaxed">
                           Information resource shared by the team for
                           operational enablement.
                         </p>
-                        <div className="flex gap-1.5 mb-auto">
+                        <div className="mb-auto flex gap-1.5">
                           <span
-                            className={`text-[8px] px-2 py-0.5 rounded-md border font-bold flex items-center gap-1 ${card.type === 'Public' ? 'bg-success/10 border-success/20 text-success' : 'bg-warning/10 border-warning/20 text-warning'}`}
+                            className={`flex items-center gap-1 rounded-md border px-2 py-0.5 font-bold text-[8px] ${card.type === "Public" ? "border-success/20 bg-success/10 text-success" : "border-warning/20 bg-warning/10 text-warning"}`}
                           >
-                            {card.type === 'Public' ? (
-                              <Activity className="w-2 h-2" />
+                            {card.type === "Public" ? (
+                              <Activity className="h-2 w-2" />
                             ) : (
-                              <Shield className="w-2 h-2" />
-                            )}{' '}
+                              <Shield className="h-2 w-2" />
+                            )}{" "}
                             {card.type}
                           </span>
                           {card.tags.map((tag) => (
                             <span
+                              className="rounded-md border border-border bg-muted/20 px-2 py-0.5 font-bold text-[8px] text-muted-foreground"
                               key={tag}
-                              className="text-[8px] px-2 py-0.5 rounded-md border border-border bg-muted/20 font-bold text-muted-foreground"
                             >
                               {tag}
                             </span>
                           ))}
                         </div>
-                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/50">
-                          <div className="text-[9px] font-bold text-muted-foreground flex items-center gap-1.5">
-                            <Activity className="w-3 h-3 text-primary/70" /> 0
+                        <div className="mt-4 flex items-center justify-between border-border/50 border-t pt-3">
+                          <div className="flex items-center gap-1.5 font-bold text-[9px] text-muted-foreground">
+                            <Activity className="h-3 w-3 text-primary/70" /> 0
                             Insights
                           </div>
-                          <span className="text-[9px] font-black border border-border px-2.5 py-1 rounded-lg shadow-sm group-hover:bg-primary group-hover:text-primary-foreground group-hover:border-primary transition-colors flex items-center gap-1">
-                            Open Resource <ArrowRight className="w-2.5 h-2.5" />
+                          <span className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 font-black text-[9px] shadow-sm transition-colors group-hover:border-primary group-hover:bg-primary group-hover:text-primary-foreground">
+                            Open Resource <ArrowRight className="h-2.5 w-2.5" />
                           </span>
                         </div>
                       </motion.div>
@@ -1318,20 +1348,20 @@ function RouteComponent() {
           </div>
 
           {/* Tool 4: EnvMatrix - High Fidelity UI */}
-          <div className="flex flex-col md:flex-row-reverse items-center gap-12 md:gap-24">
-            <div className="md:w-1/2 space-y-8">
-              <div className="w-20 h-20 rounded-[1.5rem] bg-card flex items-center justify-center text-foreground shadow-sm ring-1 ring-border relative overflow-hidden group mb-6">
-                <Layers className="w-10 h-10 relative z-10" />
+          <div className="flex flex-col items-center gap-12 md:flex-row-reverse md:gap-24">
+            <div className="space-y-8 md:w-1/2">
+              <div className="group relative mb-6 flex h-20 w-20 items-center justify-center overflow-hidden rounded-[1.5rem] bg-card text-foreground shadow-sm ring-1 ring-border">
+                <Layers className="relative z-10 h-10 w-10" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
+                <h3 className="font-black text-4xl text-foreground tracking-tight md:text-5xl">
                   EnvMatrix.
                   <br />
-                  <span className="text-muted-foreground font-medium md:text-4xl">
+                  <span className="font-medium text-muted-foreground md:text-4xl">
                     Total Inventory.
                   </span>
                 </h3>
-                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed font-medium">
+                <p className="font-medium text-lg text-muted-foreground leading-relaxed md:text-xl">
                   Maintain a precise matrix of every server, database, and
                   microservice across DEV, UAT, and PROD environments. Golden
                   source of truth.
@@ -1340,27 +1370,27 @@ function RouteComponent() {
               <ul className="space-y-4 pt-4">
                 {[
                   {
-                    title: 'Full-Stack Inventory',
-                    desc: 'Databases, APIs, caching layers, and more',
+                    title: "Full-Stack Inventory",
+                    desc: "Databases, APIs, caching layers, and more",
                   },
                   {
-                    title: 'Status Monitoring',
-                    desc: 'Live health checks for each component',
+                    title: "Status Monitoring",
+                    desc: "Live health checks for each component",
                   },
                   {
-                    title: 'Dependency Mapping',
-                    desc: 'Visualize connections between services',
+                    title: "Dependency Mapping",
+                    desc: "Visualize connections between services",
                   },
-                ].map((feat, i) => (
-                  <li key={i} className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-xl bg-muted border border-border flex items-center justify-center text-foreground shrink-0 shadow-sm">
-                      <Activity className="w-4 h-4" />
+                ].map((feat) => (
+                  <li className="flex items-start gap-4" key={feat.title}>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border bg-muted text-foreground shadow-sm">
+                      <Activity className="h-4 w-4" />
                     </div>
                     <div>
                       <span className="font-bold text-foreground text-sm">
                         {feat.title}
                       </span>
-                      <p className="text-sm text-muted-foreground font-medium">
+                      <p className="font-medium text-muted-foreground text-sm">
                         {feat.desc}
                       </p>
                     </div>
@@ -1369,82 +1399,82 @@ function RouteComponent() {
               </ul>
             </div>
 
-            <div className="md:w-1/2 w-full">
+            <div className="w-full md:w-1/2">
               <motion.div
+                className="group relative flex h-[450px] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
                 initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ margin: '-100px' }}
                 transition={{ duration: 0.8 }}
-                className="rounded-3xl bg-card border border-border shadow-2xl relative overflow-hidden group h-[450px] flex flex-col"
+                viewport={{ margin: "-100px" }}
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 {/* Subtle Pattern Background */}
-                <div className="absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03] pointer-events-none" />
+                <div className="pointer-events-none absolute inset-0 bg-[url('/patterns/amex-1.png')] bg-cover opacity-[0.03]" />
 
-                <div className="bg-muted/30 border-b border-border p-4 flex gap-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground relative z-10">
+                <div className="relative z-10 flex gap-4 border-border border-b bg-muted/30 p-4 font-black text-[10px] text-muted-foreground uppercase tracking-widest">
                   <div className="flex-[2]">Service Name</div>
                   <div className="flex-1 text-center">Env</div>
                   <div className="flex-1 text-right">Status</div>
                 </div>
 
-                <div className="relative z-10 flex-1 overflow-hidden flex flex-col justify-center p-2">
+                <div className="relative z-10 flex flex-1 flex-col justify-center overflow-hidden p-2">
                   {[
                     {
-                      name: 'Auth Service API',
-                      type: 'Microservice',
-                      env: 'PROD',
-                      status: 'Healthy',
+                      name: "Auth Service API",
+                      type: "Microservice",
+                      env: "PROD",
+                      status: "Healthy",
                     },
                     {
-                      name: 'Payment Gateway',
-                      type: 'External API',
-                      env: 'PROD',
-                      status: 'Healthy',
+                      name: "Payment Gateway",
+                      type: "External API",
+                      env: "PROD",
+                      status: "Healthy",
                     },
                     {
-                      name: 'Redis Cache',
-                      type: 'Database',
-                      env: 'PROD',
-                      status: 'Degraded',
+                      name: "Redis Cache",
+                      type: "Database",
+                      env: "PROD",
+                      status: "Degraded",
                     },
                     {
-                      name: 'User Profile DB',
-                      type: 'Postgres',
-                      env: 'UAT',
-                      status: 'Healthy',
+                      name: "User Profile DB",
+                      type: "Postgres",
+                      env: "UAT",
+                      status: "Healthy",
                     },
                     {
-                      name: 'Notification Svc',
-                      type: 'Lambda',
-                      env: 'DEV',
-                      status: 'Offline',
+                      name: "Notification Svc",
+                      type: "Lambda",
+                      env: "DEV",
+                      status: "Offline",
                     },
                   ].map((svc, i) => (
                     <motion.div
-                      key={i}
+                      className="group mx-2 my-1 flex items-center justify-between gap-4 rounded-xl border border-border/50 border-b bg-background p-4 shadow-sm transition-colors last:border-0 hover:bg-muted/10"
                       initial={{ opacity: 0, x: 20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
+                      key={svc.name}
                       transition={{ duration: 0.4, delay: 0.2 + i * 0.1 }}
-                      className="p-4 border-b border-border/50 last:border-0 flex items-center justify-between gap-4 bg-background hover:bg-muted/10 transition-colors mx-2 rounded-xl my-1 shadow-sm border group"
+                      whileInView={{ opacity: 1, x: 0 }}
                     >
-                      <div className="flex-[2] min-w-0">
-                        <div className="font-bold text-sm truncate group-hover:text-primary transition-colors">
+                      <div className="min-w-0 flex-[2]">
+                        <div className="truncate font-bold text-sm transition-colors group-hover:text-primary">
                           {svc.name}
                         </div>
-                        <div className="text-[10px] font-bold text-muted-foreground mt-0.5">
+                        <div className="mt-0.5 font-bold text-[10px] text-muted-foreground">
                           {svc.type}
                         </div>
                       </div>
-                      <div className="flex-1 flex justify-center">
-                        <span className="px-2 py-1 rounded-md text-[9px] font-black bg-muted border border-border/50 shadow-sm">
+                      <div className="flex flex-1 justify-center">
+                        <span className="rounded-md border border-border/50 bg-muted px-2 py-1 font-black text-[9px] shadow-sm">
                           {svc.env}
                         </span>
                       </div>
-                      <div className="flex-1 flex justify-end">
+                      <div className="flex flex-1 justify-end">
                         <div
-                          className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider ${svc.status === 'Healthy' ? 'text-success' : svc.status === 'Degraded' ? 'text-warning' : svc.status === 'Offline' ? 'text-destructive' : 'text-primary'}`}
+                          className={`flex items-center gap-1.5 font-black text-[10px] uppercase tracking-wider ${getStatusTextColor(svc.status)}`}
                         >
                           <div
-                            className={`w-2 h-2 rounded-full shadow-sm ${svc.status === 'Healthy' ? 'bg-success shadow-success/50 animate-pulse' : svc.status === 'Degraded' ? 'bg-warning shadow-warning/50' : 'bg-destructive shadow-destructive/50'}`}
+                            className={`h-2 w-2 rounded-full shadow-sm ${getStatusDotClass(svc.status)}`}
                           />
                           {svc.status}
                         </div>
@@ -1459,25 +1489,25 @@ function RouteComponent() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border/20 py-12 bg-background relative z-10">
-        <div className="container mx-auto px-4 max-w-7xl flex flex-col md:flex-row justify-between items-center opacity-60 hover:opacity-100 transition-opacity">
-          <p className="text-xs text-muted-foreground w-full md:w-auto text-center md:text-left">
+      <footer className="relative z-10 border-border/20 border-t bg-background py-12">
+        <div className="container mx-auto flex max-w-7xl flex-col items-center justify-between px-4 opacity-60 transition-opacity hover:opacity-100 md:flex-row">
+          <p className="w-full text-center text-muted-foreground text-xs md:w-auto md:text-left">
             &copy; {new Date().getFullYear()} American Express. <br />
             Built for internal excellence. Use responsibly.
           </p>
-          <div className="flex gap-6 mt-4 md:mt-0">
-            <span className="text-xs font-medium cursor-pointer hover:text-primary">
+          <div className="mt-4 flex gap-6 md:mt-0">
+            <span className="cursor-pointer font-medium text-xs hover:text-primary">
               Policy
             </span>
-            <span className="text-xs font-medium cursor-pointer hover:text-primary">
+            <span className="cursor-pointer font-medium text-xs hover:text-primary">
               Support
             </span>
-            <span className="text-xs font-medium cursor-pointer hover:text-primary">
+            <span className="cursor-pointer font-medium text-xs hover:text-primary">
               Status
             </span>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }

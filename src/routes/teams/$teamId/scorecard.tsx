@@ -1,4 +1,4 @@
-import { Link, createFileRoute, useRouteContext } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouteContext } from "@tanstack/react-router";
 import {
   Activity,
   AlertTriangle,
@@ -12,26 +12,27 @@ import {
   Percent,
   Send,
   TrendingUp,
-} from 'lucide-react'
-import type {TimePeriod, ViewMode} from '@/components/scorecard';
-import { PageHeader } from '@/components/shared'
-import { getTeamById } from '@/app/actions/teams'
+} from "lucide-react";
+import { getTeamById } from "@/app/actions/teams";
+import type { TimePeriod, ViewMode } from "@/components/scorecard";
+// Import from scorecard components
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+  AddEntryDialog,
+  // Components
+  ApplicationSection,
+  AVAILABLE_YEARS,
+  DeleteEntryDialog,
+  EditEntryDialog,
+  MetricsChartSheet,
+  MONTH_NAMES,
+  // Types
+
+  // Constants
+  TIME_PERIOD_OPTIONS,
+  // Hook
+  useScorecard,
+} from "@/components/scorecard";
+import { PageHeader } from "@/components/shared";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,99 +42,93 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-
-import { cn } from '@/lib/utils'
-
-// Import from scorecard components
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
-  // Types
-  
-  
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
-  // Constants
-  TIME_PERIOD_OPTIONS,
-  AVAILABLE_YEARS,
-  MONTH_NAMES,
-
-  // Components
-  ApplicationSection,
-  AddEntryDialog,
-  EditEntryDialog,
-  DeleteEntryDialog,
-  MetricsChartSheet,
-
-  // Hook
-  useScorecard
-} from '@/components/scorecard'
-
-export const Route = createFileRoute('/teams/$teamId/scorecard')({
+export const Route = createFileRoute("/teams/$teamId/scorecard")({
   loader: async ({ params }) => {
-    const team = await getTeamById({ data: { teamId: params.teamId } })
+    const team = await getTeamById({ data: { teamId: params.teamId } });
     if (!team) {
-      throw new Error('Team not found')
+      throw new Error("Team not found");
     }
-    return { team }
+    return { team };
   },
   component: ScorecardPage,
-})
+});
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: scorecard page with multiple interactive states
 function ScorecardPage() {
-  const { team } = Route.useLoaderData()
-  const { teamId } = Route.useParams()
-  const { session } = useRouteContext({ from: '__root__' })
+  const { team } = Route.useLoaderData();
+  const { teamId } = Route.useParams();
+  const { session } = useRouteContext({ from: "__root__" });
 
   const isAdmin =
     session?.permissions?.some(
       (p: { teamId: string; role: string }) =>
-        p.teamId === teamId && p.role === 'ADMIN',
-    ) ?? false
+        p.teamId === teamId && p.role === "ADMIN"
+    ) ?? false;
 
   // Use the scorecard hook for all state management
-  const scorecard = useScorecard({ teamId, isAdmin })
+  const scorecard = useScorecard({ teamId, isAdmin });
 
   // Toggle all apps handler
   const toggleAllApps = () => {
-    const allAppIds = scorecard.scorecardData.applications.map((app) => app.id)
+    const allAppIds = scorecard.scorecardData.applications.map((app) => app.id);
     if (
       scorecard.expandedApps.hasExpanded &&
       scorecard.expandedApps.expandedCount === allAppIds.length
     ) {
-      scorecard.expandedApps.collapseAll()
+      scorecard.expandedApps.collapseAll();
     } else {
-      scorecard.expandedApps.expandAll(allAppIds)
+      scorecard.expandedApps.expandAll(allAppIds);
     }
-  }
+  };
 
   return (
-    <div className="flex-1 min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
-      <div className="max-w-7xl mx-auto space-y-8 p-8 pt-6">
+    <div className="min-h-screen flex-1 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/5 via-background to-background">
+      <div className="mx-auto max-w-7xl space-y-8 p-8 pt-6">
         {/* Premium Admin Header Banner */}
         <PageHeader
-          title="Performance Scorecard"
           description={
             <>
-              Tracking for{' '}
-              <span className="text-white font-bold">{team.teamName}</span>
+              Tracking for{" "}
+              <span className="font-bold text-white">{team.teamName}</span>
             </>
           }
+          title="Performance Scorecard"
         >
           <Link to="/scorecard">
             <Button
-              variant="outline"
+              className="gap-2 border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white"
               size="sm"
-              className="gap-2 bg-white/10 text-white border-white/20 hover:bg-white/20 hover:text-white"
+              variant="outline"
             >
               <Activity className="h-4 w-4" />
               Enterprise View
             </Button>
           </Link>
           {isAdmin && (
-            <Link to="/teams/$teamId/settings" params={{ teamId }}>
+            <Link params={{ teamId }} to="/teams/$teamId/settings">
               <Button
-                variant="ghost"
-                size="sm"
                 className="text-white hover:bg-white/10 hover:text-white"
+                size="sm"
+                variant="ghost"
               >
                 Manage Apps
               </Button>
@@ -142,97 +137,97 @@ function ScorecardPage() {
         </PageHeader>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 py-4">
-          <div className="flex flex-col justify-center py-2 relative z-10">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-primary/10 text-primary">
+        <div className="grid grid-cols-2 gap-8 py-4 md:grid-cols-5">
+          <div className="relative z-10 flex flex-col justify-center py-2">
+            <div className="mb-3 flex items-center gap-2.5">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                 <Activity className="h-4 w-4 text-blue-500" />
               </div>
-              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">
+              <p className="truncate font-bold text-[11px] text-muted-foreground uppercase tracking-widest">
                 Applications
               </p>
             </div>
-            <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">
+            <p className="font-black text-4xl text-foreground tabular-nums leading-none tracking-tighter md:text-5xl">
               {scorecard.stats.apps}
             </p>
           </div>
 
-          <div className="flex flex-col justify-center py-2 relative z-10">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 dark:bg-indigo-500/20">
+          <div className="relative z-10 flex flex-col justify-center py-2">
+            <div className="mb-3 flex items-center gap-2.5">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
                 <Hash className="h-4 w-4" />
               </div>
-              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">
+              <p className="truncate font-bold text-[11px] text-muted-foreground uppercase tracking-widest">
                 Tracked Tech
               </p>
             </div>
-            <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">
+            <p className="font-black text-4xl text-foreground tabular-nums leading-none tracking-tighter md:text-5xl">
               {scorecard.stats.entries}
             </p>
           </div>
 
-          <div className="flex flex-col justify-center py-2 relative z-10 md:mt-0">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-green-500/10 text-green-600 dark:text-green-400 dark:bg-green-500/20">
+          <div className="relative z-10 flex flex-col justify-center py-2 md:mt-0">
+            <div className="mb-3 flex items-center gap-2.5">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-green-500/10 text-green-600 dark:bg-green-500/20 dark:text-green-400">
                 <Percent className="h-4 w-4" />
               </div>
-              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">
+              <p className="truncate font-bold text-[11px] text-muted-foreground uppercase tracking-widest">
                 Availability
               </p>
             </div>
             <div className="flex items-baseline gap-3">
-              <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">
+              <p className="font-black text-4xl text-foreground tabular-nums leading-none tracking-tighter md:text-5xl">
                 {scorecard.stats.availRecords}
               </p>
               <div className="flex items-center gap-1.5 opacity-80">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                <p className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
                   {scorecard.filterLabel}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col justify-center py-2 relative z-10 md:mt-0">
-            <div className="flex items-center gap-2.5 mb-3">
-              <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-500/10 text-purple-600 dark:text-purple-400 dark:bg-purple-500/20">
+          <div className="relative z-10 flex flex-col justify-center py-2 md:mt-0">
+            <div className="mb-3 flex items-center gap-2.5">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400">
                 <TrendingUp className="h-4 w-4" />
               </div>
-              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest truncate">
+              <p className="truncate font-bold text-[11px] text-muted-foreground uppercase tracking-widest">
                 Volume Log
               </p>
             </div>
             <div className="flex items-baseline gap-3">
-              <p className="text-4xl md:text-5xl font-black tabular-nums tracking-tighter text-foreground leading-none">
+              <p className="font-black text-4xl text-foreground tabular-nums leading-none tracking-tighter md:text-5xl">
                 {scorecard.stats.volRecords}
               </p>
               <div className="flex items-center gap-1.5 opacity-80">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
-                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                <p className="font-medium text-[10px] text-muted-foreground uppercase tracking-wider">
                   {scorecard.filterLabel}
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col justify-center py-2 relative z-10 md:mt-0">
-            <div className="flex items-center gap-2.5 mb-3">
+          <div className="relative z-10 flex flex-col justify-center py-2 md:mt-0">
+            <div className="mb-3 flex items-center gap-2.5">
               <div
                 className={cn(
-                  'h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0',
+                  "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg",
                   scorecard.stats.availBreaches > 0
-                    ? 'bg-red-500/10 text-red-600 dark:text-red-500'
-                    : 'bg-primary/10 text-primary',
+                    ? "bg-red-500/10 text-red-600 dark:text-red-500"
+                    : "bg-primary/10 text-primary"
                 )}
               >
                 <AlertTriangle className="h-4 w-4" />
               </div>
               <p
                 className={cn(
-                  'text-[11px] font-bold uppercase tracking-widest truncate',
+                  "truncate font-bold text-[11px] uppercase tracking-widest",
                   scorecard.stats.availBreaches > 0
-                    ? 'text-red-500/80 dark:text-red-400'
-                    : 'text-muted-foreground',
+                    ? "text-red-500/80 dark:text-red-400"
+                    : "text-muted-foreground"
                 )}
               >
                 SLA Breaches
@@ -241,10 +236,10 @@ function ScorecardPage() {
             <div className="flex items-baseline gap-3">
               <p
                 className={cn(
-                  'text-4xl md:text-5xl font-black tabular-nums tracking-tighter leading-none',
+                  "font-black text-4xl tabular-nums leading-none tracking-tighter md:text-5xl",
                   scorecard.stats.availBreaches > 0
-                    ? 'text-red-600 dark:text-red-500'
-                    : 'text-foreground',
+                    ? "text-red-600 dark:text-red-500"
+                    : "text-foreground"
                 )}
               >
                 {scorecard.stats.availBreaches}
@@ -252,18 +247,18 @@ function ScorecardPage() {
               <div className="flex items-center gap-1.5 opacity-80">
                 <div
                   className={cn(
-                    'h-1.5 w-1.5 rounded-full',
+                    "h-1.5 w-1.5 rounded-full",
                     scorecard.stats.availBreaches > 0
-                      ? 'bg-red-500/50'
-                      : 'bg-primary/40',
+                      ? "bg-red-500/50"
+                      : "bg-primary/40"
                   )}
                 />
                 <p
                   className={cn(
-                    'text-[10px] font-medium uppercase tracking-wider',
+                    "font-medium text-[10px] uppercase tracking-wider",
                     scorecard.stats.availBreaches > 0
-                      ? 'text-red-600/70 dark:text-red-500/80'
-                      : 'text-muted-foreground',
+                      ? "text-red-600/70 dark:text-red-500/80"
+                      : "text-muted-foreground"
                   )}
                 >
                   {scorecard.filterLabel}
@@ -277,23 +272,23 @@ function ScorecardPage() {
         {isAdmin && (
           <div
             className={cn(
-              'flex flex-col md:flex-row md:items-center justify-between gap-4 px-5 py-3 rounded-2xl border transition-all duration-300',
+              "flex flex-col justify-between gap-4 rounded-2xl border px-5 py-3 transition-all duration-300 md:flex-row md:items-center",
               scorecard.unpublishedMonths.length > 0 ||
                 scorecard.pendingChangesMonths.length > 0
-                ? 'border-orange-500/30 bg-orange-500/[0.04] ring-1 ring-orange-500/10'
-                : 'border-green-500/20 bg-green-500/[0.02]',
+                ? "border-orange-500/30 bg-orange-500/[0.04] ring-1 ring-orange-500/10"
+                : "border-green-500/20 bg-green-500/[0.02]"
             )}
           >
             <div className="flex items-center gap-3">
               {scorecard.unpublishedMonths.length > 0 ||
               scorecard.pendingChangesMonths.length > 0 ? (
                 <div className="flex items-center gap-3">
-                  <AlertTriangle className="h-5 w-5 text-orange-600 animate-pulse" />
+                  <AlertTriangle className="h-5 w-5 animate-pulse text-orange-600" />
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold uppercase tracking-wider text-orange-700">
+                    <span className="font-bold text-orange-700 text-xs uppercase tracking-wider">
                       Sync Required
                     </span>
-                    <span className="text-[10px] font-bold text-orange-600/70">
+                    <span className="font-bold text-[10px] text-orange-600/70">
                       Select a month below to publish changes
                     </span>
                   </div>
@@ -301,7 +296,7 @@ function ScorecardPage() {
               ) : (
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-green-700/70">
+                  <span className="font-bold text-green-700/70 text-xs uppercase tracking-wider">
                     Fully Synchronized
                   </span>
                 </div>
@@ -312,56 +307,58 @@ function ScorecardPage() {
               {scorecard.displayMonths
                 .filter((m) => !m.isFuture)
                 .map(({ year, month, label }) => {
-                  const key = `${year}-${month}`
+                  const key = `${year}-${month}`;
                   const hasPending = scorecard.pendingChangesMonths.some(
-                    (p) => p.year === year && p.month === month,
-                  )
+                    (p) => p.year === year && p.month === month
+                  );
                   const isUnpublished = scorecard.unpublishedMonths.some(
-                    (u) => u.year === year && u.month === month,
-                  )
+                    (u) => u.year === year && u.month === month
+                  );
 
-                  let colorClass = ''
-                  if (hasPending)
+                  let colorClass = "";
+                  if (hasPending) {
                     colorClass =
-                      'bg-orange-500/10 text-orange-700 border-orange-500/20'
-                  else if (isUnpublished)
+                      "bg-orange-500/10 text-orange-700 border-orange-500/20";
+                  } else if (isUnpublished) {
                     colorClass =
-                      'bg-amber-500/10 text-amber-700 border-amber-500/20'
-                  else
+                      "bg-amber-500/10 text-amber-700 border-amber-500/20";
+                  } else {
                     colorClass =
-                      'bg-green-500/5 text-green-700/50 border-green-500/10 hover:bg-green-500/10'
+                      "bg-green-500/5 text-green-700/50 border-green-500/10 hover:bg-green-500/10";
+                  }
 
                   return (
                     <button
-                      key={key}
                       className={cn(
-                        'px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-tight transition-all border',
-                        colorClass,
+                        "rounded border px-2 py-0.5 font-bold text-[9px] uppercase tracking-tight transition-all",
+                        colorClass
                       )}
+                      key={key}
                       onClick={() =>
                         hasPending || isUnpublished
                           ? scorecard.handlePublishClick(year, month)
                           : scorecard.handleUnpublishClick(year, month)
                       }
+                      type="button"
                     >
                       {label}
                     </button>
-                  )
+                  );
                 })}
             </div>
           </div>
         )}
 
         {/* Main Content */}
-        <Card className="shadow-sm border-border/50 overflow-hidden rounded-3xl bg-card/30 backdrop-blur-sm">
-          <CardHeader className="py-4 px-6 border-b border-border/40">
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+        <Card className="overflow-hidden rounded-3xl border-border/50 bg-card/30 shadow-sm backdrop-blur-sm">
+          <CardHeader className="border-border/40 border-b px-6 py-4">
+            <div className="flex flex-col justify-between gap-6 xl:flex-row xl:items-center">
               <div>
-                <CardTitle className="text-lg font-bold flex items-center gap-3">
+                <CardTitle className="flex items-center gap-3 font-bold text-lg">
                   <BarChart3 className="h-5 w-5 text-primary" />
                   Application Health
                 </CardTitle>
-                <CardDescription className="text-sm font-medium mt-1">
+                <CardDescription className="mt-1 font-medium text-sm">
                   Performance tracking and reliability metrics across your
                   application portfolio.
                 </CardDescription>
@@ -370,10 +367,10 @@ function ScorecardPage() {
               {/* Toolbar */}
               <div className="flex flex-wrap items-center gap-3">
                 <Tabs
-                  value={scorecard.viewMode}
                   onValueChange={(val) =>
                     scorecard.setViewMode(val as ViewMode)
                   }
+                  value={scorecard.viewMode}
                 >
                   <TabsList>
                     <TabsTrigger value="period">Period</TabsTrigger>
@@ -382,15 +379,15 @@ function ScorecardPage() {
                 </Tabs>
 
                 {/* Period/Year Selector */}
-                {scorecard.viewMode === 'period' ? (
+                {scorecard.viewMode === "period" ? (
                   <Select
-                    value={scorecard.selectedPeriod}
                     onValueChange={(val) =>
                       scorecard.setSelectedPeriod(val as TimePeriod)
                     }
+                    value={scorecard.selectedPeriod}
                   >
-                    <SelectTrigger className="w-[160px] h-9 text-xs">
-                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <SelectTrigger className="h-9 w-[160px] text-xs">
+                      <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -408,13 +405,13 @@ function ScorecardPage() {
                   </Select>
                 ) : (
                   <Select
-                    value={String(scorecard.selectedYear)}
                     onValueChange={(val) =>
                       scorecard.setSelectedYear(Number(val))
                     }
+                    value={String(scorecard.selectedYear)}
                   >
-                    <SelectTrigger className="w-[120px] h-9 text-xs">
-                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <SelectTrigger className="h-9 w-[120px] text-xs">
+                      <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -429,69 +426,77 @@ function ScorecardPage() {
 
                 <div className="flex items-center gap-1.5">
                   <Button
-                    variant="outline"
-                    size="sm"
                     className="gap-2"
                     onClick={() => scorecard.setShowChart(true)}
+                    size="sm"
+                    variant="outline"
                   >
                     <TrendingUp className="h-4 w-4" />
                     Visualize
                   </Button>
 
                   <Button
-                    variant="ghost"
-                    size="sm"
                     className="gap-2"
                     onClick={toggleAllApps}
+                    size="sm"
+                    variant="ghost"
                   >
                     <ChevronsUpDown className="h-4 w-4" />
                     {scorecard.expandedApps.hasExpanded &&
                     scorecard.expandedApps.expandedCount ===
                       (scorecard.scorecardData.applications.length || 0)
-                      ? 'Collapse All'
-                      : 'Expand All'}
+                      ? "Collapse All"
+                      : "Expand All"}
                   </Button>
                 </div>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {scorecard.isLoading ? (
+            {scorecard.isLoading && (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : !scorecard.scorecardData.applications.length ? (
-              <div className="flex flex-col items-center justify-center py-20 text-center">
-                <Activity className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold">No Applications Found</h3>
-                <p className="text-muted-foreground text-sm max-w-md mt-2">
-                  Add applications in Team Settings to start tracking metrics.
-                </p>
-                <Link to="/teams/$teamId/settings" params={{ teamId }}>
-                  <Button className="mt-4">Go to Settings</Button>
-                </Link>
-              </div>
-            ) : (
-              <div className="divide-y">
-                {scorecard.scorecardData.applications.map((app) => (
-                  <ApplicationSection
-                    key={app.id}
-                    app={app}
-                    isAdmin={isAdmin}
-                    isExpanded={scorecard.expandedApps.isExpanded(app.id)}
-                    onToggle={() => scorecard.expandedApps.toggle(app.id)}
-                    entries={scorecard.entriesByApp[app.id] || []}
-                    availabilityByEntry={scorecard.availabilityByEntry}
-                    volumeByEntry={scorecard.volumeByEntry}
-                    displayMonths={scorecard.displayMonths}
-                    onAddEntry={() => scorecard.setAddEntryAppId(app.id)}
-                    onEditEntry={(entry) => scorecard.setEditingEntry(entry)}
-                    onDeleteEntry={(entry) => scorecard.setDeletingEntry(entry)}
-                    teamId={teamId}
-                  />
-                ))}
-              </div>
             )}
+            {!scorecard.isLoading &&
+              scorecard.scorecardData.applications.length > 0 && (
+                <div className="divide-y">
+                  {scorecard.scorecardData.applications.map((app) => (
+                    <ApplicationSection
+                      app={app}
+                      availabilityByEntry={scorecard.availabilityByEntry}
+                      displayMonths={scorecard.displayMonths}
+                      entries={scorecard.entriesByApp[app.id] || []}
+                      isAdmin={isAdmin}
+                      isExpanded={scorecard.expandedApps.isExpanded(app.id)}
+                      key={app.id}
+                      onAddEntry={() => scorecard.setAddEntryAppId(app.id)}
+                      onDeleteEntry={(entry) =>
+                        scorecard.setDeletingEntry(entry)
+                      }
+                      onEditEntry={(entry) => scorecard.setEditingEntry(entry)}
+                      onToggle={() => scorecard.expandedApps.toggle(app.id)}
+                      teamId={teamId}
+                      volumeByEntry={scorecard.volumeByEntry}
+                    />
+                  ))}
+                </div>
+              )}
+            {!scorecard.isLoading &&
+              scorecard.scorecardData.applications.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Activity className="mb-4 h-12 w-12 text-muted-foreground/50" />
+                  <h3 className="font-semibold text-lg">
+                    No Applications Found
+                  </h3>
+                  <p className="mt-2 max-w-md text-muted-foreground text-sm">
+                    Add applications in Team Settings to start tracking metrics.
+                  </p>
+                  <Link params={{ teamId }} to="/teams/$teamId/settings">
+                    <Button className="mt-4">Go to Settings</Button>
+                  </Link>
+                </div>
+              )}
           </CardContent>
         </Card>
 
@@ -499,12 +504,12 @@ function ScorecardPage() {
         {scorecard.addEntryAppId && (
           <AddEntryDialog
             applicationId={scorecard.addEntryAppId}
-            open={!!scorecard.addEntryAppId}
             onOpenChange={(open) => !open && scorecard.setAddEntryAppId(null)}
             onSuccess={() => {
-              scorecard.invalidateData()
-              scorecard.setAddEntryAppId(null)
+              scorecard.invalidateData();
+              scorecard.setAddEntryAppId(null);
             }}
+            open={!!scorecard.addEntryAppId}
           />
         )}
 
@@ -512,12 +517,12 @@ function ScorecardPage() {
         {scorecard.editingEntry && (
           <EditEntryDialog
             entry={scorecard.editingEntry}
-            open={!!scorecard.editingEntry}
             onOpenChange={(open) => !open && scorecard.setEditingEntry(null)}
             onSuccess={() => {
-              scorecard.invalidateData()
-              scorecard.setEditingEntry(null)
+              scorecard.invalidateData();
+              scorecard.setEditingEntry(null);
             }}
+            open={!!scorecard.editingEntry}
           />
         )}
 
@@ -525,36 +530,36 @@ function ScorecardPage() {
         {scorecard.deletingEntry && (
           <DeleteEntryDialog
             entry={scorecard.deletingEntry}
-            open={!!scorecard.deletingEntry}
             onOpenChange={(open) => !open && scorecard.setDeletingEntry(null)}
             onSuccess={() => {
-              scorecard.invalidateData()
-              scorecard.setDeletingEntry(null)
+              scorecard.invalidateData();
+              scorecard.setDeletingEntry(null);
             }}
+            open={!!scorecard.deletingEntry}
           />
         )}
 
         {/* Metrics Chart Sheet */}
         <MetricsChartSheet
-          open={scorecard.showChart}
-          onOpenChange={scorecard.setShowChart}
           applications={scorecard.scorecardData.applications}
-          entriesByApp={scorecard.entriesByApp}
           availabilityByEntry={scorecard.availabilityByEntry}
-          volumeByEntry={scorecard.volumeByEntry}
           displayMonths={scorecard.displayMonths}
+          entriesByApp={scorecard.entriesByApp}
           filterLabel={scorecard.filterLabel}
+          onOpenChange={scorecard.setShowChart}
+          open={scorecard.showChart}
+          volumeByEntry={scorecard.volumeByEntry}
         />
 
         {/* Publish/Unpublish Confirmation Dialog */}
         <AlertDialog
-          open={scorecard.showPublishDialog}
           onOpenChange={scorecard.setShowPublishDialog}
+          open={scorecard.showPublishDialog}
         >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
-                {scorecard.publishAction === 'publish' ? (
+                {scorecard.publishAction === "publish" ? (
                   <>
                     <Send className="h-5 w-5 text-green-500" />
                     Publish Scorecard
@@ -567,19 +572,19 @@ function ScorecardPage() {
                 )}
               </AlertDialogTitle>
               <AlertDialogDescription className="space-y-2">
-                {scorecard.publishAction === 'publish' ? (
+                {scorecard.publishAction === "publish" ? (
                   <>
                     <p>
-                      You are about to publish the scorecard for{' '}
+                      You are about to publish the scorecard for{" "}
                       <strong>
                         {scorecard.publishMonth
                           ? MONTH_NAMES[scorecard.publishMonth.month - 1]
-                          : ''}{' '}
+                          : ""}{" "}
                         {scorecard.publishMonth?.year}
                       </strong>
                       .
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       Once published, this data will be visible in the
                       Enterprise Scorecard for all users.
                     </p>
@@ -587,16 +592,16 @@ function ScorecardPage() {
                 ) : (
                   <>
                     <p>
-                      You are about to unpublish the scorecard for{' '}
+                      You are about to unpublish the scorecard for{" "}
                       <strong>
                         {scorecard.publishMonth
                           ? MONTH_NAMES[scorecard.publishMonth.month - 1]
-                          : ''}{' '}
+                          : ""}{" "}
                         {scorecard.publishMonth?.year}
                       </strong>
                       .
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-muted-foreground text-sm">
                       This will hide the data from the Enterprise Scorecard. You
                       can republish it later.
                     </p>
@@ -607,25 +612,25 @@ function ScorecardPage() {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction
-                onClick={scorecard.confirmPublishAction}
-                disabled={scorecard.isPublishing}
                 className={cn(
-                  scorecard.publishAction === 'publish'
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-amber-600 hover:bg-amber-700',
+                  scorecard.publishAction === "publish"
+                    ? "bg-green-600 hover:bg-green-700"
+                    : "bg-amber-600 hover:bg-amber-700"
                 )}
+                disabled={scorecard.isPublishing}
+                onClick={scorecard.confirmPublishAction}
               >
                 {scorecard.isPublishing && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                {scorecard.publishAction === 'publish'
-                  ? 'Publish'
-                  : 'Unpublish'}
+                {scorecard.publishAction === "publish"
+                  ? "Publish"
+                  : "Unpublish"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </div>
     </div>
-  )
+  );
 }

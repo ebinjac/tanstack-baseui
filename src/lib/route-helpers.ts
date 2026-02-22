@@ -7,7 +7,7 @@
  * @see skills/tanstack-router/rules/load-ensure-query-data.md
  */
 
-import type { QueryClient } from '@tanstack/react-query'
+import type { QueryClient } from "@tanstack/react-query";
 
 /**
  * Helper to ensure query data is loaded in a route loader.
@@ -27,9 +27,9 @@ import type { QueryClient } from '@tanstack/react-query'
  */
 export async function ensureQueryDataInLoader<T>(
   queryClient: QueryClient,
-  options: { queryKey: ReadonlyArray<unknown>; queryFn: () => Promise<T> },
+  options: { queryKey: readonly unknown[]; queryFn: () => Promise<T> }
 ): Promise<T> {
-  return queryClient.ensureQueryData(options)
+  return await queryClient.ensureQueryData(options);
 }
 
 /**
@@ -49,21 +49,21 @@ export async function ensureQueryDataInLoader<T>(
  */
 export async function ensureMultipleQueries(
   queryClient: QueryClient,
-  optionsList: Array<{
-    queryKey: ReadonlyArray<unknown>
-    queryFn: () => Promise<any>
-  }>,
-): Promise<Array<any>> {
-  return Promise.all(
-    optionsList.map((options) => queryClient.ensureQueryData(options)),
-  )
+  optionsList: {
+    queryKey: readonly unknown[];
+    queryFn: () => Promise<unknown>;
+  }[]
+): Promise<unknown[]> {
+  return await Promise.all(
+    optionsList.map((options) => queryClient.ensureQueryData(options))
+  );
 }
 
 /**
  * Type for route context with query client
  */
 export interface RouteContextWithQueryClient {
-  queryClient: QueryClient
+  queryClient: QueryClient;
 }
 
 /**
@@ -84,11 +84,11 @@ export interface RouteContextWithQueryClient {
  */
 export async function invalidateInAction(
   queryClient: QueryClient,
-  keys: Array<ReadonlyArray<unknown>>,
+  keys: (readonly unknown[])[]
 ): Promise<void> {
   await Promise.all(
     keys.map((key) =>
-      queryClient.invalidateQueries({ queryKey: key as Array<unknown> }),
-    ),
-  )
+      queryClient.invalidateQueries({ queryKey: key as unknown[] })
+    )
+  );
 }

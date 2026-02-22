@@ -1,9 +1,17 @@
-'use client'
-
-import { useMemo } from 'react'
-import { AlertTriangle, ChevronDown, Lock } from 'lucide-react'
-import { EntryRows } from './entry-rows'
-import { CURRENT_MONTH, CURRENT_YEAR, MONTHS } from './constants'
+import { AlertTriangle, ChevronDown, Lock } from "lucide-react";
+import { useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
+import { CURRENT_MONTH, CURRENT_YEAR, MONTHS } from "./constants";
+import { EntryRows } from "./entry-rows";
 import type {
   Application,
   AvailabilityRecord,
@@ -11,28 +19,18 @@ import type {
   ScorecardEntry,
   VisibleMonth,
   VolumeRecord,
-} from './types'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { cn } from '@/lib/utils'
+} from "./types";
 
 interface ApplicationCardProps {
-  app: Application
-  isExpanded: boolean
-  onToggle: () => void
-  entries: Array<ScorecardEntry>
-  availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>
-  volumeByEntry: Record<string, Record<string, VolumeRecord>>
-  selectedYear: number
-  leadership: Array<LeadershipDisplay>
-  visibleMonths?: Array<VisibleMonth>
+  app: Application;
+  availabilityByEntry: Record<string, Record<string, AvailabilityRecord>>;
+  entries: ScorecardEntry[];
+  isExpanded: boolean;
+  leadership: LeadershipDisplay[];
+  onToggle: () => void;
+  selectedYear: number;
+  visibleMonths?: VisibleMonth[];
+  volumeByEntry: Record<string, Record<string, VolumeRecord>>;
 }
 
 export function ApplicationCard({
@@ -49,117 +47,121 @@ export function ApplicationCard({
   const ALL_MONTHS = Array.from({ length: 12 }, (_, i) => ({
     month: i + 1,
     year: selectedYear,
-  }))
-  const monthsToShow = visibleMonths || ALL_MONTHS
+  }));
+  const monthsToShow = visibleMonths || ALL_MONTHS;
 
   // Calculate app-level average availability
   const avgAvailability = useMemo(() => {
-    let total = 0
-    let count = 0
+    let total = 0;
+    let count = 0;
 
-    entries.forEach((entry) => {
-      const entryAvail = availabilityByEntry[entry.id] || {}
-      monthsToShow.forEach(({ month, year }) => {
-        const av = entryAvail[`${year}-${month}`]
+    for (const entry of entries) {
+      const entryAvail = availabilityByEntry[entry.id] || {};
+      for (const { month, year } of monthsToShow) {
+        const av = entryAvail[`${year}-${month}`];
         if (av) {
-          total += parseFloat(av.availability)
-          count++
+          total += Number.parseFloat(av.availability);
+          count++;
         }
-      })
-    })
+      }
+    }
 
-    return count > 0 ? total / count : null
-  }, [entries, availabilityByEntry, monthsToShow])
+    return count > 0 ? total / count : null;
+  }, [entries, availabilityByEntry, monthsToShow]);
 
   // Calculate app-level total volume
   const totalVolume = useMemo(() => {
-    let total = 0
-    let hasData = false
+    let total = 0;
+    let hasData = false;
 
-    entries.forEach((entry) => {
-      const entryVol = volumeByEntry[entry.id] || {}
-      monthsToShow.forEach(({ month, year }) => {
-        const vol = entryVol[`${year}-${month}`]
+    for (const entry of entries) {
+      const entryVol = volumeByEntry[entry.id] || {};
+      for (const { month, year } of monthsToShow) {
+        const vol = entryVol[`${year}-${month}`];
         if (vol) {
-          total += vol.volume
-          hasData = true
+          total += vol.volume;
+          hasData = true;
         }
-      })
-    })
+      }
+    }
 
-    return hasData ? total : null
-  }, [entries, volumeByEntry, monthsToShow])
+    return hasData ? total : null;
+  }, [entries, volumeByEntry, monthsToShow]);
 
   // Count breaches
   const breachCount = useMemo(() => {
-    let breaches = 0
-    entries.forEach((entry) => {
-      const threshold = parseFloat(entry.availabilityThreshold)
-      const entryAvail = availabilityByEntry[entry.id] || {}
-      monthsToShow.forEach(({ month, year }) => {
-        const av = entryAvail[`${year}-${month}`]
-        if (av && parseFloat(av.availability) < threshold) {
-          breaches++
+    let breaches = 0;
+    for (const entry of entries) {
+      const threshold = Number.parseFloat(entry.availabilityThreshold);
+      const entryAvail = availabilityByEntry[entry.id] || {};
+      for (const { month, year } of monthsToShow) {
+        const av = entryAvail[`${year}-${month}`];
+        if (av && Number.parseFloat(av.availability) < threshold) {
+          breaches++;
         }
-      })
-    })
-    return breaches
-  }, [entries, availabilityByEntry, monthsToShow])
+      }
+    }
+    return breaches;
+  }, [entries, availabilityByEntry, monthsToShow]);
 
   return (
     <Card
       className={cn(
-        'transition-all duration-300 border-border/50 bg-background/50 group overflow-hidden',
-        isExpanded ? 'ring-1 ring-primary/20 shadow-md' : 'hover:bg-muted/30',
+        "group overflow-hidden border-border/50 bg-background/50 transition-all duration-300",
+        isExpanded ? "shadow-md ring-1 ring-primary/20" : "hover:bg-muted/30"
       )}
     >
-      <div
-        className="flex flex-col sm:flex-row sm:items-center justify-between py-2.5 px-4 cursor-pointer relative"
+      <button
+        className="relative flex w-full cursor-pointer flex-col justify-between px-4 py-2.5 text-left focus:outline-none focus-visible:ring-1 focus-visible:ring-primary sm:flex-row sm:items-center"
         onClick={onToggle}
+        type="button"
       >
         {/* Identity Layer */}
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex min-w-0 items-center gap-4">
           {/* Circled arrow indicator */}
           <div
             className={cn(
-              'w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all duration-300',
+              "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-all duration-300",
               isExpanded
-                ? 'bg-primary/10 border-primary/30 text-primary'
-                : 'bg-muted/30 border-border/50 text-muted-foreground',
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-border/50 bg-muted/30 text-muted-foreground"
             )}
           >
             <ChevronDown
               className={cn(
-                'h-3.5 w-3.5 transition-transform duration-300',
-                isExpanded ? 'rotate-0' : '-rotate-90',
+                "h-3.5 w-3.5 transition-transform duration-300",
+                isExpanded ? "rotate-0" : "-rotate-90"
               )}
             />
           </div>
 
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <div className="flex items-center flex-wrap gap-2">
-              <span className="font-bold text-sm tracking-tight group-hover:text-primary transition-colors truncate">
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="truncate font-bold text-sm tracking-tight transition-colors group-hover:text-primary">
                 {app.applicationName}
               </span>
               <Badge
+                className="h-5 border-primary/20 bg-background/50 px-2 font-bold text-[10px] text-primary uppercase tracking-widest"
                 variant="outline"
-                className="text-[10px] font-bold uppercase tracking-widest bg-background/50 border-primary/20 text-primary px-2 h-5"
               >
                 {app.tla}
               </Badge>
-              {app.tier && ['0', '1', '2'].includes(String(app.tier)) && (
-                <Badge className="bg-red-500/10 text-red-600 border-red-500/20 text-[9px] font-bold uppercase tracking-widest h-5 px-1.5">
+              {app.tier && ["0", "1", "2"].includes(String(app.tier)) && (
+                <Badge className="h-5 border-red-500/20 bg-red-500/10 px-1.5 font-bold text-[9px] text-red-600 uppercase tracking-widest">
                   T{app.tier}
                 </Badge>
               )}
             </div>
-            <div className="flex items-center flex-wrap gap-x-3 gap-y-1 text-muted-foreground">
-              {leadership.slice(0, 2).map((l, i) => (
-                <div key={i} className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
+              {leadership.slice(0, 2).map((l) => (
+                <div
+                  className="flex items-center gap-1.5"
+                  key={`${l.role}-${l.name}`}
+                >
+                  <span className="font-bold text-[10px] uppercase tracking-widest opacity-40">
                     {l.role}
                   </span>
-                  <span className="text-[10px] font-bold text-foreground/80">
+                  <span className="font-bold text-[10px] text-foreground/80">
                     {l.name}
                   </span>
                 </div>
@@ -169,25 +171,25 @@ export function ApplicationCard({
         </div>
 
         {/* Status Layer */}
-        <div className="flex items-center gap-6 mt-3 sm:mt-0 shrink-0">
+        <div className="mt-3 flex shrink-0 items-center gap-6 sm:mt-0">
           {avgAvailability !== null && (
-            <div className="flex flex-col items-end group/stat">
-              <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest leading-none mb-1.5 opacity-60">
+            <div className="group/stat flex flex-col items-end">
+              <span className="mb-1.5 font-bold text-[9px] text-muted-foreground uppercase leading-none tracking-widest opacity-60">
                 Availability
               </span>
               <div className="flex items-center gap-2">
                 <div
                   className={cn(
-                    'h-1.5 w-1.5 rounded-full',
+                    "h-1.5 w-1.5 rounded-full",
                     avgAvailability < 98
-                      ? 'bg-red-500 animate-pulse'
-                      : 'bg-green-500',
+                      ? "animate-pulse bg-red-500"
+                      : "bg-green-500"
                   )}
                 />
                 <span
                   className={cn(
-                    'text-base font-bold tabular-nums tracking-tight leading-none',
-                    avgAvailability < 98 ? 'text-red-600' : 'text-green-600',
+                    "font-bold text-base tabular-nums leading-none tracking-tight",
+                    avgAvailability < 98 ? "text-red-600" : "text-green-600"
                   )}
                 >
                   {avgAvailability.toFixed(2)}%
@@ -197,63 +199,63 @@ export function ApplicationCard({
           )}
 
           {totalVolume !== null && (
-            <div className="flex flex-col items-end group/stat">
-              <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-widest leading-none mb-1.5 opacity-60">
+            <div className="group/stat flex flex-col items-end">
+              <span className="mb-1.5 font-bold text-[9px] text-muted-foreground uppercase leading-none tracking-widest opacity-60">
                 Annual Volume
               </span>
-              <span className="text-base font-bold tabular-nums tracking-tight leading-none text-indigo-600">
-                {totalVolume > 1000000
-                  ? `${(totalVolume / 1000000).toFixed(1)}M`
+              <span className="font-bold text-base text-indigo-600 tabular-nums leading-none tracking-tight">
+                {totalVolume > 1_000_000
+                  ? `${(totalVolume / 1_000_000).toFixed(1)}M`
                   : totalVolume.toLocaleString()}
               </span>
             </div>
           )}
 
           {breachCount > 0 && (
-            <div className="flex items-center justify-center h-8 w-8 rounded-full bg-red-500/10 border border-red-500/20 text-red-600">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10 text-red-600">
               <AlertTriangle className="h-4 w-4" />
             </div>
           )}
         </div>
-      </div>
+      </button>
 
       {/* Expanded Content - Metrics Table */}
       {isExpanded && entries.length > 0 && (
-        <div className="border-t px-3 pb-3 pt-2 overflow-x-auto">
+        <div className="overflow-x-auto border-t px-3 pt-2 pb-3">
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-bold uppercase w-[160px]">
+                <TableHead className="w-[160px] font-bold text-xs uppercase">
                   Entry
                 </TableHead>
-                <TableHead className="text-xs font-bold uppercase w-[50px]">
+                <TableHead className="w-[50px] font-bold text-xs uppercase">
                   Type
                 </TableHead>
                 {monthsToShow.map((vm) => {
-                  const m = MONTHS[vm.month - 1]
+                  const m = MONTHS[vm.month - 1];
                   const isFuture =
-                    vm.year === CURRENT_YEAR && vm.month > CURRENT_MONTH
+                    vm.year === CURRENT_YEAR && vm.month > CURRENT_MONTH;
                   return (
                     <TableHead
-                      key={`${vm.year}-${vm.month}`}
                       className={cn(
-                        'text-xs font-bold uppercase text-center w-[55px]',
-                        isFuture && 'text-muted-foreground/40',
+                        "w-[55px] text-center font-bold text-xs uppercase",
+                        isFuture && "text-muted-foreground/40"
                       )}
+                      key={`${vm.year}-${vm.month}`}
                     >
                       <div className="flex flex-col leading-none">
                         <span>{m}</span>
                         {vm.year !== selectedYear && (
-                          <span className="text-[7px] opacity-40 mt-0.5">
+                          <span className="mt-0.5 text-[7px] opacity-40">
                             {vm.year}
                           </span>
                         )}
                       </div>
-                      {isFuture && <Lock className="h-2 w-2 inline ml-0.5" />}
+                      {isFuture && <Lock className="ml-0.5 inline h-2 w-2" />}
                     </TableHead>
-                  )
+                  );
                 })}
-                <TableHead className="text-xs font-bold uppercase text-center w-[60px] bg-muted/30">
+                <TableHead className="w-[60px] bg-muted/30 text-center font-bold text-xs uppercase">
                   Avg
                 </TableHead>
               </TableRow>
@@ -261,12 +263,12 @@ export function ApplicationCard({
             <TableBody>
               {entries.map((entry) => (
                 <EntryRows
-                  key={entry.id}
-                  entry={entry}
                   availability={availabilityByEntry[entry.id] || {}}
-                  volume={volumeByEntry[entry.id] || {}}
+                  entry={entry}
+                  key={entry.id}
                   selectedYear={selectedYear}
                   visibleMonths={monthsToShow}
+                  volume={volumeByEntry[entry.id] || {}}
                 />
               ))}
             </TableBody>
@@ -280,5 +282,5 @@ export function ApplicationCard({
         </div>
       )}
     </Card>
-  )
+  );
 }

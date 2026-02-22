@@ -1,12 +1,11 @@
-import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'sonner'
-import { Loader2, Plus } from 'lucide-react'
-import type { z } from 'zod'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2, Plus } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import type { z } from "zod";
+import { createScorecardEntry } from "@/app/actions/scorecard";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,15 +13,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { createScorecardEntry } from '@/app/actions/scorecard'
-import { CreateScorecardEntrySchema } from '@/lib/zod/scorecard.schema'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { CreateScorecardEntrySchema } from "@/lib/zod/scorecard.schema";
 
 interface AddEntryDialogProps {
-  applicationId: string
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+  applicationId: string;
+  onOpenChange: (open: boolean) => void;
+  onSuccess: () => void;
+  open: boolean;
 }
 
 export function AddEntryDialog({
@@ -40,31 +40,31 @@ export function AddEntryDialog({
     resolver: zodResolver(CreateScorecardEntrySchema),
     defaultValues: {
       applicationId,
-      scorecardIdentifier: '',
-      name: '',
+      scorecardIdentifier: "",
+      name: "",
       availabilityThreshold: 98,
       volumeChangeThreshold: 20,
     },
-  })
+  });
 
   const createMutation = useMutation({
     mutationFn: createScorecardEntry,
     onSuccess: () => {
-      toast.success('Sub-application added successfully')
-      reset()
-      onSuccess()
+      toast.success("Sub-application added successfully");
+      reset();
+      onSuccess();
     },
     onError: (err: Error) => {
-      toast.error(err.message || 'Failed to add sub-application')
+      toast.error(err.message || "Failed to add sub-application");
     },
-  })
+  });
 
   const onSubmit = (values: z.infer<typeof CreateScorecardEntrySchema>) => {
-    createMutation.mutate({ data: values })
-  }
+    createMutation.mutate({ data: values });
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -75,38 +75,38 @@ export function AddEntryDialog({
             Create a new scorecard entry to track metrics for a sub-application.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+        <form className="space-y-4 py-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-2">
             <Label htmlFor="name">Display Name</Label>
             <Input
               id="name"
-              {...register('name')}
+              {...register("name")}
               placeholder="e.g., KMS-IDEAL"
             />
             {errors.name && (
-              <p className="text-sm text-destructive">{errors.name.message}</p>
+              <p className="text-destructive text-sm">{errors.name.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="scorecardIdentifier">
               Scorecard Identifier
-              <span className="text-xs text-muted-foreground ml-2">
+              <span className="ml-2 text-muted-foreground text-xs">
                 (optional, for automation)
               </span>
             </Label>
             <Input
               id="scorecardIdentifier"
-              {...register('scorecardIdentifier')}
-              placeholder="e.g., kms-ideal-01"
+              {...register("scorecardIdentifier")}
               className="font-mono"
+              placeholder="e.g., kms-ideal-01"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               A unique identifier used for API integrations. Leave empty to
               auto-generate.
             </p>
             {errors.scorecardIdentifier && (
-              <p className="text-sm text-destructive">
+              <p className="text-destructive text-sm">
                 {errors.scorecardIdentifier.message}
               </p>
             )}
@@ -119,12 +119,12 @@ export function AddEntryDialog({
               </Label>
               <Input
                 id="availabilityThreshold"
-                type="number"
                 step="0.1"
-                {...register('availabilityThreshold', { valueAsNumber: true })}
+                type="number"
+                {...register("availabilityThreshold", { valueAsNumber: true })}
               />
               {errors.availabilityThreshold && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   {errors.availabilityThreshold.message}
                 </p>
               )}
@@ -136,12 +136,12 @@ export function AddEntryDialog({
               </Label>
               <Input
                 id="volumeChangeThreshold"
-                type="number"
                 step="0.1"
-                {...register('volumeChangeThreshold', { valueAsNumber: true })}
+                type="number"
+                {...register("volumeChangeThreshold", { valueAsNumber: true })}
               />
               {errors.volumeChangeThreshold && (
-                <p className="text-sm text-destructive">
+                <p className="text-destructive text-sm">
                   {errors.volumeChangeThreshold.message}
                 </p>
               )}
@@ -150,13 +150,13 @@ export function AddEntryDialog({
 
           <DialogFooter>
             <Button
+              onClick={() => onOpenChange(false)}
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createMutation.isPending}>
+            <Button disabled={createMutation.isPending} type="submit">
               {createMutation.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
@@ -166,5 +166,5 @@ export function AddEntryDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

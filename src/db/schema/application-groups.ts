@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   boolean,
   index,
@@ -7,82 +8,81 @@ import {
   uniqueIndex,
   uuid,
   varchar,
-} from 'drizzle-orm/pg-core'
-import { relations } from 'drizzle-orm'
+} from "drizzle-orm/pg-core";
 
-import { applications, ensembleSchema, teams } from './teams'
+import { applications, ensembleSchema, teams } from "./teams";
 
 // ============================================================================
 // Application Groups - Logical grouping of applications
 // ============================================================================
 export const applicationGroups = ensembleSchema.table(
-  'application_groups',
+  "application_groups",
   {
-    id: uuid('id').defaultRandom().primaryKey(),
-    teamId: uuid('team_id')
+    id: uuid("id").defaultRandom().primaryKey(),
+    teamId: uuid("team_id")
       .notNull()
       .references(() => teams.id, {
-        onDelete: 'cascade',
-        onUpdate: 'cascade',
+        onDelete: "cascade",
+        onUpdate: "cascade",
       }),
-    name: varchar('name', { length: 100 }).notNull(),
-    description: text('description'),
-    color: varchar('color', { length: 20 }).default('#6366f1'), // Default indigo
-    displayOrder: integer('display_order').notNull().default(0),
-    isEnabled: boolean('is_enabled').notNull().default(true),
-    createdBy: varchar('created_by', { length: 255 }).notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true })
+    name: varchar("name", { length: 100 }).notNull(),
+    description: text("description"),
+    color: varchar("color", { length: 20 }).default("#6366f1"), // Default indigo
+    displayOrder: integer("display_order").notNull().default(0),
+    isEnabled: boolean("is_enabled").notNull().default(true),
+    createdBy: varchar("created_by", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
-    updatedBy: varchar('updated_by', { length: 255 }),
-    updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(
-      () => new Date(),
+    updatedBy: varchar("updated_by", { length: 255 }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
+      () => new Date()
     ),
   },
   (table) => [
-    index('app_groups_team_id_idx').on(table.teamId),
-    index('app_groups_display_order_idx').on(table.teamId, table.displayOrder),
-    index('app_groups_is_enabled_idx').on(table.teamId, table.isEnabled),
-  ],
-)
+    index("app_groups_team_id_idx").on(table.teamId),
+    index("app_groups_display_order_idx").on(table.teamId, table.displayOrder),
+    index("app_groups_is_enabled_idx").on(table.teamId, table.isEnabled),
+  ]
+);
 
 // ============================================================================
 // Application Group Memberships - Links applications to groups
 // ============================================================================
 export const applicationGroupMemberships = ensembleSchema.table(
-  'application_group_memberships',
+  "application_group_memberships",
   {
-    id: uuid('id').defaultRandom().primaryKey(),
-    groupId: uuid('group_id')
+    id: uuid("id").defaultRandom().primaryKey(),
+    groupId: uuid("group_id")
       .notNull()
       .references(() => applicationGroups.id, {
-        onDelete: 'cascade',
-        onUpdate: 'cascade',
+        onDelete: "cascade",
+        onUpdate: "cascade",
       }),
-    applicationId: uuid('application_id')
+    applicationId: uuid("application_id")
       .notNull()
       .references(() => applications.id, {
-        onDelete: 'cascade',
-        onUpdate: 'cascade',
+        onDelete: "cascade",
+        onUpdate: "cascade",
       }),
-    displayOrder: integer('display_order').notNull().default(0),
-    createdAt: timestamp('created_at', { withTimezone: true })
+    displayOrder: integer("display_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
       .defaultNow()
       .notNull(),
   },
   (table) => [
-    uniqueIndex('app_group_membership_unique_idx').on(
+    uniqueIndex("app_group_membership_unique_idx").on(
       table.groupId,
-      table.applicationId,
+      table.applicationId
     ),
-    index('app_group_membership_group_id_idx').on(table.groupId),
-    index('app_group_membership_app_id_idx').on(table.applicationId),
-    index('app_group_membership_order_idx').on(
+    index("app_group_membership_group_id_idx").on(table.groupId),
+    index("app_group_membership_app_id_idx").on(table.applicationId),
+    index("app_group_membership_order_idx").on(
       table.groupId,
-      table.displayOrder,
+      table.displayOrder
     ),
-  ],
-)
+  ]
+);
 
 // ============================================================================
 // Relations
@@ -95,8 +95,8 @@ export const applicationGroupsRelations = relations(
       references: [teams.id],
     }),
     memberships: many(applicationGroupMemberships),
-  }),
-)
+  })
+);
 
 export const applicationGroupMembershipsRelations = relations(
   applicationGroupMemberships,
@@ -109,15 +109,15 @@ export const applicationGroupMembershipsRelations = relations(
       fields: [applicationGroupMemberships.applicationId],
       references: [applications.id],
     }),
-  }),
-)
+  })
+);
 
 // ============================================================================
 // Types
 // ============================================================================
-export type ApplicationGroup = typeof applicationGroups.$inferSelect
-export type NewApplicationGroup = typeof applicationGroups.$inferInsert
+export type ApplicationGroup = typeof applicationGroups.$inferSelect;
+export type NewApplicationGroup = typeof applicationGroups.$inferInsert;
 export type ApplicationGroupMembership =
-  typeof applicationGroupMemberships.$inferSelect
+  typeof applicationGroupMemberships.$inferSelect;
 export type NewApplicationGroupMembership =
-  typeof applicationGroupMemberships.$inferInsert
+  typeof applicationGroupMemberships.$inferInsert;

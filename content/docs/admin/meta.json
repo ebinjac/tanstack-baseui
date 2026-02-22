@@ -1,9 +1,4 @@
 {
-    "title": "Admin",
-    "pages": [
-        "index",
-        "requests",
-        "teams",
-        "health"
-    ]
+  "title": "Admin",
+  "pages": ["index", "requests", "teams", "health"]
 }

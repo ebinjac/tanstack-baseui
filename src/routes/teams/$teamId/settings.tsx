@@ -1,17 +1,14 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
-import { useState } from 'react'
-import { toast } from 'sonner'
-import { Boxes, LayoutDashboard, LifeBuoy, Users2, Wrench } from 'lucide-react'
-
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type {
-  NavItem} from '@/components/settings';
-import { PageHeader } from '@/components/shared'
-import { getTeamById } from '@/app/actions/teams'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { Boxes, LayoutDashboard, LifeBuoy, Users2, Wrench } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
   getTeamApplications,
   updateApplication,
-} from '@/app/actions/applications'
+} from "@/app/actions/applications";
+import { getTeamById } from "@/app/actions/teams";
+import type { NavItem } from "@/components/settings";
 import {
   AddApplicationDialog,
   ApplicationsTab,
@@ -24,204 +21,222 @@ import {
   SettingsNav,
   SupportTab,
   ViewApplicationDialog,
-} from '@/components/settings'
+} from "@/components/settings";
+import { PageHeader } from "@/components/shared";
 
-export const Route = createFileRoute('/teams/$teamId/settings')({
+interface ApplicationRecord {
+  applicationName: string;
+  assetId: number;
+  id: string;
+  lifeCycleStatus?: string | null;
+  teamId: string;
+  tier?: string | null;
+  tla: string;
+}
+
+export const Route = createFileRoute("/teams/$teamId/settings")({
   loader: async ({ params }) => {
-    const team = await getTeamById({ data: { teamId: params.teamId } })
+    const team = await getTeamById({ data: { teamId: params.teamId } });
     if (!team) {
-      throw new Error('Team not found')
+      throw new Error("Team not found");
     }
-    return { team }
+    return { team };
   },
   component: TeamSettingsPage,
-})
+});
 
 function TeamSettingsPage() {
-  const { team } = Route.useLoaderData()
-  const { teamId } = Route.useParams()
-  const router = useRouter()
-  const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState('overview')
+  const { team } = Route.useLoaderData();
+  const { teamId } = Route.useParams();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Action States
-  const [viewingApp, setViewingApp] = useState<any>(null)
-  const [editingApp, setEditingApp] = useState<any>(null)
-  const [deletingApp, setDeletingApp] = useState<any>(null)
-  const [isEditingTeam, setIsEditingTeam] = useState(false)
+  const [viewingApp, setViewingApp] = useState<ApplicationRecord | null>(null);
+  const [editingApp, setEditingApp] = useState<ApplicationRecord | null>(null);
+  const [deletingApp, setDeletingApp] = useState<ApplicationRecord | null>(
+    null
+  );
+  const [isEditingTeam, setIsEditingTeam] = useState(false);
 
   // Fetch Applications
   const { data: applications, isLoading: isLoadingApps } = useQuery({
-    queryKey: ['applications', teamId],
+    queryKey: ["applications", teamId],
     queryFn: () => getTeamApplications({ data: { teamId } }),
-  })
+  });
 
   // Sync Mutation
   const syncMutation = useMutation({
-    mutationFn: async (app: any) => {
-      // Mock Sync Implementation
-      const syncData: any = {
+    mutationFn: (app: ApplicationRecord) => {
+      const syncData = {
         id: app.id,
         teamId: app.teamId,
-      }
-      return updateApplication({ data: syncData })
+      };
+      return updateApplication({ data: syncData });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['applications', teamId] })
-      toast.success('Application synced with Central Registry')
+      queryClient.invalidateQueries({ queryKey: ["applications", teamId] });
+      toast.success("Application synced with Central Registry");
     },
-    onError: (err: any) => {
-      toast.error(err.message || 'Failed to sync application')
+    onError: (err: Error) => {
+      toast.error(err.message || "Failed to sync application");
     },
-  })
+  });
 
   const stats = {
     total: applications?.length || 0,
     active:
       applications?.filter(
         (a) =>
-          a.lifeCycleStatus?.toLowerCase() === 'production' ||
-          a.lifeCycleStatus?.toLowerCase() === 'active',
+          a.lifeCycleStatus?.toLowerCase() === "production" ||
+          a.lifeCycleStatus?.toLowerCase() === "active"
       ).length || 0,
     tiers: {
       critical:
-        applications?.filter((a) => ['0', '1', '2'].includes(String(a.tier)))
+        applications?.filter((a) => ["0", "1", "2"].includes(String(a.tier)))
           .length || 0,
       other:
-        applications?.filter((a) => !['0', '1', '2'].includes(String(a.tier)))
+        applications?.filter((a) => !["0", "1", "2"].includes(String(a.tier)))
           .length || 0,
     },
-  }
+  };
 
-  const navItems: Array<NavItem> = [
-    { value: 'overview', label: 'Overview', icon: LayoutDashboard },
+  const navItems: NavItem[] = [
+    { value: "overview", label: "Overview", icon: LayoutDashboard },
     {
-      value: 'applications',
-      label: 'Applications',
+      value: "applications",
+      label: "Applications",
       icon: Boxes,
       count: stats.total,
     },
-    { value: 'members', label: 'Members', icon: Users2 },
-    { value: 'resources', label: 'Resources', icon: Wrench },
-    { value: 'support', label: 'Support', icon: LifeBuoy },
-  ]
+    { value: "members", label: "Members", icon: Users2 },
+    { value: "resources", label: "Resources", icon: Wrench },
+    { value: "support", label: "Support", icon: LifeBuoy },
+  ];
 
   // Mock Admin Check
-  const isAdmin = true
+  const isAdmin = true;
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-6xl space-y-6">
+    <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
       <PageHeader
-        title="Settings"
         description={
           <>
-            Manage your operational configurations, members, and preferences for{' '}
+            Manage your operational configurations, members, and preferences for{" "}
             <span className="font-bold text-white drop-shadow-sm">
               {team.teamName}
             </span>
             .
           </>
         }
+        title="Settings"
       />
 
-      <div className="flex flex-col md:flex-row gap-8">
+      <div className="flex flex-col gap-8 md:flex-row">
         <SettingsNav
-          items={navItems}
           activeTab={activeTab}
+          items={navItems}
           onTabChange={setActiveTab}
         />
 
-        <div className="flex-1 min-w-0">
-          {activeTab === 'overview' && (
+        <div className="min-w-0 flex-1">
+          {activeTab === "overview" && (
             <OverviewTab
-              team={team}
-              stats={stats}
               isAdmin={isAdmin}
               onEditTeam={() => setIsEditingTeam(true)}
+              stats={stats}
+              team={team}
             />
           )}
 
-          {activeTab === 'applications' && (
+          {activeTab === "applications" && (
             <ApplicationsTab
-              team={team}
+              AddApplicationDialog={AddApplicationDialog}
               applications={applications}
-              isLoadingApps={isLoadingApps}
               isAdmin={isAdmin}
-              syncMutation={syncMutation}
-              onViewApp={setViewingApp}
-              onEditApp={setEditingApp}
-              onDeleteApp={setDeletingApp}
+              isLoadingApps={isLoadingApps}
               onAddSuccess={() =>
                 queryClient.invalidateQueries({
-                  queryKey: ['applications', teamId],
+                  queryKey: ["applications", teamId],
                 })
               }
+              onDeleteApp={(app) => setDeletingApp(app)}
+              onEditApp={(app) => setEditingApp(app)}
+              onViewApp={(app) => setViewingApp(app)}
+              syncMutation={
+                syncMutation as {
+                  isPending: boolean;
+                  mutate: (app: ApplicationRecord) => void;
+                  variables?: { id: string } | null;
+                }
+              }
+              team={team}
               teamId={teamId}
-              AddApplicationDialog={AddApplicationDialog}
             />
           )}
 
-          {activeTab === 'members' && (
+          {activeTab === "members" && (
             <MembersTab
               adminGroup={team.adminGroup}
               userGroup={team.userGroup}
             />
           )}
 
-          {activeTab === 'resources' && <ResourcesTab stats={stats} />}
+          {activeTab === "resources" && <ResourcesTab stats={stats} />}
 
-          {activeTab === 'support' && <SupportTab team={team} />}
+          {activeTab === "support" && <SupportTab team={team} />}
         </div>
       </div>
 
       {viewingApp && (
         <ViewApplicationDialog
           app={viewingApp}
-          open={!!viewingApp}
           onOpenChange={(open) => !open && setViewingApp(null)}
+          open={!!viewingApp}
         />
       )}
 
       {editingApp && (
         <EditApplicationDialog
           app={editingApp}
-          open={!!editingApp}
           onOpenChange={(open) => !open && setEditingApp(null)}
           onSuccess={() => {
             queryClient.invalidateQueries({
-              queryKey: ['applications', teamId],
-            })
-            setEditingApp(null)
+              queryKey: ["applications", teamId],
+            });
+            setEditingApp(null);
           }}
+          open={!!editingApp}
         />
       )}
 
       {deletingApp && (
         <DeleteConfirmationDialog
           app={deletingApp}
-          open={!!deletingApp}
           onOpenChange={(open) => !open && setDeletingApp(null)}
           onSuccess={() => {
             queryClient.invalidateQueries({
-              queryKey: ['applications', teamId],
-            })
-            setDeletingApp(null)
+              queryKey: ["applications", teamId],
+            });
+            setDeletingApp(null);
           }}
+          open={!!deletingApp}
         />
       )}
 
       {isEditingTeam && (
         <EditTeamDialog
-          team={team}
-          open={isEditingTeam}
           onOpenChange={setIsEditingTeam}
           onSuccess={() => {
-            queryClient.invalidateQueries({ queryKey: ['team', teamId] })
-            setIsEditingTeam(false)
-            router.invalidate()
+            queryClient.invalidateQueries({ queryKey: ["team", teamId] });
+            setIsEditingTeam(false);
+            router.invalidate();
           }}
+          open={isEditingTeam}
+          team={team}
         />
       )}
     </div>
-  )
+  );
 }

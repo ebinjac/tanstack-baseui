@@ -1,38 +1,37 @@
-import * as React from 'react'
-import { Column, Heading, Row, Section, Text } from '@react-email/components'
-import { EnsembleLayout } from './ensemble-layout'
+import { Column, Heading, Row, Section, Text } from "@react-email/components";
+import { EnsembleLayout } from "./ensemble-layout";
 
 interface TeamRegistrationEmailProps {
-  contactName: string
-  teamName: string
-  submissionDate?: string
+  contactName: string;
+  submissionDate?: string;
+  teamName: string;
 }
 
 export const TeamRegistrationEmail = ({
-  contactName = 'User',
-  teamName = 'Voyager Operations',
+  contactName = "User",
+  teamName = "Voyager Operations",
   submissionDate = new Date().toLocaleDateString(),
 }: TeamRegistrationEmailProps) => {
-  const previewText = `Team Registration Received for ${teamName}`
+  const previewText = `Team Registration Received for ${teamName}`;
 
   return (
     <EnsembleLayout preview={previewText}>
       <Section className="mt-[20px]">
-        <div className="w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg mb-6" />
-        <Heading className="text-[24px] font-bold text-gray-900 p-0 my-[10px] mx-0">
+        <div className="mb-6 h-2 w-full rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600" />
+        <Heading className="mx-0 my-[10px] p-0 font-bold text-[24px] text-gray-900">
           Registration Received
         </Heading>
-        <Text className="text-[16px] leading-[24px] text-gray-700">
+        <Text className="text-[16px] text-gray-700 leading-[24px]">
           Dear <strong>{contactName}</strong>,
         </Text>
-        <Text className="text-[16px] leading-[24px] text-gray-700">
+        <Text className="text-[16px] text-gray-700 leading-[24px]">
           Thank you for submitting your team registration request. We have
           received your application and it is currently being reviewed by our
           operations team.
         </Text>
 
-        <Section className="bg-slate-50 border-l-4 border-blue-500 rounded p-6 my-6">
-          <Text className="uppercase text-xs font-bold text-slate-500 tracking-wider mb-2 m-0">
+        <Section className="my-6 rounded border-blue-500 border-l-4 bg-slate-50 p-6">
+          <Text className="m-0 mb-2 font-bold text-slate-500 text-xs uppercase tracking-wider">
             Registration Details
           </Text>
           <Row className="mb-2">
@@ -57,19 +56,19 @@ export const TeamRegistrationEmail = ({
           </Row>
         </Section>
 
-        <Text className="text-[16px] leading-[24px] text-gray-700">
+        <Text className="text-[16px] text-gray-700 leading-[24px]">
           You will receive a confirmation email once your team has been
           approved. In the meantime, no further action is required on your part.
         </Text>
 
-        <Text className="text-[16px] leading-[24px] text-gray-700 mt-[30px]">
+        <Text className="mt-[30px] text-[16px] text-gray-700 leading-[24px]">
           Best regards,
           <br />
           <strong>The Ensemble Team</strong>
         </Text>
       </Section>
     </EnsembleLayout>
-  )
-}
+  );
+};
 
-export default TeamRegistrationEmail
+export default TeamRegistrationEmail;

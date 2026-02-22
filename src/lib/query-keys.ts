@@ -12,27 +12,27 @@
 // ============================================================================
 
 export interface DateRangeFilter {
-  from?: Date
-  to?: Date
+  from?: Date;
+  to?: Date;
 }
 
 export interface LinkFilters {
-  search?: string
-  visibility?: 'all' | 'private' | 'public'
-  applicationId?: string
-  categoryId?: string
+  applicationId?: string;
+  categoryId?: string;
+  search?: string;
+  visibility?: "all" | "private" | "public";
 }
 
 export interface TurnoverFilters {
-  applicationIds?: Array<string>
-  section?: string
-  includeResolved?: boolean
+  applicationIds?: string[];
+  includeResolved?: boolean;
+  section?: string;
 }
 
 export interface GlobalScorecardFilters {
-  year: number
-  leadershipType?: string
-  leadershipSearch?: string
+  leadershipSearch?: string;
+  leadershipType?: string;
+  year: number;
 }
 
 // ============================================================================
@@ -44,7 +44,7 @@ export interface GlobalScorecardFilters {
  * Hierarchical structure: all -> team -> year -> specific data
  */
 export const scorecardKeys = {
-  all: ['scorecard'] as const,
+  all: ["scorecard"] as const,
 
   // Team-level keys
   team: (teamId: string) => [...scorecardKeys.all, teamId] as const,
@@ -56,18 +56,18 @@ export const scorecardKeys = {
   // Publish status for a team/year
   publishStatus: {
     all: (teamId: string) =>
-      [...scorecardKeys.team(teamId), 'publish-status'] as const,
+      [...scorecardKeys.team(teamId), "publish-status"] as const,
     year: (teamId: string, year: number) =>
-      [...scorecardKeys.team(teamId), 'publish-status', year] as const,
+      [...scorecardKeys.team(teamId), "publish-status", year] as const,
   },
 
   // Global/enterprise scorecard
   global: {
-    all: ['global-scorecard'] as const,
+    all: ["global-scorecard"] as const,
     filtered: (filters: GlobalScorecardFilters) =>
       [...scorecardKeys.global.all, filters] as const,
   },
-} as const
+} as const;
 
 // ============================================================================
 // Turnover Keys
@@ -78,25 +78,25 @@ export const scorecardKeys = {
  * Covers entries, groups, finalized snapshots, and metrics
  */
 export const turnoverKeys = {
-  all: ['turnover'] as const,
+  all: ["turnover"] as const,
 
   // Team-level keys
   team: (teamId: string) => [...turnoverKeys.all, teamId] as const,
 
   // Entries with optional filters
   entries: {
-    all: (teamId: string) => [...turnoverKeys.team(teamId), 'entries'] as const,
+    all: (teamId: string) => [...turnoverKeys.team(teamId), "entries"] as const,
     filtered: (teamId: string, filters?: TurnoverFilters) =>
-      [...turnoverKeys.team(teamId), 'entries', filters] as const,
+      [...turnoverKeys.team(teamId), "entries", filters] as const,
     section: (
       teamId: string,
-      applicationIds: Array<string>,
+      applicationIds: string[],
       section: string,
-      withResolved?: string,
+      withResolved?: string
     ) =>
       [
         ...turnoverKeys.team(teamId),
-        'entries',
+        "entries",
         applicationIds,
         section,
         withResolved,
@@ -105,25 +105,25 @@ export const turnoverKeys = {
 
   // Dispatch entries (current turnover items)
   dispatch: (teamId: string) =>
-    [...turnoverKeys.team(teamId), 'dispatch'] as const,
+    [...turnoverKeys.team(teamId), "dispatch"] as const,
 
   // Can finalize check
   canFinalize: (teamId: string) =>
-    [...turnoverKeys.team(teamId), 'can-finalize'] as const,
+    [...turnoverKeys.team(teamId), "can-finalize"] as const,
 
   // Finalized turnover snapshots
   finalized: {
     all: (teamId: string) =>
-      [...turnoverKeys.team(teamId), 'finalized'] as const,
+      [...turnoverKeys.team(teamId), "finalized"] as const,
     filtered: (
       teamId: string,
       dateRange?: DateRangeFilter,
       search?: string,
-      page?: number,
+      page?: number
     ) =>
       [
         ...turnoverKeys.team(teamId),
-        'finalized',
+        "finalized",
         dateRange,
         search,
         page,
@@ -132,11 +132,11 @@ export const turnoverKeys = {
 
   // Turnover metrics
   metrics: (teamId: string, dateRange?: DateRangeFilter) =>
-    [...turnoverKeys.team(teamId), 'metrics', dateRange] as const,
+    [...turnoverKeys.team(teamId), "metrics", dateRange] as const,
 
   // Application groups for turnover
-  groups: (teamId: string) => [...turnoverKeys.team(teamId), 'groups'] as const,
-} as const
+  groups: (teamId: string) => [...turnoverKeys.team(teamId), "groups"] as const,
+} as const;
 
 // ============================================================================
 // Link Keys
@@ -147,22 +147,22 @@ export const turnoverKeys = {
  * Covers links, categories, and statistics
  */
 export const linkKeys = {
-  all: ['links'] as const,
+  all: ["links"] as const,
 
   // Team-level keys
   team: (teamId: string) => [...linkKeys.all, teamId] as const,
 
   // Links list with filters (for infinite query)
   list: (teamId: string, filters?: LinkFilters) =>
-    [...linkKeys.team(teamId), 'list', filters] as const,
+    [...linkKeys.team(teamId), "list", filters] as const,
 
   // Categories
   categories: (teamId: string) =>
-    [...linkKeys.team(teamId), 'categories'] as const,
+    [...linkKeys.team(teamId), "categories"] as const,
 
   // Statistics
-  stats: (teamId: string) => [...linkKeys.team(teamId), 'stats'] as const,
-} as const
+  stats: (teamId: string) => [...linkKeys.team(teamId), "stats"] as const,
+} as const;
 
 // ============================================================================
 // Team Keys
@@ -173,24 +173,24 @@ export const linkKeys = {
  * Covers teams list, individual teams, applications, and LDAP lookups
  */
 export const teamKeys = {
-  all: ['teams'] as const,
+  all: ["teams"] as const,
 
   // List of all teams
-  list: () => [...teamKeys.all, 'list'] as const,
+  list: () => [...teamKeys.all, "list"] as const,
 
   // Individual team
   detail: (teamId: string) => [...teamKeys.all, teamId] as const,
 
   // Team applications
   applications: (teamId: string) =>
-    [...teamKeys.detail(teamId), 'applications'] as const,
+    [...teamKeys.detail(teamId), "applications"] as const,
 
   // LDAP group members
-  ldap: (group: string) => [...teamKeys.all, 'ldap', group] as const,
+  ldap: (group: string) => [...teamKeys.all, "ldap", group] as const,
 
   // Team applications with TLA check
-  tlaCheck: (tla: string) => [...teamKeys.all, 'tla-check', tla] as const,
-} as const
+  tlaCheck: (tla: string) => [...teamKeys.all, "tla-check", tla] as const,
+} as const;
 
 // ============================================================================
 // Admin Keys
@@ -201,15 +201,15 @@ export const teamKeys = {
  * Covers registration requests and system health
  */
 export const adminKeys = {
-  all: ['admin'] as const,
+  all: ["admin"] as const,
 
   // Registration requests
   registrationRequests: () =>
-    [...adminKeys.all, 'registration-requests'] as const,
+    [...adminKeys.all, "registration-requests"] as const,
 
   // System health
-  health: () => [...adminKeys.all, 'health'] as const,
-} as const
+  health: () => [...adminKeys.all, "health"] as const,
+} as const;
 
 // ============================================================================
 // Application Keys
@@ -220,15 +220,15 @@ export const adminKeys = {
  * Used across multiple features
  */
 export const applicationKeys = {
-  all: ['applications'] as const,
+  all: ["applications"] as const,
 
   // Team applications
   team: (teamId: string) => [...applicationKeys.all, teamId] as const,
 
   // Application search (Central Registry)
   search: (assetId: number) =>
-    [...applicationKeys.all, 'search', assetId] as const,
-} as const
+    [...applicationKeys.all, "search", assetId] as const,
+} as const;
 
 // ============================================================================
 // Utility Functions
@@ -245,7 +245,7 @@ export function getTeamQueryKeys(teamId: string) {
     links: linkKeys.team(teamId),
     team: teamKeys.detail(teamId),
     applications: teamKeys.applications(teamId),
-  }
+  };
 }
 
 /**
@@ -259,5 +259,5 @@ export function getPermissionInvalidationKeys(teamId: string) {
     linkKeys.team(teamId),
     teamKeys.applications(teamId),
     turnoverKeys.groups(teamId),
-  ]
+  ];
 }

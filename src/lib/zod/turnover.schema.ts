@@ -1,65 +1,63 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 // Section types
 export const TurnoverSectionSchema = z.enum([
-  'RFC',
-  'INC',
-  'ALERTS',
-  'MIM',
-  'COMMS',
-  'FYI',
-])
-export type TurnoverSection = z.infer<typeof TurnoverSectionSchema>
+  "RFC",
+  "INC",
+  "ALERTS",
+  "MIM",
+  "COMMS",
+  "FYI",
+]);
+export type TurnoverSection = z.infer<typeof TurnoverSectionSchema>;
 
 // Status types
-export const TurnoverStatusSchema = z.enum(['OPEN', 'RESOLVED'])
-export type TurnoverStatus = z.infer<typeof TurnoverStatusSchema>
+export const TurnoverStatusSchema = z.enum(["OPEN", "RESOLVED"]);
+export type TurnoverStatus = z.infer<typeof TurnoverStatusSchema>;
 
 // RFC Status options
 export const RfcStatusSchema = z.enum([
-  'Draft',
-  'In Progress',
-  'Pending Approval',
-  'Approved',
-  'Rejected',
-  'Implemented',
-  'Cancelled',
-])
-export type RfcStatus = z.infer<typeof RfcStatusSchema>
+  "Draft",
+  "In Progress",
+  "Pending Approval",
+  "Approved",
+  "Rejected",
+  "Implemented",
+  "Cancelled",
+]);
+export type RfcStatus = z.infer<typeof RfcStatusSchema>;
 
 // Section-specific field schemas
 export const RfcFieldsSchema = z.object({
-  rfcNumber: z.string().min(1, 'RFC Number is required'),
+  rfcNumber: z.string().min(1, "RFC Number is required"),
   rfcStatus: RfcStatusSchema,
-  validatedBy: z.string().min(1, 'Validated By is required'),
-})
+  validatedBy: z.string().min(1, "Validated By is required"),
+});
 
 export const IncFieldsSchema = z.object({
-  incidentNumber: z.string().min(1, 'Incident Number is required'),
-})
+  incidentNumber: z.string().min(1, "Incident Number is required"),
+});
 
 export const MimFieldsSchema = z.object({
-  mimLink: z.url('Must be a valid URL'),
-  mimSlackLink: z.url('Must be a valid URL')
-    .optional()
-    .or(z.literal('')),
-})
+  mimLink: z.url("Must be a valid URL"),
+  mimSlackLink: z.url("Must be a valid URL").optional().or(z.literal("")),
+});
 
 export const CommsFieldsSchema = z.object({
   emailSubject: z.string().optional(),
-  slackLink: z.url('Must be a valid URL').optional().or(z.literal('')),
-})
+  slackLink: z.url("Must be a valid URL").optional().or(z.literal("")),
+});
 
 // Base entry schema
 export const CreateTurnoverEntryBaseSchema = z.object({
   teamId: z.uuid(),
   applicationId: z.uuid(),
   section: TurnoverSectionSchema,
-  title: z.string().max(255).optional().or(z.literal('')), // Title is auto-generated if empty
+  title: z.string().max(255).optional().or(z.literal("")), // Title is auto-generated if empty
   description: z.string().optional(),
   comments: z.string().optional(), // HTML rich text
   isImportant: z.boolean().optional().prefault(false),
-})
+});
 
 // Combined create schema with section-specific fields
 export const CreateTurnoverEntrySchema = CreateTurnoverEntryBaseSchema.extend({
@@ -78,72 +76,76 @@ export const CreateTurnoverEntrySchema = CreateTurnoverEntryBaseSchema.extend({
 }).superRefine((data, ctx) => {
   // Validate section-specific required fields
   switch (data.section) {
-    case 'RFC':
+    case "RFC":
       if (!data.rfcNumber) {
         ctx.addIssue({
           code: "custom",
-          message: 'RFC Number is required',
-          path: ['rfcNumber'],
-        })
+          message: "RFC Number is required",
+          path: ["rfcNumber"],
+        });
       }
       if (!data.rfcStatus) {
         ctx.addIssue({
           code: "custom",
-          message: 'RFC Status is required',
-          path: ['rfcStatus'],
-        })
+          message: "RFC Status is required",
+          path: ["rfcStatus"],
+        });
       }
       if (!data.validatedBy) {
         ctx.addIssue({
           code: "custom",
-          message: 'Validated By is required',
-          path: ['validatedBy'],
-        })
+          message: "Validated By is required",
+          path: ["validatedBy"],
+        });
       }
-      break
-    case 'INC':
+      break;
+    case "INC":
       if (!data.incidentNumber) {
         ctx.addIssue({
           code: "custom",
-          message: 'Incident Number is required',
-          path: ['incidentNumber'],
-        })
+          message: "Incident Number is required",
+          path: ["incidentNumber"],
+        });
       }
-      break
-    case 'MIM':
+      break;
+    case "MIM":
       if (!data.mimLink) {
         ctx.addIssue({
           code: "custom",
-          message: 'MIM Link is required',
-          path: ['mimLink'],
-        })
+          message: "MIM Link is required",
+          path: ["mimLink"],
+        });
       }
-      break
-    case 'COMMS':
-      if (!data.emailSubject && !data.slackLink) {
+      break;
+    case "COMMS":
+      if (!(data.emailSubject || data.slackLink)) {
         ctx.addIssue({
           code: "custom",
-          message: 'Email Subject or Slack Link is required',
-          path: ['emailSubject'],
-        })
+          message: "Email Subject or Slack Link is required",
+          path: ["emailSubject"],
+        });
       }
-      break
-    case 'ALERTS':
+      break;
+    case "ALERTS":
       // Title is already required by base schema
-      break
-    case 'FYI':
+      break;
+    case "FYI":
       if (!data.description) {
         ctx.addIssue({
           code: "custom",
-          message: 'Content is required for FYI entries',
-          path: ['description'],
-        })
+          message: "Content is required for FYI entries",
+          path: ["description"],
+        });
       }
-      break
+      break;
+    default:
+      break;
   }
-})
+});
 
-export type CreateTurnoverEntryInput = z.infer<typeof CreateTurnoverEntrySchema>
+export type CreateTurnoverEntryInput = z.infer<
+  typeof CreateTurnoverEntrySchema
+>;
 
 // Base schema for updates (without superRefine, so we can use .partial())
 const UpdateTurnoverEntryBaseSchema = CreateTurnoverEntryBaseSchema.extend({
@@ -159,33 +161,35 @@ const UpdateTurnoverEntryBaseSchema = CreateTurnoverEntryBaseSchema.extend({
   // COMMS fields
   emailSubject: z.string().optional(),
   slackLink: z.string().optional(),
-})
+});
 
 // Update schema
 export const UpdateTurnoverEntrySchema =
   UpdateTurnoverEntryBaseSchema.partial().extend({
     id: z.uuid(),
     teamId: z.uuid(),
-  })
+  });
 
-export type UpdateTurnoverEntryInput = z.infer<typeof UpdateTurnoverEntrySchema>
+export type UpdateTurnoverEntryInput = z.infer<
+  typeof UpdateTurnoverEntrySchema
+>;
 
 // Toggle important
 export const ToggleImportantSchema = z.object({
   id: z.uuid(),
   isImportant: z.boolean(),
-})
+});
 
 // Resolve entry
 export const ResolveEntrySchema = z.object({
   id: z.uuid(),
-})
+});
 
 // Delete entry
 export const DeleteEntrySchema = z.object({
   id: z.uuid(),
   teamId: z.uuid(),
-})
+});
 
 // Get entries
 export const GetEntriesSchema = z.object({
@@ -196,13 +200,13 @@ export const GetEntriesSchema = z.object({
   includeRecentlyResolved: z.boolean().optional(), // Include resolved entries from last 24 hours
   limit: z.int().positive().prefault(50).optional(),
   offset: z.int().nonnegative().prefault(0).optional(),
-})
+});
 
 // Finalize turnover
 export const FinalizeTurnoverSchema = z.object({
   teamId: z.uuid(),
   notes: z.string().optional(),
-})
+});
 
 // Get finalized turnovers
 export const GetFinalizedTurnoversSchema = z.object({
@@ -212,71 +216,71 @@ export const GetFinalizedTurnoversSchema = z.object({
   toDate: z.string().optional(), // ISO date string
   limit: z.int().positive().prefault(20).optional(),
   offset: z.int().nonnegative().prefault(0).optional(),
-})
+});
 
 // Metrics
 export const GetTurnoverMetricsSchema = z.object({
   teamId: z.uuid(),
   startDate: z.string(), // ISO date string
   endDate: z.string(), // ISO date string
-})
+});
 
 // Section configuration for UI
 export const SECTION_CONFIG = {
   RFC: {
-    id: 'RFC',
-    name: 'Request for Change',
-    shortName: 'RFC',
-    icon: 'CheckCircle2',
-    colorClass: 'text-blue-600 dark:text-blue-500',
-    bgClass: '',
-    borderClass: '',
+    id: "RFC",
+    name: "Request for Change",
+    shortName: "RFC",
+    icon: "CheckCircle2",
+    colorClass: "text-blue-600 dark:text-blue-500",
+    bgClass: "",
+    borderClass: "",
   },
   INC: {
-    id: 'INC',
-    name: 'Incidents',
-    shortName: 'INC',
-    icon: 'AlertCircle',
-    colorClass: 'text-red-600 dark:text-red-500',
-    bgClass: '',
-    borderClass: '',
+    id: "INC",
+    name: "Incidents",
+    shortName: "INC",
+    icon: "AlertCircle",
+    colorClass: "text-red-600 dark:text-red-500",
+    bgClass: "",
+    borderClass: "",
   },
   ALERTS: {
-    id: 'ALERTS',
-    name: 'Alerts/Issues',
-    shortName: 'Alerts',
-    icon: 'Bell',
-    colorClass: 'text-orange-600 dark:text-orange-500',
-    bgClass: '',
-    borderClass: '',
+    id: "ALERTS",
+    name: "Alerts/Issues",
+    shortName: "Alerts",
+    icon: "Bell",
+    colorClass: "text-orange-600 dark:text-orange-500",
+    bgClass: "",
+    borderClass: "",
   },
   MIM: {
-    id: 'MIM',
-    name: 'Major Incident Management',
-    shortName: 'MIM',
-    icon: 'Zap',
-    colorClass: 'text-purple-600 dark:text-purple-500',
-    bgClass: '',
-    borderClass: '',
+    id: "MIM",
+    name: "Major Incident Management",
+    shortName: "MIM",
+    icon: "Zap",
+    colorClass: "text-purple-600 dark:text-purple-500",
+    bgClass: "",
+    borderClass: "",
   },
   COMMS: {
-    id: 'COMMS',
-    name: 'Communications',
-    shortName: 'Comms',
-    icon: 'MessageSquare',
-    colorClass: 'text-green-600 dark:text-green-500',
-    bgClass: '',
-    borderClass: '',
+    id: "COMMS",
+    name: "Communications",
+    shortName: "Comms",
+    icon: "MessageSquare",
+    colorClass: "text-green-600 dark:text-green-500",
+    bgClass: "",
+    borderClass: "",
   },
   FYI: {
-    id: 'FYI',
-    name: 'For Your Information',
-    shortName: 'FYI',
-    icon: 'HelpCircle',
-    colorClass: 'text-slate-600 dark:text-slate-400',
-    bgClass: '',
-    borderClass: '',
+    id: "FYI",
+    name: "For Your Information",
+    shortName: "FYI",
+    icon: "HelpCircle",
+    colorClass: "text-slate-600 dark:text-slate-400",
+    bgClass: "",
+    borderClass: "",
   },
-} as const
+} as const;
 
-export type SectionConfigKey = keyof typeof SECTION_CONFIG
+export type SectionConfigKey = keyof typeof SECTION_CONFIG;

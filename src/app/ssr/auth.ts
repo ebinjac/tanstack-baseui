@@ -82,9 +82,7 @@ export const getSession = createServerFn({ method: "GET" }).handler(
 /**
  * LOGOUT: Destroys the cookie
  */
-export const logoutUser = createServerFn({ method: "POST" }).handler(
-  async () => {
-    deleteCookie(SESSION_CONFIG.cookieName);
-    return { success: true };
-  }
-);
+export const logoutUser = createServerFn({ method: "POST" }).handler(() => {
+  deleteCookie(SESSION_CONFIG.cookieName);
+  return { success: true };
+});

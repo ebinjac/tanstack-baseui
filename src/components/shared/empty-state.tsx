@@ -141,7 +141,6 @@ export const EmptyStateInline = memo(function EmptyStateInline(
 });
 
 // Re-export the shadcn Empty components for direct use
-// biome-ignore lint/performance/noBarrelFile: intentional re-export of UI primitives
 export {
   Empty,
   EmptyContent,

@@ -23,7 +23,7 @@ export interface ErrorBoundaryProps {
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   onReset?: () => void;
-  resetKeys?: Array<unknown>;
+  resetKeys?: unknown[];
 }
 
 export interface ErrorFallbackProps {

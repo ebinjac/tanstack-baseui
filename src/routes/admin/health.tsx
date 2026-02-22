@@ -35,7 +35,6 @@ export const Route = createFileRoute("/admin/health")({
   component: HealthPage,
 });
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: health dashboard with multiple status conditions
 function HealthPage() {
   const [autoRefresh, setAutoRefresh] = useState(true); // Changed from React.useState
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set()); // Changed from React.useState

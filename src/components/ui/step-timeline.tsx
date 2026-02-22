@@ -11,7 +11,7 @@ export interface Step {
 interface StepTimelineProps {
   className?: string;
   currentStep: number;
-  steps: Array<Step>;
+  steps: Step[];
 }
 
 export function StepTimeline({

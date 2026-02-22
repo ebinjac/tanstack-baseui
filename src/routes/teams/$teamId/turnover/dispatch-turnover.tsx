@@ -464,7 +464,6 @@ function DispatchTurnoverPage() {
                         <CollapsibleContent className="data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-top-1 data-[state=open]:slide-in-from-top-1 overflow-hidden duration-200 data-[state=closed]:animate-out data-[state=open]:animate-in">
                           <div className="space-y-4 border-t bg-muted/5 px-4 pt-3 pb-4">
                             {Object.entries(bySection).map(
-                              // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: section rendering with multiple config lookups
                               ([section, sectionEntries]) => {
                                 const sConfig =
                                   SECTION_CONFIG[section as TurnoverSection];

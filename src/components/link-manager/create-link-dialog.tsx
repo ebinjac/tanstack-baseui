@@ -6,9 +6,21 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
 import { getTeamApplications } from "@/app/actions/applications";
-import { createLink, getLinkCategories, updateLink } from "@/app/actions/links";
+import {
+  createLink,
+  createLinkCategory,
+  getLinkCategories,
+  updateLink,
+} from "@/app/actions/links";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+} from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -21,13 +33,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { LinkWithRelations } from "@/db/schema/links";
 import { cn } from "@/lib/utils";
@@ -38,7 +43,12 @@ type FormData = z.infer<typeof CreateLinkSchema>;
 interface Application {
   applicationName: string;
   id: string;
+  tla?: string | null;
 }
+
+const getAppLabel = (a: Application) => {
+  return a.tla ? `${a.tla} - ${a.applicationName}` : a.applicationName;
+};
 
 interface Category {
   id: string;
@@ -109,7 +119,12 @@ const TagInput = ({
 
   return (
     <div className="grid gap-2">
-      <Label className="text-xs">Tags</Label>
+      <div className="space-y-1">
+        <Label className="font-medium text-sm">Tags</Label>
+        <p className="text-[13px] text-muted-foreground">
+          Help others discover this link with keywords.
+        </p>
+      </div>
       <div className="flex flex-wrap gap-2 rounded-md border p-2">
         {tags.map((t) => (
           <Badge className="gap-1" key={t} variant="secondary">
@@ -159,6 +174,20 @@ export function CreateLinkDialog({
     }
   };
   const queryClient = useQueryClient();
+  const [isCreatingCat, setIsCreatingCat] = useState(false);
+  const [newCatName, setNewCatName] = useState("");
+
+  const createCatMut = useMutation({
+    mutationFn: (name: string) =>
+      createLinkCategory({ data: { teamId, name } }),
+    onSuccess: (newCat) => {
+      queryClient.invalidateQueries({ queryKey: ["cats", teamId] });
+      form.setValue("categoryId", newCat.id);
+      setIsCreatingCat(false);
+      setNewCatName("");
+      toast.success("Category created");
+    },
+  });
 
   const form = useForm<FormData>({
     resolver: zodResolver(CreateLinkSchema),
@@ -245,22 +274,42 @@ export function CreateLinkDialog({
           }
         />
       )}
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="min-w-4xl">
         <DialogHeader>
           <DialogTitle>{titleText} Link</DialogTitle>
           <DialogDescription>
             {isView ? "Resource details." : "Share with your team."}
           </DialogDescription>
         </DialogHeader>
-        <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
-          <div className="grid gap-4 sm:grid-cols-2">
+        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <div className="grid gap-6 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="u">URL</Label>
-              <Input id="u" {...form.register("url")} disabled={isView} />
+              <div className="space-y-1">
+                <Label htmlFor="u">URL</Label>
+                <p className="text-[13px] text-muted-foreground">
+                  The web address for this link.
+                </p>
+              </div>
+              <Input
+                id="u"
+                {...form.register("url")}
+                disabled={isView}
+                placeholder="https://"
+              />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="t">Title</Label>
-              <Input id="t" {...form.register("title")} disabled={isView} />
+              <div className="space-y-1">
+                <Label htmlFor="t">Title</Label>
+                <p className="text-[13px] text-muted-foreground">
+                  A clear, descriptive name.
+                </p>
+              </div>
+              <Input
+                id="t"
+                {...form.register("title")}
+                disabled={isView}
+                placeholder="e.g. Design Spec"
+              />
             </div>
           </div>
           <Controller
@@ -270,57 +319,169 @@ export function CreateLinkDialog({
               <VisibilitySelector disabled={isView} field={field} />
             )}
           />
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-6 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label>App</Label>
+              <div className="space-y-1">
+                <Label>App</Label>
+                <p className="text-[13px] text-muted-foreground">
+                  Link to an application (optional).
+                </p>
+              </div>
               <Controller
                 control={form.control}
                 name="applicationId"
-                render={({ field }) => (
-                  <Select
-                    disabled={isView}
-                    onValueChange={field.onChange}
-                    value={field.value || "none"}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {apps?.map((a) => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.applicationName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                render={({ field }) => {
+                  const selectedApp = apps?.find((a) => a.id === field.value);
+                  const displayValue = selectedApp
+                    ? getAppLabel(selectedApp)
+                    : "none";
+                  return (
+                    <Combobox
+                      disabled={isView}
+                      onValueChange={(val) => {
+                        if (val === "none" || !val) {
+                          field.onChange(null);
+                        } else {
+                          const app = apps?.find((a) => getAppLabel(a) === val);
+                          field.onChange(app ? app.id : null);
+                        }
+                      }}
+                      value={displayValue}
+                    >
+                      <ComboboxInput
+                        placeholder={isView ? "None" : "Select application..."}
+                        showClear={
+                          !!field.value && field.value !== "none" && !isView
+                        }
+                      />
+                      <ComboboxContent className="w-[--anchor-width] min-w-48">
+                        <ComboboxList>
+                          <ComboboxItem value="none">None</ComboboxItem>
+                          {apps?.map((a) => {
+                            const label = getAppLabel(a);
+                            return (
+                              <ComboboxItem key={a.id} value={label}>
+                                {label}
+                              </ComboboxItem>
+                            );
+                          })}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
+                  );
+                }}
               />
             </div>
             <div className="grid gap-2">
-              <Label>Category</Label>
+              <div className="space-y-1">
+                <Label>Category</Label>
+                <p className="text-[13px] text-muted-foreground">
+                  Group similar links together (optional).
+                </p>
+              </div>
               <Controller
                 control={form.control}
                 name="categoryId"
-                render={({ field }) => (
-                  <Select
-                    disabled={isView}
-                    onValueChange={field.onChange}
-                    value={field.value || "none"}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      {cats?.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                render={({ field }) => {
+                  const selectedCat = cats?.find((c) => c.id === field.value);
+                  const displayValue = selectedCat ? selectedCat.name : "none";
+                  return (
+                    <Combobox
+                      disabled={isView}
+                      onValueChange={(val) => {
+                        if (val === "none" || !val) {
+                          field.onChange(null);
+                        } else {
+                          const cat = cats?.find((c) => c.name === val);
+                          field.onChange(cat ? cat.id : null);
+                        }
+                      }}
+                      value={displayValue}
+                    >
+                      <ComboboxInput
+                        placeholder={isView ? "None" : "Select category..."}
+                        showClear={
+                          !!field.value && field.value !== "none" && !isView
+                        }
+                      />
+                      <ComboboxContent className="w-[--anchor-width] min-w-48">
+                        <ComboboxList>
+                          <ComboboxItem value="none">None</ComboboxItem>
+                          {cats?.map((c) => (
+                            <ComboboxItem key={c.id} value={c.name}>
+                              {c.name}
+                            </ComboboxItem>
+                          ))}
+                        </ComboboxList>
+                        {!isView && (
+                          <div className="border-t p-2">
+                            {isCreatingCat ? (
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  autoFocus
+                                  className="h-8"
+                                  onChange={(e) =>
+                                    setNewCatName(e.target.value)
+                                  }
+                                  onClick={(e) => e.stopPropagation()}
+                                  onKeyDown={(e) => {
+                                    e.stopPropagation();
+                                    if (
+                                      e.key === "Enter" &&
+                                      newCatName.trim()
+                                    ) {
+                                      e.preventDefault();
+                                      createCatMut.mutate(newCatName.trim());
+                                    } else if (e.key === "Escape") {
+                                      e.preventDefault();
+                                      setIsCreatingCat(false);
+                                    }
+                                  }}
+                                  placeholder="New category name..."
+                                  value={newCatName}
+                                />
+                                <Button
+                                  className="h-8 w-8 shrink-0 px-0"
+                                  disabled={
+                                    !newCatName.trim() || createCatMut.isPending
+                                  }
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    createCatMut.mutate(newCatName.trim());
+                                  }}
+                                  size="sm"
+                                  type="button"
+                                >
+                                  {createCatMut.isPending ? (
+                                    "..."
+                                  ) : (
+                                    <Plus className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                className="w-full justify-start text-xs"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setIsCreatingCat(true);
+                                }}
+                                size="sm"
+                                type="button"
+                                variant="ghost"
+                              >
+                                <Plus className="mr-2 h-3 w-3" />
+                                Quick Add Category
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </ComboboxContent>
+                    </Combobox>
+                  );
+                }}
               />
             </div>
           </div>
@@ -337,12 +498,22 @@ export function CreateLinkDialog({
             }
             tags={form.watch("tags") || []}
           />
-          <Textarea
-            placeholder="Notes"
-            {...form.register("description")}
-            disabled={isView}
-          />
-          <DialogFooter>
+          <div className="grid gap-2">
+            <div className="space-y-1">
+              <Label>Notes</Label>
+              <p className="text-[13px] text-muted-foreground">
+                Add any extra context or instructions here (optional).
+              </p>
+            </div>
+            <Textarea
+              className="resize-none"
+              disabled={isView}
+              placeholder="e.g. Access via VPN only..."
+              rows={3}
+              {...form.register("description")}
+            />
+          </div>
+          <DialogFooter className="pt-2">
             <Button
               onClick={() => setOpen(false)}
               type="button"

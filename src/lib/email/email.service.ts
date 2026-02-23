@@ -8,7 +8,7 @@ import { TeamRejectionEmail } from "./templates/team-rejection";
 // SMTP Configuration from environment variables
 const SMTP_HOST = process.env.SMTP_HOST || "smtp.freesmtpservers.com";
 const SMTP_PORT = Number.parseInt(process.env.SMTP_PORT || "25", 10);
-const SMTP_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || "ensemble@gmail.com";
+const SMTP_FROM_EMAIL = process.env.SMTP_FROM_EMAIL || "ensemble@aexp.com";
 const SMTP_FROM_NAME = process.env.SMTP_FROM_NAME || "Ensemble";
 
 // Create nodemailer transporter

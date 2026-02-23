@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Application } from "@/db/schema/teams";
 import type { TurnoverEntryWithDetails } from "@/db/schema/turnover";
+import { turnoverKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import type { TurnoverSection } from "@/lib/zod/turnover.schema";
 import { SECTION_CONFIG } from "@/lib/zod/turnover.schema";
@@ -68,13 +69,12 @@ export function SectionTable({
       : [applicationId];
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: [
-      "turnover-entries",
+    queryKey: turnoverKeys.entries.section(
       teamId,
       applicationIds,
       section,
-      "with-resolved",
-    ],
+      "with-resolved"
+    ),
     queryFn: async () => {
       // Fetch entries for all applications
       const entriesPromises = applicationIds.map((appId) =>

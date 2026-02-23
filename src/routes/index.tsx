@@ -134,8 +134,8 @@ function RouteComponent() {
                     Scorecard Metrics
                   </h3>
                   <p className="font-medium text-lg text-white/80 leading-relaxed">
-                    Visualize reliability, availability, and performance trends
-                    in real-time. Know your score before the meeting starts.
+                    Visualize availability, and performance trends in real-time.
+                    Know your score without any manual intervention.
                   </p>
                 </div>
 
@@ -352,7 +352,7 @@ function RouteComponent() {
                       </div>
                       <div className="flex h-10 w-full items-center rounded-xl border border-border bg-background px-3 shadow-inner">
                         <span className="font-bold text-foreground text-xs">
-                          Platform Trading Systems
+                          Information_Security_SRE
                         </span>
                         <motion.div
                           className="ml-auto flex h-5 w-5 items-center justify-center rounded-full border border-success/20 bg-success/10 text-success"
@@ -416,7 +416,7 @@ function RouteComponent() {
                       <div className="flex items-center gap-2 px-1">
                         <div className="h-1.5 w-1.5 rounded-full bg-success" />
                         <span className="truncate font-black text-xs tracking-tight">
-                          ENSEMBLE-PTS-USERS
+                          PRC_ENSEMBLE-IS-SRE-USERS
                         </span>
                       </div>
                     </div>
@@ -428,7 +428,7 @@ function RouteComponent() {
                       <div className="flex items-center gap-2 px-1">
                         <div className="h-1.5 w-1.5 rounded-full bg-success" />
                         <span className="truncate font-black text-xs tracking-tight">
-                          ENSEMBLE-PTS-ADMINS
+                          PRC_ENSEMBLE-IS-SRE-USERS
                         </span>
                       </div>
                     </div>
@@ -460,7 +460,7 @@ function RouteComponent() {
                   </h3>
                   <p className="px-2 font-medium text-muted-foreground text-sm leading-relaxed lg:px-4">
                     Hit submit and your robust suite is provisioned
-                    automatically. Scorecards, Turnover logs, and more—ready
+                    automatically. Scorecards, Turnover, and more ready
                     immediately.
                   </p>
                 </div>

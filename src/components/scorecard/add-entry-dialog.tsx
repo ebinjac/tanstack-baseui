@@ -78,11 +78,7 @@ export function AddEntryDialog({
         <form className="space-y-4 py-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-2">
             <Label htmlFor="name">Display Name</Label>
-            <Input
-              id="name"
-              {...register("name")}
-              placeholder="e.g., KMS-IDEAL"
-            />
+            <Input id="name" {...register("name")} placeholder="e.g., KMS" />
             {errors.name && (
               <p className="text-destructive text-sm">{errors.name.message}</p>
             )}
@@ -99,7 +95,7 @@ export function AddEntryDialog({
               id="scorecardIdentifier"
               {...register("scorecardIdentifier")}
               className="font-mono"
-              placeholder="e.g., kms-ideal-01"
+              placeholder="e.g., kms"
             />
             <p className="text-muted-foreground text-xs">
               A unique identifier used for API integrations. Leave empty to

@@ -271,10 +271,12 @@ export function EntryCard({
     <>
       <div
         className={cn(
-          "group relative rounded-lg border bg-card p-4 transition-all duration-200 hover:bg-accent/5 hover:shadow-md",
-          entry.isImportant && "border-l-4 border-l-orange-500/80",
-          entry.status === "RESOLVED" &&
-            "border-l-4 border-l-green-500/50 bg-muted/10 opacity-70"
+          "group relative rounded-lg border bg-card p-4 transition-all duration-300 hover:shadow-md",
+          entry.isImportant &&
+            "border-l-4 border-l-orange-500/80 shadow-orange-500/5 shadow-sm",
+          entry.status === "RESOLVED"
+            ? "border-l-4 border-l-green-500 bg-green-50/30 opacity-90 dark:bg-green-950/10"
+            : "hover:bg-accent/5"
         )}
       >
         {/* Header: Primary ID row */}
@@ -397,7 +399,7 @@ export function EntryCard({
           {/* Status Badge */}
           {entry.status === "RESOLVED" && (
             <Badge
-              className="h-[18px] gap-1 bg-green-100 px-1.5 py-0 text-[10px] text-green-700 dark:bg-green-900/30 dark:text-green-400"
+              className="h-[18px] gap-1 bg-green-100 px-1.5 py-0 text-[10px] text-green-700 dark:bg-green-900/40 dark:text-green-300"
               variant="secondary"
             >
               <CheckCircle className="h-2.5 w-2.5" />

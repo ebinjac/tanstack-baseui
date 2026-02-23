@@ -102,7 +102,7 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
       <PopoverTrigger
         className={cn(
           buttonVariants({ variant: "outline" }),
-          "h-11 w-full justify-between px-3 md:w-[260px]",
+          "h-11 justify-between px-3 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:border-none group-data-[collapsible=icon]:px-0",
           "border-border/40 bg-background/80 backdrop-blur-md",
           "hover:border-border/60 hover:bg-accent/50",
           "transition-colors duration-200",
@@ -110,18 +110,19 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
           className
         )}
       >
-        <div className="flex items-center gap-3 overflow-hidden">
+        <div className="flex h-full items-center gap-3 overflow-hidden group-data-[collapsible=icon]:gap-0">
           <div
             className={cn(
               "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
-              "font-bold text-[11px]",
+              "font-bold text-xs",
               "transition-all duration-200",
-              "border border-primary/20 bg-primary/10 text-primary"
+              "border border-primary/20 bg-primary/10 text-primary",
+              "group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 group-data-[collapsible=icon]:rounded-md"
             )}
           >
             {activeTeam ? getInitials(activeTeam.teamName) : "T"}
           </div>
-          <div className="flex flex-col items-start overflow-hidden">
+          <div className="flex flex-col items-start overflow-hidden group-data-[collapsible=icon]:hidden">
             <span className="truncate font-semibold text-sm tracking-tight">
               {activeTeam ? activeTeam.teamName : "Select Team..."}
             </span>
@@ -136,6 +137,7 @@ export function TeamSwitcher({ className, teams }: TeamSwitcherProps) {
           className={cn(
             "ml-2 h-4 w-4 shrink-0 text-muted-foreground/50",
             "transition-transform duration-200",
+            "group-data-[collapsible=icon]:hidden",
             open && "rotate-180"
           )}
         />

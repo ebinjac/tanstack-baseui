@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { ApplicationGroup } from "@/db/schema/application-groups";
 import type { Application } from "@/db/schema/teams";
+import { turnoverKeys } from "@/lib/query-keys";
 import type { TurnoverSection } from "@/lib/zod/turnover.schema";
 
 export const Route = createFileRoute("/teams/$teamId/turnover/pass-the-baton")({
@@ -103,7 +104,10 @@ function PassTheBatonPage() {
 
   // Fetch entries for all applications in the active tab
   const { data: allEntriesData } = useQuery({
-    queryKey: ["turnover-entries", teamId, activeAppIds, "all"],
+    queryKey: turnoverKeys.entries.filtered(teamId, {
+      applicationIds: activeAppIds,
+      includeResolved: true,
+    }),
     queryFn: async () => {
       if (activeAppIds.length === 0) {
         return { entries: [], total: 0 };

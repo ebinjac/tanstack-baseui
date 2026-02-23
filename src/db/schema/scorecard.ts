@@ -28,7 +28,7 @@ export const scorecardEntries = ensembleSchema.table(
     scorecardIdentifier: varchar("scorecard_identifier", { length: 100 })
       .notNull()
       .unique(),
-    // Display name (e.g., "KMS-IDEAL", "KMS-V1")
+    // Display name (e.g., "KMS", "KMS-V1")
     name: varchar("name", { length: 255 }).notNull(),
     // Threshold for availability (default 98%)
     availabilityThreshold: decimal("availability_threshold", {

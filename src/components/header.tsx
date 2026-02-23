@@ -1,5 +1,5 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { AnimatePresence, motion } from "framer-motion";
+import { domAnimation, LazyMotion, m } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
@@ -161,7 +161,7 @@ export function Header({ session }: { session: SessionData | null }) {
   const userInitials = `${user?.attributes.firstName?.[0] || ""}${user?.attributes.lastName?.[0] || ""}`;
 
   return (
-    <>
+    <LazyMotion features={domAnimation}>
       <header
         className={`fixed top-0 right-0 left-0 z-50 transition-all duration-150 ease-out ${
           scrolled
@@ -231,7 +231,7 @@ export function Header({ session }: { session: SessionData | null }) {
 
       {/* Spacer for fixed header */}
       <div className="h-16" />
-    </>
+    </LazyMotion>
   );
 }
 
@@ -241,7 +241,7 @@ export function Header({ session }: { session: SessionData | null }) {
 export function LogoLink() {
   return (
     <Link className="group flex items-center gap-3" to="/">
-      <motion.div
+      <m.div
         className="relative flex h-10 w-10 items-center justify-center"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -300,7 +300,7 @@ export function LogoLink() {
             />
           </g>
         </svg>
-      </motion.div>
+      </m.div>
       <div className="hidden flex-col sm:flex">
         <span className="font-black text-[22px] text-foreground leading-[1.1] tracking-tight">
           Ensemble
@@ -422,7 +422,7 @@ function DesktopNav({ tools }: { tools: Tool[] }) {
 // ============================================================================
 function ToolMenuItem({ tool, index }: { tool: Tool; index: number }) {
   return (
-    <motion.li
+    <m.li
       animate={{ opacity: 1, y: 0 }}
       initial={{ opacity: 0, y: 10 }}
       transition={{ delay: index * 0.05 }}
@@ -453,7 +453,7 @@ function ToolMenuItem({ tool, index }: { tool: Tool; index: number }) {
           </Link>
         }
       />
-    </motion.li>
+    </m.li>
   );
 }
 
@@ -596,46 +596,44 @@ interface MobileMenuProps {
 }
 
 function MobileMenu({ isOpen, onClose, tools, teams }: MobileMenuProps) {
+  if (!isOpen) {
+    return null;
+  }
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed inset-x-0 top-16 z-40 lg:hidden"
-          exit={{ opacity: 0, y: -10 }}
-          initial={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="border-border/50 border-b bg-background/95 shadow-xl backdrop-blur-xl">
-            <div className="mx-auto max-w-7xl space-y-2 px-4 py-4">
-              {tools.map((tool) => (
-                <Link
-                  className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-muted/50"
-                  key={tool.title}
-                  onClick={onClose}
-                  // biome-ignore lint/suspicious/noExplicitAny: TanStack Router dynamic route
-                  to={tool.href as any}
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-                    <tool.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-foreground">
-                      {tool.title}
-                    </div>
-                    <div className="text-muted-foreground text-xs">
-                      {tool.description}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-              <div className="mt-2 border-border/50 border-t pt-2">
-                <TeamSwitcher teams={teams} />
+    <m.div
+      animate={{ opacity: 1, y: 0 }}
+      className="fixed inset-x-0 top-16 z-40 lg:hidden"
+      exit={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="border-border/50 border-b bg-background/95 shadow-xl backdrop-blur-xl">
+        <div className="mx-auto max-w-7xl space-y-2 px-4 py-4">
+          {tools.map((tool) => (
+            <Link
+              className="flex items-center gap-3 rounded-xl p-3 transition-colors hover:bg-muted/50"
+              key={tool.title}
+              onClick={onClose}
+              // biome-ignore lint/suspicious/noExplicitAny: TanStack Router dynamic route
+              to={tool.href as any}
+            >
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                <tool.icon className="h-5 w-5 text-primary" />
               </div>
-            </div>
+              <div>
+                <div className="font-medium text-foreground">{tool.title}</div>
+                <div className="text-muted-foreground text-xs">
+                  {tool.description}
+                </div>
+              </div>
+            </Link>
+          ))}
+          <div className="mt-2 border-border/50 border-t pt-2">
+            <TeamSwitcher teams={teams} />
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </div>
+      </div>
+    </m.div>
   );
 }

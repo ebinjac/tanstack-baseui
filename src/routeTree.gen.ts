@@ -29,6 +29,7 @@ import { Route as TeamsTeamIdLinkManagerRouteImport } from './routes/teams/$team
 import { Route as TeamsTeamIdLinkManagerIndexRouteImport } from './routes/teams/$teamId/link-manager/index'
 import { Route as TeamsTeamIdTurnoverTurnoverMetricsRouteImport } from './routes/teams/$teamId/turnover/turnover-metrics'
 import { Route as TeamsTeamIdTurnoverTransitionHistoryRouteImport } from './routes/teams/$teamId/turnover/transition-history'
+import { Route as TeamsTeamIdTurnoverSettingsRouteImport } from './routes/teams/$teamId/turnover/settings'
 import { Route as TeamsTeamIdTurnoverPassTheBatonRouteImport } from './routes/teams/$teamId/turnover/pass-the-baton'
 import { Route as TeamsTeamIdTurnoverDispatchTurnoverRouteImport } from './routes/teams/$teamId/turnover/dispatch-turnover'
 import { Route as TeamsTeamIdLinkManagerStatsRouteImport } from './routes/teams/$teamId/link-manager/stats'
@@ -138,6 +139,12 @@ const TeamsTeamIdTurnoverTransitionHistoryRoute =
     path: '/transition-history',
     getParentRoute: () => TeamsTeamIdTurnoverRoute,
   } as any)
+const TeamsTeamIdTurnoverSettingsRoute =
+  TeamsTeamIdTurnoverSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => TeamsTeamIdTurnoverRoute,
+  } as any)
 const TeamsTeamIdTurnoverPassTheBatonRoute =
   TeamsTeamIdTurnoverPassTheBatonRouteImport.update({
     id: '/pass-the-baton',
@@ -192,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/teams/$teamId/link-manager/stats': typeof TeamsTeamIdLinkManagerStatsRoute
   '/teams/$teamId/turnover/dispatch-turnover': typeof TeamsTeamIdTurnoverDispatchTurnoverRoute
   '/teams/$teamId/turnover/pass-the-baton': typeof TeamsTeamIdTurnoverPassTheBatonRoute
+  '/teams/$teamId/turnover/settings': typeof TeamsTeamIdTurnoverSettingsRoute
   '/teams/$teamId/turnover/transition-history': typeof TeamsTeamIdTurnoverTransitionHistoryRoute
   '/teams/$teamId/turnover/turnover-metrics': typeof TeamsTeamIdTurnoverTurnoverMetricsRoute
   '/teams/$teamId/link-manager/': typeof TeamsTeamIdLinkManagerIndexRoute
@@ -217,6 +225,7 @@ export interface FileRoutesByTo {
   '/teams/$teamId/link-manager/stats': typeof TeamsTeamIdLinkManagerStatsRoute
   '/teams/$teamId/turnover/dispatch-turnover': typeof TeamsTeamIdTurnoverDispatchTurnoverRoute
   '/teams/$teamId/turnover/pass-the-baton': typeof TeamsTeamIdTurnoverPassTheBatonRoute
+  '/teams/$teamId/turnover/settings': typeof TeamsTeamIdTurnoverSettingsRoute
   '/teams/$teamId/turnover/transition-history': typeof TeamsTeamIdTurnoverTransitionHistoryRoute
   '/teams/$teamId/turnover/turnover-metrics': typeof TeamsTeamIdTurnoverTurnoverMetricsRoute
   '/teams/$teamId/link-manager': typeof TeamsTeamIdLinkManagerIndexRoute
@@ -245,6 +254,7 @@ export interface FileRoutesById {
   '/teams/$teamId/link-manager/stats': typeof TeamsTeamIdLinkManagerStatsRoute
   '/teams/$teamId/turnover/dispatch-turnover': typeof TeamsTeamIdTurnoverDispatchTurnoverRoute
   '/teams/$teamId/turnover/pass-the-baton': typeof TeamsTeamIdTurnoverPassTheBatonRoute
+  '/teams/$teamId/turnover/settings': typeof TeamsTeamIdTurnoverSettingsRoute
   '/teams/$teamId/turnover/transition-history': typeof TeamsTeamIdTurnoverTransitionHistoryRoute
   '/teams/$teamId/turnover/turnover-metrics': typeof TeamsTeamIdTurnoverTurnoverMetricsRoute
   '/teams/$teamId/link-manager/': typeof TeamsTeamIdLinkManagerIndexRoute
@@ -274,6 +284,7 @@ export interface FileRouteTypes {
     | '/teams/$teamId/link-manager/stats'
     | '/teams/$teamId/turnover/dispatch-turnover'
     | '/teams/$teamId/turnover/pass-the-baton'
+    | '/teams/$teamId/turnover/settings'
     | '/teams/$teamId/turnover/transition-history'
     | '/teams/$teamId/turnover/turnover-metrics'
     | '/teams/$teamId/link-manager/'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/teams/$teamId/link-manager/stats'
     | '/teams/$teamId/turnover/dispatch-turnover'
     | '/teams/$teamId/turnover/pass-the-baton'
+    | '/teams/$teamId/turnover/settings'
     | '/teams/$teamId/turnover/transition-history'
     | '/teams/$teamId/turnover/turnover-metrics'
     | '/teams/$teamId/link-manager'
@@ -326,6 +338,7 @@ export interface FileRouteTypes {
     | '/teams/$teamId/link-manager/stats'
     | '/teams/$teamId/turnover/dispatch-turnover'
     | '/teams/$teamId/turnover/pass-the-baton'
+    | '/teams/$teamId/turnover/settings'
     | '/teams/$teamId/turnover/transition-history'
     | '/teams/$teamId/turnover/turnover-metrics'
     | '/teams/$teamId/link-manager/'
@@ -489,6 +502,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeamsTeamIdTurnoverTransitionHistoryRouteImport
       parentRoute: typeof TeamsTeamIdTurnoverRoute
     }
+    '/teams/$teamId/turnover/settings': {
+      id: '/teams/$teamId/turnover/settings'
+      path: '/settings'
+      fullPath: '/teams/$teamId/turnover/settings'
+      preLoaderRoute: typeof TeamsTeamIdTurnoverSettingsRouteImport
+      parentRoute: typeof TeamsTeamIdTurnoverRoute
+    }
     '/teams/$teamId/turnover/pass-the-baton': {
       id: '/teams/$teamId/turnover/pass-the-baton'
       path: '/pass-the-baton'
@@ -567,6 +587,7 @@ const TeamsTeamIdLinkManagerRouteWithChildren =
 interface TeamsTeamIdTurnoverRouteChildren {
   TeamsTeamIdTurnoverDispatchTurnoverRoute: typeof TeamsTeamIdTurnoverDispatchTurnoverRoute
   TeamsTeamIdTurnoverPassTheBatonRoute: typeof TeamsTeamIdTurnoverPassTheBatonRoute
+  TeamsTeamIdTurnoverSettingsRoute: typeof TeamsTeamIdTurnoverSettingsRoute
   TeamsTeamIdTurnoverTransitionHistoryRoute: typeof TeamsTeamIdTurnoverTransitionHistoryRoute
   TeamsTeamIdTurnoverTurnoverMetricsRoute: typeof TeamsTeamIdTurnoverTurnoverMetricsRoute
 }
@@ -575,6 +596,7 @@ const TeamsTeamIdTurnoverRouteChildren: TeamsTeamIdTurnoverRouteChildren = {
   TeamsTeamIdTurnoverDispatchTurnoverRoute:
     TeamsTeamIdTurnoverDispatchTurnoverRoute,
   TeamsTeamIdTurnoverPassTheBatonRoute: TeamsTeamIdTurnoverPassTheBatonRoute,
+  TeamsTeamIdTurnoverSettingsRoute: TeamsTeamIdTurnoverSettingsRoute,
   TeamsTeamIdTurnoverTransitionHistoryRoute:
     TeamsTeamIdTurnoverTransitionHistoryRoute,
   TeamsTeamIdTurnoverTurnoverMetricsRoute:

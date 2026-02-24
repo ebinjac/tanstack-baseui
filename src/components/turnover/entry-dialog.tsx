@@ -37,6 +37,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import type { Application } from "@/db/schema/teams";
 import type { TurnoverEntryWithDetails } from "@/db/schema/turnover";
+import { turnoverKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import type {
   CreateTurnoverEntryInput,
@@ -104,11 +105,52 @@ function buildEditFormValues(teamId: string, entry: TurnoverEntryWithDetails) {
   };
 }
 
+export function buildItsmFormValues(
+  teamId: string,
+  section: TurnoverSection,
+  record: ItsmRecord
+) {
+  const data = record.rawData;
+  return {
+    teamId,
+    applicationId: "", // User must select
+    section,
+    title: record.externalId,
+    description: data.short_description || data.description || "",
+    comments: data.description || "",
+    isImportant: false,
+    rfcNumber: record.type === "RFC" ? record.externalId : "",
+    rfcStatus: (data.state ?? "") as RfcStatus,
+    validatedBy: data.assignment_group || "",
+    incidentNumber: record.type === "INC" ? record.externalId : "",
+    mimLink: "",
+    mimSlackLink: "",
+    emailSubject: "",
+    slackLink: "",
+  };
+}
+
+export interface ItsmRecord {
+  applicationId?: string | null;
+  externalId: string;
+  id: string;
+  rawData: {
+    short_description?: string;
+    description?: string;
+    state?: string;
+    assignment_group?: string;
+    opened_at?: string;
+    priority?: string;
+    [key: string]: string | number | boolean | null | undefined;
+  };
+  type: "RFC" | "INC";
+}
+
 interface EntryDialogProps {
   applicationId: string;
   editEntry?: TurnoverEntryWithDetails | null;
   groupApplications?: Application[];
-  // Group-related props
+  initialData?: ItsmRecord | null;
   isGrouped?: boolean;
   onOpenChange: (open: boolean) => void;
   open: boolean;
@@ -125,6 +167,7 @@ export function EntryDialog({
   editEntry,
   isGrouped = false,
   groupApplications = [],
+  initialData,
 }: EntryDialogProps) {
   const queryClient = useQueryClient();
   const isEditing = !!editEntry;
@@ -158,6 +201,8 @@ export function EntryDialog({
     if (open) {
       if (editEntry) {
         form.reset(buildEditFormValues(teamId, editEntry));
+      } else if (initialData) {
+        form.reset(buildItsmFormValues(teamId, section, initialData));
       } else {
         // For new entries in a group, default to the first application
         const defaultAppId =
@@ -193,6 +238,7 @@ export function EntryDialog({
     section,
     isGrouped,
     groupApplications,
+    initialData,
   ]);
 
   const createMutation = useMutation({
@@ -200,7 +246,9 @@ export function EntryDialog({
       createTurnoverEntry({ data }),
     onSuccess: () => {
       toast.success("Entry created successfully");
-      queryClient.invalidateQueries({ queryKey: ["turnover-entries", teamId] });
+      queryClient.invalidateQueries({
+        queryKey: turnoverKeys.entries.all(teamId),
+      });
       onOpenChange(false);
     },
     onError: (error: Error) => {
@@ -213,7 +261,9 @@ export function EntryDialog({
       updateTurnoverEntry({ data }),
     onSuccess: () => {
       toast.success("Entry updated successfully");
-      queryClient.invalidateQueries({ queryKey: ["turnover-entries", teamId] });
+      queryClient.invalidateQueries({
+        queryKey: turnoverKeys.entries.all(teamId),
+      });
       onOpenChange(false);
     },
     onError: (error: Error) => {

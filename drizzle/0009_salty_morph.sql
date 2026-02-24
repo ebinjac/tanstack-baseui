@@ -1,0 +1,1 @@
+ALTER TABLE "ensemble"."turnover_rfc_details" ADD COLUMN "cmdb_ci" varchar(255);

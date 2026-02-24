@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { untrackItsmRecord } from "@/app/actions/itsm";
 import {
   deleteTurnoverEntry,
   resolveTurnoverEntry,
@@ -180,6 +181,7 @@ export function EntryCard({
 }: EntryCardProps) {
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showUntrackDialog, setShowUntrackDialog] = useState(false);
   const [showResolveDialog, setShowResolveDialog] = useState(false);
   const [showInfoDialog, setShowInfoDialog] = useState(false);
 
@@ -188,6 +190,7 @@ export function EntryCard({
   const slaStatus = calculateSlaStatus(entry);
   const slaConfig = SLA_CONFIG[slaStatus];
   const SlaIcon = slaConfig.icon;
+  const isItsmEntry = !!(entry.rfcDetails || entry.incDetails);
 
   // Mutations
   const toggleImportantMutation = useMutation({
@@ -219,6 +222,23 @@ export function EntryCard({
     },
     onError: (error: Error) => {
       toast.error(error.message || "Failed to delete");
+    },
+  });
+
+  const untrackMutation = useMutation({
+    mutationFn: () =>
+      untrackItsmRecord({ data: { entryId: entry.id, teamId } }),
+    onSuccess: () => {
+      toast.success("ITSM record untracked");
+      // Double invalidate to ensure both the review queue (if open) and the main list are fresh
+      queryClient.invalidateQueries({
+        queryKey: turnoverKeys.entries.all(teamId),
+      });
+      queryClient.invalidateQueries({ queryKey: ["review-queue", teamId] });
+      setShowUntrackDialog(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to untrack");
     },
   });
 
@@ -347,10 +367,14 @@ export function EntryCard({
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
-                    onClick={() => setShowDeleteDialog(true)}
+                    onClick={() =>
+                      isItsmEntry
+                        ? setShowUntrackDialog(true)
+                        : setShowDeleteDialog(true)
+                    }
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
+                    {isItsmEntry ? "Untrack Record" : "Delete"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -526,7 +550,7 @@ export function EntryCard({
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete/Untrack Confirmation Dialogs */}
       <AlertDialog onOpenChange={setShowDeleteDialog} open={showDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -556,6 +580,41 @@ export function EntryCard({
                 </>
               ) : (
                 "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog onOpenChange={setShowUntrackDialog} open={showUntrackDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Untrack ITSM Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the entry from turnover and mark it as untracked.
+              It will **not** be re-added automatically during future syncs.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={untrackMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={untrackMutation.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                untrackMutation.mutate();
+              }}
+              type="button"
+            >
+              {untrackMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Untracking...
+                </>
+              ) : (
+                "Untrack"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

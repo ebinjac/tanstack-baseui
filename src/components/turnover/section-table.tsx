@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   FolderOpen,
   HelpCircle,
+  Inbox,
   Loader2,
   MessageSquare,
   Plus,
@@ -12,6 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { getTurnoverSettings } from "@/app/actions/itsm";
 import { getTurnoverEntries } from "@/app/actions/turnover";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +26,8 @@ import { cn } from "@/lib/utils";
 import type { TurnoverSection } from "@/lib/zod/turnover.schema";
 import { SECTION_CONFIG } from "@/lib/zod/turnover.schema";
 import { EntryCard } from "./entry-card";
-import { EntryDialog } from "./entry-dialog";
+import { EntryDialog, type ItsmRecord } from "./entry-dialog";
+import { ItsmSelectorDialog } from "./itsm-selector-dialog";
 
 const SECTION_ICONS: Record<
   TurnoverSection,
@@ -55,9 +58,12 @@ export function SectionTable({
   groupApplications = [],
 }: SectionTableProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [itsmSelectorOpen, setItsmSelectorOpen] = useState(false);
   const [editEntry, setEditEntry] = useState<TurnoverEntryWithDetails | null>(
     null
   );
+  const [selectedItsmRecord, setSelectedItsmRecord] =
+    useState<ItsmRecord | null>(null);
 
   const sectionConfig = SECTION_CONFIG[section];
   const SectionIcon = SECTION_ICONS[section];
@@ -99,6 +105,11 @@ export function SectionTable({
       return { entries: allEntries, total: allEntries.length };
     },
     staleTime: 30_000,
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ["turnover-settings", teamId],
+    queryFn: () => getTurnoverSettings({ data: teamId }),
   });
 
   const entries = data?.entries || [];
@@ -170,16 +181,32 @@ export function SectionTable({
               )}
             </div>
 
-            <Button
-              className="h-9 gap-2 rounded-xl border-white/10 border-t bg-gradient-to-br from-primary via-primary to-primary/90 px-4 font-semibold text-primary-foreground shadow-[0_8px_16px_-6px_rgba(59,130,246,0.3)] transition-all duration-300 hover:to-primary hover:shadow-[0_12px_20px_-8px_rgba(59,130,246,0.4)] active:scale-95"
-              onClick={handleAdd}
-              size="sm"
-            >
-              <div className="rounded-md bg-white/20 p-0.5 transition-colors group-hover:bg-white/30">
-                <Plus className="h-3.5 w-3.5" />
-              </div>
-              Add Entry
-            </Button>
+            <div className="flex gap-2">
+              {(section === "RFC" || section === "INC") &&
+                (section === "RFC"
+                  ? settings?.rfcImportMode === "REVIEW"
+                  : settings?.incImportMode === "REVIEW") && (
+                  <Button
+                    className="h-9 gap-2 rounded-xl border border-primary/20 bg-background px-4 font-semibold text-primary shadow-sm transition-all duration-300 hover:bg-primary/5 active:scale-95"
+                    onClick={() => setItsmSelectorOpen(true)}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <Inbox className="h-4 w-4" />
+                    ITSM
+                  </Button>
+                )}
+              <Button
+                className="h-9 gap-2 rounded-xl border-white/10 border-t bg-gradient-to-br from-primary via-primary to-primary/90 px-4 font-semibold text-primary-foreground shadow-[0_8px_16px_-6px_rgba(59,130,246,0.3)] transition-all duration-300 hover:to-primary hover:shadow-[0_12px_20px_-8px_rgba(59,130,246,0.4)] active:scale-95"
+                onClick={handleAdd}
+                size="sm"
+              >
+                <div className="rounded-md bg-white/20 p-0.5 transition-colors group-hover:bg-white/30">
+                  <Plus className="h-3.5 w-3.5" />
+                </div>
+                Add Entry
+              </Button>
+            </div>
           </CardHeader>
 
           {/* Content */}
@@ -240,14 +267,16 @@ export function SectionTable({
 
       {/* Entry Dialog */}
       <EntryDialog
-        applicationId={applicationId}
+        applicationId={selectedItsmRecord?.applicationId || applicationId}
         editEntry={editEntry}
         groupApplications={groupApplications}
+        initialData={selectedItsmRecord || undefined}
         isGrouped={isGrouped}
         onOpenChange={(open) => {
           setDialogOpen(open);
           if (!open) {
             setEditEntry(null);
+            setSelectedItsmRecord(null);
           }
         }}
         open={dialogOpen}
@@ -255,6 +284,23 @@ export function SectionTable({
         section={section}
         teamId={teamId}
       />
+
+      {/* ITSM Selector Dialog */}
+      {(section === "RFC" || section === "INC") && (
+        <ItsmSelectorDialog
+          applications={groupApplications.length > 0 ? groupApplications : []}
+          defaultApplicationId={applicationId}
+          onOpenChange={setItsmSelectorOpen}
+          onSelect={(record) => {
+            setSelectedItsmRecord(record);
+            setItsmSelectorOpen(false);
+            setDialogOpen(true);
+          }}
+          open={itsmSelectorOpen}
+          section={section as "RFC" | "INC"}
+          teamId={teamId}
+        />
+      )}
     </>
   );
 }

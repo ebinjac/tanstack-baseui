@@ -3,6 +3,7 @@ export * from "./links";
 export * from "./scorecard";
 export * from "./teams";
 export * from "./turnover";
+export * from "./turnover-settings";
 
 import {
   applicationGroupMemberships,
@@ -59,6 +60,18 @@ import {
   turnoverStatus,
 } from "./turnover";
 
+import {
+  importMode,
+  itsmRecordStatus,
+  itsmRecordType,
+  turnoverAppAssignmentGroups,
+  turnoverAppAssignmentGroupsRelations,
+  turnoverItsmRecords,
+  turnoverItsmRecordsRelations,
+  turnoverSettings,
+  turnoverSettingsRelations,
+} from "./turnover-settings";
+
 export default {
   ensembleSchema,
   approvalStatus,
@@ -100,4 +113,13 @@ export default {
   turnoverMimDetailsRelations,
   turnoverCommsDetailsRelations,
   finalizedTurnoversRelations,
+  importMode,
+  itsmRecordStatus,
+  itsmRecordType,
+  turnoverSettings,
+  turnoverItsmRecords,
+  turnoverAppAssignmentGroups,
+  turnoverSettingsRelations,
+  turnoverItsmRecordsRelations,
+  turnoverAppAssignmentGroupsRelations,
 };

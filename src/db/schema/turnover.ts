@@ -81,6 +81,7 @@ export const turnoverRfcDetails = ensembleSchema.table(
       .unique(),
     rfcNumber: varchar("rfc_number", { length: 50 }).notNull(),
     rfcStatus: varchar("rfc_status", { length: 50 }).notNull(),
+    cmdbCi: varchar("cmdb_ci", { length: 255 }),
     validatedBy: varchar("validated_by", { length: 255 }).notNull(),
   },
   (table) => [

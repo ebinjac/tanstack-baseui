@@ -4,7 +4,13 @@ import {
   redirect,
   useRouteContext,
 } from "@tanstack/react-router";
-import { ArrowRightLeft, BarChart3, History, Send } from "lucide-react";
+import {
+  ArrowRightLeft,
+  BarChart3,
+  History,
+  Send,
+  Settings2,
+} from "lucide-react";
 import { AppSidebar } from "@/components/shared/app-sidebar";
 
 export const Route = createFileRoute("/teams/$teamId/turnover")({
@@ -52,6 +58,11 @@ function TurnoverLayoutComponent() {
       title: "Turnover Metrics",
       url: `/teams/${teamId}/turnover/turnover-metrics`,
       icon: BarChart3,
+    },
+    {
+      title: "Turnover Settings",
+      url: `/teams/${teamId}/turnover/settings`,
+      icon: Settings2,
     },
   ];
 

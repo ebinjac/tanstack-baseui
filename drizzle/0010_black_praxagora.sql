@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "turnover_itsm_records_team_id_ext_id_unq" ON "ensemble"."turnover_itsm_records" USING btree ("team_id","external_id");

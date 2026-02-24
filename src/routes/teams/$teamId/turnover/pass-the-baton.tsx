@@ -1,9 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AlertTriangle, FolderOpen, Layers, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getApplicationGroups } from "@/app/actions/application-groups";
 import { getTeamApplications } from "@/app/actions/applications";
+import { getTurnoverSettings, syncItsmItems } from "@/app/actions/itsm";
 import { getTurnoverEntries } from "@/app/actions/turnover";
 import { PageHeader } from "@/components/shared";
 import { GroupManagementDialog } from "@/components/turnover/group-management-sheet";
@@ -46,6 +47,7 @@ const SECTIONS: TurnoverSection[] = [
 function PassTheBatonPage() {
   const { teamId } = Route.useParams();
   const { applications, groupsData: initialGroupsData } = Route.useLoaderData();
+  const queryClient = useQueryClient();
 
   // Fetch groups data with react-query for live updates
   const { data: groupsData } = useQuery({
@@ -54,8 +56,47 @@ function PassTheBatonPage() {
     initialData: initialGroupsData,
   });
 
+  // Fetch turnover settings to check for AUTO import mode
+  const { data: settings } = useQuery({
+    queryKey: ["turnover-settings", teamId],
+    queryFn: () => getTurnoverSettings({ data: teamId }),
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: (vars: {
+      data: { teamId: string; fallbackApplicationId?: string };
+    }) => syncItsmItems(vars),
+    onSuccess: () => {
+      // Invalidate both review queue and entries
+      queryClient.invalidateQueries({ queryKey: ["review-queue", teamId] });
+      queryClient.invalidateQueries({
+        queryKey: turnoverKeys.entries.all(teamId),
+      });
+      console.log("[AUTO-SYNC] Completed and invalidated entries.");
+    },
+  });
+
   // Track active tab and its applications
   const [activeTab, setActiveTab] = useState<TabItem | null>(null);
+
+  // Auto-sync if AUTO mode is enabled
+  useEffect(() => {
+    if (settings) {
+      const isAuto =
+        settings.rfcImportMode === "AUTO" || settings.incImportMode === "AUTO";
+      if (isAuto) {
+        console.log("[AUTO-SYNC] Triggering background sync...");
+        syncMutation.mutate({
+          data: {
+            teamId,
+            fallbackApplicationId: activeTab?.id?.startsWith("group-")
+              ? activeTab.applications[0]?.id
+              : activeTab?.id || applications?.[0]?.id,
+          },
+        });
+      }
+    }
+  }, [settings, teamId, syncMutation.mutate, activeTab, applications]); // Only trigger when settings load or team changes
 
   // Build initial tab on mount or when groupsData changes
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: complex tab initialization logic with groups

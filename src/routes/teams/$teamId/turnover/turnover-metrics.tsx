@@ -1,19 +1,25 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { format, subDays } from "date-fns";
 import { motion } from "framer-motion";
 import {
   Activity,
   AlertCircle,
+  AlertTriangle,
   BarChart3,
   Calendar,
   CheckCircle2,
   Download,
+  Loader2,
+  Minus,
   PieChart,
+  Sparkles,
   Star,
+  TrendingDown,
   TrendingUp,
+  Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import type { DateRange } from "react-day-picker";
 import {
   Area,
@@ -25,6 +31,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { analyzeTurnoverMetrics } from "@/app/actions/ai/analyze-turnover-metrics";
 import { getTurnoverMetrics } from "@/app/actions/turnover";
 import { StatsSummaryItem } from "@/components/link-manager/shared";
 import { PageHeader } from "@/components/shared";
@@ -50,6 +57,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { TurnoverSection } from "@/lib/zod/turnover.schema";
 import { SECTION_CONFIG } from "@/lib/zod/turnover.schema";
@@ -59,6 +67,293 @@ export const Route = createFileRoute(
 )({
   component: TurnoverMetricsPage,
 });
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type ResolutionRating = "excellent" | "good" | "needs-attention" | "critical";
+type TeamLoadRating = "low" | "moderate" | "high" | "overloaded";
+type AnomalySeverity = "info" | "warning" | "critical";
+
+interface Anomaly {
+  detail: string;
+  severity: AnomalySeverity;
+  title: string;
+}
+
+interface MetricsInsights {
+  anomalies: Anomaly[];
+  headline: string;
+  narrative: string;
+  recommendation: string;
+  resolutionRating: ResolutionRating;
+  teamLoadRating: TeamLoadRating;
+}
+
+// ─── AI Intelligence Panel ───────────────────────────────────────────────────
+
+const RESOLUTION_BADGE: Record<
+  ResolutionRating,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
+  excellent: { label: "Excellent", variant: "default" },
+  good: { label: "Good", variant: "secondary" },
+  "needs-attention": { label: "Needs Attention", variant: "outline" },
+  critical: { label: "Critical", variant: "destructive" },
+};
+
+const LOAD_BADGE: Record<
+  TeamLoadRating,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
+  low: { label: "Low Load", variant: "secondary" },
+  moderate: { label: "Moderate Load", variant: "outline" },
+  high: { label: "High Load", variant: "default" },
+  overloaded: { label: "Overloaded", variant: "destructive" },
+};
+
+const ANOMALY_STYLES: Record<
+  AnomalySeverity,
+  { icon: React.ElementType; bg: string; border: string; dot: string }
+> = {
+  info: {
+    icon: Minus,
+    bg: "bg-muted/50",
+    border: "border-muted",
+    dot: "bg-muted-foreground",
+  },
+  warning: {
+    icon: AlertTriangle,
+    bg: "bg-amber-500/5",
+    border: "border-amber-500/20",
+    dot: "bg-amber-500",
+  },
+  critical: {
+    icon: AlertCircle,
+    bg: "bg-destructive/5",
+    border: "border-destructive/20",
+    dot: "bg-destructive",
+  },
+};
+
+function TrendIcon({ trend }: { trend: "up" | "down" | "neutral" }) {
+  if (trend === "up") {
+    return <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />;
+  }
+  if (trend === "down") {
+    return <TrendingDown className="h-3.5 w-3.5 text-destructive" />;
+  }
+  return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
+}
+
+function ratingToTrend(r: ResolutionRating): "up" | "down" | "neutral" {
+  if (r === "excellent" || r === "good") {
+    return "up";
+  }
+  if (r === "critical") {
+    return "down";
+  }
+  return "neutral";
+}
+
+interface AIMetricsPanelProps {
+  activityTrend: { date: string; created: number; resolved: number }[];
+  dateRange: string;
+  kpis: {
+    totalEntries: number;
+    resolvedEntries: number;
+    openEntries: number;
+    criticalItems: number;
+    resolutionRate: number;
+  };
+  sectionDistribution: { section: string; count: number }[];
+}
+
+function AIMetricsPanel({
+  dateRange,
+  kpis,
+  sectionDistribution,
+  activityTrend,
+}: AIMetricsPanelProps) {
+  const [insights, setInsights] = React.useState<MetricsInsights | null>(null);
+
+  const analysisMutation = useMutation({
+    mutationFn: () =>
+      analyzeTurnoverMetrics({
+        data: { dateRange, kpis, sectionDistribution, activityTrend },
+      }),
+    onSuccess: (result) => setInsights(result as MetricsInsights),
+  });
+
+  const hasData = kpis.totalEntries > 0;
+
+  return (
+    <motion.div
+      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 20 }}
+      transition={{ delay: 0.4 }}
+    >
+      <Card className="border-primary/10 bg-primary/[0.02]">
+        <CardHeader className="flex flex-row items-center justify-between gap-3 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+              <Sparkles className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-base">AI Intelligence Brief</CardTitle>
+              <CardDescription className="text-[12px]">
+                AI-generated analysis of {dateRange}
+              </CardDescription>
+            </div>
+          </div>
+
+          {!analysisMutation.isPending && (
+            <Button
+              className="gap-2"
+              disabled={!hasData}
+              onClick={() => analysisMutation.mutate()}
+              size="sm"
+              title={
+                hasData ? "Analyse this period with AI" : "No data to analyse"
+              }
+              variant="outline"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              {insights ? "Re-analyse" : "Analyse Period"}
+            </Button>
+          )}
+
+          {analysisMutation.isPending && (
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              Analysing…
+            </div>
+          )}
+        </CardHeader>
+
+        {/* Prompt state */}
+        {!(insights || analysisMutation.isPending) && (
+          <CardContent className="px-6 pb-6">
+            <p className="rounded-xl border border-muted-foreground/20 border-dashed bg-muted/30 p-5 text-center text-[13px] text-muted-foreground">
+              {hasData
+                ? 'Click "Analyse Period" to get an AI-powered intelligence brief for the metrics above.'
+                : "No data in the selected range. Expand the date window and try again."}
+            </p>
+          </CardContent>
+        )}
+
+        {/* Loading shimmer */}
+        {analysisMutation.isPending && (
+          <CardContent className="space-y-3 px-6 pb-6">
+            {[72, 88, 55, 80, 65].map((w) => (
+              <div
+                className="h-3 animate-pulse rounded-full bg-muted"
+                key={w}
+                style={{ width: `${w}%` }}
+              />
+            ))}
+          </CardContent>
+        )}
+
+        {/* Results */}
+        {insights && !analysisMutation.isPending && (
+          <CardContent className="px-6 pb-6">
+            {/* Headline + Badges */}
+            <div className="mb-5 flex flex-wrap items-start gap-3">
+              <p className="flex-1 font-semibold text-base text-foreground leading-snug">
+                {insights.headline}
+              </p>
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <Badge
+                  className="gap-1 rounded-full"
+                  variant={RESOLUTION_BADGE[insights.resolutionRating].variant}
+                >
+                  <TrendIcon trend={ratingToTrend(insights.resolutionRating)} />
+                  {RESOLUTION_BADGE[insights.resolutionRating].label}
+                </Badge>
+                <Badge
+                  className="gap-1 rounded-full"
+                  variant={LOAD_BADGE[insights.teamLoadRating].variant}
+                >
+                  <Users className="h-3 w-3" />
+                  {LOAD_BADGE[insights.teamLoadRating].label}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Narrative */}
+            <p className="mb-5 text-[13px] text-foreground/80 leading-relaxed">
+              {insights.narrative}
+            </p>
+
+            {/* Anomalies */}
+            {insights.anomalies.length > 0 && (
+              <>
+                <Separator className="mb-4" />
+                <div className="mb-5">
+                  <p className="mb-3 flex items-center gap-1.5 font-semibold text-[11px] text-muted-foreground uppercase tracking-wider">
+                    <AlertTriangle className="h-3 w-3 text-amber-500" />
+                    Notable Patterns
+                  </p>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {insights.anomalies.map((a) => {
+                      const style = ANOMALY_STYLES[a.severity];
+                      return (
+                        <div
+                          className={cn(
+                            "flex items-start gap-3 rounded-xl border p-3",
+                            style.bg,
+                            style.border
+                          )}
+                          key={a.title}
+                        >
+                          <span
+                            className={cn(
+                              "mt-1.5 h-2 w-2 shrink-0 rounded-full",
+                              style.dot
+                            )}
+                          />
+                          <div>
+                            <p className="font-semibold text-foreground text-xs">
+                              {a.title}
+                            </p>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">
+                              {a.detail}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Recommendation */}
+            {insights.recommendation && (
+              <>
+                <Separator className="mb-4" />
+                <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-3">
+                  <p className="mb-1 font-semibold text-[11px] text-primary uppercase tracking-wider">
+                    Recommendation
+                  </p>
+                  <p className="text-[13px] text-foreground/80 leading-relaxed">
+                    {insights.recommendation}
+                  </p>
+                </div>
+              </>
+            )}
+          </CardContent>
+        )}
+      </Card>
+    </motion.div>
+  );
+}
 
 function TurnoverMetricsPage() {
   const { teamId } = Route.useParams();
@@ -115,10 +410,19 @@ function TurnoverMetricsPage() {
       (item: { section: string; count: number }) => ({
         name: item.section,
         value: item.count,
-        // Color is now handled by ChartContainer via CSS variables mapped in chartConfig
       })
     );
   }, [metrics]);
+
+  // Human-readable date range label for AI
+  const dateRangeLabel = useMemo(() => {
+    if (!dateRange?.from) {
+      return "last 30 days";
+    }
+    const from = format(dateRange.from, "MMM dd, yyyy");
+    const to = dateRange.to ? format(dateRange.to, "MMM dd, yyyy") : "today";
+    return `${from} – ${to}`;
+  }, [dateRange]);
 
   // Chart config - using direct HSL values for proper color rendering
   const chartConfig = {
@@ -453,6 +757,24 @@ function TurnoverMetricsPage() {
             </Card>
           </motion.div>
         )}
+
+      {/* AI Intelligence Brief */}
+      {metrics && (
+        <AIMetricsPanel
+          activityTrend={metrics.activityTrend ?? []}
+          dateRange={dateRangeLabel}
+          kpis={
+            metrics.kpis ?? {
+              totalEntries: 0,
+              resolvedEntries: 0,
+              openEntries: 0,
+              criticalItems: 0,
+              resolutionRate: 0,
+            }
+          }
+          sectionDistribution={metrics.sectionDistribution ?? []}
+        />
+      )}
     </div>
   );
 }

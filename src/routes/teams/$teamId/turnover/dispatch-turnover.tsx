@@ -17,10 +17,12 @@ import {
   MessageSquare,
   Search,
   Send,
+  Sparkles,
   Zap,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { generateHandoverSummary } from "@/app/actions/ai/handover-summary";
 import {
   canFinalizeTurnover,
   finalizeTurnover,
@@ -175,6 +177,34 @@ function DispatchTurnoverPage() {
     queryFn: () => canFinalizeTurnover({ data: { teamId } }),
   });
 
+  // AI-6: Generate handover brief
+  const briefMutation = useMutation({
+    mutationFn: () =>
+      generateHandoverSummary({
+        data: {
+          teamId,
+          entries: entries.map((e: TurnoverEntryWithDetails) => ({
+            section: e.section,
+            title: e.title,
+            status: e.status,
+            isImportant: e.isImportant,
+            appName: e.application?.applicationName ?? "Unknown",
+            description: e.description,
+            rfcNumber: e.rfcDetails?.rfcNumber,
+            rfcStatus: e.rfcDetails?.rfcStatus,
+            incidentNumber: e.incDetails?.incidentNumber,
+            mimLink: e.mimDetails?.mimLink,
+          })),
+        },
+      }),
+    onSuccess: ({ summary }) => {
+      setFinalizeNotes(summary);
+    },
+    onError: () => {
+      toast.error("AI brief generation failed");
+    },
+  });
+
   // Finalize mutation
   const finalizeMutation = useMutation({
     mutationFn: () =>
@@ -286,7 +316,11 @@ function DispatchTurnoverPage() {
               !canFinalizeData?.canFinalize ||
               entries.length === 0
             }
-            onClick={() => setFinalizeDialogOpen(true)}
+            onClick={() => {
+              setFinalizeDialogOpen(true);
+              setFinalizeNotes("");
+              briefMutation.mutate();
+            }}
             variant="secondary"
           >
             {checkingCooldown ? (
@@ -531,19 +565,38 @@ function DispatchTurnoverPage() {
 
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <label
-                  className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  htmlFor="finalize-notes"
-                >
-                  Shift Intelligence Notes
-                </label>
+                <div className="flex items-center justify-between">
+                  <label
+                    className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    htmlFor="finalize-notes"
+                  >
+                    Shift Handover Brief
+                  </label>
+                  {briefMutation.isPending && (
+                    <span className="flex items-center gap-1 font-semibold text-[10px] text-primary">
+                      <Sparkles className="h-2.5 w-2.5 animate-pulse" />
+                      AI generating brief…
+                    </span>
+                  )}
+                </div>
                 <Textarea
+                  disabled={briefMutation.isPending}
                   id="finalize-notes"
                   onChange={(e) => setFinalizeNotes(e.target.value)}
-                  placeholder="Add high-level summary or specific instructions for the incoming shift..."
-                  rows={4}
+                  placeholder="AI-generated handover brief will appear here. You can edit it before finalizing."
+                  rows={6}
                   value={finalizeNotes}
                 />
+                {!(briefMutation.isPending || finalizeNotes) && (
+                  <button
+                    className="flex items-center gap-1 self-start font-semibold text-[11px] text-primary hover:underline"
+                    onClick={() => briefMutation.mutate()}
+                    type="button"
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    Regenerate AI brief
+                  </button>
+                )}
               </div>
 
               <div className="space-y-3 rounded-md bg-muted p-4">

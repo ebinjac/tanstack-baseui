@@ -166,9 +166,11 @@ export function EntryRows({
               key={key}
             >
               <DataCell
+                appName={entry.name}
                 disabled={monthInfo.isFuture}
                 editable={isAdmin && !monthInfo.isFuture}
                 isBreach={isBreach}
+                month={monthInfo.label}
                 onSave={(newValue, reason) => {
                   const numValue = Number.parseFloat(newValue.replace("%", ""));
                   if (Number.isNaN(numValue)) {
@@ -257,10 +259,12 @@ export function EntryRows({
               key={key}
             >
               <DataCell
+                appName={entry.name}
                 changeValue={change}
                 disabled={monthInfo.isFuture}
                 editable={isAdmin && !monthInfo.isFuture}
                 isBreach={isBreach}
+                month={monthInfo.label}
                 onSave={(newValue, reason) => {
                   const numValue = parseVolumeInput(newValue);
                   if (numValue === null) {

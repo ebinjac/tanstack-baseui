@@ -10,6 +10,7 @@ import {
   Layers,
   Loader2,
   MessageSquare,
+  Sparkles,
   Star,
   Zap,
 } from "lucide-react";
@@ -17,6 +18,7 @@ import { useEffect } from "react";
 import type { FieldValues } from "react-hook-form";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { draftTurnoverEntry } from "@/app/actions/ai/draft-turnover-entry";
 import {
   createTurnoverEntry,
   updateTurnoverEntry,
@@ -232,6 +234,40 @@ export function EntryDialog({
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  // AI-5: Rewrite entry mutation
+  const draftMutation = useMutation({
+    mutationFn: () =>
+      draftTurnoverEntry({
+        data: {
+          section,
+          description: form.getValues("description") || undefined,
+          comments: form.getValues("comments") || undefined,
+          title: form.getValues("title") || undefined,
+          rfcNumber: form.getValues("rfcNumber") || undefined,
+          incidentNumber: form.getValues("incidentNumber") || undefined,
+        },
+      }),
+    onSuccess: ({ description, comments }) => {
+      if (description) {
+        form.setValue("description", description);
+      }
+      if (comments) {
+        form.setValue("comments", comments);
+      }
+    },
+    onError: () => {
+      toast.error("AI rewrite failed — please edit manually");
+    },
+  });
+
+  // Whether the user has typed enough for a rewrite
+  const hasRewritableContent =
+    (form.watch("description")?.trim().length ?? 0) > 0 ||
+    (form
+      .watch("comments")
+      ?.replace(/<[^>]+>/g, "")
+      .trim().length ?? 0) > 0;
+
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="min-w-[750px] max-w-2xl gap-0 overflow-hidden p-0">
@@ -240,7 +276,7 @@ export function EntryDialog({
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
             <SectionIcon className="h-5 w-5 text-muted-foreground" />
           </div>
-          <div>
+          <div className="flex-1">
             <DialogTitle className="font-semibold text-lg">
               {isEditing ? "Modify Entry" : `New ${sectionConfig.name}`}
             </DialogTitle>
@@ -250,6 +286,27 @@ export function EntryDialog({
                 : `Log a new ${sectionConfig.shortName.toLowerCase()} record.`}
             </p>
           </div>
+          {/* AI-5: Rewrite button in header */}
+          <button
+            className="flex items-center gap-1.5 rounded-xl border border-primary/20 bg-primary/5 px-3 py-1.5 font-semibold text-[11px] text-primary transition-all hover:bg-primary/10 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={
+              draftMutation.isPending || isPending || !hasRewritableContent
+            }
+            onClick={() => draftMutation.mutate()}
+            title={
+              hasRewritableContent
+                ? "Rewrite description & comments with AI"
+                : "Type a description or comments first"
+            }
+            type="button"
+          >
+            {draftMutation.isPending ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Sparkles className="h-3 w-3" />
+            )}
+            {draftMutation.isPending ? "Rewriting…" : "✨ AI Rewrite"}
+          </button>
         </div>
 
         {/* Form Body */}

@@ -1,4 +1,14 @@
-import { Activity, Filter, TrendingUp } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import {
+  Activity,
+  AlertTriangle,
+  Filter,
+  Loader2,
+  Minus,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import React, { useMemo, useState } from "react";
 import {
   Area,
@@ -11,8 +21,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { generateScorecardInsights } from "@/app/actions/ai/scorecard-insights";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import type { ChartConfig } from "@/components/ui/chart";
 import {
   ChartContainer,
@@ -21,6 +33,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -166,6 +179,273 @@ function buildEntryDataPoint(
     }
   }
 }
+
+// ─── AI-3: Health Insights Panel ────────────────────────────────────────────
+
+interface InsightRecord {
+  availability: string | null;
+  availabilityBreach: boolean;
+  month: string;
+  reason: string | null;
+  volume: number | null;
+  volumeBreach: boolean;
+  volumeChange: number | null;
+}
+
+interface AIInsightsPanelProps {
+  appName: string;
+  availabilityThreshold: number;
+  records: InsightRecord[];
+  volumeChangeThreshold: number;
+}
+
+interface InsightResult {
+  healthScore: number | null;
+  keyRisks: string[];
+  narrative: string;
+  recommendation: string;
+  trend: "improving" | "stable" | "degrading";
+}
+
+function getHealthScoreColor(score: number | null): string {
+  if (score === null) {
+    return "text-muted-foreground";
+  }
+  if (score >= 90) {
+    return "text-emerald-600 dark:text-emerald-400";
+  }
+  if (score >= 70) {
+    return "text-amber-600 dark:text-amber-400";
+  }
+  return "text-destructive";
+}
+
+function getHealthScoreRingClass(score: number | null): string {
+  if (score === null) {
+    return "border-muted";
+  }
+  if (score >= 90) {
+    return "border-emerald-500";
+  }
+  if (score >= 70) {
+    return "border-amber-500";
+  }
+  return "border-destructive";
+}
+
+function TrendIcon({ trend }: { trend: InsightResult["trend"] }) {
+  if (trend === "improving") {
+    return (
+      <TrendingUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+    );
+  }
+  if (trend === "degrading") {
+    return <TrendingDown className="h-3.5 w-3.5 text-destructive" />;
+  }
+  return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
+}
+
+function getTrendBadgeVariant(trend: InsightResult["trend"]) {
+  if (trend === "improving") {
+    return "default" as const;
+  }
+  if (trend === "degrading") {
+    return "destructive" as const;
+  }
+  return "secondary" as const;
+}
+
+function AIInsightsPanel({
+  appName,
+  availabilityThreshold,
+  volumeChangeThreshold,
+  records,
+}: AIInsightsPanelProps) {
+  const [insights, setInsights] = useState<InsightResult | null>(null);
+
+  const analysisMutation = useMutation({
+    mutationFn: () =>
+      generateScorecardInsights({
+        data: {
+          appName,
+          availabilityThreshold,
+          volumeChangeThreshold,
+          records,
+        },
+      }),
+    onSuccess: (result) => {
+      setInsights(result);
+    },
+  });
+
+  const hasData = records.some(
+    (r) => r.availability !== null || r.volume !== null
+  );
+
+  return (
+    <Card className="border-primary/10 bg-primary/[0.02]">
+      <CardHeader className="flex flex-row items-center justify-between gap-3 px-5 py-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground text-sm">
+              AI Health Insights
+            </p>
+            <p className="text-[11px] text-muted-foreground">{appName}</p>
+          </div>
+        </div>
+
+        {!analysisMutation.isPending && (
+          <Button
+            className="h-8 gap-1.5 rounded-lg text-xs"
+            disabled={!hasData}
+            onClick={() => analysisMutation.mutate()}
+            size="sm"
+            variant="outline"
+          >
+            {insights ? (
+              <>
+                <Sparkles className="h-3 w-3 text-primary" />
+                Re-analyse
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-3 w-3 text-primary" />
+                Analyse
+              </>
+            )}
+          </Button>
+        )}
+
+        {analysisMutation.isPending && (
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin text-primary" />
+            Analysing…
+          </div>
+        )}
+      </CardHeader>
+
+      {/* Empty / prompt state */}
+      {!(insights || analysisMutation.isPending) && (
+        <CardContent className="px-5 pb-5">
+          <p className="rounded-lg border border-muted-foreground/20 border-dashed bg-muted/30 p-4 text-center text-[12px] text-muted-foreground">
+            {hasData
+              ? "Click Analyse to get AI-powered health insights for the selected applications."
+              : "Add availability or volume data to the scorecard first, then run analysis."}
+          </p>
+        </CardContent>
+      )}
+
+      {/* Loading shimmer */}
+      {analysisMutation.isPending && (
+        <CardContent className="space-y-3 px-5 pb-5">
+          {[60, 80, 45, 70].map((w) => (
+            <div
+              className="h-3 animate-pulse rounded-full bg-muted"
+              key={w}
+              style={{ width: `${w}%` }}
+            />
+          ))}
+        </CardContent>
+      )}
+
+      {/* Insights result */}
+      {insights && !analysisMutation.isPending && (
+        <CardContent className="px-5 pb-5">
+          {/* Health score + trend */}
+          <div className="mb-4 flex items-start gap-4">
+            {/* Score ring */}
+            {insights.healthScore !== null && (
+              <div
+                className={cn(
+                  "flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-4",
+                  getHealthScoreRingClass(insights.healthScore)
+                )}
+              >
+                <span
+                  className={cn(
+                    "font-bold text-xl tabular-nums",
+                    getHealthScoreColor(insights.healthScore)
+                  )}
+                >
+                  {insights.healthScore}
+                </span>
+              </div>
+            )}
+
+            <div className="flex-1 space-y-1.5">
+              {/* Trend pill */}
+              <div className="flex items-center gap-2">
+                <Badge
+                  className="gap-1 rounded-full px-2.5 py-0.5 text-[11px] capitalize"
+                  variant={getTrendBadgeVariant(insights.trend)}
+                >
+                  <TrendIcon trend={insights.trend} />
+                  {insights.trend}
+                </Badge>
+                {insights.healthScore !== null && (
+                  <span className="text-[11px] text-muted-foreground">
+                    Health score
+                  </span>
+                )}
+              </div>
+
+              {/* Narrative */}
+              <p className="text-foreground/80 text-xs leading-relaxed">
+                {insights.narrative}
+              </p>
+            </div>
+          </div>
+
+          {/* Key Risks */}
+          {insights.keyRisks.length > 0 && (
+            <>
+              <Separator className="mb-4" />
+              <div className="mb-4">
+                <p className="mb-2 flex items-center gap-1.5 font-semibold text-[11px] text-muted-foreground uppercase tracking-wider">
+                  <AlertTriangle className="h-3 w-3 text-amber-500" />
+                  Key Risks
+                </p>
+                <ul className="space-y-1.5">
+                  {insights.keyRisks.map((risk) => (
+                    <li
+                      className="flex items-start gap-2 rounded-md border border-amber-500/10 bg-amber-500/5 px-3 py-2"
+                      key={risk}
+                    >
+                      <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                      <span className="text-[12px] text-foreground/80 leading-tight">
+                        {risk}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+
+          {/* Recommendation */}
+          {insights.recommendation && (
+            <>
+              <Separator className="mb-4" />
+              <div className="rounded-lg border border-primary/10 bg-primary/5 px-4 py-3">
+                <p className="mb-1 font-semibold text-[11px] text-primary uppercase tracking-wider">
+                  Recommendation
+                </p>
+                <p className="text-[12px] text-foreground/80 leading-relaxed">
+                  {insights.recommendation}
+                </p>
+              </div>
+            </>
+          )}
+        </CardContent>
+      )}
+    </Card>
+  );
+}
+
+// ─── Main Chart Sheet ────────────────────────────────────────────────────────
 
 export function MetricsChartSheet({
   open,
@@ -977,6 +1257,84 @@ export function MetricsChartSheet({
                     })}
                   </div>
                 </div>
+
+                {/* AI-3: Health Insights Panel */}
+                {viewLevel === "applications" && selectedApps.length >= 1 && (
+                  <AIInsightsPanel
+                    appName={
+                      selectedApps.length === 1
+                        ? selectedApps[0].applicationName
+                        : `${selectedApps.length} selected apps`
+                    }
+                    availabilityThreshold={
+                      selectedApps.length === 1
+                        ? Number.parseFloat(
+                            entriesByApp[selectedApps[0].id]?.[0]
+                              ?.availabilityThreshold ?? "98"
+                          )
+                        : 98
+                    }
+                    records={displayMonths
+                      .filter((m) => !m.isFuture)
+                      .map((m) => {
+                        const key = `${m.year}-${m.month}`;
+                        // Aggregate across selected apps
+                        let totalAvail = 0;
+                        let availCount = 0;
+                        let totalVol = 0;
+                        const volChange: number | null = null;
+                        let availBreach = false;
+                        const volBreach = false;
+                        let reason: string | undefined;
+
+                        for (const app of selectedApps) {
+                          const appEntries = entriesByApp[app.id] || [];
+                          for (const entry of appEntries) {
+                            const av = availabilityByEntry[entry.id]?.[key];
+                            if (av) {
+                              const val = Number.parseFloat(av.availability);
+                              if (!Number.isNaN(val)) {
+                                totalAvail += val;
+                                availCount++;
+                                if (av.reason && !reason) {
+                                  reason = av.reason;
+                                }
+                              }
+                            }
+                            const vol = volumeByEntry[entry.id]?.[key];
+                            if (vol) {
+                              totalVol += vol.volume;
+                            }
+                          }
+                        }
+
+                        const avgAvail =
+                          availCount > 0 ? totalAvail / availCount : null;
+                        if (avgAvail !== null) {
+                          availBreach = avgAvail < 98;
+                        }
+
+                        return {
+                          month: m.label,
+                          availability:
+                            avgAvail !== null ? avgAvail.toFixed(2) : null,
+                          availabilityBreach: availBreach,
+                          volume: totalVol > 0 ? totalVol : null,
+                          volumeChange: volChange,
+                          volumeBreach: volBreach,
+                          reason: reason ?? null,
+                        };
+                      })}
+                    volumeChangeThreshold={
+                      selectedApps.length === 1
+                        ? Number.parseFloat(
+                            entriesByApp[selectedApps[0].id]?.[0]
+                              ?.volumeChangeThreshold ?? "20"
+                          )
+                        : 20
+                    }
+                  />
+                )}
               </div>
             )}
           </div>

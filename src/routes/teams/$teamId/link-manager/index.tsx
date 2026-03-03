@@ -30,6 +30,7 @@ import {
   getLinks,
 } from "@/app/actions/links";
 import { CreateLinkDialog } from "@/components/link-manager/create-link-dialog";
+import { LinkAIAssistant } from "@/components/link-manager/link-ai-assistant";
 import {
   CompactView,
   GridView,
@@ -319,14 +320,17 @@ function LinkManagerIndexPage() {
         description="Central team repository for bookmarks & tools"
         title="Link Manager"
       >
-        <CreateLinkDialog
-          teamId={teamId}
-          trigger={
-            <Button className="gap-2" variant="secondary">
-              <Plus className="h-4 w-4" /> Add Link
-            </Button>
-          }
-        />
+        <div className="flex items-center gap-2">
+          <LinkAIAssistant teamId={teamId} />
+          <CreateLinkDialog
+            teamId={teamId}
+            trigger={
+              <Button className="gap-2" variant="secondary">
+                <Plus className="h-4 w-4" /> Add Link
+              </Button>
+            }
+          />
+        </div>
       </PageHeader>
 
       {/* Stats Summary Grid */}

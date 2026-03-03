@@ -95,7 +95,9 @@ function buildEditFormValues(teamId: string, entry: TurnoverEntryWithDetails) {
     comments: entry.comments || "",
     isImportant: entry.isImportant,
     rfcNumber: entry.rfcDetails?.rfcNumber || "",
-    rfcStatus: (entry.rfcDetails?.rfcStatus ?? "") as RfcStatus,
+    rfcStatus: (entry.rfcDetails?.rfcStatus ?? undefined) as
+      | RfcStatus
+      | undefined,
     validatedBy: entry.rfcDetails?.validatedBy || "",
     incidentNumber: entry.incDetails?.incidentNumber || "",
     mimLink: entry.mimDetails?.mimLink || "",

@@ -5,6 +5,7 @@ import {
   HeadContent,
   Scripts,
   useLocation,
+  useRouterState,
 } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { MotionConfig } from "framer-motion";
@@ -12,6 +13,8 @@ import { RootProvider } from "fumadocs-ui/provider/tanstack";
 import { getSession } from "@/app/ssr/auth";
 import { Header } from "@/components/header";
 import { SessionGuard } from "@/components/session-guard";
+import { GlobalNavigationProgress } from "@/components/shared/navigation-progress";
+import { PageSkeleton } from "@/components/skeletons/page-skeleton";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import type { RouterContext } from "@/router";
@@ -26,6 +29,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       return { session: null };
     }
   },
+  pendingComponent: PageSkeleton,
   head: () => ({
     meta: [
       {
@@ -53,7 +57,21 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { session, queryClient } = Route.useRouteContext();
   const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith("/admin");
+  const routerState = useRouterState();
+
+  // Use the pending pathname during navigation so UI decisions are based on
+  // where we're going, not where we currently are. This prevents header/hero
+  // flashing when transitioning between routes.
+  const effectivePath =
+    routerState.status === "pending" && routerState.location
+      ? routerState.location.pathname
+      : location.pathname;
+
+  const isAdminRoute = effectivePath.startsWith("/admin");
+  const hideHeader =
+    isAdminRoute ||
+    effectivePath.includes("/link-manager") ||
+    effectivePath.includes("/turnover");
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -63,15 +81,12 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider defaultTheme="system" storageKey="ensemble-theme">
           <MotionConfig reducedMotion="user">
+            <GlobalNavigationProgress />
             <QueryClientProvider client={queryClient}>
               <RootProvider>
                 <SessionGuard session={session}>
                   <div className="relative flex min-h-screen flex-col">
-                    {!(
-                      isAdminRoute ||
-                      location.pathname.includes("/link-manager") ||
-                      location.pathname.includes("/turnover")
-                    ) && <Header session={session} />}
+                    {!hideHeader && <Header session={session} />}
                     <main className="flex-1">{children}</main>
                   </div>
                   <Toaster />

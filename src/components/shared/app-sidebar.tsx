@@ -111,6 +111,7 @@ function AppSidebarContent({
                             "flex w-full items-center gap-2",
                             isActive(item.url, item.exact) && "font-medium"
                           )}
+                          preload="viewport"
                           to={item.url}
                         >
                           <item.icon className="h-4 w-4 shrink-0" />

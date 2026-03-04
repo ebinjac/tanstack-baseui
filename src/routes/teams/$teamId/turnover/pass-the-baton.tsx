@@ -7,6 +7,7 @@ import { getTeamApplications } from "@/app/actions/applications";
 import { getTurnoverSettings, syncItsmItems } from "@/app/actions/itsm";
 import { getTurnoverEntries } from "@/app/actions/turnover";
 import { PageHeader } from "@/components/shared";
+import { TurnoverSkeleton } from "@/components/skeletons/turnover-skeleton";
 import { GroupManagementDialog } from "@/components/turnover/group-management-sheet";
 import type { TabItem } from "@/components/turnover/grouped-application-tabs";
 import {
@@ -20,17 +21,27 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { ApplicationGroup } from "@/db/schema/application-groups";
 import type { Application } from "@/db/schema/teams";
-import { turnoverKeys } from "@/lib/query-keys";
+import { applicationKeys, turnoverKeys } from "@/lib/query-keys";
 import type { TurnoverSection } from "@/lib/zod/turnover.schema";
 
 export const Route = createFileRoute("/teams/$teamId/turnover/pass-the-baton")({
   component: PassTheBatonPage,
-  loader: async ({ params: { teamId } }) => {
-    const [applications, groupsData] = await Promise.all([
-      getTeamApplications({ data: { teamId } }),
-      getApplicationGroups({ data: { teamId } }),
+  pendingComponent: TurnoverSkeleton,
+  loader: async ({ params: { teamId }, context: { queryClient } }) => {
+    // Non-blocking: both queries are kicked off in parallel and cached.
+    // The component reads from the same cache keys — no double-fetch.
+    await Promise.all([
+      queryClient.ensureQueryData({
+        queryKey: applicationKeys.team(teamId),
+        queryFn: () => getTeamApplications({ data: { teamId } }),
+        staleTime: 1000 * 60,
+      }),
+      queryClient.ensureQueryData({
+        queryKey: turnoverKeys.groups(teamId),
+        queryFn: () => getApplicationGroups({ data: { teamId } }),
+        staleTime: 1000 * 60,
+      }),
     ]);
-    return { applications, groupsData };
   },
 });
 
@@ -46,14 +57,21 @@ const SECTIONS: TurnoverSection[] = [
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: multi-tab turnover page with grouped/flat views
 function PassTheBatonPage() {
   const { teamId } = Route.useParams();
-  const { applications, groupsData: initialGroupsData } = Route.useLoaderData();
   const queryClient = useQueryClient();
+
+  // Both queries are pre-warmed by the loader via ensureQueryData.
+  // Reading from cache here causes zero extra network calls.
+  const { data: applications } = useQuery({
+    queryKey: applicationKeys.team(teamId),
+    queryFn: () => getTeamApplications({ data: { teamId } }),
+    staleTime: 1000 * 60,
+  });
 
   // Fetch groups data with react-query for live updates
   const { data: groupsData } = useQuery({
-    queryKey: ["application-groups", teamId],
+    queryKey: turnoverKeys.groups(teamId),
     queryFn: () => getApplicationGroups({ data: { teamId } }),
-    initialData: initialGroupsData,
+    staleTime: 1000 * 60,
   });
 
   // Fetch turnover settings to check for AUTO import mode
@@ -128,13 +146,16 @@ function PassTheBatonPage() {
             applications: [ungroupedApps[0]],
           });
         }
-      } else if (applications.length > 0) {
-        setActiveTab({
-          id: applications[0].id,
-          label: applications[0].tla,
-          type: "application",
-          applications: [applications[0]],
-        });
+      } else {
+        const firstApp = applications?.[0];
+        if (firstApp) {
+          setActiveTab({
+            id: firstApp.id,
+            label: firstApp.tla,
+            type: "application",
+            applications: [firstApp],
+          });
+        }
       }
     }
   }, [groupsData, applications, activeTab]);

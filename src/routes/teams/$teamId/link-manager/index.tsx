@@ -66,6 +66,10 @@ const linkSearchSchema = z.object({
 
 const PAGE_SIZE = 30;
 
+import { logger } from "@/lib/logger";
+
+const log = logger.child({ module: "link-manager" });
+
 export const Route = createFileRoute("/teams/$teamId/link-manager/")({
   component: LinkManagerIndexPage,
   pendingComponent: LinkManagerSkeleton,
@@ -74,6 +78,8 @@ export const Route = createFileRoute("/teams/$teamId/link-manager/")({
     search: { search, visibility, applicationId, categoryId },
   }) => ({ search, visibility, applicationId, categoryId }),
   loader: async ({ params: { teamId }, context: { queryClient } }) => {
+    const t = performance.now();
+    log.debug({ teamId }, "link-manager loader: start");
     // Pre-warm categories and applications (small, static-ish) in parallel.
     // Links are intentionally excluded: useInfiniteQuery owns that data
     // and the pendingComponent skeleton covers the load time.
@@ -89,6 +95,10 @@ export const Route = createFileRoute("/teams/$teamId/link-manager/")({
         staleTime: 1000 * 60,
       }),
     ]);
+    log.debug(
+      { teamId, durationMs: Math.round(performance.now() - t) },
+      "link-manager loader: complete"
+    );
   },
 });
 

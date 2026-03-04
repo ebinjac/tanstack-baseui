@@ -17,15 +17,30 @@ import { GlobalNavigationProgress } from "@/components/shared/navigation-progres
 import { PageSkeleton } from "@/components/skeletons/page-skeleton";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { logger } from "@/lib/logger";
 import type { RouterContext } from "@/router";
 import appCss from "../styles.css?url";
 
+const log = logger.child({ module: "root" });
+
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async () => {
+    const t = performance.now();
     try {
       const session = await getSession();
+      log.debug(
+        {
+          durationMs: Math.round(performance.now() - t),
+          authenticated: !!session,
+        },
+        "root: getSession complete"
+      );
       return { session };
-    } catch (_e) {
+    } catch (err) {
+      log.error(
+        { err, durationMs: Math.round(performance.now() - t) },
+        "root: getSession failed"
+      );
       return { session: null };
     }
   },

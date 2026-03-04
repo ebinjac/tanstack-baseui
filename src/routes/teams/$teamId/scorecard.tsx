@@ -62,18 +62,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { logger } from "@/lib/logger";
 import { teamKeys } from "@/lib/query-keys";
-
 import { cn } from "@/lib/utils";
+
+const log = logger.child({ module: "scorecard" });
 
 export const Route = createFileRoute("/teams/$teamId/scorecard")({
   pendingComponent: ScorecardSkeleton,
-  loader: ({ params, context: { queryClient } }) =>
-    queryClient.ensureQueryData({
+  loader: async ({ params, context: { queryClient } }) => {
+    const t = performance.now();
+    log.debug({ teamId: params.teamId }, "scorecard loader: start");
+    const result = await queryClient.ensureQueryData({
       queryKey: teamKeys.detail(params.teamId),
       queryFn: () => getTeamById({ data: { teamId: params.teamId } }),
-      staleTime: 1000 * 60, // 1 minute — matches QueryClient default
-    }),
+      staleTime: 1000 * 60,
+    });
+    log.debug(
+      { teamId: params.teamId, durationMs: Math.round(performance.now() - t) },
+      "scorecard loader: complete"
+    );
+    return result;
+  },
   component: ScorecardPage,
 });
 

@@ -21,13 +21,18 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { ApplicationGroup } from "@/db/schema/application-groups";
 import type { Application } from "@/db/schema/teams";
+import { logger } from "@/lib/logger";
 import { applicationKeys, turnoverKeys } from "@/lib/query-keys";
 import type { TurnoverSection } from "@/lib/zod/turnover.schema";
+
+const log = logger.child({ module: "pass-the-baton" });
 
 export const Route = createFileRoute("/teams/$teamId/turnover/pass-the-baton")({
   component: PassTheBatonPage,
   pendingComponent: TurnoverSkeleton,
   loader: async ({ params: { teamId }, context: { queryClient } }) => {
+    const t = performance.now();
+    log.debug({ teamId }, "pass-the-baton loader: start");
     // Non-blocking: both queries are kicked off in parallel and cached.
     // The component reads from the same cache keys — no double-fetch.
     await Promise.all([
@@ -42,6 +47,10 @@ export const Route = createFileRoute("/teams/$teamId/turnover/pass-the-baton")({
         staleTime: 1000 * 60,
       }),
     ]);
+    log.debug(
+      { teamId, durationMs: Math.round(performance.now() - t) },
+      "pass-the-baton loader: complete"
+    );
   },
 });
 

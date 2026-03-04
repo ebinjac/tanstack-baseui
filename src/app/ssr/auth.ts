@@ -8,7 +8,10 @@ import { sealData, unsealData } from "iron-session";
 import type { SessionData } from "@/lib/auth/config";
 import { SESSION_CONFIG } from "@/lib/auth/config";
 import { resolveUserPermissions } from "@/lib/auth/service";
+import { logger } from "@/lib/logger";
 import { ssoUserSchema } from "@/lib/zod/auth.schema";
+
+const log = logger.child({ module: "auth" });
 
 // How long (ms) before we re-query the DB to refresh permissions.
 const PERMISSIONS_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -22,14 +25,21 @@ const SLIDING_WINDOW_THRESHOLD = 0.25; // re-seal in the last 25% of the session
 export const loginUser = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => ssoUserSchema.parse(data))
   .handler(async ({ data: ssoUser }) => {
+    const email = ssoUser.attributes.email;
+    log.info({ email }, "loginUser: start");
+
     // 0. Email domain guard — defence in depth against forged SSO payloads.
-    //    Adjust the domain suffix to match your organisation's email policy.
-    if (!ssoUser.attributes.email.endsWith("@aexp.com")) {
+    if (!email.endsWith("@aexp.com")) {
+      log.warn({ email }, "loginUser: rejected — invalid email domain");
       throw new Error("Unauthorized: invalid email domain");
     }
 
     // 1. Resolve Permissions from DB
     const permissions = await resolveUserPermissions(ssoUser.groups);
+    log.info(
+      { email, permissionsCount: permissions.length },
+      "loginUser: permissions resolved"
+    );
 
     const now = Date.now();
     const maxAgeMs = SESSION_CONFIG.cookieOptions.maxAge * 1000;
@@ -39,10 +49,9 @@ export const loginUser = createServerFn({ method: "POST" })
       user: {
         firstName: ssoUser.attributes.firstName,
         lastName: ssoUser.attributes.lastName,
-        email: ssoUser.attributes.email,
+        email,
         adsId: ssoUser.attributes.adsId,
       },
-      // Keep the LDAP groups so getSession() can re-resolve without a new login
       groups: ssoUser.groups,
       permissions,
       expiresAt: now + maxAgeMs,
@@ -61,6 +70,7 @@ export const loginUser = createServerFn({ method: "POST" })
       SESSION_CONFIG.cookieOptions
     );
 
+    log.debug({ email }, "loginUser: session sealed and cookie set");
     return { success: true, permissions };
   });
 
@@ -70,15 +80,13 @@ export const loginUser = createServerFn({ method: "POST" })
  * Side-effects (transparent to the caller):
  *  - Auto-refreshes permissions every PERMISSIONS_REFRESH_INTERVAL ms.
  *  - Slides the session expiry when <SLIDING_WINDOW_THRESHOLD of maxAge is left.
- *
- * Both re-seals happen in a fire-and-forget `void` call so they don't add
- * latency to the critical path of serving the page.
  */
 export const getSession = createServerFn({ method: "GET" }).handler(
   async () => {
     const cookie = getCookie(SESSION_CONFIG.cookieName);
 
     if (!cookie) {
+      log.debug("getSession: no cookie found");
       return null;
     }
 
@@ -92,6 +100,10 @@ export const getSession = createServerFn({ method: "GET" }).handler(
 
       // 2. Verify Expiration
       if (now > session.expiresAt) {
+        log.warn(
+          { email: session.user.email },
+          "getSession: session expired — clearing cookie"
+        );
         deleteCookie(SESSION_CONFIG.cookieName);
         return null;
       }
@@ -101,24 +113,38 @@ export const getSession = createServerFn({ method: "GET" }).handler(
       let needsReseal = false;
 
       // 3. Auto-refresh permissions if groups are stored and refresh interval has elapsed.
-      //    Falls back gracefully for old cookies that don't have `groups` yet.
       const lastRefresh = session.refreshedAt ?? 0;
       if (
         session.groups?.length &&
         now - lastRefresh > PERMISSIONS_REFRESH_INTERVAL
       ) {
+        log.info(
+          { email: session.user.email },
+          "getSession: auto-refreshing permissions"
+        );
         const freshPermissions = await resolveUserPermissions(session.groups);
         updatedSession = {
           ...updatedSession,
           permissions: freshPermissions,
           refreshedAt: now,
         };
+        log.info(
+          {
+            email: session.user.email,
+            permissionsCount: freshPermissions.length,
+          },
+          "getSession: permissions refreshed"
+        );
         needsReseal = true;
       }
 
       // 4. Sliding session window: extend expiry when close to the end.
       const timeLeft = updatedSession.expiresAt - now;
       if (timeLeft < maxAgeMs * SLIDING_WINDOW_THRESHOLD) {
+        log.debug(
+          { email: session.user.email, timeLeftMs: timeLeft },
+          "getSession: sliding session window"
+        );
         updatedSession = { ...updatedSession, expiresAt: now + maxAgeMs };
         needsReseal = true;
       }
@@ -133,11 +159,23 @@ export const getSession = createServerFn({ method: "GET" }).handler(
           resealed,
           SESSION_CONFIG.cookieOptions
         );
+        log.debug(
+          { email: session.user.email },
+          "getSession: session re-sealed"
+        );
       }
 
+      log.debug(
+        {
+          email: session.user.email,
+          permissionsCount: updatedSession.permissions.length,
+        },
+        "getSession: session valid"
+      );
       return updatedSession;
-    } catch (_error) {
+    } catch (err) {
       // If decryption fails (tampered cookie), clear it
+      log.error({ err }, "getSession: decryption failed — clearing cookie");
       deleteCookie(SESSION_CONFIG.cookieName);
       return null;
     }

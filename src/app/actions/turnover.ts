@@ -1,4 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
+import { logger } from "@/lib/logger";
+
+const log = logger.child({ module: "turnover" });
+
 import { and, count, desc, eq, gte, ilike, lte, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
@@ -35,6 +39,10 @@ export const createTurnoverEntry = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => CreateTurnoverEntrySchema.parse(data))
   .handler(async ({ data, context }) => {
     const userName = context.userName;
+    log.info(
+      { teamId: data.teamId, section: data.section, userName },
+      "createTurnoverEntry: start"
+    );
 
     // Generate title based on section if not provided
     let title = data.title;
@@ -119,6 +127,10 @@ export const createTurnoverEntry = createServerFn({ method: "POST" })
         break;
     }
 
+    log.info(
+      { entryId: entry.id, section: data.section, userName },
+      "createTurnoverEntry: success"
+    );
     return { success: true, entryId: entry.id };
   });
 
@@ -265,6 +277,7 @@ export const updateTurnoverEntry = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => UpdateTurnoverEntrySchema.parse(data))
   .handler(async ({ data, context }) => {
     const userName = context.userName;
+    log.info({ entryId: data.id, userName }, "updateTurnoverEntry: start");
 
     // Verify entry exists
     const existingEntry = await db.query.turnoverEntries.findFirst({
@@ -272,6 +285,7 @@ export const updateTurnoverEntry = createServerFn({ method: "POST" })
     });
 
     if (!existingEntry) {
+      log.warn({ entryId: data.id }, "updateTurnoverEntry: entry not found");
       throw new Error("Entry not found");
     }
 
@@ -301,6 +315,7 @@ export const updateTurnoverEntry = createServerFn({ method: "POST" })
     // Update section-specific details
     await updateTurnoverSectionDetails(data, existingEntry.section);
 
+    log.info({ entryId: data.id, userName }, "updateTurnoverEntry: success");
     return { success: true };
   });
 
@@ -311,9 +326,10 @@ export const deleteTurnoverEntry = createServerFn({ method: "POST" })
   .middleware([requireAuth])
   .inputValidator((data: unknown) => DeleteEntrySchema.parse(data))
   .handler(async ({ data }) => {
+    log.info({ entryId: data.id }, "deleteTurnoverEntry: start");
     // Delete entry (cascades to extension tables)
     await db.delete(turnoverEntries).where(eq(turnoverEntries.id, data.id));
-
+    log.info({ entryId: data.id }, "deleteTurnoverEntry: success");
     return { success: true };
   });
 
@@ -325,6 +341,10 @@ export const toggleImportantEntry = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => ToggleImportantSchema.parse(data))
   .handler(async ({ data, context }) => {
     const userName = context.userName;
+    log.info(
+      { entryId: data.id, isImportant: data.isImportant, userName },
+      "toggleImportantEntry"
+    );
 
     await db
       .update(turnoverEntries)
@@ -346,6 +366,7 @@ export const resolveTurnoverEntry = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => ResolveEntrySchema.parse(data))
   .handler(async ({ data, context }) => {
     const userName = context.userName;
+    log.info({ entryId: data.id, userName }, "resolveTurnoverEntry: start");
 
     await db
       .update(turnoverEntries)
@@ -358,6 +379,7 @@ export const resolveTurnoverEntry = createServerFn({ method: "POST" })
       })
       .where(eq(turnoverEntries.id, data.id));
 
+    log.info({ entryId: data.id, userName }, "resolveTurnoverEntry: success");
     return { success: true };
   });
 
@@ -536,12 +558,17 @@ export const finalizeTurnover = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => FinalizeTurnoverSchema.parse(data))
   .handler(async ({ data, context }) => {
     const userName = context.userName;
+    log.info({ teamId: data.teamId, userName }, "finalizeTurnover: start");
 
     // Check cooldown
     const canFinalizeResult = await canFinalizeTurnover({
       data: { teamId: data.teamId },
     });
     if (!canFinalizeResult.canFinalize) {
+      log.warn(
+        { teamId: data.teamId, message: canFinalizeResult.message },
+        "finalizeTurnover: cooldown active"
+      );
       throw new Error(canFinalizeResult.message);
     }
 
@@ -591,6 +618,15 @@ export const finalizeTurnover = createServerFn({ method: "POST" })
       finalizedBy: userName,
     });
 
+    log.info(
+      {
+        teamId: data.teamId,
+        userName,
+        totalEntries: entries.length,
+        importantCount,
+      },
+      "finalizeTurnover: success"
+    );
     return { success: true };
   });
 

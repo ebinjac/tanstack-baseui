@@ -5,11 +5,7 @@ export const CreateScorecardEntrySchema = z.object({
   applicationId: z.uuid("Invalid application ID"),
   scorecardIdentifier: z
     .string()
-    .max(100, "Identifier must be less than 100 characters")
-    .regex(
-      /^[a-zA-Z0-9_-]*$/,
-      "Identifier can only contain letters, numbers, hyphens, and underscores"
-    )
+    .max(255, "Identifier must be less than 255 characters")
     .optional()
     .or(z.literal("")),
   name: z
@@ -26,17 +22,19 @@ export const CreateScorecardEntrySchema = z.object({
     .max(100, "Threshold must be at most 100"),
 });
 
+// Fetch Year Data Schema (for proxying the external API)
+export const FetchYearDataSchema = z.object({
+  scorecardIdentifier: z.string().min(1),
+  timeframe: z.string().default("12"),
+});
+
 // Update Scorecard Entry Schema
 export const UpdateScorecardEntrySchema = z.object({
   id: z.uuid("Invalid entry ID"),
   scorecardIdentifier: z
     .string()
-    .min(2, "Identifier must be at least 2 characters")
-    .max(100, "Identifier must be less than 100 characters")
-    .regex(
-      /^[a-zA-Z0-9_-]+$/,
-      "Identifier can only contain letters, numbers, hyphens, and underscores"
-    )
+    .min(1, "Identifier must not be empty")
+    .max(255, "Identifier must be less than 255 characters")
     .optional(),
   name: z
     .string()
@@ -140,3 +138,4 @@ export type GetScorecardData = z.infer<typeof GetScorecardDataSchema>;
 export type PublishScorecard = z.infer<typeof PublishScorecardSchema>;
 export type UnpublishScorecard = z.infer<typeof UnpublishScorecardSchema>;
 export type GetPublishStatus = z.infer<typeof GetPublishStatusSchema>;
+export type FetchYearData = z.infer<typeof FetchYearDataSchema>;

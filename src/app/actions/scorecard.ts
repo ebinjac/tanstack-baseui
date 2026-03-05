@@ -92,27 +92,19 @@ export const createScorecardEntry = createServerFn({ method: "POST" })
 
     const userEmail = context.userEmail;
 
-    // Generate or use provided scorecardIdentifier
-    let identifier = data.scorecardIdentifier?.trim();
+    const identifier = data.scorecardIdentifier?.trim() || null;
 
-    if (!identifier) {
-      // Auto-generate identifier from name + random suffix
-      const baseId = data.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "")
-        .slice(0, 50);
-      const suffix = Math.random().toString(36).substring(2, 8);
-      identifier = `${baseId}-${suffix}`;
-    }
+    // Only check uniqueness when an identifier is provided
+    if (identifier) {
+      const existing = await db.query.scorecardEntries.findFirst({
+        where: (entries, { eq }) => eq(entries.scorecardIdentifier, identifier),
+      });
 
-    // Check uniqueness of scorecardIdentifier
-    const existing = await db.query.scorecardEntries.findFirst({
-      where: (entries, { eq }) => eq(entries.scorecardIdentifier, identifier),
-    });
-
-    if (existing) {
-      throw new Error(`Scorecard identifier "${identifier}" is already in use`);
+      if (existing) {
+        throw new Error(
+          `Scorecard identifier "${identifier}" is already in use`
+        );
+      }
     }
 
     try {
@@ -120,7 +112,7 @@ export const createScorecardEntry = createServerFn({ method: "POST" })
         .insert(scorecardEntries)
         .values({
           applicationId: data.applicationId,
-          scorecardIdentifier: identifier,
+          scorecardIdentifier: identifier ?? "",
           name: data.name,
           availabilityThreshold: String(data.availabilityThreshold),
           volumeChangeThreshold: String(data.volumeChangeThreshold),
@@ -130,7 +122,6 @@ export const createScorecardEntry = createServerFn({ method: "POST" })
 
       return { success: true, entry: newEntry };
     } catch (error: unknown) {
-      console.error("Failed to create scorecard entry:", error);
       const message =
         error instanceof Error
           ? error.message

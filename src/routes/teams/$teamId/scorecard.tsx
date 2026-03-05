@@ -544,6 +544,7 @@ function ScorecardPage() {
               scorecard.setEditingEntry(null);
             }}
             open={!!scorecard.editingEntry}
+            teamId={teamId}
           />
         )}
 

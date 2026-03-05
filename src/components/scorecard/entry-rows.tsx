@@ -1,7 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, RefreshCw, Trash2 } from "lucide-react";
 import { useMemo } from "react";
+import { toast } from "sonner";
 import { upsertAvailability, upsertVolume } from "@/app/actions/scorecard";
+import { syncScorecardEntry } from "@/app/actions/year-data";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { scorecardKeys } from "@/lib/query-keys";
@@ -55,6 +57,25 @@ export function EntryRows({
       queryClient.invalidateQueries({
         queryKey: scorecardKeys.team(teamId),
       });
+    },
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: () =>
+      syncScorecardEntry({ data: { entryId: entry.id, timeframe: "12" } }),
+    onSuccess: (result) => {
+      const parts: string[] = [`${result.synced} months synced`];
+      if (result.skippedZeros > 0) {
+        parts.push(`${result.skippedZeros} zero-value records skipped`);
+      }
+      if (result.skippedManual > 0) {
+        parts.push(`${result.skippedManual} manual corrections preserved`);
+      }
+      toast.success("Sync complete", { description: parts.join(" · ") });
+      queryClient.invalidateQueries({ queryKey: scorecardKeys.team(teamId) });
+    },
+    onError: (err: Error) => {
+      toast.error(`Sync failed: ${err.message}`);
     },
   });
 
@@ -218,6 +239,20 @@ export function EntryRows({
             rowSpan={2}
           >
             <div className="flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+              <Button
+                className="h-8 w-8 rounded-lg transition-all hover:bg-blue-500/10 hover:text-blue-600"
+                disabled={syncMutation.isPending}
+                onClick={() => syncMutation.mutate()}
+                size="icon"
+                title="Sync from Year Data API"
+                variant="ghost"
+              >
+                {syncMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
               <Button
                 className="h-8 w-8 rounded-lg transition-all hover:bg-primary/10 hover:text-primary"
                 onClick={onEdit}

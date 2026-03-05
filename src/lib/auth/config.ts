@@ -9,6 +9,8 @@ export const SessionSchema = z.object({
     email: z.email(),
     adsId: z.string(),
   }),
+  // LDAP groups snapshot — kept so we can re-resolve permissions without a new login
+  groups: z.array(z.string()).optional(),
   permissions: z.array(
     z.object({
       teamId: z.string(),
@@ -17,6 +19,8 @@ export const SessionSchema = z.object({
     })
   ),
   expiresAt: z.number(), // Unix timestamp
+  // When permissions were last refreshed (Unix ms). Used for auto-refresh logic.
+  refreshedAt: z.number().optional(),
 });
 
 export type SessionData = z.infer<typeof SessionSchema>;

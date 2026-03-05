@@ -38,7 +38,6 @@ export async function resolveUserPermissions(
 
   for (const team of matchingTeams) {
     const isAdmin = userGroups.includes(team.adminGroup);
-    const _isMember = userGroups.includes(team.userGroup);
 
     // Current determined role for this specific row match
     let calculatedRole: "ADMIN" | "MEMBER" = "MEMBER";

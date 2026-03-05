@@ -1,4 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouteContext } from "@tanstack/react-router";
+
 import {
   Activity,
   AlertTriangle,
@@ -33,6 +35,7 @@ import {
   useScorecard,
 } from "@/components/scorecard";
 import { PageHeader } from "@/components/shared";
+import { ScorecardSkeleton } from "@/components/skeletons/scorecard-skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,24 +62,42 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { logger } from "@/lib/logger";
+import { teamKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 
+const log = logger.child({ module: "scorecard" });
+
 export const Route = createFileRoute("/teams/$teamId/scorecard")({
-  loader: async ({ params }) => {
-    const team = await getTeamById({ data: { teamId: params.teamId } });
-    if (!team) {
-      throw new Error("Team not found");
-    }
-    return { team };
+  pendingComponent: ScorecardSkeleton,
+  loader: async ({ params, context: { queryClient } }) => {
+    const t = performance.now();
+    log.debug({ teamId: params.teamId }, "scorecard loader: start");
+    const result = await queryClient.ensureQueryData({
+      queryKey: teamKeys.detail(params.teamId),
+      queryFn: () => getTeamById({ data: { teamId: params.teamId } }),
+      staleTime: 1000 * 60,
+    });
+    log.debug(
+      { teamId: params.teamId, durationMs: Math.round(performance.now() - t) },
+      "scorecard loader: complete"
+    );
+    return result;
   },
   component: ScorecardPage,
 });
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: scorecard page with multiple interactive states
 function ScorecardPage() {
-  const { team } = Route.useLoaderData();
   const { teamId } = Route.useParams();
   const { session } = useRouteContext({ from: "__root__" });
+
+  // Loader called ensureQueryData → data is already in cache; no extra fetch.
+  const { data: team } = useQuery({
+    queryKey: teamKeys.detail(teamId),
+    queryFn: () => getTeamById({ data: { teamId } }),
+    staleTime: 1000 * 60,
+  });
 
   const isAdmin =
     session?.permissions?.some(
@@ -108,7 +129,7 @@ function ScorecardPage() {
           description={
             <>
               Tracking for{" "}
-              <span className="font-bold text-white">{team.teamName}</span>
+              <span className="font-bold text-white">{team?.teamName}</span>
             </>
           }
           title="Performance Scorecard"
@@ -523,6 +544,7 @@ function ScorecardPage() {
               scorecard.setEditingEntry(null);
             }}
             open={!!scorecard.editingEntry}
+            teamId={teamId}
           />
         )}
 

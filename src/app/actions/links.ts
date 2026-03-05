@@ -4,8 +4,11 @@ import { z } from "zod";
 import { db } from "@/db";
 import { linkCategories, links } from "@/db/schema/links";
 import type { SessionData } from "@/lib/auth/config";
+import { logger } from "@/lib/logger";
 import { requireAuth } from "@/lib/middleware/auth.middleware";
 import { BulkCreateLinkSchema, CreateLinkSchema } from "@/lib/zod/links.schema";
+
+const log = logger.child({ module: "links" });
 
 // ─── Helpers ───
 
@@ -180,10 +183,18 @@ export const createLink = createServerFn({ method: "POST" })
       data.visibility === "public" &&
       !isTeamAdminCheck(context.session, data.teamId)
     ) {
+      log.warn(
+        { teamId: data.teamId, userEmail: context.userEmail },
+        "createLink: unauthorised — non-admin tried to create public link"
+      );
       throw new Error("Only Admins can create Public links");
     }
 
     const userEmail = context.userEmail;
+    log.info(
+      { teamId: data.teamId, visibility: data.visibility, userEmail },
+      "createLink: start"
+    );
 
     // Insert
     await db.insert(links).values({
@@ -198,6 +209,7 @@ export const createLink = createServerFn({ method: "POST" })
       createdBy: userEmail,
     });
 
+    log.info({ teamId: data.teamId, userEmail }, "createLink: success");
     return { success: true };
   });
 
@@ -215,6 +227,7 @@ export const deleteLink = createServerFn({ method: "POST" })
     });
 
     if (!link) {
+      log.warn({ linkId: data.id }, "deleteLink: link not found");
       throw new Error("Link not found");
     }
 
@@ -223,12 +236,24 @@ export const deleteLink = createServerFn({ method: "POST" })
     const isOwner = link.userEmail === context.userEmail;
 
     if (link.visibility === "public" && !isAdmin) {
+      log.warn(
+        { linkId: data.id, userEmail: context.userEmail },
+        "deleteLink: unauthorised — non-admin tried to delete public link"
+      );
       throw new Error("Only Admins can delete Public links");
     }
     if (link.visibility !== "public" && !isOwner) {
+      log.warn(
+        { linkId: data.id, userEmail: context.userEmail },
+        "deleteLink: unauthorised — user tried to delete another user's link"
+      );
       throw new Error("You can only delete your own private links");
     }
 
+    log.info(
+      { linkId: data.id, userEmail: context.userEmail },
+      "deleteLink: success"
+    );
     await db.delete(links).where(eq(links.id, data.id));
     return { success: true };
   });
@@ -274,6 +299,7 @@ export const updateLink = createServerFn({ method: "POST" })
     });
 
     if (!link) {
+      log.warn({ linkId: data.id }, "updateLink: link not found");
       throw new Error("Link not found");
     }
 
@@ -282,9 +308,17 @@ export const updateLink = createServerFn({ method: "POST" })
     const isOwner = link.userEmail === context.userEmail;
 
     if (link.visibility === "public" && !isAdmin) {
+      log.warn(
+        { linkId: data.id, userEmail: context.userEmail },
+        "updateLink: unauthorised — non-admin tried to update public link"
+      );
       throw new Error("Only Admins can update Public links");
     }
     if (link.visibility !== "public" && !isOwner) {
+      log.warn(
+        { linkId: data.id, userEmail: context.userEmail },
+        "updateLink: unauthorised — user tried to update another user's link"
+      );
       throw new Error("You can only update your own private links");
     }
 
@@ -307,7 +341,7 @@ export const updateLink = createServerFn({ method: "POST" })
     }
 
     await db.update(links).set(updates).where(eq(links.id, id));
-
+    log.info({ linkId: id, userEmail }, "updateLink: success");
     return { success: true };
   });
 
@@ -321,16 +355,23 @@ export const bulkCreateLinks = createServerFn({ method: "POST" })
     const userEmail = context.userEmail;
 
     // Check permissions
-    // If any link is public, user must be admin
     const hasPublicLinks = data.links.some((l) => l.visibility === "public");
     if (hasPublicLinks && !isTeamAdminCheck(context.session, data.teamId)) {
+      log.warn(
+        { teamId: data.teamId, userEmail },
+        "bulkCreateLinks: non-admin tried to create public links"
+      );
       throw new Error("Only admins can create public links");
     }
 
-    // Prepare data for insertion
     if (data.links.length === 0) {
       return { count: 0 };
     }
+
+    log.info(
+      { teamId: data.teamId, count: data.links.length, userEmail },
+      "bulkCreateLinks: start"
+    );
 
     const linksToInsert = data.links.map((link) => ({
       ...link,
@@ -350,6 +391,10 @@ export const bulkCreateLinks = createServerFn({ method: "POST" })
 
     await db.insert(links).values(linksToInsert);
 
+    log.info(
+      { teamId: data.teamId, count: linksToInsert.length, userEmail },
+      "bulkCreateLinks: success"
+    );
     return { count: linksToInsert.length };
   });
 
@@ -377,6 +422,10 @@ export const bulkUpdateLinks = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { teamId, linkIds, updates } = data;
     const userEmail = context.userEmail;
+    log.info(
+      { teamId, linkCount: linkIds.length, userEmail },
+      "bulkUpdateLinks: start"
+    );
 
     // Get permission for this team
     const isAdmin = isTeamAdminCheck(context.session, teamId);
@@ -390,6 +439,7 @@ export const bulkUpdateLinks = createServerFn({ method: "POST" })
     });
 
     if (linksToUpdate.length === 0) {
+      log.warn({ teamId, linkIds }, "bulkUpdateLinks: no links found");
       throw new Error("No links found to update");
     }
 
@@ -418,7 +468,6 @@ export const bulkUpdateLinks = createServerFn({ method: "POST" })
 
     // Handle tags - need to update each link individually if appending
     if (updates.tagsToAdd && updates.tagsToAdd.length > 0) {
-      // Update links one by one to handle tags properly
       for (const link of linksToUpdate) {
         const existingTags = link.tags || [];
         const newTags = updates.replaceTags
@@ -446,6 +495,10 @@ export const bulkUpdateLinks = createServerFn({ method: "POST" })
         );
     }
 
+    log.info(
+      { teamId, linkCount: linksToUpdate.length, userEmail },
+      "bulkUpdateLinks: success"
+    );
     return { success: true, count: linksToUpdate.length };
   });
 
@@ -476,6 +529,10 @@ export const createLinkCategory = createServerFn({ method: "POST" })
       .parse(data)
   )
   .handler(async ({ data, context }) => {
+    log.info(
+      { teamId: data.teamId, name: data.name, userEmail: context.userEmail },
+      "createLinkCategory: start"
+    );
     const [newCategory] = await db
       .insert(linkCategories)
       .values({
@@ -485,6 +542,10 @@ export const createLinkCategory = createServerFn({ method: "POST" })
       })
       .returning();
 
+    log.info(
+      { categoryId: newCategory.id, teamId: data.teamId },
+      "createLinkCategory: success"
+    );
     return newCategory;
   });
 

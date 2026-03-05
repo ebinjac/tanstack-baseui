@@ -24,8 +24,15 @@ export const getRouter = () => {
   const router = createRouter({
     routeTree,
     scrollRestoration: true,
+    // Preloading
     defaultPreload: "intent",
-    defaultPreloadStaleTime: 0,
+    defaultPreloadDelay: 100, // 100ms hover before firing preload (prevents thrash)
+    defaultPreloadStaleTime: 0, // Let React Query handle cache freshness
+    // Loading states
+    defaultPendingMs: 0, // Show skeleton immediately — no 1s blank screen
+    defaultPendingMinMs: 300, // Keep skeleton ≥300ms (avoids flash if data is cached)
+    // Cache lifetime
+    defaultGcTime: 1000 * 60 * 5, // Keep unused route data for 5 min (fast back-nav)
     context: {
       queryClient,
       session: null, // Will be populated by __root.tsx beforeLoad

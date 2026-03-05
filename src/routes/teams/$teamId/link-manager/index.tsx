@@ -1,6 +1,7 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -41,6 +42,7 @@ import {
 } from "@/components/link-manager/shared";
 import { PageHeader } from "@/components/shared";
 import { EmptyState } from "@/components/shared/empty-state";
+import { LinkManagerSkeleton } from "@/components/skeletons/link-manager-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +53,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { linkKeys } from "@/lib/query-keys";
+import { applicationKeys, linkKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 
 // Schema for search params
@@ -64,44 +66,60 @@ const linkSearchSchema = z.object({
 
 const PAGE_SIZE = 30;
 
+import { logger } from "@/lib/logger";
+
+const log = logger.child({ module: "link-manager" });
+
 export const Route = createFileRoute("/teams/$teamId/link-manager/")({
   component: LinkManagerIndexPage,
+  pendingComponent: LinkManagerSkeleton,
   validateSearch: (search) => linkSearchSchema.parse(search),
   loaderDeps: ({
     search: { search, visibility, applicationId, categoryId },
   }) => ({ search, visibility, applicationId, categoryId }),
-  loader: async ({
-    params: { teamId },
-    deps: { search, visibility, applicationId, categoryId },
-  }) => {
-    const [linksData, categories, applications] = await Promise.all([
-      getLinks({
-        data: {
-          teamId,
-          search,
-          visibility: visibility || "all",
-          applicationId,
-          categoryId,
-          limit: PAGE_SIZE,
-        },
+  loader: async ({ params: { teamId }, context: { queryClient } }) => {
+    const t = performance.now();
+    log.debug({ teamId }, "link-manager loader: start");
+    // Pre-warm categories and applications (small, static-ish) in parallel.
+    // Links are intentionally excluded: useInfiniteQuery owns that data
+    // and the pendingComponent skeleton covers the load time.
+    await Promise.all([
+      queryClient.ensureQueryData({
+        queryKey: linkKeys.categories(teamId),
+        queryFn: () => getLinkCategories({ data: { teamId } }),
+        staleTime: 1000 * 60 * 5, // 5 min — categories rarely change
       }),
-      getLinkCategories({ data: { teamId } }),
-      getTeamApplications({ data: { teamId } }),
+      queryClient.ensureQueryData({
+        queryKey: applicationKeys.team(teamId),
+        queryFn: () => getTeamApplications({ data: { teamId } }),
+        staleTime: 1000 * 60,
+      }),
     ]);
-    return { linksData, categories, applications };
+    log.debug(
+      { teamId, durationMs: Math.round(performance.now() - t) },
+      "link-manager loader: complete"
+    );
   },
 });
 
 function LinkManagerIndexPage() {
   const { teamId } = Route.useParams();
-  const {
-    linksData: initialData,
-    categories,
-    applications,
-  } = Route.useLoaderData();
   const searchParams = Route.useSearch();
   const navigate = Route.useNavigate();
   const queryClient = useQueryClient();
+
+  // Read categories and applications from cache (pre-warmed by loader)
+  const { data: categories } = useQuery({
+    queryKey: linkKeys.categories(teamId),
+    queryFn: () => getLinkCategories({ data: { teamId } }),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: applications } = useQuery({
+    queryKey: applicationKeys.team(teamId),
+    queryFn: () => getTeamApplications({ data: { teamId } }),
+    staleTime: 1000 * 60,
+  });
 
   const [viewMode, setViewMode] = useState<"grid" | "table" | "compact">(
     "grid"
@@ -109,7 +127,7 @@ function LinkManagerIndexPage() {
   const [selectedLinks, setSelectedLinks] = useState<Set<string>>(new Set());
   const sentinelRef = useRef<HTMLDivElement>(null);
 
-  // Infinite query for paginated links
+  // Infinite query for paginated links — no initialData (loader no longer fetches links)
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       queryKey: linkKeys.list(teamId, {
@@ -132,7 +150,6 @@ function LinkManagerIndexPage() {
         }),
       initialPageParam: undefined as string | undefined,
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-      initialData: { pages: [initialData], pageParams: [undefined] },
     });
 
   // Flatten all loaded pages into a single array

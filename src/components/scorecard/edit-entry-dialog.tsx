@@ -162,13 +162,11 @@ export function EditEntryDialog({
           </DialogDescription>
         </DialogHeader>
         <form className="space-y-4 py-4" onSubmit={handleSubmit(onSubmit)}>
-          {/* Scorecard Identifier — optional, drives API lookup when provided */}
+          {/* Scorecard Identifier — drives API lookup when provided */}
           <div className="space-y-2">
             <Label htmlFor="edit-scorecardIdentifier">
               Scorecard Identifier
-              <span className="ml-2 text-muted-foreground text-xs">
-                (optional — for Year Data API automation)
-              </span>
+              <span className="ml-1 text-destructive">*</span>
             </Label>
             <div className="relative">
               <Input

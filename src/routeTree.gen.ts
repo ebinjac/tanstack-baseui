@@ -10,13 +10,16 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SupportRouteImport } from './routes/support'
-import { Route as ScorecardRouteImport } from './routes/scorecard'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as ScorecardRouteRouteImport } from './routes/scorecard.route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ScorecardIndexRouteImport } from './routes/scorecard/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as TeamsRegisterRouteImport } from './routes/teams/register'
+import { Route as ScorecardMyTeamsRouteImport } from './routes/scorecard/my-teams'
+import { Route as ScorecardDirectoryRouteImport } from './routes/scorecard/directory'
 import { Route as DocsSplatRouteImport } from './routes/docs/$'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as AdminTeamsRouteImport } from './routes/admin/teams'
@@ -41,11 +44,6 @@ const SupportRoute = SupportRouteImport.update({
   path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ScorecardRoute = ScorecardRouteImport.update({
-  id: '/scorecard',
-  path: '/scorecard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -61,10 +59,20 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ScorecardRouteRoute = ScorecardRouteRouteImport.update({
+  id: '/scorecard',
+  path: '/scorecard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ScorecardIndexRoute = ScorecardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ScorecardRouteRoute,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
@@ -75,6 +83,16 @@ const TeamsRegisterRoute = TeamsRegisterRouteImport.update({
   id: '/teams/register',
   path: '/teams/register',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ScorecardMyTeamsRoute = ScorecardMyTeamsRouteImport.update({
+  id: '/my-teams',
+  path: '/my-teams',
+  getParentRoute: () => ScorecardRouteRoute,
+} as any)
+const ScorecardDirectoryRoute = ScorecardDirectoryRouteImport.update({
+  id: '/directory',
+  path: '/directory',
+  getParentRoute: () => ScorecardRouteRoute,
 } as any)
 const DocsSplatRoute = DocsSplatRouteImport.update({
   id: '/docs/$',
@@ -178,18 +196,21 @@ const TeamsTeamIdLinkManagerCategoriesRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/scorecard': typeof ScorecardRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/profile': typeof ProfileRoute
-  '/scorecard': typeof ScorecardRoute
   '/support': typeof SupportRoute
   '/admin/health': typeof AdminHealthRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/admin/teams': typeof AdminTeamsRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
+  '/scorecard/directory': typeof ScorecardDirectoryRoute
+  '/scorecard/my-teams': typeof ScorecardMyTeamsRoute
   '/teams/register': typeof TeamsRegisterRoute
   '/admin/': typeof AdminIndexRoute
+  '/scorecard/': typeof ScorecardIndexRoute
   '/teams/$teamId/link-manager': typeof TeamsTeamIdLinkManagerRouteWithChildren
   '/teams/$teamId/scorecard': typeof TeamsTeamIdScorecardRoute
   '/teams/$teamId/settings': typeof TeamsTeamIdSettingsRoute
@@ -208,15 +229,17 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/profile': typeof ProfileRoute
-  '/scorecard': typeof ScorecardRoute
   '/support': typeof SupportRoute
   '/admin/health': typeof AdminHealthRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/admin/teams': typeof AdminTeamsRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
+  '/scorecard/directory': typeof ScorecardDirectoryRoute
+  '/scorecard/my-teams': typeof ScorecardMyTeamsRoute
   '/teams/register': typeof TeamsRegisterRoute
   '/admin': typeof AdminIndexRoute
+  '/scorecard': typeof ScorecardIndexRoute
   '/teams/$teamId/scorecard': typeof TeamsTeamIdScorecardRoute
   '/teams/$teamId/settings': typeof TeamsTeamIdSettingsRoute
   '/teams/$teamId/turnover': typeof TeamsTeamIdTurnoverRouteWithChildren
@@ -233,18 +256,21 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/scorecard': typeof ScorecardRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/admin': typeof AdminRouteWithChildren
   '/profile': typeof ProfileRoute
-  '/scorecard': typeof ScorecardRoute
   '/support': typeof SupportRoute
   '/admin/health': typeof AdminHealthRoute
   '/admin/requests': typeof AdminRequestsRoute
   '/admin/teams': typeof AdminTeamsRoute
   '/api/search': typeof ApiSearchRoute
   '/docs/$': typeof DocsSplatRoute
+  '/scorecard/directory': typeof ScorecardDirectoryRoute
+  '/scorecard/my-teams': typeof ScorecardMyTeamsRoute
   '/teams/register': typeof TeamsRegisterRoute
   '/admin/': typeof AdminIndexRoute
+  '/scorecard/': typeof ScorecardIndexRoute
   '/teams/$teamId/link-manager': typeof TeamsTeamIdLinkManagerRouteWithChildren
   '/teams/$teamId/scorecard': typeof TeamsTeamIdScorecardRoute
   '/teams/$teamId/settings': typeof TeamsTeamIdSettingsRoute
@@ -263,18 +289,21 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/scorecard'
     | '/about'
     | '/admin'
     | '/profile'
-    | '/scorecard'
     | '/support'
     | '/admin/health'
     | '/admin/requests'
     | '/admin/teams'
     | '/api/search'
     | '/docs/$'
+    | '/scorecard/directory'
+    | '/scorecard/my-teams'
     | '/teams/register'
     | '/admin/'
+    | '/scorecard/'
     | '/teams/$teamId/link-manager'
     | '/teams/$teamId/scorecard'
     | '/teams/$teamId/settings'
@@ -293,15 +322,17 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/profile'
-    | '/scorecard'
     | '/support'
     | '/admin/health'
     | '/admin/requests'
     | '/admin/teams'
     | '/api/search'
     | '/docs/$'
+    | '/scorecard/directory'
+    | '/scorecard/my-teams'
     | '/teams/register'
     | '/admin'
+    | '/scorecard'
     | '/teams/$teamId/scorecard'
     | '/teams/$teamId/settings'
     | '/teams/$teamId/turnover'
@@ -317,18 +348,21 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/scorecard'
     | '/about'
     | '/admin'
     | '/profile'
-    | '/scorecard'
     | '/support'
     | '/admin/health'
     | '/admin/requests'
     | '/admin/teams'
     | '/api/search'
     | '/docs/$'
+    | '/scorecard/directory'
+    | '/scorecard/my-teams'
     | '/teams/register'
     | '/admin/'
+    | '/scorecard/'
     | '/teams/$teamId/link-manager'
     | '/teams/$teamId/scorecard'
     | '/teams/$teamId/settings'
@@ -346,10 +380,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ScorecardRouteRoute: typeof ScorecardRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AdminRoute: typeof AdminRouteWithChildren
   ProfileRoute: typeof ProfileRoute
-  ScorecardRoute: typeof ScorecardRoute
   SupportRoute: typeof SupportRoute
   ApiSearchRoute: typeof ApiSearchRoute
   DocsSplatRoute: typeof DocsSplatRoute
@@ -367,13 +401,6 @@ declare module '@tanstack/react-router' {
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof SupportRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/scorecard': {
-      id: '/scorecard'
-      path: '/scorecard'
-      fullPath: '/scorecard'
-      preLoaderRoute: typeof ScorecardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -397,12 +424,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/scorecard': {
+      id: '/scorecard'
+      path: '/scorecard'
+      fullPath: '/scorecard'
+      preLoaderRoute: typeof ScorecardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/scorecard/': {
+      id: '/scorecard/'
+      path: '/'
+      fullPath: '/scorecard/'
+      preLoaderRoute: typeof ScorecardIndexRouteImport
+      parentRoute: typeof ScorecardRouteRoute
     }
     '/admin/': {
       id: '/admin/'
@@ -417,6 +458,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/teams/register'
       preLoaderRoute: typeof TeamsRegisterRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/scorecard/my-teams': {
+      id: '/scorecard/my-teams'
+      path: '/my-teams'
+      fullPath: '/scorecard/my-teams'
+      preLoaderRoute: typeof ScorecardMyTeamsRouteImport
+      parentRoute: typeof ScorecardRouteRoute
+    }
+    '/scorecard/directory': {
+      id: '/scorecard/directory'
+      path: '/directory'
+      fullPath: '/scorecard/directory'
+      preLoaderRoute: typeof ScorecardDirectoryRouteImport
+      parentRoute: typeof ScorecardRouteRoute
     }
     '/docs/$': {
       id: '/docs/$'
@@ -547,6 +602,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ScorecardRouteRouteChildren {
+  ScorecardDirectoryRoute: typeof ScorecardDirectoryRoute
+  ScorecardMyTeamsRoute: typeof ScorecardMyTeamsRoute
+  ScorecardIndexRoute: typeof ScorecardIndexRoute
+}
+
+const ScorecardRouteRouteChildren: ScorecardRouteRouteChildren = {
+  ScorecardDirectoryRoute: ScorecardDirectoryRoute,
+  ScorecardMyTeamsRoute: ScorecardMyTeamsRoute,
+  ScorecardIndexRoute: ScorecardIndexRoute,
+}
+
+const ScorecardRouteRouteWithChildren = ScorecardRouteRoute._addFileChildren(
+  ScorecardRouteRouteChildren,
+)
+
 interface AdminRouteChildren {
   AdminHealthRoute: typeof AdminHealthRoute
   AdminRequestsRoute: typeof AdminRequestsRoute
@@ -608,10 +679,10 @@ const TeamsTeamIdTurnoverRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ScorecardRouteRoute: ScorecardRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AdminRoute: AdminRouteWithChildren,
   ProfileRoute: ProfileRoute,
-  ScorecardRoute: ScorecardRoute,
   SupportRoute: SupportRoute,
   ApiSearchRoute: ApiSearchRoute,
   DocsSplatRoute: DocsSplatRoute,

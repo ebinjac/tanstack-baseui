@@ -5,9 +5,8 @@ export const CreateScorecardEntrySchema = z.object({
   applicationId: z.uuid("Invalid application ID"),
   scorecardIdentifier: z
     .string()
-    .max(255, "Identifier must be less than 255 characters")
-    .optional()
-    .or(z.literal("")),
+    .min(1, "Identifier is required")
+    .max(255, "Identifier must be less than 255 characters"),
   name: z
     .string()
     .min(1, "Name is required")
@@ -33,9 +32,8 @@ export const UpdateScorecardEntrySchema = z.object({
   id: z.uuid("Invalid entry ID"),
   scorecardIdentifier: z
     .string()
-    .min(1, "Identifier must not be empty")
-    .max(255, "Identifier must be less than 255 characters")
-    .optional(),
+    .min(1, "Identifier is required")
+    .max(255, "Identifier must be less than 255 characters"),
   name: z
     .string()
     .min(1, "Name is required")

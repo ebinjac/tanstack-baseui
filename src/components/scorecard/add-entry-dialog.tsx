@@ -168,8 +168,8 @@ export function AddEntryDialog({
             Add Sub-Application
           </DialogTitle>
           <DialogDescription>
-            Create a new scorecard entry. Provide a Scorecard Identifier if this
-            application is tracked by the Year Data API — metrics will be
+            Create a new scorecard entry. The Scorecard Identifier is required
+            to track this application via the Year Data API — metrics will be
             auto-populated on save.
           </DialogDescription>
         </DialogHeader>
@@ -189,13 +189,11 @@ export function AddEntryDialog({
             )}
           </div>
 
-          {/* Scorecard Identifier — optional, drives API lookup when provided */}
+          {/* Scorecard Identifier — drives API lookup when provided */}
           <div className="space-y-2">
             <Label htmlFor="scorecardIdentifier">
               Scorecard Identifier
-              <span className="ml-2 text-muted-foreground text-xs">
-                (optional — for Year Data API automation)
-              </span>
+              <span className="ml-1 text-destructive">*</span>
             </Label>
             <div className="relative">
               <Input

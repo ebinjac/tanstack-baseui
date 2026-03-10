@@ -8,7 +8,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { publishScorecard, unpublishScorecard } from "@/app/actions/scorecard";
 import { useYearSelection } from "@/hooks/use-date-range";
@@ -218,7 +218,7 @@ export function useScorecard({
   // Expand state for applications
   const expandedApps = useExpandState<Application>({
     getItemId: (app) => app.id,
-    initialExpanded: "none",
+    initialExpanded: "all",
   });
 
   // Get the months to display based on view mode
@@ -270,6 +270,19 @@ export function useScorecard({
 
     return { applications: apps, entries, availability, volume };
   }, [currentYearData, prevYearData]);
+
+  const [hasAutoExpanded, setHasAutoExpanded] = useState(false);
+
+  useEffect(() => {
+    if (
+      !hasAutoExpanded &&
+      scorecardData &&
+      scorecardData.applications.length > 0
+    ) {
+      expandedApps.expandAll(scorecardData.applications.map((a) => a.id));
+      setHasAutoExpanded(true);
+    }
+  }, [scorecardData, hasAutoExpanded, expandedApps]);
 
   // Fetch publish status for current year
   const { data: publishStatusCurrentYear } = useQuery(

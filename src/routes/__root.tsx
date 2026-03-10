@@ -86,7 +86,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const hideHeader =
     isAdminRoute ||
     effectivePath.includes("/link-manager") ||
-    effectivePath.includes("/turnover");
+    effectivePath.includes("/turnover") ||
+    effectivePath.includes("/scorecard");
 
   return (
     <html lang="en" suppressHydrationWarning>

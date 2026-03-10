@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { AvailabilitySparkline } from "./availability-sparkline";
 import { CURRENT_MONTH, CURRENT_YEAR, MONTHS } from "./constants";
 import { EntryRows } from "./entry-rows";
 import type {
@@ -170,8 +171,16 @@ export function ApplicationCard({
           </div>
         </div>
 
-        {/* Status Layer */}
-        <div className="mt-3 flex shrink-0 items-center gap-6 sm:mt-0">
+        {/* Sparkline + Stats */}
+        <div className="mt-3 flex shrink-0 items-center gap-4 sm:mt-0">
+          <AvailabilitySparkline
+            availabilityByEntry={availabilityByEntry}
+            className="hidden opacity-50 transition-opacity group-hover:opacity-100 sm:block"
+            entries={entries}
+            height={24}
+            selectedYear={selectedYear}
+            width={64}
+          />
           {avgAvailability !== null && (
             <div className="group/stat flex flex-col items-end">
               <span className="mb-1.5 font-bold text-[9px] text-muted-foreground uppercase leading-none tracking-widest opacity-60">
